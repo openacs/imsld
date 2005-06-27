@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+<article>
+  <title>Very Short Introduction to IMS LD</title>
+
+  <section>
+    <title>IMS Learning Design (very short introduction)</title>
+
+    <para>IMS Learning Design (from now on referred as IMS LD) is a
+    specification done by the IMS Global Learning Consortium. It is an
+    XML-based description for e-learning. It provides a global framework for
+    including the description of different pedagogical and methodological
+    learning models. Therefore IMS LD is independent from a concrete pedagogy
+    or methodology.</para>
+
+    <para>The XML file that is compliant with IMS LD specifies a set of
+    learning activities (which are usually related to a set of resources and
+    services) and who and when can do these activities and with which
+    conditions. Therefore, it establishes a sequencing of activities for each
+    role. IMS LD is in principle independent from <ulink
+    url="http://www.imsglobal.org/content/packagin/">IMS Content
+    Packaging</ulink> (IMS CP), so it can be used without IMS CP.
+    Nevertheless, the most common case is to insert the IMS LD file inside the
+    organizations element of an IMS CP and the result is called "unit of
+    learning". A unit of learning, as defined in the IMS LD specification, is
+    an abstract term used to refer to any delimited piece of education or
+    training, such as a course, a module, a lesson, etc. In this
+    specification, the terms unit of learning and course are used to represent
+    the same thing: a collection of ordered activities which has associated
+    resources and services to learn that are going to be delivered to
+    different defined roles and the workflow of the activities.</para>
+
+    <para>Unit of learning and IMS Learning Design are not the same thing. A
+    learning design is a description of a learning method used to achieve
+    certain goals (learning objectives), and a unit of learning is the result
+    of packaging a learning design (for example using IMS CP). There are some
+    other terms introduced by IMS LD that need to be defined, which are
+    briefly explained bellow:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">Prerequisites</emphasis>. The previous
+        requirements for learners for doing the unit of learning.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Objectives</emphasis>: They are the goals
+        to obtain in a unit of learning. Also it is possible to write
+        objectives for each particular activity.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Components.</emphasis> It defines
+        statically the following elements of a unit of learning: roles,
+        activities, environments and properties</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Roles.</emphasis> It defines the different
+        types of users in a unit of learning. There are two basic types of
+        roles: Learner and Staff. But additional roles can be defined. The
+        roles form a hierarchical graph where the root roles are the basic
+        ones. For example inside Learner role we can have additional roles
+        depending on the students level or inside the staff role we can have
+        professors, teaching assisstants, tutors, etc. .LRN. in fact, has
+        defined predefined roles, so the sutdent role will be linked to the
+        Learner one and the proffessor, teaching assisstant, etc. can be
+        mapped to the IMS LD corresponding ones. When there is no an exact
+        correspondence, then we will create new .LRN subgroups that match with
+        the IMS LD roles. </para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Properties</emphasis>. This is something
+        that defines a concrete feature. There are local properties ,
+        local-person properties, local-role properties, global-personal
+        properties and global properties. They are used depending on the scope
+        of the property.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Activities</emphasis>. An activity is
+        something to be done, that usually has a description and an
+        enviroment. There are two types of activities: learning activities
+        (activities that are done by students in order to learn) and support
+        activities (activities to support or help students, usually done by
+        professors). Also there are structure activities which are an union of
+        several activities that can be presented to the student either in a
+        sequencial mode or for the user to select. The activities are the core
+        of the workflow of the learning design.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Environment</emphasis>. Collection of
+        learning objects (for example files to be viewed by the student),
+        services (like foros, chat, etc.) and sub-environments, in wich
+        activities take place. When a student has to complete an activity that
+        have a concrete enviroment, then he/she can do whichever of the
+        learning objects and services that are defined inside this
+        enviroment</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Service</emphasis>. For instance, a
+        discussion forum, email, conference service and monitor service (to
+        look at the properties).</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Method</emphasis>. It defines the dinamic
+        part of learning design. It consists of several plays and contitions.
+        If a method has several plays then each play is executed in parallel
+        for all the roles. Therefore, for example a Learner can select in an
+        instant of time between the different parallel activities (one
+        activity for each play)</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Play</emphasis> A play has a set of acts.
+        Each act is not executed until the previous one has been executed.
+        Therefore, it can be viewed as a sequence of acts. A play finishes
+        when all its acts has finished </para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Act</emphasis> It defines what activity to
+        do for each of role. Each role make the activity in parallel respect
+        to the rest of roles. An act is finished when all the roles have
+        finished its activity. This provides a synchronization point.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Conditions</emphasis>. They are used in
+        conjunction with properties to further refinement and to add
+        personalization facilities in the learning design. By these way, for
+        example is possible to take decissions taken into account the user
+        profile, assessments done by the student, selections of the students
+        during the course, etc. </para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Notification</emphasis>. Allows to send
+        messages between roles or to assign new learning or support activities
+        to roles based on certain events. When integrating IMS LD with .LRN,
+        we take advantage of this capability in order to send messages between
+        the system's components. This can only be done if .LRN is fully aware
+        of the learner status inside the course.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Item</emphasis>. When a component, a
+        learning objective, or a prerequisite needs a resource, an item
+        element is used. The learning design provides a semantic context for
+        these items, so that runtime systems can know what to do with the
+        resource.</para>
+      </listitem>
+    </itemizedlist>
+  </section>
+
+  <section>
+    <title>Levels A, B and C</title>
+
+    <para>There are tree levels of complaint in the IMS LD
+    specification:</para>
+
+    <orderedlist>
+      <listitem>
+        <para><emphasis>Learning Design Level A</emphasis> includes everything
+        described above except the conditions, properties and notifications.
+        It thus contains all the core vocabulary needed to support dedagogical
+        diversity.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>Learning Design Level B </emphasis>adds Properties and
+        Conditions to level A, which enable personalization and more elaborate
+        sequencing and interactions based on learner porfolios. It can be used
+        to direct the learning activities as well as record outcomes.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis>Learning Design Level C</emphasis> adds Notification
+        to level B, which, although a fairly small addition to the
+        specification, adds significantly to the capability.</para>
+      </listitem>
+    </orderedlist>
+
+    <para> There is a <ulink
+    url="http://www.imsglobal.org/learningdesign/ldv1p0/imsld_bindv1p0.html">IMS
+    Learning Design XML Binding</ulink> document, where you can find detailed
+    information about how each one of the elements described above is mapped
+    in the final xml file.</para>
+  </section>
+</article>

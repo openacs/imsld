@@ -1,0 +1,3145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.3//EN"
+"http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
+<book>
+  <title>imsld</title>
+
+  <chapter>
+    <title>Introduction</title>
+
+    <section>
+      <title>Introduction</title>
+
+      <para>Given the current need of the professors as .LRN users of having a
+      tool that lets them define and set up the workflow of their courses and
+      a synchronization and interaction between different roles of an
+      e-learning experience, the imsld package provides the support to
+      fullfill these needs, making use of the IMS Learning Design (from now on
+      referred as IMS LD). We recommend to read the <ulink
+      url="http://www.imsglobal.org/learningdesign/">IMS LD
+      specification</ulink> in order to understand better this document. If
+      you are already familiarized with the specification, continue reading
+      this document, otherwise you can take a quick introduction by reading
+      our <link linkend="imsld-short-intro">very short introducion to IMS
+      LD</link>)</para>
+    </section>
+
+    <section>
+      <title>Integrating IMS LD with .LRN</title>
+
+      <para>Using the IMD LD specification, the professor is able to indicate
+      the moment (which could be based on conditions) in which a role is going
+      to do an activity and which materials and services are going to be used.
+      Integrating IMD LD into .LRN, the professor is able to use all the
+      services provided by .LRN, such as forums for asynchronous interaction,
+      chat as synchronous interaction, assessments to evaluate the e-learning
+      process (students and contents), the evaluation package (grade book) to
+      support a a variety of learning and support activities, etc. And all of
+      this is done in a centralized way, from an IMS LD editor.</para>
+
+      <para>The main idea is to load an IMS LD document (which is an XML
+      document) and play it. To play an IMS LD document is nothing more than
+      to peform the activities prescribed in the document with its related
+      enviroment which defines the learning objects and services, and this is
+      when the interaction with the .LRN services begin. The imsld package is
+      able to detect and indicate what .LRN service is the most indicated one
+      to perform a given IMS LD service. The activities will follow the
+      sequence prescribed in the IMS LD document, each member of the course
+      will perform a specific set of activities according to the member's role
+      inside the course. The professor is able to decide the different roles
+      that the course supports, and which role can do what at any given time
+      during the course life, and following the defined sequence.</para>
+
+      <para>With the imsld package, the professor is able to let the learner
+      choose betwen the activities, make the learner follow a specific
+      sequence or use a combinaiton of both sequenced and learner's choice
+      activities. And that's not all, the professor is also able to define the
+      sequence of the learning activities using conditions and properties that
+      change according to the learner behavior during the course (as defined
+      at the the level B of the Learning Design Specification). Moreover .LRN
+      can take advantage from the power notification system in order to send
+      messages and set new activities based on events (as defined at the level
+      C of the Learning Design Specification)</para>
+
+      <para>The imsld package provides an IMS LD editor, an IMS LD player, an
+      IMS LD viewer and an IMS LD importer/exporter. Each one of these is
+      described later on this document.</para>
+    </section>
+
+    <section>
+      <title>Pedagogical Flexibility</title>
+
+      <para>"The IMS LD specification is flexible in the description of all
+      different kinds of pedagogies and not prescribe any specific pedagogical
+      approach." (IMS LD spec) The IMS LD specification does not follow any
+      pedagogy. When doing the integration with .LRN, this pedagogical
+      flexibility has to be preserved, letting the professor to give the
+      course in any way he or she wants, limiting as less as possible the
+      professor choices when creating the IMD LD document.</para>
+    </section>
+
+    <section>
+      <title>Historical Considerations</title>
+
+      <para>There is some work done so far that we could use in the near
+      future:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><ulink url="http://alfanet.ia.uned.es/">Alfanet</ulink>.The
+          people of Alfanet has already done some integration of IMS LD with
+          OpenACS. At the time of writing this specification we were waiting
+          to have access to their code in order to evaluate the possibility to
+          make use of what they have already done, avoiding the waist of
+          resources, but by the moment we don't know if this will be
+          possible.</para>
+        </listitem>
+
+        <listitem>
+          <para><ulink url="http://www.lamsinternational.com">LAMS</ulink>. At
+          the time of writing this specification, we were plannig to do an
+          integration with LAMS, which is a tool for designing, managing and
+          delivering online collaborative learning activities. The LAMs
+          project is already integrated with <ulink
+          url="http://www.moodle.org">Moodle</ulink>. We can take advantage of
+          that integration experience, but we expect to write all the code at
+          .LRN from scratch, and maybe later work on the integration.</para>
+        </listitem>
+
+        <listitem>
+          <para><ulink url="http://www.reload.ac.uk/">RELOAD</ulink>. It has
+          an IMS LD editor wich is independent from any LMS. By means of this
+          editor, you can generate an IMS LD for a concrete course. Also it
+          has integrated the CopperCore player</para>
+        </listitem>
+
+        <listitem>
+          <para><ulink url="http://coppercore.org/">CopperCore</ulink>. It has
+          an IMS LD editor wich is independent from any LMS. By means of this
+          editor, you can generate an IMS LD for a concrete course. Also it
+          has a player.</para>
+
+          <para>Our purporse is to be able to interpret the IMS LD generated
+          by RELOAD, CopperCore and LAMS and whichever IMS LD that can be
+          generated by other different authoring tools.</para>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>Competitive Analysis</title>
+
+      <para>There are a lot of competing products.The IMS LD specification is
+      very large and has many different options. Each product can implement
+      the most suitable features. Also, it does not indicate how to implement
+      it. And therefore, different LMS can implement it in a different way
+      depending on their services. This is a compatibility problem, but it can
+      be solved by a convenient mapping between the different IMS LD
+      references and the different services of a LMS</para>
+
+      <para>Moreover, when writing the specification we tried to incorporate
+      the ideas from the competing products (each one of them has its own way
+      of dealing with the IMS LD specification), and from the experience we
+      had when using them. A detailed analysis would be too much for the
+      moment.</para>
+    </section>
+
+    <section>
+      <title>Extensibility</title>
+
+      <para>The .LRN implementation must be easily extensible. The IMS LD
+      specification may change in the future, so the .LRN implementation has
+      to be done taking that into account. The .LRN implementation must be so
+      flexible in order to adapt to the posible changes of the IMS LD
+      specification. This means that if a change is produced in IMS LD
+      specification, then this should imply only minor changes in our .LRN
+      implementation of IMS LD. Also, if the initial specification should be
+      extended it should be done in an easy way.</para>
+
+      <para>Reusability and standards</para>
+
+      <para>The implementation must follow, as much as possible, the standards
+      defined by the IMS Global Learning Consortium. For example for the
+      compatibility problem that was mentioned before, there should be an easy
+      way to modify which .LRN service performs wich IMS LD service, and also
+      to add a new type of IMS LD service and the corresponding .LRN service
+      that will be in charge of dealing with it.</para>
+
+      <para>Our XML parser has to be aware of this flexibility, being easy to
+      modify according to the, probably often, changes or improvements in the
+      specification. The mapping between the service types and its
+      corresponding .LRN services can be easily edited via web. Everything
+      that can possibly change in the near future, must be easily extensible
+      as this was mentioned in the previous section</para>
+    </section>
+
+    <section>
+      <title>User Requirements</title>
+
+      <para>The user requirements are described in detail in the User
+      Requirements Chapter. In this section we explain in detail the
+      objectives of the imsld package, as well as the way to achieve
+      them.</para>
+    </section>
+
+    <section>
+      <title>Use Cases</title>
+
+      <para>In this Chapter we give some use cases that correspond to
+      frequently applications that can be handled by the ims-ld package</para>
+    </section>
+
+    <section>
+      <title>API</title>
+
+      <para>The API will be defined during the development phase.</para>
+    </section>
+
+    <section>
+      <title>Data Model</title>
+
+      <para>The data model is described in the Data Model Chapter, and it
+      intends to show all the tables where the information will be
+      stored.</para>
+
+      <para>The IMS LD specification is large and the number of tables to
+      store all the information is large too. We don't store every information
+      that comes in the IMS LD compliant XML file when parsing it, because
+      there are some metadata and tags that can be ignored, not affecting the
+      behavior of the unit of learning.</para>
+
+      <para>Anyway, you can take a look at the data model and see how we store
+      the information in the different tables and how these tables are related
+      betwheen them. As you will notice, the data model is almost the exactly
+      the representation of the tables in the IMS LD Information Model in a
+      relational database, plus some control tables.</para>
+    </section>
+
+    <section>
+      <title>Architectural Model</title>
+
+      <para>The architectural model is described in the Architectural Model
+      Chapter, and it presents the general architectural related to the ims-ld
+      package. It explains each part of the system and particullary the ims-ld
+      package, and are described the aspects about the implementation as for
+      example the mapping between .LRN services and IMS LD services,</para>
+    </section>
+
+    <section>
+      <title>Authors</title>
+
+      <para>The specifications for the imsld package have been written by
+      <ulink
+      url="http://openacs.org/shared/community-member?user%5fid=139803">Pedro
+      Muñoz</ulink> and <ulink
+      url="http://openacs.org/shared/community-member?user_id=106311">Jose
+      Pablo Escobedo</ulink> with help from people within and outside the
+      OpenACS community.</para>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>User Requirements</title>
+
+    <section>
+      <title>Importing IMS Learning Design Documents</title>
+
+      <para>As we mentioned before in this specification, an IMS LD document
+      is an XML file, so by practical means, we are just dealing with an XML
+      file, which is easy to parse. In this XML file is defined all the unit
+      of learning. We took advantage of the work already done in the <ulink
+      url="http://cvs.openacs.org/cvs/*checkout*/openacs-4/packages/assessment/www/doc/index.html">assessment
+      package</ulink>, where an <ulink
+      url="http://www.imsglobal.org/uestion/">IMS QTI</ulink> parser was
+      implemented. In the case of the assessment package, the document follows
+      the IMS QTI specification, and it is parsed and imported into the data
+      base. The imsld package will do something similar but with documents
+      following the IMS LD specification, and with the big difference that the
+      MS LD document can not be displayed in only one .LRN package, as happens
+      with IMS QTI. IMS LD deals with activities, roles (users), properties,
+      conditions, workflows, etc, and that is why the imsld package will
+      interact with other .LRN services.</para>
+
+      <para>Besides the XML parser, we need .LRN to recognize each one of the
+      activities and roles defined in the IMS LD and to know what to do with
+      each one of them.</para>
+
+      <para>The professor or IMS LD designer will only have to enter a path
+      where it is located an IMS LD file and then push upload. By these way a
+      profesor can upload an existing IMS LD file which describes a unit of
+      learning. The IMS LD importer will recognize IMS LD files that are
+      integrated in IMS CP or files that are IMS LD, but are not in an IMS
+      CP.</para>
+
+      <para>We call the process of parsing and interpreting the IMS LD
+      document the import stage. This IMS LD document can be generated with
+      any external or internal editor that follows the IMS LD specification,
+      such as <ulink url="???">LAMS</ulink>, <ulink
+      url="http://coppercore.org/">Coppercore</ulink>, <ulink
+      url="http://www.reload.ac.uk">Reload</ulink>, etc, wich is one of the
+      main advantages and purposes of following a well defined
+      standNoard.</para>
+    </section>
+
+    <section>
+      <title>Interaction Between imsld package and .LRN Services</title>
+
+      <para>The imsld package is a .LRN service (or package, we use these
+      terms indifferently in this specification when referring to .LRN), wich
+      will interact with some other .LRN services. When writing this
+      specification, we expect the imsld package to interact with at least the
+      following .LRN packages:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">Forums.</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Jabber.</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Assessment</emphasis>.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Evaluation (grade
+          book).</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Calendar.</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">News</emphasis>.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">FAQ </emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Notifications.</emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">File Storage</emphasis>.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>As we mentioned earlier, the imsld package allows to easily modify
+      the mappings between the elemnts of the IMS LD specification and the
+      .LRN services. And not only modifying the mappings, but also to add new
+      ones. By these way if the IMS LD specification change in some aspect,
+      then the package will addapt to the new changes easily. From our point
+      of view it is necessary that in the future the IMS LD specification will
+      add more tags that univoquily mapping with services. By these way
+      compatibility between LMS are obtained, and if an LMS doesn't understand
+      one tag because it is not available, then it will be ignored and nothing
+      will be presented to the user.</para>
+
+      <para>Besides, we take advantage of the new callbacks used in OpenACS in
+      order to provide a clean interaction between different .LRN packages.
+      With the callbacks we can determine if some needed package is not
+      installed, and instead of displaying an error to the user, try to map
+      the activity or whatever we are mapping to other package, and if after
+      trying with all the available packages we can't map the item to .LRN, a
+      message is shown to the user with this and any other item that coud not
+      be mapped by the system and with the purpose of leting the user to do
+      the manual mapping.</para>
+
+      <para>We have to take into account that the item will not allways have
+      all the necessary information to let the mapping be done easily, but we
+      try to do our best by providing at least the required information to
+      create the forum, chat, assessment, task, etc, and if definetively no
+      mapping can be done, a final error message is shown to the user
+      indicating that there is at least one item that .LRN can't
+      understand.</para>
+    </section>
+
+    <section>
+      <title>Editing IMS Learning Design Documents</title>
+
+      <para>When writting this specification, we were not thinking about
+      implementing an IMS LD editor in the short term. We think that in the
+      market there are already very good IMS LD editors, and that instead of
+      investing efforts and resources in doing one more, we better work in
+      order to provide a good IMS LD player and a viewer.</para>
+
+      <para>In the future we might work on an editor, but now there is a
+      greater need of a good player. We therefore provide support for the most
+      commonly used IMS LD editors (Reload, Coppercore and LAMS), wich we
+      mentioned above. Even tough there is a standard, there is always
+      something different in the way each editor makes use of it, and we try
+      to deal with it by being as flexible as possible, even tough sometimes
+      it is hard to achieve.</para>
+    </section>
+
+    <section>
+      <title>Viewing an IMS LD Document and Groups assignation</title>
+
+      <para>The imsld package provides an IMS LD viewer that will have two
+      modes for the professor: off-line mode and on-line mode.</para>
+
+      <para>In the off-line mode only the professor will have access and
+      he/she will be able to see all the plays, acts, properties, conditions,
+      etc. Definitively, all the things that are described in an IMS LD
+      document. But this information of the XML package will not include the
+      mapping between roles and members of the .LRN course or community. It is
+      the professor who must do this association before running the IMS LD for
+      concrete students. The interface will allow to select the students
+      inside a concrete .LRN course. This tool will allow assignate students
+      and professors (or other groups if exists) to the roles defined in the
+      IMS LD file.</para>
+
+      <para>On the other hand, in the on-line mode, it is visualized the IMS
+      LD when it is running. It will give to both the teacher and the student
+      (staff and learner) an overview of the activities in the workflow, i.e.
+      the visualization of the play, as well as their current status.</para>
+
+      <para>For the teacher, the viewer also offers in on-line mode the
+      possibility of seeing the properties and conditions, tracking the
+      students, watching the users in every activity of an act, etc. The
+      teacher is able to view more details in every act and see who has done
+      what. He/she can verify if a given test is too difficult and the
+      students can't continue with the flow of the course, or if the teaching
+      method is not working as planned. The viewer shows the list of acts that
+      conforms the play, as well as the activities that conforms each act, the
+      list of students that are part of that given course, etc. It display
+      this information in a graphical way, in order to make the information
+      easy to understand. It will also display links to the .LRN services
+      involved, in case the teacher wants to make use of the functionalities
+      of that specific package (because eventhough we make use of them, it
+      doesn't mean that we are replacing them). In the future the teacher will
+      be able to edit the sequence of activities from the viewer, when the
+      editor is finished.</para>
+
+      <para>On the other hand, the viewer offers the possibility to the
+      students to see their status inside the play. They can see how much have
+      completed and how much they have yet to complete. Of course, when
+      viewing the IMS LD level B, this current status is not that easy to see
+      nor to reproduce, because the workflow can depend on the students
+      themselves because of the properties and contitions. Even more, there
+      can be sometimes that this status is impossible to represent (we mean,
+      the exact path that the student has not completed yet), because the
+      conditions change during the lifetime of the course. This gets even more
+      complicated when viewing IMS LD level C, because it adds the
+      notifications, wich combined with the conditions and properties of level
+      B, can make the play to follow a path impossible to represent. But no
+      matter what level the student is viewing, he is able to see what he or
+      she have already done.</para>
+    </section>
+
+    <section>
+      <title>IMS LD Player</title>
+
+      <para>The player is the part of the imsld package that present to all
+      the roles of the unit of learning the different activities in a sequence
+      ordered way based on the properties and conditions.</para>
+
+      <para>When deciding how the player should interact with the user, we
+      thought two different implementations:</para>
+
+      <orderedlist>
+        <listitem>
+          <para>Show a little portlet to the user that indicates the next
+          activity to complete, showing the corresponding link to the
+          appropriate .LRN package.</para>
+        </listitem>
+
+        <listitem>
+          <para>Render all the information in a single window, in a
+          centralized way. Something that the LORS package currently do when
+          playing an SCORM document.</para>
+        </listitem>
+      </orderedlist>
+
+      <para>After analizing each one of these approaches, we concluded that
+      rendering all the information in a single window was the better option,
+      because we think is more simple for the users (teachers and students) to
+      centralize the visualization instead of following different links, and
+      also it can give us some kind of controll of what the user is doing, and
+      we can be sure of what the user is actually seeing on his/her
+      screen.</para>
+
+      <para>Also, for example if the activity is a forum and we redirect the
+      user to this forum, the user can easily get distracted and end up
+      reading a forum that does not form part of the activity. In the other
+      hand, if we render the forum inside a centralized window, we have the
+      controll on the user's window, and by using some kind of iframe, we can
+      easily show any important message to the user and be sure (well, not
+      entirely), that he/she read it. Besides, in this centralized window we
+      can show in the bottom the activities that are completed and, when
+      possible, the ones that are yet to complete.</para>
+
+      <para>Therefore the selected option is the single window. The users
+      (students, professors, etc.) will see in the single window in a concrete
+      moment of time, some resource associated with an activity. The user will
+      have at the left hand a list of the possible activities that he/she can
+      see in a concrete moment (this depends on the design of the course). The
+      student can select between the activities presented. Also for each
+      activity it will be a description that will be shown always if the
+      current activity is selected by the user (this description will appear
+      in a little space), and also the user will be able to choice between the
+      different resources of the associated enviroment of the activity.
+      Therefore the student will select between the given resources for the
+      activity. These resources can be any of the .LRN services or learning
+      objects as files that comes for example in the IMS CP.</para>
+
+      <para>The activities presented to the different roles will change in the
+      time depending on the different properties and conditions. For example,
+      it can change depending on the evaluations of the professors, on the
+      results of the assessments, on the user models, etc. Therefore not all
+      the users will see the same information because it is personalized
+      depending on conditions. Also different paths in the workflow can be
+      defined based on roles.</para>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Use Cases</title>
+
+    <section>
+      <title>Use Cases</title>
+
+      <para>The following Use Cases describe how the ims-ld package for .LRN
+      can be applied in different situations. Some of these Use Cases have
+      been inspired for the experience in the <ulink
+      url="http://e-lane.org">E-LANE</ulink> project . The ims-ld package for
+      .LRN will have a wide range of capabilities and it could be applied to a
+      wide range of powerful pedagogies and scenarios. Here we explain
+      different Use Cases where this package can be used. The Use Cases
+      doesn't present the detailed diagram about the interactions beween the
+      different roles involved, but they can be easily deduced from the given
+      explanation.</para>
+
+      <section>
+        <title>Integration in the same execution framework of different .LRN
+        packages combined in a workflow</title>
+
+        <para>The ims-ld package will communicate with different .LRN
+        services, as part of different activities, presenting them in a
+        prescribed order. The ims-ld package allows to visualize in the same
+        window different .LRN services like assessments, calendar,
+        evaluation(gradebook), forums, FAQs, chat, etc.</para>
+
+        <para>With the ims-ld package the user only has to click the execution
+        window link, and then he/she will be able to visualize all the
+        workflow of the activities designed for him/her without having to go
+        to the concrete links.</para>
+      </section>
+
+      <section>
+        <title>Evaluation of the educational process</title>
+
+        <para>With the IMS LD package can be used to evaluate the users in the
+        unit of learning (using evaluation, for instance), but it also can
+        evaluate them using the contents and activities of the e-learning
+        process, and even tests, that the professor have designed. Therefore
+        the entire educational process is evaluated. The professor can assign
+        tests for some activities, for some contents, for some users,
+        etc.</para>
+
+        <para>As a particular example of this scenario, several contents can
+        be presented to the students grouped in different activities. The
+        activities are presented to the students in a sequencial order and
+        after each activity an assessment associated to its content has to be
+        done. These way the professor can evaluate the students for all the
+        different contents, and also evaluate the content. For example, if the
+        majority of the students fails an exam then it is a signal of a
+        content that could require modification.</para>
+
+        <para>Moreover, IMS LD allows to evaluate the process in function of
+        the obtained objectives (learning objectives). The ims-ld package
+        defines overall objectives and objectives for each activity, so an
+        analisys of the obtained objectives can be made with respect to the
+        initial requirements.</para>
+      </section>
+
+      <section>
+        <title>Content Personalization depending on different user
+        properties</title>
+
+        <para>The possibility of the ims-ld package of defining personal
+        global properties allows to define a concrete user modeling in the
+        e-learning experience (unit of learning). A user model in ims-ld
+        package can be viewed as a set of global properties for a user. The
+        idea is that a user should follow a particular path in the unit of
+        learning depending on its particular profile. The ims-ld package
+        allows to define concrete sequences along with the contents depending
+        on the user properties and also to show or hide some content inside a
+        document depending on them.</para>
+
+        <para>As a particular example, in the E-LANE project we are several
+        different partners, and some or them speak spanish, so at the E-LANE
+        project we have designed different courses in spanish. Each country
+        has its special form of the spanish language, and some words doesn't
+        mean exactly the same in all the countries, also some courses can be
+        applied in some countries but not in others. With the use of IMS LD we
+        can solve this problem, defining a property named country and
+        personalizing each content depending on the country of the user.
+        Therefore, if a word has different meanings in different countries,
+        the system will be show the appropiate word depending on the country
+        property of each user.</para>
+      </section>
+
+      <section>
+        <title>Different paths of contents for users depending on the
+        evaluation of activities or on the assessments results</title>
+
+        <para>The ims-ld package allows to define different paths along with
+        the different activities depending on the result of an evaluation of a
+        homework, task, depending on the grade of an assessment or a on
+        combination of several evaluations.</para>
+
+        <para>For example, we can define three levels of the student
+        knowlodge: low, medium and high. If a students receive a set of
+        evaluations, assessments, etc. and with the tests results the systems
+        detects that they have a low knowledge level, the system, based on the
+        unit of learning dessign, can detect it and present to the students an
+        easy exercise. Neverless, if the tests show that the student has a
+        high knowledge level, then the system presents to the student a more
+        difficult exercise. By this way we are adapting the content to the
+        necesities and knowledge of the students.</para>
+      </section>
+
+      <section>
+        <title>Give the students exactly what they don't know</title>
+
+        <para>Each unit of learning can have a set of prerequisites and a set
+        of objectives. The prerequisites can be considered as the previous
+        related knowledge necessary about a given subject and the objectives
+        can be considered as the future knowledge to aquire. The ims-ld
+        package allows to check if a particular user has the required
+        knowledges (the previous and future ones) using assessments or/and
+        evaluations. This way the system can determine the weak knowledge
+        areas of the students and show them only the knowlodges they don't
+        have. This way, for instance, if the student already knows some
+        concepts of the course, we can avoid to show them because it is a
+        waste of time for the students.</para>
+      </section>
+
+      <section>
+        <title>Repeating activities for students</title>
+
+        <para>A student can repeat the same activity if the obtained results
+        are not the desirable or expected ones. He/She can repeat all the
+        activity or only one part of the it. The repeated activity can consist
+        of assessments, forums, content, FAQ, chat, etc.</para>
+      </section>
+
+      <section>
+        <title>Give the students the capacity for selecting options</title>
+
+        <para>A user can select different options during the cycle of the unit
+        of learing, for example, checking a checkbox or fullfiling a text box,
+        and depending on this selection he/she can go trough different paths
+        along the course.</para>
+      </section>
+
+      <section>
+        <title>Problem based learning</title>
+
+        <para>The ims-ld package allows to use a common framewok for different
+        pedagogical models. One of the most beneficious techniques in order to
+        learn is the problem based learning, where a problem is given to the
+        students and evaluated by a professor.</para>
+
+        <para>For example we can apply the Polya model for problem solving.
+        This method has four phases: 1) Understanding the problem 2) Doing a
+        plan 3) Execution of the plan 4) Review and examining the
+        solution.</para>
+
+        <para>In IMS LD all of this can be described. Ther could be infinite
+        possibilities for applying this model in IMS LD. This example uses the
+        Polya model appliet to a mathematics problem: We have only one play
+        and one act for this example. The act has one learning-structure which
+        shows the different activities in an stablished order. Each phase of
+        the Polya model will have at least one associated activity.</para>
+
+        <para>1) Understanding the problem: The activity consists in reading
+        the enunciation of a problem. The problem is presented to the student
+        as a description. Also, there is a resource inside an enviroment that
+        asks the student the next questions: What are the variables? What are
+        the conditions? Is enough the conditions to determine some variables?,
+        etc. IMS LD can indicate that only when the user answer these
+        questions he/she can move on to the next step. this will be
+        interpreted in our .LRN package and only when this condition is done
+        the student will go to the next step.</para>
+
+        <para>2) Doing a plan: The activity consists of thinking an adequate
+        strategy for solving the problem. To help tje student, he/she can
+        consult an enviroment during the activity that consists of a set of
+        files that contains the theoretical concepts thay helps to understand
+        the problem. With the IMS LD specification, the professor can indicate
+        that only when the student push a specific bottom, then he/she will go
+        to the following step. The ims-ld package deal with this case
+        too.</para>
+
+        <para>3) Execution of the plan: This phase has two activities. Both of
+        them use the Evaluation(Gradebook) package. The first activity is for
+        the students, they have to do the solution of the problem and submit
+        it to the system. The second one is for the professors and it is a
+        support activity. They have to grade the submissions and also they
+        provide feedback for the students.</para>
+
+        <para>4) Reviewing and examining the solution: The student has to
+        debug his/her answer according to the feedback received by the
+        professor. The professor in the previous phase has given the
+        studentsthe solution and they should extend it to other type of
+        problems. In this phase, the students can access the course materials,
+        use the chats, forums, etc, in orther to discuss their ideas among
+        them, and finally they have to take an assessment.</para>
+      </section>
+
+      <section>
+        <title>Learning in student groups</title>
+
+        <para>The benefits of working with groups of students in order to
+        learn are well known. The ims-ld package allows this approach in
+        several ways. It allows to define different roles wich in the
+        execution time will be transformed in different groups. Each group can
+        receive a common problem to solve, being in a common forum, chat, etc.
+        Also, there can be different groups with people of different roles,
+        where each person has to do a different task in order to get the work
+        done, wich at the end is discussed by all members of the group.</para>
+      </section>
+
+      <section>
+        <title>Collaboratibe Learning</title>
+
+        <para>The ims-ld package allows to produce different ways of
+        Collaboratibe Learning. For example, it can establish that until a
+        certain group doesn't finish one set of activities, then the following
+        activity will not begin. This can be done thanks to the contitoins of
+        the different acts. It also allows the interaction between people
+        with, for example, the notifications of the Level C of IMS LD. Also,
+        for the Collaborative Learning, the chat, forums, etc. can be
+        used.</para>
+
+        <para>For example, in a learning experience, until all the members of
+        a group have not finished reading an on-line text, they cannot start a
+        discusison forum about it.</para>
+      </section>
+
+      <section>
+        <title>Learning by Games</title>
+
+        <para>As a lot of games requires a sequence of activities and
+        interaction between different roles, then some Games could be modelled
+        as IMS LD, and they could be played using the Player of the ims-ld
+        package</para>
+      </section>
+
+      <section>
+        <title>Reusing Methodologies</title>
+
+        <para>The methodology represented in an IMS LD file can be reused for
+        other purposes. For example the methodology of a successful course of
+        "Computer Architecture" could be reused in another course of
+        "Communication Software". Although the content of the courses have
+        nothing in common, the methodology can be reused in the sense of the
+        order of the activities, conditions, services that are going to use,
+        etc.</para>
+      </section>
+    </section>
+
+    <section>
+      <title>Final Comments</title>
+
+      <para>The presented use cases are only a set of examples about some
+      possible applications of the ims-ld package in .LRN, but it is not
+      restricted to this applications. There can be a use case that combines
+      some or all of the ones described above too. For example, a
+      collaboratibe learning activity, problem based and content personalized
+      e-learning experience with an evaluation of the educational process is
+      possible. Whichever other combinations are also possible.</para>
+
+      <para>We have tried to represent the more common applications but there
+      are some other applications that can be applied with the ims-ld package
+      and have not been mentioned.</para>
+
+      <para>In Summary the ims-ld package provides a wide range of
+      possibilities for both teachers and students, and many different and
+      interesting use cases have been exposed.</para>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Data Model</title>
+
+    <para>The following data model stores the relevant information that can be
+    in an IMS LD file. The tables are the ones needed to store the interesting
+    part of the information from IMS LD specification that we consider is
+    necessary in order to play the unit of learning correctly.</para>
+
+    <para>At present, the data model does not have into account the
+    interaction with the rest of the .LRN packages, because the tables needed
+    for that interaction will be defined in the development phase. Also, the
+    tables might change during the development phase, because we can find
+    better ways to structure the information, but the final data model, in our
+    opinion, will not be too different from the one presented here.</para>
+
+    <para>The complete data model is presented in an Entity-Relationship (ER)
+    diagram that is divided in three blocks, each one related to a level of
+    the IMS LD specification. The tables of the .LRN model for supporting IMS
+    LD of a level are not independent from the other levels, and the
+    relationships of the three diagrams have been represented. In the tables
+    of the E-R diagrams are presented only the primary keys and foreign keys.
+    This is in order to achieve clarity and simplicity because the diagram is
+    too big. Nevertheless, all the fields of the proposed diagram are
+    presented and explained next, divided by the three levels of IMS
+    LD.</para>
+
+    <para>Next, each table of the data model is described divided in the three
+    levels of the IMS LD specification</para>
+
+    <para>IMPORTANT NOTE: The present Data Model will be normilize in the near
+    time in order to improve its understanding.</para>
+
+    <section>
+      <title>Level A</title>
+
+      <para><itemizedlist>
+          <listitem>
+            <para>imsld_imslds: This table is used to store all the units of
+            learning. This is the high level in the hierarchy. Each IMS LD
+            file loaded in .LRN will generate an entrance in this table. This
+            table contains all the different units of learning. Each unit of
+            learning will contain global information and also references to
+            other tables for having all the required information of a unit of
+            learning</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>imsld_id - identifier</para>
+              </listitem>
+
+              <listitem>
+                <para>version - version number</para>
+              </listitem>
+
+              <listitem>
+                <para>uri - uri of the imsld</para>
+              </listitem>
+
+              <listitem>
+                <para>level - A, B or C. It is the level of the IMS LD file
+                that arrive</para>
+              </listitem>
+
+              <listitem>
+                <para>sequence_p - sequence used, true or false. True means
+                simple sequencing is being used. Defaults to false</para>
+              </listitem>
+
+              <listitem>
+                <para>learning_objective_id - references
+                imsld_learning_objectives</para>
+              </listitem>
+
+              <listitem>
+                <para>title</para>
+              </listitem>
+
+              <listitem>
+                <para>method_id - references imsld_methods</para>
+              </listitem>
+
+              <listitem>
+                <para>prerequisite_id - references imsld_itemmodel</para>
+              </listitem>
+
+              <listitem>
+                <para>component_id - references imsld_components</para>
+              </listitem>
+
+              <listitem>
+                <para>complete_unit_of_learning_id - references
+                complete_unit_of_learning</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_complete_unit_of_learning. This tables describes the
+            actions to do when a unit of learning is completed</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>complete_unit_of_learning_id</para>
+              </listitem>
+
+              <listitem>
+                <para>when_property_value_is_set_id * - references
+                imsld_when_property_value_is_set</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_prerequisites. It has all the prerequisites of a unit
+            of learning. These are the previous knolowdges that are required
+            for doing the unit of learning</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>prerequisite_id</para>
+              </listitem>
+
+              <listitem>
+                <para>prerequisite_item - references imsld_items</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_components: Used to store all the components of the
+            IMS LD</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>component_id</para>
+              </listitem>
+
+              <listitem>
+                <para>role_id - references imsld_roles</para>
+              </listitem>
+
+              <listitem>
+                <para>activity_id - references imsld_activities</para>
+              </listitem>
+
+              <listitem>
+                <para>environment_id - references imsld_environments</para>
+              </listitem>
+
+              <listitem>
+                <para>property_id * - references imsld_properties</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_roles. This table contains all the defined
+            roles</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>role_id - references imsld_roles</para>
+              </listitem>
+
+              <listitem>
+                <para>role_types - references role_types_id</para>
+              </listitem>
+
+              <listitem>
+                <para>create_new_p - multopleoccurrences of this role may be
+                created during runtime?</para>
+              </listitem>
+
+              <listitem>
+                <para>match_n_persons - exclusively-in-roles,
+                not-esclusively</para>
+              </listitem>
+
+              <listitem>
+                <para>max_persons. Maximum number of persons for this
+                role</para>
+              </listitem>
+
+              <listitem>
+                <para>min_persons. Minimum number of persons for this
+                role</para>
+              </listitem>
+
+              <listitem>
+                <para>role_name. The name of the role</para>
+              </listitem>
+
+              <listitem>
+                <para>information_id - references imsld_items</para>
+              </listitem>
+
+              <listitem>
+                <para>role_parent_id. The parent role. This allows a hierarchy
+                of roles. The root of the hierarchy are learner and stuff,
+                which has not a parent role</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_activities. This table defines the three types of
+            activities in IMS LD: learning activities, support activities and
+            structure activities. These three tables references to this
+            table</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>activity_id</para>
+              </listitem>
+
+              <listitem>
+                <para>activity_structure_id - references
+                imsld_activity_structures</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_learning_activities. This table stores all the
+            learning activities of IMS LD</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>learning_activity_id - references
+                imsld_activities</para>
+              </listitem>
+
+              <listitem>
+                <para>title</para>
+              </listitem>
+
+              <listitem>
+                <para>isvisible_p - initial visibility attribute. Initial
+                value: true</para>
+              </listitem>
+
+              <listitem>
+                <para>learning_obective_id - references
+                imsld_learning_objectives</para>
+              </listitem>
+
+              <listitem>
+                <para>prerequisite_id - refereces imsld_itemmodel</para>
+              </listitem>
+
+              <listitem>
+                <para>parameter_id - references imsld_parameters</para>
+              </listitem>
+
+              <listitem>
+                <para>activity_description_id - references imsld_items</para>
+              </listitem>
+
+              <listitem>
+                <para>complete_activity_id - references
+                complete_activities</para>
+              </listitem>
+
+              <listitem>
+                <para>on_completion_id * - references
+                imsld_on_completions</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_complete_activities. This is a table where for each
+            entry is specified when an activity is considered completed</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>complete_activity_id</para>
+              </listitem>
+
+              <listitem>
+                <para>user_choice - the user specifies that this activity is
+                completed</para>
+              </listitem>
+
+              <listitem>
+                <para>time_limit - references imsld_time_limits. The activity
+                is completed when the time is completed</para>
+              </listitem>
+
+              <listitem>
+                <para>when_property_value_is_set_id * - references
+                imsld_when_property_value_is_set</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_learning_activity_environments_map This table maps
+            learning activities with enviroments</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>learning_activity_id - references
+                imsld_learning_activities</para>
+              </listitem>
+
+              <listitem>
+                <para>environment_id - references imsld_environments</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_support_activities. This table stores all the support
+            activities of IMS LD</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>support_activity_id - references imsld_activities</para>
+              </listitem>
+
+              <listitem>
+                <para>component_id - references imsld_components</para>
+              </listitem>
+
+              <listitem>
+                <para>isvisible_p - initial visibility attribute. Initial
+                value: true</para>
+              </listitem>
+
+              <listitem>
+                <para>title. The name of the support activity</para>
+              </listitem>
+
+              <listitem>
+                <para>activity_description_id - references imsld_items</para>
+              </listitem>
+
+              <listitem>
+                <para>complete_activity_id - references
+                imsld_complete_activities</para>
+              </listitem>
+
+              <listitem>
+                <para>on_completion_id - references
+                imsld_on_completions</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_support_activity_roles_map. This table maps a support
+            role to an activity</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>support_activity_id - references
+                imsld_support_activities</para>
+              </listitem>
+
+              <listitem>
+                <para>role_id - references imsld_roles</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_support_activity_environments_map. This table maps
+            support activities with enviroments</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>support_activity_id - references
+                imsld_support_activities</para>
+              </listitem>
+
+              <listitem>
+                <para>environment_id - references imsld_environments</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_activity_structures. This table contains all the
+            activity structures of IMS LD. Each entry is one activity
+            structure.</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>activity_structure_id - references
+                imsld_activities</para>
+              </listitem>
+
+              <listitem>
+                <para>number_to_select - if not null, the activity structure
+                is completed when the number of activities completed equals
+                the number set</para>
+              </listitem>
+
+              <listitem>
+                <para>sort - possible values: as-is, visibility-order</para>
+              </listitem>
+
+              <listitem>
+                <para>structure_type - sequence or selection</para>
+              </listitem>
+
+              <listitem>
+                <para>title. The name of the activity structure</para>
+              </listitem>
+
+              <listitem>
+                <para>information_id - references imsld_items</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_activity_structure_choices</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>choice_id</para>
+              </listitem>
+
+              <listitem>
+                <para>learning_activity_id - references
+                imsld_learning_activities</para>
+              </listitem>
+
+              <listitem>
+                <para>support_activity_id - references
+                imsld_support_atcivities</para>
+              </listitem>
+
+              <listitem>
+                <para>unit_of_learning_id - references imsld_imslds</para>
+              </listitem>
+
+              <listitem>
+                <para>activity_structure_id - references
+                imsld_activity_structures</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_activity_structure_choices_map</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>activity_structure_id - references
+                imsld_activity_structures</para>
+              </listitem>
+
+              <listitem>
+                <para>choice_id - references
+                imsld_activity_structure_choices</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_activity_structure_environments_map</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>activity_structure_id - references
+                imsld_activity_structures</para>
+              </listitem>
+
+              <listitem>
+                <para>environment_id - references imsld_environments</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_environments</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>environment_id</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_enviromnent_instances</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>enviroment_id - references imsld_environments</para>
+              </listitem>
+
+              <listitem>
+                <para>environmen_instance_id</para>
+              </listitem>
+
+              <listitem>
+                <para>title</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_environment_instance_choices</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>choice_id</para>
+              </listitem>
+
+              <listitem>
+                <para>learning_object_id - references
+                imsld_learning_objects</para>
+              </listitem>
+
+              <listitem>
+                <para>service_id - references imsld_services</para>
+              </listitem>
+
+              <listitem>
+                <para>environment_id - references imsld_environments</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_environment_instances_environment_instance_choices_map</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>choice_id - references
+                imsld_environment_instance_choices</para>
+              </listitem>
+
+              <listitem>
+                <para>environment_instance_id - references
+                imsld_enviromnent_instances</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_learning_objects</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>learning_object_id</para>
+              </listitem>
+
+              <listitem>
+                <para>class</para>
+              </listitem>
+
+              <listitem>
+                <para>isvisible_p - the user decides when the activity is
+                completed?</para>
+              </listitem>
+
+              <listitem>
+                <para>parameter_id - references imsld_parameters</para>
+              </listitem>
+
+              <listitem>
+                <para>type - knowledge-object, tool-object, test-object, etc.
+                (learning resource type from the IEEE LTSC LOM)</para>
+              </listitem>
+
+              <listitem>
+                <para>item_sequence_id - references
+                ims_leanring_object_item_sequences</para>
+              </listitem>
+
+              <listitem>
+                <para>schema_sequence_id - references
+                ims_learning_object_schema_sequences</para>
+              </listitem>
+
+              <listitem>
+                <para>item_id - references imsld_items</para>
+              </listitem>
+
+              <listitem>
+                <para>environment_id - references imsld_environments</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_learning_object_item_sequences: First sequence of the
+            learning objects</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>sequence_id</para>
+              </listitem>
+
+              <listitem>
+                <para>title</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>ims_learning_object_schema_sequences: Second sequence of the
+            learning objects</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>sequence_id</para>
+              </listitem>
+
+              <listitem>
+                <para>schema</para>
+              </listitem>
+
+              <listitem>
+                <para>schemaversion</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_learning_object_item_sequence_items_map</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>sequence_id - references
+                imsld_learning_object_item_sequences</para>
+              </listitem>
+
+              <listitem>
+                <para>item_id - references imsld_items</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_parameters: Table for holding the parameter values.
+            This table will possible dissapear, depending if in the
+            development phase there is the need of storing more information
+            about the parameters</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>parameter_id</para>
+              </listitem>
+
+              <listitem>
+                <para>parameter_value</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_services. It contains all the services</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>service_id</para>
+              </listitem>
+
+              <listitem>
+                <para>class</para>
+              </listitem>
+
+              <listitem>
+                <para>identifier</para>
+              </listitem>
+
+              <listitem>
+                <para>isvisible_p</para>
+              </listitem>
+
+              <listitem>
+                <para>parameter_id</para>
+              </listitem>
+
+              <listitem>
+                <para>email_service - (send_mail) references
+                imsld_email_services</para>
+              </listitem>
+
+              <listitem>
+                <para>conference_service_id - references
+                imsld_conference_services</para>
+              </listitem>
+
+              <listitem>
+                <para>index_search_id - refernces
+                imsld_index_search_services</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_email_services. It describes all the email
+            services</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>email_id - references imsld_services</para>
+              </listitem>
+
+              <listitem>
+                <para>select - all-persons-in-role, persons-in-role</para>
+              </listitem>
+
+              <listitem>
+                <para>title</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_email_data</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>email_data_id</para>
+              </listitem>
+
+              <listitem>
+                <para>role_id - references imsld_roles</para>
+              </listitem>
+
+              <listitem>
+                <para>email_property_id - references imsld_properties *</para>
+              </listitem>
+
+              <listitem>
+                <para>username_property_id - references imsld_properties
+                *</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_email_service_email_data_map</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>email_id - references imsld_email_services</para>
+              </listitem>
+
+              <listitem>
+                <para>email_data_id - references imsld_email_data</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_conference_services</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>conference_id</para>
+              </listitem>
+
+              <listitem>
+                <para>conference_type - synchronous, asynchronos or
+                announcement</para>
+              </listitem>
+
+              <listitem>
+                <para>title</para>
+              </listitem>
+
+              <listitem>
+                <para>conference_manager_id - references imsld_roles</para>
+              </listitem>
+
+              <listitem>
+                <para>moderator_id - references imsld_roles</para>
+              </listitem>
+
+              <listitem>
+                <para>item_id - references imsld_items</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_conference_participants_or_observers_map</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>conference_id - references
+                imsld_conference_services</para>
+              </listitem>
+
+              <listitem>
+                <para>role_id - references imsld_roles</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_index_search_services</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>search_service_id</para>
+              </listitem>
+
+              <listitem>
+                <para>title</para>
+              </listitem>
+
+              <listitem>
+                <para>index_class - this element selects the clss to make the
+                index on</para>
+              </listitem>
+
+              <listitem>
+                <para>index_element - this element selects the element to make
+                the index on</para>
+              </listitem>
+
+              <listitem>
+                <para>index_type_of_element - type of element to index
+                on</para>
+              </listitem>
+
+              <listitem>
+                <para>search - how a user can access the indexed
+                entities</para>
+              </listitem>
+
+              <listitem>
+                <para>search_type - type of search facility that is expected
+                at runtime: free-text-search, index-with-reference,
+                index-without-reference</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_learning_objectives. This table contains all the
+            different objectives of the different unit of learning and
+            activities. Each entry of this table is a set of objectives. A set
+            of objectives is symbolized by an itemmodel_id</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>learning_objective_id</para>
+              </listitem>
+
+              <listitem>
+                <para>itemmodel_id - references imsld_itemmodels</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_methods</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>method_id</para>
+              </listitem>
+
+              <listitem>
+                <para>time_limit_id - references imsld_time_limits. If not
+                null, the mehod is completed when this time has been
+                completed, otherwise, the method is completed when all the
+                plays mapped to this method through the
+                imsld_plays_to_complete_method are completed</para>
+              </listitem>
+
+              <listitem>
+                <para>on_completion_id - references
+                imsld_on_completions</para>
+              </listitem>
+
+              <listitem>
+                <para>condition_id * - references imsld_conditions</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_plays_to_complete_method. It contains all the plays
+            that has a method. Each play can be selected in parallel by an
+            user during the delivering of a unit of learning</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>method_id</para>
+              </listitem>
+
+              <listitem>
+                <para>play_id</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_plays</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>play_id</para>
+              </listitem>
+
+              <listitem>
+                <para>isvisible_p - the user decides when the activity is
+                completed?</para>
+              </listitem>
+
+              <listitem>
+                <para>title</para>
+              </listitem>
+
+              <listitem>
+                <para>complete_play_id - references imsld_complete_play</para>
+              </listitem>
+
+              <listitem>
+                <para>on_completion_id - references
+                imsld_on_completions</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_complete_play</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>complete_play_id</para>
+              </listitem>
+
+              <listitem>
+                <para>when_last_act_completed - references imsld_acts. The
+                play is completed when this act is completed</para>
+              </listitem>
+
+              <listitem>
+                <para>time_limit_id - references imsld_time_limits. The play
+                is completed when this time is completed</para>
+              </listitem>
+
+              <listitem>
+                <para>when_property_value_is_set_id * - references
+                imsld_when_property_value_is_set</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_method_plays_map</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>method_id - references imsld_methods</para>
+              </listitem>
+
+              <listitem>
+                <para>play_id - references imsld_plays</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_play_acts_map</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>play_id - references imsld_plays</para>
+              </listitem>
+
+              <listitem>
+                <para>act_id - references imsld_acts</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_acts</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>act_id</para>
+              </listitem>
+
+              <listitem>
+                <para>title</para>
+              </listitem>
+
+              <listitem>
+                <para>complete_act_id - refrences imsld_complete_acts</para>
+              </listitem>
+
+              <listitem>
+                <para>on_completion_id - references on_completion</para>
+              </listitem>
+
+              <listitem>
+                <para>when_condition_true * - references
+                imsld_when_condition_true</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_complete_acts</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>complete_act_id</para>
+              </listitem>
+
+              <listitem>
+                <para>time_limit_id - references imsld_complete_acts. When not
+                null, the act is completed when this time has been completed,
+                otherwise, the act is completed until all role parts mapped to
+                this complete_act_id trhoug the imsld_act_role_parts are
+                completed</para>
+              </listitem>
+
+              <listitem>
+                <para>when_property_value_is_set_id * - references
+                imsld_when_property_value_is_set</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_act_role_parts</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>complete_act_id - references imsld_acts</para>
+              </listitem>
+
+              <listitem>
+                <para>role_part_id - references imsld_part_id</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_act_role_parts_map</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>role_part_id - references imsld_role_parts</para>
+              </listitem>
+
+              <listitem>
+                <para>act_id - references imsld_acts</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_role_part_choices</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>choice_id</para>
+              </listitem>
+
+              <listitem>
+                <para>learning_activity_id - references
+                imsld_learning_activities</para>
+              </listitem>
+
+              <listitem>
+                <para>support_activity_id - references
+                imsld_support_activities</para>
+              </listitem>
+
+              <listitem>
+                <para>unit_of_learning_id - references imsld_imslds</para>
+              </listitem>
+
+              <listitem>
+                <para>activity_structure_id - references
+                imsld_activity_strutcures</para>
+              </listitem>
+
+              <listitem>
+                <para>environment_id - references imsld_environments</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_role_parts - mapping table between acts and
+            roles</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>role_part_id</para>
+              </listitem>
+
+              <listitem>
+                <para>title</para>
+              </listitem>
+
+              <listitem>
+                <para>role_id - references imsld_roles</para>
+              </listitem>
+
+              <listitem>
+                <para>choice_id - references imsld_role_part_choices</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_on_completion</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>on_completion_id</para>
+              </listitem>
+
+              <listitem>
+                <para>feedback_description_id - references
+                imsld_itemmodels</para>
+              </listitem>
+
+              <listitem>
+                <para>change_property_value_id * - references
+                imsld_change_property_value</para>
+              </listitem>
+
+              <listitem>
+                <para>notification_id - references imsld_notifications
+                **</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_itemmodels. This is a table that contains a text and
+            an id. In conjuction with the tables imsld_itemmodel and
+            imsld_itemmodel_items_map allow to associate several items to the
+            same itemmodel.</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>title</para>
+              </listitem>
+
+              <listitem>
+                <para>itemmodel_id</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_itemmodel_items_map</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>item_id - references imsld_items</para>
+              </listitem>
+
+              <listitem>
+                <para>itemmodel_id - references imsld_itemmodels</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_items. Items are used for multiple purporses in other
+            tables. For example it can describe objectives, prerequisites,
+            references to files, etc.</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>item_id</para>
+              </listitem>
+
+              <listitem>
+                <para>identifier. Unique identifier for the IMS LD</para>
+              </listitem>
+
+              <listitem>
+                <para>identifierref. It references the IMS CP</para>
+              </listitem>
+
+              <listitem>
+                <para>isvisible_p.</para>
+              </listitem>
+
+              <listitem>
+                <para>parameter_id</para>
+              </listitem>
+
+              <listitem>
+                <para>title: A text that can represent a prerrequisite, an
+                objective, the name of a file, etc.</para>
+              </listitem>
+
+              <listitem>
+                <para>parent_item - references imsld_items. An item can
+                reference to another item, wich is a sub-item or child of the
+                one referencing it.</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+
+          <listitem>
+            <para>imsld_time_limits</para>
+
+            <itemizedlist>
+              <listitem>
+                <para>time_limit_id</para>
+              </listitem>
+
+              <listitem>
+                <para>time_limit - amount of time in a specific format</para>
+              </listitem>
+
+              <listitem>
+                <para>property_id * - references imsld_properties</para>
+              </listitem>
+            </itemizedlist>
+          </listitem>
+        </itemizedlist>Next, the tables necessary for Level A are draw in the
+      form of an E-R diagram</para>
+
+      <para><ulink url="resources/imsld_diagram_A.GIF"><inlinemediaobject>
+          <imageobject>
+            <imagedata fileref="resources/imsld_diagram_A.GIF" />
+          </imageobject>
+        </inlinemediaobject></ulink></para>
+    </section>
+
+    <section>
+      <title>Level B</title>
+
+      <para>Level B extends the table email_data and add: username_property_id
+      and email_property_id * Next is shown the E-R diagram for these
+      tables</para>
+
+      <para><ulink url="resources/imsld_diagram_B.GIF"><inlinemediaobject>
+          <imageobject>
+            <imagedata fileref="resources/imsld_diagram_B.GIF" />
+          </imageobject>
+        </inlinemediaobject></ulink></para>
+
+      <itemizedlist>
+        <listitem>
+          <para>imsld_properties (add a reference to properties from
+          imsld_components and time_limits *)</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>property_id</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_loc_locpers_locrole_properties: Combined table for the
+          loc, locpers and locrole properties</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>property_id - references imsld_properties</para>
+            </listitem>
+
+            <listitem>
+              <para>title. The name of the property</para>
+            </listitem>
+
+            <listitem>
+              <para>datatype - references imsld_datatypes</para>
+            </listitem>
+
+            <listitem>
+              <para>initial_value</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_globpers_glob_property: Combined table for the glob and
+          globpers properties</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>property_id - references imsld_properties</para>
+            </listitem>
+
+            <listitem>
+              <para>global_definition_id - references
+              imsld_global_definitions</para>
+            </listitem>
+
+            <listitem>
+              <para>existing</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_global_definitions</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>property_id - references imsld_properties</para>
+            </listitem>
+
+            <listitem>
+              <para>uri</para>
+            </listitem>
+
+            <listitem>
+              <para>title</para>
+            </listitem>
+
+            <listitem>
+              <para>global_definition</para>
+            </listitem>
+
+            <listitem>
+              <para>datatype_id</para>
+            </listitem>
+
+            <listitem>
+              <para>initial_value</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_property_groups</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>property_group_id</para>
+            </listitem>
+
+            <listitem>
+              <para>property_id - references imsld_properties</para>
+            </listitem>
+
+            <listitem>
+              <para>title</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_group_property_coices</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>choice_id</para>
+            </listitem>
+
+            <listitem>
+              <para>property_id - references imsld_properties</para>
+            </listitem>
+
+            <listitem>
+              <para>proerty_group_id - references imsld_property_groups</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_restrictions</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>restriction_id</para>
+            </listitem>
+
+            <listitem>
+              <para>restriction_type - minExclusive, minInclusive,
+              maxExclusive, maxInclusive, totalDigits, fractionDigits, length,
+              minLength, maxLength, enumeration, whiteSpace, pattern</para>
+            </listitem>
+
+            <listitem>
+              <para>restriction</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_property_restrictions_map</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>restriction_id - references imsld_restrictions</para>
+            </listitem>
+
+            <listitem>
+              <para>property_id - references imsld_properties</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_datatypes</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>datatype_id</para>
+            </listitem>
+
+            <listitem>
+              <para>datatype - string, boolean, integer, uri, datetime, file,
+              real, tet, duration, other</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_when_property_value_is_set (add a reference to this
+          table from the tables: complete_activities, complete_act,
+          complete_play and complete_unit_of_learning *)</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>when_property_value_is_set_id</para>
+            </listitem>
+
+            <listitem>
+              <para>property_id - references imsld_properties</para>
+            </listitem>
+
+            <listitem>
+              <para>property_value_id - references property_values</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_property_values</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>property_value_id</para>
+            </listitem>
+
+            <listitem>
+              <para>langstirng</para>
+            </listitem>
+
+            <listitem>
+              <para>calculate_id - references imsld_calculates</para>
+            </listitem>
+
+            <listitem>
+              <para>property_id - references imsld_properties</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_change_property_values: A reference to this table must
+          be added from the imsld_on_completion table in level A</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>change_property_value_id</para>
+            </listitem>
+
+            <listitem>
+              <para>property_id - references imsld_properties</para>
+            </listitem>
+
+            <listitem>
+              <para>property_vaue_id - references property_values</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_monitors</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>monitor_id</para>
+            </listitem>
+
+            <listitem>
+              <para>serivce_id - references imsld_services</para>
+            </listitem>
+
+            <listitem>
+              <para>monitor_choice_id - references
+              imsld_monitor_choices</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_monitor_choices</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>choice_id</para>
+            </listitem>
+
+            <listitem>
+              <para>role_id - references imsld_roles</para>
+            </listitem>
+
+            <listitem>
+              <para>self - references imsld_roles</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_conditions: A reference to this table must be added fom
+          the table imsld_methods in level A</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>condition_id</para>
+            </listitem>
+
+            <listitem>
+              <para>title</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_sequences</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>sequence_id</para>
+            </listitem>
+
+            <listitem>
+              <para>condition_id - references imsld_conditions</para>
+            </listitem>
+
+            <listitem>
+              <para>sequence_sort - to know how to evaluate the
+              condition</para>
+            </listitem>
+
+            <listitem>
+              <para>if_id - references imsld_ifs</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_then_model</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>then_model_id</para>
+            </listitem>
+
+            <listitem>
+              <para>show_id - references imsld_show_hide</para>
+            </listitem>
+
+            <listitem>
+              <para>hide_id - references imsld_show_hide</para>
+            </listitem>
+
+            <listitem>
+              <para>change_property_value</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_ifs</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>if_id</para>
+            </listitem>
+
+            <listitem>
+              <para>expression_id - references imsld_expressions</para>
+            </listitem>
+
+            <listitem>
+              <para>true_thenmodel_id - 'then', evaluated if the expression is
+              true. References imsld_then_model</para>
+            </listitem>
+
+            <listitem>
+              <para>false_thenmodel_id - 'else', evaluated if the expresison
+              is false. References imsld_then_model</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_expressions - table holding the expressions. Instead of
+          makin a table for each type of expression, we store the
+          expression_type and according to that value we know what other
+          attributes in the table have to be stored in order to use
+          them</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>expression_id</para>
+            </listitem>
+
+            <listitem>
+              <para>expression_type - is-member-of-role, is, is-not, and, or,
+              sum, substract, multiply, divide, greater-than, less-than,
+              users-in-role, no-vaue, time-unit-of-learning-started,
+              datetime-activity-started, current-datetime, complete,
+              not</para>
+            </listitem>
+
+            <listitem>
+              <para>expression_id - references imsld_expressions</para>
+            </listitem>
+
+            <listitem>
+              <para>calculate_id - references imsld_calculates</para>
+            </listitem>
+
+            <listitem>
+              <para>expression_one_id - references imsld_expressions</para>
+            </listitem>
+
+            <listitem>
+              <para>expression_two_id - references imsld_expressions</para>
+            </listitem>
+
+            <listitem>
+              <para>role_id - references imsld_roles</para>
+            </listitem>
+
+            <listitem>
+              <para>property_id - references imsld_properties</para>
+            </listitem>
+
+            <listitem>
+              <para>time_unit_of_learning_started</para>
+            </listitem>
+
+            <listitem>
+              <para>datetime_activity_started</para>
+            </listitem>
+
+            <listitem>
+              <para>current_datetime</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_calculates</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>calculate_id</para>
+            </listitem>
+
+            <listitem>
+              <para>right_operand - references imsld_operands</para>
+            </listitem>
+
+            <listitem>
+              <para>left_operand - references imsld_operands</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_operands</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>operand_id</para>
+            </listitem>
+
+            <listitem>
+              <para>property_id - references imsld_properties</para>
+            </listitem>
+
+            <listitem>
+              <para>property_value - references imsld_property_values</para>
+            </listitem>
+
+            <listitem>
+              <para>expression_id - refernces imsld_expressions</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_when_condition_true (add a reference from the
+          imsld_complete_acts table *)</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>when_condition_true_id</para>
+            </listitem>
+
+            <listitem>
+              <para>role_id - references imsld_roles</para>
+            </listitem>
+
+            <listitem>
+              <para>expression_id - references imsld_expressions</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_show_hide</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>show_hide_id</para>
+            </listitem>
+
+            <listitem>
+              <para>class</para>
+            </listitem>
+
+            <listitem>
+              <para>item_id - references imsld_items</para>
+            </listitem>
+
+            <listitem>
+              <para>environment_id - references imsld_environments</para>
+            </listitem>
+
+            <listitem>
+              <para>learning_activity_id - references
+              imsld_learning_activities</para>
+            </listitem>
+
+            <listitem>
+              <para>support_activity_id - references
+              imsld_support_atctivities</para>
+            </listitem>
+
+            <listitem>
+              <para>activity_structure_id - references
+              imsld_activity_structures</para>
+            </listitem>
+
+            <listitem>
+              <para>play_id - references imsld_plays</para>
+            </listitem>
+
+            <listitem>
+              <para>unit_of_learning_id - references imsld_imslds</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_global_elements</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>global_element_id</para>
+            </listitem>
+
+            <listitem>
+              <para>view_set_property_id - references
+              view_set_properties</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_view_set_properties</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>view_set_property_id</para>
+            </listitem>
+
+            <listitem>
+              <para>type - view-property, view-property-group, set-property,
+              set-property-group</para>
+            </listitem>
+
+            <listitem>
+              <para>href</para>
+            </listitem>
+
+            <listitem>
+              <para>property_of - self or supporter-person</para>
+            </listitem>
+
+            <listitem>
+              <para>ref</para>
+            </listitem>
+
+            <listitem>
+              <para>view - value or title-value</para>
+            </listitem>
+
+            <listitem>
+              <para>max_transactions</para>
+            </listitem>
+
+            <listitem>
+              <para>transaction_type</para>
+            </listitem>
+
+            <listitem>
+              <para>notification_id - references imsld_notifications **</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>Level C</title>
+
+      <para>Level C modity the imsld_email_data (**), add a reference to
+      imsld_notifications table from imsld_on_completion, imsld_thens and
+      imsld_view_set_properties table (**). Next is shown the E-R diagram that
+      adds Level C</para>
+
+      <para><ulink url="resources/imsld_diagram_C.GIF"><inlinemediaobject>
+          <imageobject>
+            <imagedata fileref="resources/imsld_diagram_C.GIF" />
+          </imageobject>
+        </inlinemediaobject></ulink></para>
+
+      <itemizedlist>
+        <listitem>
+          <para>imsld_notifications</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>notification_id</para>
+            </listitem>
+
+            <listitem>
+              <para>choice_id - references imsld_notifications_choice</para>
+            </listitem>
+
+            <listitem>
+              <para>subject</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_notification_emails_data_map</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>notification_id - references imsld_notifications</para>
+            </listitem>
+
+            <listitem>
+              <para>email_data_id - references imsld_email_data</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_notifications_choice</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>choice_id</para>
+            </listitem>
+
+            <listitem>
+              <para>learning_activity_id - references
+              imsld_learning_activities</para>
+            </listitem>
+
+            <listitem>
+              <para>support_activity_id - references
+              imsld_support_activities</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </itemizedlist>
+    </section>
+
+    <section>
+      <title>Run Tables</title>
+
+      <para>The previous tables are referred to the IMS LD specifications
+      level A, B and C. They have all the information necessary to map an XML
+      conformant IMS LD document to the tables in the .LRN platform. But also,
+      for the ims-ld package to interact with real users, we need additional
+      tables. These new tables are necessary for the execution of the player
+      where the information is sequenced to the student. These tables are
+      described in this Section. Next is shown the E-R diagram for these
+      tables</para>
+
+      <para><ulink
+      url="resources/imsld_diagram_run_tables.GIF"><inlinemediaobject>
+          <imageobject>
+            <imagedata fileref="resources/imsld_diagram_run_tables.GIF" />
+          </imageobject>
+        </inlinemediaobject></ulink></para>
+
+      <itemizedlist>
+        <listitem>
+          <para>imsld_party_roles_map. This table maps parties of a .LRN
+          course to the roles defined in the IMS LD document. A party can be
+          either a user or a group. One party can belong to several
+          roles.</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>party_id references parties</para>
+            </listitem>
+
+            <listitem>
+              <para>role_id references imsld_roles</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_parties_property_values_map. This table maps parties of
+          a .LRN course to the properties defined in the IMS LD document. One
+          party can have several property values to establish. The properties
+          can be local or global.</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>party_id references parties</para>
+            </listitem>
+
+            <listitem>
+              <para>property_id references imsld_properties</para>
+            </listitem>
+
+            <listitem>
+              <para>property_value. This is the value of the property for the
+              party in a current moment. The value can change during the
+              delivering of the unit of learning</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_roles_property_values_map. This table maps roles of the
+          IMS LD document to the properties of the IMS LD document. One role
+          can have several property values to establish. The properties can
+          only be local.</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>roles_id references imsld_roles</para>
+            </listitem>
+
+            <listitem>
+              <para>property_id references imsld_properties</para>
+            </listitem>
+
+            <listitem>
+              <para>property_value. This is the value of the property for the
+              role in a current moment. The value can change during the
+              delivering of the unit of learning</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_property_values. This table stores the values of the
+          properties that are common for all the users of the the IMS LD
+          document. There can be several property values to establish. The
+          properties can be local or global.</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>property_id references imsld_properties</para>
+            </listitem>
+          </itemizedlist>
+
+          <itemizedlist>
+            <listitem>
+              <para>property_value. This is the value of the property for the
+              role in a current moment. The value can change during the
+              delivering of the unit of learninging</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para>imsld_parties_activities_audit. This table stores all the .LRN
+          parties information about the IMS LD delivering that is of interest.
+          related to activities At present we have defined only a little
+          information, but in the future this information may be expanded.
+          Each entry of the table has an activity that has been realized by a
+          party.</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>party_id references parties</para>
+            </listitem>
+
+            <listitem>
+              <para>activity_id references imsld_activity</para>
+            </listitem>
+
+            <listitem>
+              <para>delivering_order. It represents the order of visualization
+              of the activity in the sequence of activities</para>
+            </listitem>
+
+            <listitem>
+              <para>selected_p. It is true if the party select by himself the
+              activity. It is false if the activity was sequenced to the
+              party</para>
+            </listitem>
+
+            <listitem>
+              <para>start_time. The start time of the activity</para>
+            </listitem>
+
+            <listitem>
+              <para>end_time. The end time of the activity</para>
+            </listitem>
+
+            <listitem>
+              <para>done_p. It is true if the activity is complete</para>
+            </listitem>
+
+            <listitem>
+              <para>act_id references ismld_parties_acts_audit</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </itemizedlist>
+
+      <itemizedlist>
+        <listitem>
+          <para>imsld_parties_acts_audit. This table stores all the .LRN
+          parties information about the IMS LD delivering that is of interest
+          related to acts. At present we have defined only a little
+          information, but in the future this information may be expanded.
+          Each entry of the table has an act that has been realized by a
+          party.</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>party_id references parties</para>
+            </listitem>
+          </itemizedlist>
+
+          <itemizedlist>
+            <listitem>
+              <para>act_id references imsld_acts</para>
+            </listitem>
+          </itemizedlist>
+
+          <itemizedlist>
+            <listitem>
+              <para>start_time. The start time of the act</para>
+            </listitem>
+          </itemizedlist>
+
+          <itemizedlist>
+            <listitem>
+              <para>end_time. The end time of the activity</para>
+            </listitem>
+
+            <listitem>
+              <para>done_p. It is true if the act is complete</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_parties_plays_audit. This table stores all the .LRN
+          parties information about the IMS LD delivering that is of interest
+          related to plays. At present we have defined only a little
+          information, but in the future this information may be expanded.
+          Each entry of the table has an act that has been realized by a
+          party.</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>party_id references parties</para>
+            </listitem>
+          </itemizedlist>
+
+          <itemizedlist>
+            <listitem>
+              <para>play_id references imsld_plays</para>
+            </listitem>
+          </itemizedlist>
+
+          <itemizedlist>
+            <listitem>
+              <para>start_time.The start time of the act</para>
+            </listitem>
+          </itemizedlist>
+
+          <itemizedlist>
+            <listitem>
+              <para>end_time. The end time of the activity</para>
+            </listitem>
+
+            <listitem>
+              <para>done_p. It is true if the act is complete</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </itemizedlist>
+    </section>
+  </chapter>
+
+  <chapter>
+    <title>Architectural Model</title>
+
+    <para>Here we give an explanation of the way the inner components of the
+    imsld package interact internally between them and externally with some
+    other packages of .LRN Next, a figure about the general architecture about
+    IMS LD and the ims-ld package is shown.</para>
+
+    <para><ulink url="resources/behavioral_model.GIF"><inlinemediaobject>
+        <imageobject>
+          <imagedata fileref="resources/behavioral_model.GIF" />
+        </imageobject>
+      </inlinemediaobject></ulink></para>
+
+    <para>We have two methods for loading the information into the ims-ld
+    package. One is by means of an internal .LRN editor (as we said this is
+    not planned for the short term). The other method is loading an IMS LD
+    compliant XML file, as we said before, it can be generated using an
+    authoring tool wich is not part of .LRN, at least not when writing this
+    specification. The file is requested to the user by the UI of the parser.
+    This UI will conist of a small number of pages with a form where the user
+    can upload the file and with some others with error or log messages
+    displayed to the user via web. In this step, the imsld package will also
+    validate the IMS LD file for proving conformance with the IMS LD standard.
+    It indicates when the parser didn't parse the whole file correctly and it
+    needs human help in order to finish its job. So, the first component of
+    the imsld package that interacts with the database is the parser, using
+    the tcl and sql API.</para>
+
+    <para>At the lowest level we have the information stored in the data base.
+    The information that have been loaded from an IMS LD file is parsed and
+    stored in the database in the tables related to the level A, B and C that
+    have been shown in the previous Data Model Section. With this mapping we
+    will have all the information contained from the IMS LD package in the
+    .LRN</para>
+
+    <para>Once all the information of the IMS LD compliant XML file is stored
+    in the database, the course is ready to be played. As we mentioned above,
+    the player has two modes for the professor, on-line and off-line. The
+    first one is the off-line mode, because the course has not being played or
+    instanced yet. In the off-line mode the teacher should associate the
+    students and course admins to their respective roles in the unit of
+    learning. In this step are fullfilled the tables imsld_party_roles_map and
+    imsld_parties_property_values_map. Also the rest of the tables of the run
+    tables are initialized for each user at this time. All the information
+    that is stored in this Run Tables is not contained in the IMS LD file,
+    this information is particular for each run. At this step the information
+    is particularized for the users of the unit of learning.</para>
+
+    <para>Be aware that a professor can have the student role in the unit of
+    learning or vice versa, that is the professor's choice. The roles of the
+    unit of learning are stored in the database, but the mappings between the
+    real users with their respectives roles is the professor's task. When
+    doing these mappings, the respective conditions recently obtained from the
+    XML file start to be verified. For instance, there is a
+    max-number-of-persons tag for a role, so the professor can't assign more
+    than n users to that role. There is also a match-person tag, that implies
+    that the person with that role can't have any other role inside the unit
+    of leaning while being assigned to the first role. In this off-line mode,
+    the professor can take a general perspective of the unit of learning.
+    He/she can take a look at all the activities that will be done by the
+    students, as well as the conditions and every information that is
+    important to be shown.</para>
+
+    <para>Once the real users are mapped to the roles, the unit of learning
+    can be instantiated. This will start the on-line mode of the
+    viewer.</para>
+
+    <para>For the professor, the on-line mode of the viewer lets him/her to
+    see the status of the course(unit of learning). As mentioned in the user
+    requirements chapter, this mode of the viewer lets the professor to do any
+    tracking activity of the students. Such as seeing how many students are in
+    what act of the play, what user-choice activities are being accessed and
+    what aren't, etc. By the time when writing this specification, the
+    professor can't modify anything from the viewer, it is read only
+    information. At the time of run of the unit of learning the Run Tables are
+    refreshed with new completed activities, acts and plays of each
+    user.</para>
+
+    <para>For the student, the on-line mode of the viewer is very similar to
+    the one for the professor, with the main difference that with the student
+    can only see his/her own information, whereas the professor can see the
+    information of all the class students. From the viewer the students can
+    see what activities have already completed, as well as how much time
+    between activities they took, and how much time they spent in each
+    activity. In some designs (of the IMS LD compliant XML file), the student
+    can see the rest of activities that he/she has to complete in order to
+    finish the unit of learning. This is not true in every case, because, for
+    instance, when creating the unit of learning, the professor can set the
+    is-visible tag to false for every activity in the unit of learning, not
+    allowing the students to see any more than what they have already
+    done.</para>
+
+    <para>Everything is ready now for the most important component of the
+    imsld package: The Player. Of course, the viewer will be allways
+    accessible to the class members, so they can interact with the player and
+    then with the viewer, any time they want and in any sequence.</para>
+
+    <para>The player, from the visualization point of view, is nothing more
+    tan a cetralized page. This centralized page has some menus and message
+    sections at the sides and at the bottom, with instructions and
+    descriptions that the student has to read. The professor can be part of
+    the unit of learning being played too, the only thing he/she has to do is
+    assign him/herself to a role of the unit of learning.</para>
+
+    <para>The player is the component that is in charge of verifying the
+    poperties and conditions that were specified in the XML file. It will
+    detect wichever change in the properties, check the completion of
+    activities, acts, etc. and evaluate the conditions. In particular the
+    properties that at least the ims-ld package is going to support
+    are:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>Global user properties. These type of properties are as the
+        nationality, user model, etc.</para>
+      </listitem>
+
+      <listitem>
+        <para>Properties selected by the user when navigation throuh html
+        page. The user can select different values and this became properties.
+        Depending on the values selected by the user, he/she can go through
+        different paths in the course. For this option is necesary that the
+        player understand HTML modified with some IMS LD properties in order
+        to enable this</para>
+      </listitem>
+
+      <listitem>
+        <para>Properties that are the result of an evaluation or an
+        assessment. Depending on the values of the evaluation or assessment,
+        he/she can go through different paths in the course.</para>
+      </listitem>
+
+      <listitem>
+        <para></para>
+      </listitem>
+    </itemizedlist>
+
+    <para>Every time that for wichever user a resource is served, an activity
+    is started or completed, an assessment is finished, etc, the player must
+    check for every possible condition in order to follow the worklow defined
+    by the unit of learning. The player is also the one in charge of changing
+    the corresponding property values of each resource and to make sure that
+    the workflow of the course is the one the course creator intended.</para>
+
+    <para>Moreover, the player is the component that interacts with the .LRN
+    packages mentioned before. It make use of them in order to interact with
+    the users. The information about every resource is stored in the database
+    by the parser, but the actual interaction happens when the player finds
+    out that a given resource has to be instanciated and shown to the user.
+    This is then the intercomunication between .LRN packages takes place. As
+    mentioned before, in order to make this intercomunication as clean as
+    possible, we will make use of the callbacks functionallity. Using
+    callbacks is the best way of intercomunicating .LRN packages, because we
+    don't have to rewrite the code and we can verify if two packages are
+    connected. Besides, we can't depend on the packages that are not required
+    by .LRN. In fact, we can't assume that any package is installed, because
+    we don't know how the site wide admin configured the .LRN service. Tha is
+    something that the player is aware of.</para>
+
+    <para>This is a detailed explanation of what .LRN packages and for what
+    resources we will use:</para>
+
+    <para><itemizedlist>
+        <listitem>
+          <para><emphasis role="bold">Forums.</emphasis> To deal with the
+          asynchronous IMS LD defined services. More specifically, it will
+          deal with the &lt;conference&gt; IMS LD tag, when conference-type is
+          <emphasis role="bold">asynchronous</emphasis>.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Jabber.</emphasis> To deal with the
+          synchronous IMS LD services. More specifically, it will deal with
+          the &lt;conference&gt; IMS LD tag, when conference-type is <emphasis
+          role="bold">synchronous</emphasis>.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Assessment</emphasis>. To deal with
+          activities in which enviroment has a QTI resource or a reference to
+          an assessment. Therefore, whichever QTI file or a predefined
+          reference to an assessment will be interpreted by the assessment
+          module.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Evaluation (grade book). </emphasis> We
+          will have an standard way in order to recognize that Evaluation
+          package should be invoked when interpreting an IMS LD file. This is
+          not mentioned in the IMS LD specification so it is an adaptation to
+          our LMS system. So we have to stablish a new propietary criterion: A
+          necessary condition for launching the Evaluation package will be
+          that we would have two associated resources together in the same act
+          with a concrete reference to the evaluation package. One resource
+          inside an enviroment of a learning activity (usually for students)
+          and the other resource for a support activity (usually for a
+          professor). When the consensued href for evaluation arrives, then
+          the ims ld package will be launched and the professor will
+          parametrize a new exam, file to submit, homework, etc. with its
+          respective mark load if proceeds. On the other hand the student will
+          be able to upload his/her solution. But another necessary condition
+          will be that there would be in the following act another two
+          associated resources together: one for the professor in order to be
+          able to mark and evaluate his/her work, and other for the students
+          that will receive the results and comments for the professor and
+          should study them. As we can see there are really 4 different
+          resources that could be in 4 different activities.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Calendar.</emphasis> We will have an
+          standard way in the IMS LD package in order to recongnize that the
+          Calendar package should be invoked. Some activities can require as a
+          resource to see dates or/and notes in a Calendar or to put them in
+          it.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">News</emphasis>. To deal with the
+          announcements. More specifically, it will deal with the
+          &lt;conference&gt; IMS LD tag, when conference-type is <emphasis
+          role="bold">announcement</emphasis>.</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">FAQ <emphasis>We will have an standard
+          way in the IMS LD package in order to recognize that the FAQ package
+          should be invoked. When the package is invoked then a set of FAQ
+          will be presented to the student.</emphasis></emphasis></para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">Notifications.</emphasis> The system
+          will generate notifications in the form of emails for all the users
+          of the learning experience or for particular roles, and also the
+          different applications will communicate in order to advice about
+          some events</para>
+        </listitem>
+
+        <listitem>
+          <para><emphasis role="bold">File Storage</emphasis>. The IMS LD can
+          refer to an existing resource (file or URL) of the File Storage.
+          Although, the more usual case is that if we want to refer to some
+          files, then the files will go inside the IMS LD package instead of
+          being a reference to the File Storage.</para>
+        </listitem>
+      </itemizedlist><parameter>What specific funcions of each package we use
+    will be defined during the development phase.</parameter></para>
+
+    <para></para>
+  </chapter>
+</book>
