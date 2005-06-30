@@ -9,14 +9,8 @@
     tool that lets them define and set up the workflow of their courses and a
     synchronization and interaction between different roles of an e-learning
     experience, the IMS-LD package provides the support to fulfil these needs,
-    making use of the IMS Learning Design (from now on referred as IMS-LD). We
-    recommend to read the <ulink
-    url="http://www.imsglobal.org/learningdesign/">IMS-LD
-    specification</ulink> in order to understand better this document. If you
-    are already familiarized with the specification, continue reading this
-    document, otherwise you can take a quick introduction by reading our
-    <ulink url="imsld-short-intro.html">short introduction to
-    IMS-LD)</ulink></para>
+    making use of the IMS Learning Design (from now on referred as
+    IMS-LD).</para>
   </section>
 
   <section>

@@ -7,6 +7,13 @@
   <section>
     <title>IMS Learning Design (short introduction)</title>
 
+    <para><emphasis>We recommend to read the <ulink
+    url="http://www.imsglobal.org/learningdesign/">IMS-LD
+    specification</ulink> before reading this document. We made a introduction
+    aout it here that will give you the required information in order to
+    understand better the rest of this document. Skip this section if you are
+    already familiarized with the IMS-LD spec. </emphasis></para>
+
     <para>IMS Learning Design (from now on referred as IMS-LD) is a
     specification done by the IMS Global Learning Consortium. It is an
     XML-based description for e-learning. It provides a global framework for
