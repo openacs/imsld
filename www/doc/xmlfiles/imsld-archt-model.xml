@@ -1,14 +1,19 @@
-<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Chapter 5. Architectural Model</title><link rel="stylesheet" href="./mystyle.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="home" href="index.html" title="IMS-LD: Integration with .LRN Specification (v 1.1)"><link rel="up" href="index.html" title="IMS-LD: Integration with .LRN Specification (v 1.1)"><link rel="previous" href="ch04s04.html" title="Run Tables"><script language="javascript" type="text/javascript">
-var win=null;
-function NewWindow(mypage,myname,w,h,scroll,pos){
-if(pos=="random"){LeftPosition=(screen.width)?Math.floor(Math.random()*(screen.width-w)):100;TopPosition=(screen.height)?Math.floor(Math.random()*((screen.height-h)-75)):100;}
-if(pos=="center"){LeftPosition=(screen.width)?(screen.width-w)/2:100;TopPosition=(screen.height)?(screen.height-h)/2:100;}
-settings='width='+w+',height='+h+',top='+TopPosition+',left='+LeftPosition+',scrollbars='+scroll+',location=no,directories=no,status=no,menubar=no,toolbar=no,resizable=no';
-win=window.open(mypage,myname,settings);}
-	</script></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 5. Architectural Model</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ch04s04.html">Prev</a> </td><th width="60%" align="center"> </th><td width="20%" align="right"> </td></tr></table><hr></div><div class="chapter" lang="en"><div class="titlepage"><div><div><h2 xmlns="http://www.w3.org/TR/xhtml1/transitional" class="title_chapter"><a xmlns="" name="id2533253"></a>Chapter 5. Architectural Model</h2></div></div></div><p>Here we give an explanation of the way the inner components of the
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter>
+  <title>Architectural Model</title>
+
+  <para>Here we give an explanation of the way the inner components of the
   IMS-LD package interact internally between them and externally with some
   other packages of .LRN Next, a figure about the general architecture about
-  IMS-LD and the ims-ld package is shown.</p><p><a href="resources/behavioral_model.GIF" target="_top"><span class="inlinemediaobject"><img src="resources/behavioral_model.GIF"></span></a></p><p>We have two methods for loading the information into the ims-ld
+  IMS-LD and the ims-ld package is shown.</para>
+
+  <para><ulink url="resources/behavioral_model.GIF"><inlinemediaobject>
+      <imageobject>
+        <imagedata fileref="resources/behavioral_model.GIF" />
+      </imageobject>
+    </inlinemediaobject></ulink></para>
+
+  <para>We have two methods for loading the information into the ims-ld
   package. One is by means of an internal .LRN editor (as we said this is not
   planned for the short term). The other method is loading an IMS-LD compliant
   XML file, as we said before, it can be generated using an authoring tool
@@ -20,12 +25,16 @@ win=window.open(mypage,myname,settings);}
   proving conformance with the IMS-LD standard. It indicates when the parser
   didn't parse the whole file correctly and it needs human help in order to
   finish its job. So, the first component of the IMS-LD package that interacts
-  with the database is the parser, using the TCL and SQL API.</p><p>At the lowest level we have the information stored in the data base.
+  with the database is the parser, using the TCL and SQL API.</para>
+
+  <para>At the lowest level we have the information stored in the data base.
   The information that have been loaded from an IMS-LD file is parsed and
   stored in the database in the tables related to the level A, B and C that
   have been shown in the previous Data Model Section. With this mapping we
   will have all the information contained from the IMS-LD package in the
-  .LRN</p><p>Once all the information of the IMS-LD compliant XML file is stored in
+  .LRN</para>
+
+  <para>Once all the information of the IMS-LD compliant XML file is stored in
   the database, the course is ready to be played. As we mentioned above, the
   player has two modes for the professor, on-line and off-line. The first one
   is the off-line mode, because the course has not being played or instanced
@@ -36,7 +45,9 @@ win=window.open(mypage,myname,settings);}
   tables are initialized for each user at this time. All the information that
   is stored in this Run Tables is not contained in the IMS-LD file, this
   information is particular for each run. At this step the information is
-  particularized for the users of the unit of learning.</p><p>Be aware that a professor can have the student role in the unit of
+  particularized for the users of the unit of learning.</para>
+
+  <para>Be aware that a professor can have the student role in the unit of
   learning or vice versa, that is the professor's choice. The roles of the
   unit of learning are stored in the database, but the mappings between the
   real users with their respective roles is the professor's task. When doing
@@ -48,8 +59,12 @@ win=window.open(mypage,myname,settings);}
   assigned to the first role. In this off-line mode, the professor can take a
   general perspective of the unit of learning. He/she can take a look at all
   the activities that will be done by the students, as well as the conditions
-  and every information that is important to be shown.</p><p>Once the real users are mapped to the roles, the unit of learning can
-  be instantiated. This will start the on-line mode of the viewer.</p><p>For the professor, the on-line mode of the viewer lets him/her to see
+  and every information that is important to be shown.</para>
+
+  <para>Once the real users are mapped to the roles, the unit of learning can
+  be instantiated. This will start the on-line mode of the viewer.</para>
+
+  <para>For the professor, the on-line mode of the viewer lets him/her to see
   the status of the course(unit of learning). As mentioned in the user
   requirements chapter, this mode of the viewer lets the professor to do any
   tracking activity of the students. Such as seeing how many students are in
@@ -57,7 +72,9 @@ win=window.open(mypage,myname,settings);}
   what aren't, etc. By the time when writing this specification, the professor
   can't modify anything from the viewer, it is read only information. At the
   time of run of the unit of learning the Run Tables are refreshed with new
-  completed activities, acts and plays of each user.</p><p>For the student, the on-line mode of the viewer is very similar to the
+  completed activities, acts and plays of each user.</para>
+
+  <para>For the student, the on-line mode of the viewer is very similar to the
   one for the professor, with the main difference that with the student can
   only see his/her own information, whereas the professor can see the
   information of all the class students. From the viewer the students can see
@@ -68,32 +85,56 @@ win=window.open(mypage,myname,settings);}
   learning. This is not true in every case, because, for instance, when
   creating the unit of learning, the professor can set the is-visible tag to
   false for every activity in the unit of learning, not allowing the students
-  to see any more than what they have already done.</p><p>Everything is ready now for the most important component of the IMS-LD
+  to see any more than what they have already done.</para>
+
+  <para>Everything is ready now for the most important component of the IMS-LD
   package: The Player. Of course, the viewer will be always accessible to the
   class members, so they can interact with the player and then with the
-  viewer, any time they want and in any sequence.</p><p>The player, from the visualization point of view, is nothing more tan
+  viewer, any time they want and in any sequence.</para>
+
+  <para>The player, from the visualization point of view, is nothing more tan
   a centralized page. This centralized page has some menus and message
   sections at the sides and at the bottom, with instructions and descriptions
   that the student has to read. The professor can be part of the unit of
   learning being played too, the only thing he/she has to do is assign
-  him/herself to a role of the unit of learning.</p><p>The player is the component that is in charge of verifying the
+  him/herself to a role of the unit of learning.</para>
+
+  <para>The player is the component that is in charge of verifying the
   properties and conditions that were specified in the XML file. It will
   detect whichever change in the properties, check the completion of
   activities, acts, etc. and evaluate the conditions. In particular the
-  properties that at least the ims-ld package is going to support are:</p><div class="itemizedlist"><ul type="disc"><li><p>Global user properties. These type of properties are as the
-      nationality, user model, etc.</p></li><li><p>Properties selected by the user when navigation through HTML page.
+  properties that at least the ims-ld package is going to support are:</para>
+
+  <itemizedlist>
+    <listitem>
+      <para>Global user properties. These type of properties are as the
+      nationality, user model, etc.</para>
+    </listitem>
+
+    <listitem>
+      <para>Properties selected by the user when navigation through HTML page.
       The user can select different values and this became properties.
       Depending on the values selected by the user, he/she can go through
       different paths in the course. For this option is necessary that the
       player understand HTML modified with some IMS-LD properties in order to
-      enable this</p></li><li><p>Properties that are the result of an evaluation or an assessment.
+      enable this</para>
+    </listitem>
+
+    <listitem>
+      <para>Properties that are the result of an evaluation or an assessment.
       Depending on the values of the evaluation or assessment, he/she can go
-      through different paths in the course.</p></li></ul></div><p>Every time that for whichever user a resource is served, an activity
+      through different paths in the course.</para>
+    </listitem>
+  </itemizedlist>
+
+  <para>Every time that for whichever user a resource is served, an activity
   is started or completed, an assessment is finished, etc, the player must
   check for every possible condition in order to follow the worklow defined by
   the unit of learning. The player is also the one in charge of changing the
   corresponding property values of each resource and to make sure that the
-  workflow of the course is the one the course creator intended.</p><p>Moreover, the player is the component that interacts with the .LRN
+  workflow of the course is the one the course creator intended.</para>
+
+  <para>Moreover, the player is the component that interacts with the .LRN
   packages mentioned before. It make use of them in order to interact with the
   users. The information about every resource is stored in the database by the
   parser, but the actual interaction happens when the player finds out that a
@@ -106,16 +147,35 @@ win=window.open(mypage,myname,settings);}
   depend on the packages that are not required by .LRN. In fact, we can't
   assume that any package is installed, because we don't know how the site
   wide admin configured the .LRN service. That is something that the player is
-  aware of.</p><p>This is a detailed explanation of what .LRN packages and for what
-  resources we will use:</p><div class="itemizedlist"><ul type="disc"><li><p><span class="bold"><strong>Forums.</strong></span> To deal with the
+  aware of.</para>
+
+  <para>This is a detailed explanation of what .LRN packages and for what
+  resources we will use:</para>
+
+  <para><itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">Forums.</emphasis> To deal with the
         asynchronous IMS-LD defined services. More specifically, it will deal
         with the &lt;conference&gt; IMS-LD tag, when conference-type is
-        <span class="bold"><strong>asynchronous</strong></span>.</p></li><li><p><span class="bold"><strong>Jabber.</strong></span> To deal with the
+        <emphasis role="bold">asynchronous</emphasis>.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Jabber.</emphasis> To deal with the
         synchronous IMS-LD services. More specifically, it will deal with the
-        &lt;conference&gt; IMS-LD tag, when conference-type is <span class="bold"><strong>synchronous</strong></span>.</p></li><li><p><span class="bold"><strong>Assessment</strong></span>. To deal with
+        &lt;conference&gt; IMS-LD tag, when conference-type is <emphasis
+        role="bold">synchronous</emphasis>.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Assessment</emphasis>. To deal with
         activities in which environment has a QTI resource or a reference to
         an assessment. Therefore, whichever QTI file or a predefined reference
-        to an assessment will be interpreted by the assessment module.</p></li><li><p><span class="bold"><strong>Evaluation (grade book). </strong></span> We
+        to an assessment will be interpreted by the assessment module.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Evaluation (grade book). </emphasis> We
         will have an standard way in order to recognize that Evaluation
         package should be invoked when interpreting an IMS-LD file. This is
         not mentioned in the IMS-LD specification so it is an adaptation to
@@ -134,22 +194,46 @@ win=window.open(mypage,myname,settings);}
         professor in order to be able to mark and evaluate his/her work, and
         other for the students that will receive the results and comments for
         the professor and should study them. As we can see there are really 4
-        different resources that could be in 4 different activities.</p></li><li><p><span class="bold"><strong>Calendar.</strong></span> We will have an
+        different resources that could be in 4 different activities.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Calendar.</emphasis> We will have an
         standard way in the IMS-LD package in order to recognize that the
         Calendar package should be invoked. Some activities can require as a
         resource to see dates or/and notes in a Calendar or to put them in
-        it.</p></li><li><p><span class="bold"><strong>News</strong></span>. To deal with the
+        it.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">News</emphasis>. To deal with the
         announcements. More specifically, it will deal with the
-        &lt;conference&gt; IMS-LD tag, when conference-type is <span class="bold"><strong>announcement</strong></span>.</p></li><li><p><span class="bold"><strong>FAQ <span class="emphasis"><em>We will have an standard way
+        &lt;conference&gt; IMS-LD tag, when conference-type is <emphasis
+        role="bold">announcement</emphasis>.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">FAQ <emphasis>We will have an standard way
         in the IMS-LD package in order to recognize that the FAQ package
         should be invoked. When the package is invoked then a set of FAQ will
-        be presented to the student.</em></span></strong></span></p></li><li><p><span class="bold"><strong>Notifications.</strong></span> The system will
+        be presented to the student.</emphasis></emphasis></para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Notifications.</emphasis> The system will
         generate notifications in the form of emails for all the users of the
         learning experience or for particular roles, and also the different
         applications will communicate in order to advice about some
-        events</p></li><li><p><span class="bold"><strong>File Storage</strong></span>. The IMS-LD can
+        events</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">File Storage</emphasis>. The IMS-LD can
         refer to an existing resource (file or URL) of the File Storage.
         Although, the more usual case is that if we want to refer to some
         files, then the files will go inside the IMS-LD package instead of
-        being a reference to the File Storage.</p></li></ul></div><p><em class="parameter"><code>What specific functions of each package we use
-  will be defined during the development phase.</code></em></p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ch04s04.html">Prev</a> </td><td width="20%" align="center"> </td><td width="40%" align="right"> </td></tr><tr><td width="40%" align="left" valign="top">Run Tables </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> </td></tr></table></div></body></html>
+        being a reference to the File Storage.</para>
+      </listitem>
+    </itemizedlist><parameter>What specific functions of each package we use
+  will be defined during the development phase.</parameter></para>
+</chapter>

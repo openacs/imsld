@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter>
+  <title>User Requirements</title>
+
+  <section>
+    <title>Interaction Between the IMS-LD package and .LRN Services</title>
+
+    <para>The IMS-LD package is a .LRN service (or package, we use these terms
+    indifferently in this specification when referring to .LRN), which will
+    interact with some other .LRN services. When writing this specification,
+    we expect the IMS-LD package to interact with at least the following .LRN
+    packages:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><emphasis role="bold">Forums.</emphasis></para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Jabber.</emphasis></para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Assessment</emphasis>.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Evaluation (grade book).</emphasis></para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Calendar.</emphasis></para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">News</emphasis>.</para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">FAQ </emphasis></para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">Notifications.</emphasis></para>
+      </listitem>
+
+      <listitem>
+        <para><emphasis role="bold">File Storage</emphasis>.</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>As we mentioned earlier, the IMS-LD package allows to easily modify
+    the mappings between the elements of the IMS-LD specification and the .LRN
+    services. And not only modifying the mappings, but also to add new ones.
+    By these way if the IMS-LD specification change in some aspect, then the
+    package will adapt to the new changes easily. From our point of view it is
+    necessary that in the future the IMS-LD specification adds more tags that
+    map onto services. By these way compatibility between LMS are obtained,
+    and if an LMS doesn't understand one tag because it is not available, then
+    it will be ignored and nothing will be presented to the user.</para>
+
+    <para>Besides, we take advantage of the new callbacks used in OpenACS in
+    order to provide a clean interaction between different .LRN packages. With
+    the callbacks we can determine if some needed package is not installed,
+    and instead of displaying an error to the user, try to map the activity or
+    whatever we are mapping to other package, and if after trying with all the
+    available packages we can't map the item to .LRN, a message is shown to
+    the user with this and any other item that could not be mapped by the
+    system and with the purpose of letting the user to do the manual
+    mapping.</para>
+
+    <para>We have to take into account that the item will not always have all
+    the necessary information to let the mapping be done easily, but we try to
+    do our best by providing at least the required information to create the
+    forum, chat, assessment, task, etc, and if definitively no mapping can be
+    done, a final error message is shown to the user indicating that there is
+    at least one item that .LRN can't understand.</para>
+  </section>
+
+  <section>
+    <title>Editing IMS Learning Design Documents</title>
+
+    <para>When writing this specification, we were not thinking about
+    implementing an IMS-LD editor in the short term. We think that in the
+    market there are already very good IMS-LD editors, and that instead of
+    investing efforts and resources in doing one more, we better work in order
+    to provide a good IMS-LD player and a viewer.</para>
+
+    <para>In the future we might work on an editor, but now there is a greater
+    need of a good player. We therefore provide support for the most commonly
+    used IMS-LD editors (Reload, Coppercore and LAMS), which we mentioned
+    above. Even tough there is a standard, there is always something different
+    in the way each editor makes use of it, and we try to deal with it by
+    being as flexible as possible, even tough sometimes it is hard to
+    achieve.</para>
+  </section>
+
+  <section>
+    <title>Viewing an IMS-LD Document and Groups assignation</title>
+
+    <para>The IMS-LD package provides an IMS-LD viewer that will have two
+    modes for the professor: off-line mode and on-line mode.</para>
+
+    <para>In the off-line mode only the professor will have access and he/she
+    will be able to see all the plays, acts, properties, conditions, etc.
+    Definitively, all the things that are described in an IMS-LD document. But
+    this information of the XML package will not include the mapping between
+    roles and members of the .LRN course or community. It is the professor who
+    must do this association before running the IMS-LD for concrete students.
+    The interface will allow to select the students inside a concrete .LRN
+    course. This tool will allow to assign students and professors (or other
+    groups if exists) to the roles defined in the IMS-LD file.</para>
+
+    <para>On the other hand, in the on-line mode, it is visualized the IMS-LD
+    when it is running. It will give to both the teacher and the student
+    (staff and learner) an overview of the activities in the workflow, i.e.
+    the visualization of the play, as well as their current status.</para>
+
+    <para>For the teacher, the viewer also offers in on-line mode the
+    possibility of seeing the properties and conditions, tracking the
+    students, watching the users in every activity of an act, etc. The teacher
+    is able to view more details in every act and see who has done what.
+    He/she can verify if a given test is too difficult and the students can't
+    continue with the flow of the course, or if the teaching method is not
+    working as planned. The viewer shows the list of acts that conforms the
+    play, as well as the activities that conforms each act, the list of
+    students that are part of that given course, etc. It display this
+    information in a graphical way, in order to make the information easy to
+    understand. It will also display links to the .LRN services involved, in
+    case the teacher wants to make use of the functionalities of that specific
+    package (because eventh ough we make use of them, it doesn't mean that we
+    are replacing them). In the future the teacher will be able to edit the
+    sequence of activities from the viewer, when the editor is
+    finished.</para>
+
+    <para>On the other hand, the viewer offers the possibility to the students
+    to see their status inside the play. They can see how much have completed
+    and how much they have yet to complete. Of course, when viewing the IMS-LD
+    level B, this current status is not that easy to see nor to reproduce,
+    because the workflow can depend on the students themselves because of the
+    properties and conditions. Even more, there can be sometimes that this
+    status is impossible to represent (we mean, the exact path that the
+    student has not completed yet), because the conditions change during the
+    lifetime of the course. This gets even more complicated when viewing
+    IMS-LD level C, because it adds the notifications, which combined with the
+    conditions and properties of level B, can make the play to follow a path
+    impossible to represent. But no matter what level the student is viewing,
+    he is able to see what he or she have already done.</para>
+  </section>
+
+  <section>
+    <title>IMS-LD Player</title>
+
+    <para>The player is the part of the IMS-LD package that present to all the
+    roles of the unit of learning the different activities in a sequence
+    ordered way based on the properties and conditions.</para>
+
+    <para>When deciding how the player should interact with the user, we
+    thought two different implementations:</para>
+
+    <orderedlist>
+      <listitem>
+        <para>Show a little portlet to the user that indicates the next
+        activity to complete, showing the corresponding link to the
+        appropriate .LRN package.</para>
+      </listitem>
+
+      <listitem>
+        <para>Render all the information in a single window, in a centralized
+        way. Something that the LORS package currently do when playing an
+        SCORM document.</para>
+      </listitem>
+    </orderedlist>
+
+    <para>After analyzing each one of these approaches, we concluded that
+    rendering all the information in a single window was the better option,
+    because we think is more simple for the users (teachers and students) to
+    centralize the visualization instead of following different links, and
+    also it can give us some kind of control of what the user is doing, and we
+    can be sure of what the user is actually seeing on his/her screen.</para>
+
+    <para>Also, for example if the activity is a forum and we redirect the
+    user to this forum, the user can easily get distracted and end up reading
+    a forum that does not form part of the activity. In the other hand, if we
+    render the forum inside a centralized window, we have the control on the
+    user's window, and by using some kind of frame, we can easily show any
+    important message to the user and be sure (well, not entirely), that
+    he/she read it. Besides, in this centralized window we can show in the
+    bottom the activities that are completed and, when possible, the ones that
+    are yet to complete.</para>
+
+    <para>Therefore the selected option is the single window. The users
+    (students, professors, etc.) will see in the single window in a concrete
+    moment of time, some resource associated with an activity. The user will
+    have at the left hand a list of the possible activities that he/she can
+    see in a concrete moment (this depends on the design of the course). The
+    student can select between the activities presented. Also for each
+    activity it will be a description that will be shown always if the current
+    activity is selected by the user (this description will appear in a little
+    space), and also the user will be able to choice between the different
+    resources of the associated environment of the activity. Therefore the
+    student will select between the given resources for the activity. These
+    resources can be any of the .LRN services or learning objects as files
+    that comes for example in the IMS CP.</para>
+
+    <para>The activities presented to the different roles will change in the
+    time depending on the different properties and conditions. For example, it
+    can change depending on the evaluations of the professors, on the results
+    of the assessments, on the user models, etc. Therefore not all the users
+    will see the same information because it is personalized depending on
+    conditions. Also different paths in the workflow can be defined based on
+    roles.</para>
+  </section>
+</chapter>

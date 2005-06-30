@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<chapter>
+  <title>Introduction</title>
+
+  <section>
+    <title>Introduction</title>
+
+    <para>Given the current need of the professors as .LRN users of having a
+    tool that lets them define and set up the workflow of their courses and a
+    synchronization and interaction between different roles of an e-learning
+    experience, the IMS-LD package provides the support to fulfil these needs,
+    making use of the IMS Learning Design (from now on referred as IMS-LD). We
+    recommend to read the <ulink
+    url="http://www.imsglobal.org/learningdesign/">IMS-LD
+    specification</ulink> in order to understand better this document. If you
+    are already familiarized with the specification, continue reading this
+    document, otherwise you can take a quick introduction by reading our
+    <ulink url="imsld-short-intro.html">short introduction to
+    IMS-LD)</ulink></para>
+  </section>
+
+  <section>
+    <title>Integrating IMS-LD with .LRN</title>
+
+    <para>Using the IMD LD specification, the professor is able to indicate
+    the moment (which could be based on conditions) in which a role is going
+    to do an activity and which materials and services are going to be used.
+    Integrating IMD LD into .LRN, the professor is able to use all the
+    services provided by .LRN, such as forums for asynchronous interaction,
+    chat as synchronous interaction, assessments to evaluate the e-learning
+    process (students and contents), the evaluation package (grade book) to
+    support a a variety of learning and support activities, etc. And all of
+    this is done in a centralized way, from an IMS-LD editor.</para>
+
+    <para>The main idea is to load an IMS-LD document (which is an XML
+    document) and play it. To play an IMS-LD document is nothing more than to
+    perform the activities prescribed in the document with its related
+    environment which defines the learning objects and services, and this is
+    when the interaction with the .LRN services begin. The IMS-LD package is
+    able to detect and indicate what .LRN service is the most indicated one to
+    perform a given IMS-LD service. The activities will follow the sequence
+    prescribed in the IMS-LD document, each member of the course will perform
+    a specific set of activities according to the member's role inside the
+    course. The professor is able to decide the different roles that the
+    course supports, and which role can do what at any given time during the
+    course life, and following the defined sequence.</para>
+
+    <para>With the IMS-LD package, the professor is able to let the learner
+    choose between the activities, make the learner follow a specific sequence
+    or use a combination of both sequenced and learner's choice activities.
+    And that's not all, the professor is also able to define the sequence of
+    the learning activities using conditions and properties that change
+    according to the learner behavior during the course (as defined at the the
+    level B of the Learning Design Specification). Moreover .LRN can take
+    advantage from the power notification system in order to send messages and
+    set new activities based on events (as defined at the level C of the
+    Learning Design Specification)</para>
+
+    <para>The IMS-LD package provides an IMS-LD editor, an IMS-LD player, an
+    IMS-LD viewer and an IMS-LD importer/exporter. Each one of these is
+    described later on this document.</para>
+  </section>
+
+  <section>
+    <title>Pedagogical Flexibility</title>
+
+    <para><quote>The IMS-LD specification is flexible in the description of
+    all different kinds of pedagogies and not prescribe any specific
+    pedagogical approach.</quote> (IMS-LD spec) The IMS-LD specification does
+    not follow any pedagogy. When doing the integration with .LRN, this
+    pedagogical flexibility has to be preserved, letting the professor to give
+    the course in any way he or she wants, limiting as less as possible the
+    professor choices when creating the IMD LD document.</para>
+  </section>
+
+  <section>
+    <title>Historical Considerations</title>
+
+    <para>There is some work done so far that we could use in the near
+    future:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para><ulink url="http://alfanet.ia.uned.es/">Alfanet</ulink>.The
+        people of Alfanet has already done some integration of IMS-LD with
+        OpenACS. At the time of writing this specification we were waiting to
+        have access to their code in order to evaluate the possibility to make
+        use of what they have already done, avoiding the waist of resources,
+        but by the moment we don't know if this will be possible.</para>
+      </listitem>
+
+      <listitem>
+        <para><ulink url="http://www.lamsinternational.com">LAMS</ulink>. At
+        the time of writing this specification, we were planing to do an
+        integration with LAMS, which is a tool for designing, managing and
+        delivering online collaborative learning activities. The LAMs project
+        is already integrated with <ulink
+        url="http://www.moodle.org">Moodle</ulink>. We can take advantage of
+        that integration experience, but we expect to write all the code at
+        .LRN from scratch, and maybe later work on the integration.</para>
+      </listitem>
+
+      <listitem>
+        <para><ulink url="http://www.reload.ac.uk/">RELOAD</ulink>. It has an
+        IMS-LD editor which is independent from any LMS. By means of this
+        editor, you can generate an IMS-LD for a concrete course. Also it has
+        integrated the CopperCore player</para>
+      </listitem>
+
+      <listitem>
+        <para><ulink url="http://coppercore.org/">CopperCore</ulink>. It has
+        an IMS-LD editor which is independent from any LMS. By means of this
+        editor, you can generate an IMS-LD for a concrete course. Also it has
+        a player.</para>
+
+        <para>Our purpose is to be able to interpret the IMS-LD generated by
+        RELOAD, CopperCore and LAMS and whichever IMS-LD that can be generated
+        by other different authoring tools.</para>
+      </listitem>
+    </itemizedlist>
+  </section>
+
+  <section>
+    <title>Competitive Analysis</title>
+
+    <para>There are a lot of competing products.The IMS-LD specification is
+    very large and has many different options. Each product can implement the
+    most suitable features. Also, it does not indicate how to implement it.
+    And therefore, different LMS can implement it in a different way depending
+    on their services. This is a compatibility problem, but it can be solved
+    by a convenient mapping between the different IMS-LD references and the
+    different services of a LMS</para>
+
+    <para>Moreover, when writing the specification we tried to incorporate the
+    ideas from the competing products (each one of them has its own way of
+    dealing with the IMS-LD specification), and from the experience we had
+    when using them. A detailed analysis would be too much for the
+    moment.</para>
+  </section>
+
+  <section>
+    <title>Extensibility</title>
+
+    <para>The .LRN implementation must be easily extensible. The IMS-LD
+    specification may change in the future, so the .LRN implementation has to
+    be done taking that into account. The .LRN implementation must be so
+    flexible in order to adapt to the possible changes of the IMS-LD
+    specification. This means that if a change is produced in IMS-LD
+    specification, then this should imply only minor changes in our .LRN
+    implementation of IMS-LD. Also, if the initial specification should be
+    extended it should be done in an easy way.</para>
+
+    <para>Reusability and standards</para>
+
+    <para>The implementation must follow, as much as possible, the standards
+    defined by the IMS Global Learning Consortium. For example for the
+    compatibility problem that was mentioned before, there should be an easy
+    way to modify which .LRN service performs which IMS-LD service, and also
+    to add a new type of IMS-LD service and the corresponding .LRN service
+    that will be in charge of dealing with it.</para>
+
+    <para>Our XML parser has to be aware of this flexibility, being easy to
+    modify according to the, probably often, changes or improvements in the
+    specification. The mapping between the service types and its corresponding
+    .LRN services can be easily edited via web. Everything that can possibly
+    change in the near future, must be easily extensible as this was mentioned
+    in the previous section</para>
+  </section>
+
+  <section>
+    <title>User Requirements</title>
+
+    <para>The user requirements are described in detail in the User
+    Requirements Chapter. In this section we explain in detail the objectives
+    of the IMS-LD package, as well as the way to achieve them.</para>
+  </section>
+
+  <section>
+    <title>Use Cases</title>
+
+    <para>In this Chapter we give some use cases that correspond to frequently
+    applications that can be handled by the ims-ld package</para>
+  </section>
+
+  <section>
+    <title>API</title>
+
+    <para>The API will be defined during the development phase.</para>
+  </section>
+
+  <section>
+    <title>Data Model</title>
+
+    <para>The data model is described in the Data Model Chapter, and it
+    intends to show all the tables where the information will be
+    stored.</para>
+
+    <para>The IMS-LD specification is large and the number of tables to store
+    all the information is large too. We don't store every information that
+    comes in the IMS-LD compliant XML file when parsing it, because there are
+    some metadata and tags that can be ignored, not affecting the behavior of
+    the unit of learning.</para>
+
+    <para>Anyway, you can take a look at the data model and see how we store
+    the information in the different tables and how these tables are related
+    between them. As you will notice, the data model is almost the exactly the
+    representation of the tables in the IMS-LD Information Model in a
+    relational database, plus some control tables.</para>
+  </section>
+
+  <section>
+    <title>Architectural Model</title>
+
+    <para>The architectural model is described in the Architectural Model
+    Chapter, and it presents the general architectural related to the ims-ld
+    package. It explains each part of the system and particularly the ims-ld
+    package, and are described the aspects about the implementation as for
+    example the mapping between .LRN services and IMS-LD services,</para>
+  </section>
+
+  <section>
+    <title>Authors</title>
+
+    <para>The specifications for the IMS-LD package have been written by
+    <ulink
+    url="http://openacs.org/shared/community-member?user%5fid=139803">Pedro
+    Muñoz</ulink> and <ulink
+    url="http://openacs.org/shared/community-member?user_id=106311">Jose Pablo
+    Escobedo</ulink> with help from people within and outside the OpenACS
+    community.</para>
+  </section>
+</chapter>

@@ -1,3 +1,47 @@
-<html><head>
-      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
-   <title>3.&nbsp;Editing IMS Learning Design Documents</title><link rel="stylesheet" href="html.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="start" href="index.html" title="imsld"><link rel="up" href="ch02.html" title="Chapter&nbsp;2.&nbsp;User Requirements"><link rel="prev" href="ch02s02.html" title="2.&nbsp;Interaction Between imsld package and .LRN Services"><link rel="next" href="ch02s04.html" title="4.&nbsp;Viewing an IMS LD Document and Groups assignation"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">3.&nbsp;Editing IMS Learning Design Documents</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ch02s02.html">Prev</a>&nbsp;</td><th width="60%" align="center">Chapter&nbsp;2.&nbsp;User Requirements</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="ch02s04.html">Next</a></td></tr></table><hr></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="d0e203"></a>3.&nbsp;Editing IMS Learning Design Documents</h2></div></div></div><p>When writting this specification, we were not thinking about implementing an IMS LD editor in the short term. We think that in the market there are already very good IMS LD editors, and that instead of investing efforts and resources in doing one more, we better work in order to provide a good IMS LD player and a viewer.</p><p>In the future we might work on an editor, but now there is a greater need of a good player. We therefore provide support for the most commonly used IMS LD editors (Reload, Coppercore and LAMS), wich we mentioned above. Even tough there is a standard, there is always something different in the way each editor makes use of it, and we try to deal with it by being as flexible as possible, even tough sometimes it is hard to achieve.</p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ch02s02.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="ch02.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="ch02s04.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">2.&nbsp;Interaction Between imsld package and .LRN Services&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;4.&nbsp;Viewing an IMS LD Document and Groups assignation</td></tr></table></div></body></html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1"><title>Viewing an IMS-LD Document and Groups assignation</title><link rel="stylesheet" href="./mystyle.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.68.1"><link rel="home" href="index.html" title="IMS-LD: Integration with .LRN Specification (v 1.1)"><link rel="up" href="ch02.html" title="Chapter 2. User Requirements"><link rel="previous" href="ch02s02.html" title="Editing IMS Learning Design Documents"><link rel="next" href="ch02s04.html" title="IMS-LD Player"><script language="javascript" type="text/javascript">
+var win=null;
+function NewWindow(mypage,myname,w,h,scroll,pos){
+if(pos=="random"){LeftPosition=(screen.width)?Math.floor(Math.random()*(screen.width-w)):100;TopPosition=(screen.height)?Math.floor(Math.random()*((screen.height-h)-75)):100;}
+if(pos=="center"){LeftPosition=(screen.width)?(screen.width-w)/2:100;TopPosition=(screen.height)?(screen.height-h)/2:100;}
+settings='width='+w+',height='+h+',top='+TopPosition+',left='+LeftPosition+',scrollbars='+scroll+',location=no,directories=no,status=no,menubar=no,toolbar=no,resizable=no';
+win=window.open(mypage,myname,settings);}
+	</script></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Viewing an IMS-LD Document and Groups assignation</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ch02s02.html">Prev</a> </td><th width="60%" align="center">Chapter 2. User Requirements</th><td width="20%" align="right"> <a accesskey="n" href="ch02s04.html">Next</a></td></tr></table><hr></div><div class="section" lang="en"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a name="id2592113"></a>Viewing an IMS-LD Document and Groups assignation</h2></div></div></div><p>The IMS-LD package provides an IMS-LD viewer that will have two
+    modes for the professor: off-line mode and on-line mode.</p><p>In the off-line mode only the professor will have access and he/she
+    will be able to see all the plays, acts, properties, conditions, etc.
+    Definitively, all the things that are described in an IMS-LD document. But
+    this information of the XML package will not include the mapping between
+    roles and members of the .LRN course or community. It is the professor who
+    must do this association before running the IMS-LD for concrete students.
+    The interface will allow to select the students inside a concrete .LRN
+    course. This tool will allow to assign students and professors (or other
+    groups if exists) to the roles defined in the IMS-LD file.</p><p>On the other hand, in the on-line mode, it is visualized the IMS-LD
+    when it is running. It will give to both the teacher and the student
+    (staff and learner) an overview of the activities in the workflow, i.e.
+    the visualization of the play, as well as their current status.</p><p>For the teacher, the viewer also offers in on-line mode the
+    possibility of seeing the properties and conditions, tracking the
+    students, watching the users in every activity of an act, etc. The teacher
+    is able to view more details in every act and see who has done what.
+    He/she can verify if a given test is too difficult and the students can't
+    continue with the flow of the course, or if the teaching method is not
+    working as planned. The viewer shows the list of acts that conforms the
+    play, as well as the activities that conforms each act, the list of
+    students that are part of that given course, etc. It display this
+    information in a graphical way, in order to make the information easy to
+    understand. It will also display links to the .LRN services involved, in
+    case the teacher wants to make use of the functionalities of that specific
+    package (because eventh ough we make use of them, it doesn't mean that we
+    are replacing them). In the future the teacher will be able to edit the
+    sequence of activities from the viewer, when the editor is
+    finished.</p><p>On the other hand, the viewer offers the possibility to the students
+    to see their status inside the play. They can see how much have completed
+    and how much they have yet to complete. Of course, when viewing the IMS-LD
+    level B, this current status is not that easy to see nor to reproduce,
+    because the workflow can depend on the students themselves because of the
+    properties and conditions. Even more, there can be sometimes that this
+    status is impossible to represent (we mean, the exact path that the
+    student has not completed yet), because the conditions change during the
+    lifetime of the course. This gets even more complicated when viewing
+    IMS-LD level C, because it adds the notifications, which combined with the
+    conditions and properties of level B, can make the play to follow a path
+    impossible to represent. But no matter what level the student is viewing,
+    he is able to see what he or she have already done.</p></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ch02s02.html">Prev</a> </td><td width="20%" align="center"><a accesskey="u" href="ch02.html">Up</a></td><td width="40%" align="right"> <a accesskey="n" href="ch02s04.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Editing IMS Learning Design Documents </td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top"> IMS-LD Player</td></tr></table></div></body></html>
