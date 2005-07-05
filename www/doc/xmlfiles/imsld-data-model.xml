@@ -33,14 +33,24 @@
   <section>
     <title>Level A</title>
 
+    <para>Next, the tables necessary for Level A are draw in the form of an
+    E-R diagram</para>
+
+    <para><ulink url="resources/imsld_diagram_A.GIF"><inlinemediaobject>
+        <imageobject>
+          <imagedata fileref="resources/imsld_diagram_A.GIF" />
+        </imageobject>
+      </inlinemediaobject></ulink></para>
+
     <para><itemizedlist>
         <listitem>
           <para>imsld_imslds: This table is used to store all the units of
           learning. This is the high level in the hierarchy. Each IMS-LD file
-          loaded in .LRN will generate an entrance in this table. This table
+          loaded in .LRN will generate a row in this table. This table
           contains all the different units of learning. Each unit of learning
-          will contain global information and also references to other tables
-          for having all the required information of a unit of learning</para>
+          will contain global information and also references to other tables,
+          in order to represent completely the information represented by the
+          unit of learning.</para>
 
           <itemizedlist>
             <listitem>
@@ -52,22 +62,19 @@
             </listitem>
 
             <listitem>
-              <para>uri - uri of the imsld</para>
-            </listitem>
-
-            <listitem>
               <para>level - A, B or C. It is the level of the IMS-LD file that
               arrive</para>
             </listitem>
 
             <listitem>
-              <para>sequence_p - sequence used, true or false. True means
+              <para>sequence_used_p - sequence used, true or false. True means
               simple sequencing is being used. Defaults to false</para>
             </listitem>
 
             <listitem>
-              <para>learning_objective_id - references
-              imsld_learning_objectives</para>
+              <para>learning_objective_itemmodel_id - references
+              imsld_itemmodels and contains the objectives of the unit of
+              learning</para>
             </listitem>
 
             <listitem>
@@ -79,7 +86,8 @@
             </listitem>
 
             <listitem>
-              <para>prerequisite_id - references imsld_itemmodel</para>
+              <para>prerequisite_itemmodel_id - references imsld_itemmodels
+              and contains the prerequisites for the unit of learning</para>
             </listitem>
 
             <listitem>
@@ -87,47 +95,17 @@
             </listitem>
 
             <listitem>
-              <para>complete_unit_of_learning_id - references
-              complete_unit_of_learning</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_complete_unit_of_learning. This tables describes the
-          actions to do when a unit of learning is completed</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>complete_unit_of_learning_id</para>
-            </listitem>
-
-            <listitem>
-              <para>when_property_value_is_set_id ** - references
-              imsld_when_property_value_is_set</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_prerequisites. It has all the prerequisites of a unit of
-          learning. These are the previous knolowdges that are required for
-          doing the unit of learning</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>prerequisite_id</para>
-            </listitem>
-
-            <listitem>
-              <para>prerequisite_item - references imsld_items</para>
+              <para>when_property_value_is_set** - references
+              imsld_when_property_value_is_set. Treated with more detail in
+              level B</para>
             </listitem>
           </itemizedlist>
         </listitem>
 
         <listitem>
           <para>imsld_components: Used to store all the components of the
-          IMS-LD</para>
+          IMS-LD (which are: roles, acitivities and environments. The
+          activities references this table)</para>
 
           <itemizedlist>
             <listitem>
@@ -136,10 +114,6 @@
 
             <listitem>
               <para>role_id - references imsld_roles</para>
-            </listitem>
-
-            <listitem>
-              <para>activity_id - references imsld_activities</para>
             </listitem>
 
             <listitem>
@@ -161,7 +135,7 @@
             </listitem>
 
             <listitem>
-              <para>role_types - references role_types_id</para>
+              <para>role_type</para>
             </listitem>
 
             <listitem>
@@ -170,7 +144,7 @@
             </listitem>
 
             <listitem>
-              <para>match_n_persons - exclusively-in-roles,
+              <para>match_persons - exclusively-in-roles,
               not-exclusively</para>
             </listitem>
 
@@ -189,31 +163,13 @@
             </listitem>
 
             <listitem>
-              <para>information_id - references imsld_items</para>
+              <para>information_itemmodel_id - references imsld_items</para>
             </listitem>
 
             <listitem>
-              <para>role_parent_id. The parent role. This allows a hierarchy
+              <para>parent_role_id. The parent role. This allows a hierarchy
               of roles. The root of the hierarchy are learner and stuff, which
               has not a parent role</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_activities. This table defines the three types of
-          activities in IMS-LD: learning activities, support activities and
-          structure activities. These three tables references to this
-          table</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>activity_id</para>
-            </listitem>
-
-            <listitem>
-              <para>activity_structure_id - references
-              imsld_activity_structures</para>
             </listitem>
           </itemizedlist>
         </listitem>
@@ -232,77 +188,43 @@
             </listitem>
 
             <listitem>
+              <para>component_id - references imsld_components</para>
+            </listitem>
+
+            <listitem>
               <para>isvisible_p - initial visibility attribute. Initial value:
               true</para>
             </listitem>
 
             <listitem>
-              <para>learning_objective_id - references
-              imsld_learning_objectives</para>
+              <para>learning_objective_itemmodel_id - references
+              imsld_itemmodels</para>
             </listitem>
 
             <listitem>
-              <para>prerequisite_id - references imsld_itemmodel</para>
+              <para>time_limit_id - references imsld_time_limits</para>
             </listitem>
 
             <listitem>
-              <para>parameter_id - references imsld_parameters</para>
+              <para>prerequisite_itemmodel_id - references
+              imsld_itemmodels</para>
             </listitem>
 
             <listitem>
-              <para>activity_description_id - references imsld_items</para>
+              <para>parameter_value</para>
             </listitem>
 
             <listitem>
-              <para>complete_activity_id - references
-              complete_activities</para>
+              <para>activity_description_itemmodel_id - references
+              imsld_itemmodels</para>
             </listitem>
 
             <listitem>
-              <para>on_completion_id ** - references
-              imsld_on_completions</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_complete_activities. This is a table where for each
-          entry is specified when an activity is considered completed</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>complete_activity_id</para>
+              <para>on_completion_id - references imsld_on_completions</para>
             </listitem>
 
             <listitem>
-              <para>user_choice - the user specifies that this activity is
-              completed</para>
-            </listitem>
-
-            <listitem>
-              <para>time_limit - references imsld_time_limits. The activity is
-              completed when the time is completed</para>
-            </listitem>
-
-            <listitem>
-              <para>when_property_value_is_set_id ** - references
-              imsld_when_property_value_is_set</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_learning_activity_environments_map This table maps
-          learning activities with environments</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>learning_activity_id - references
-              imsld_learning_activities</para>
-            </listitem>
-
-            <listitem>
-              <para>environment_id - references imsld_environments</para>
+              <para>identifier - unique identifier of the activity</para>
             </listitem>
           </itemizedlist>
         </listitem>
@@ -330,48 +252,31 @@
             </listitem>
 
             <listitem>
-              <para>activity_description_id - references imsld_items</para>
+              <para>parameter_value</para>
             </listitem>
 
             <listitem>
-              <para>complete_activity_id - references
-              imsld_complete_activities</para>
+              <para>activity_description_itemmodel_id - references
+              imsld_itemmodels</para>
+            </listitem>
+
+            <listitem>
+              <para>user_choice - The user decides when the activity is
+              completed</para>
+            </listitem>
+
+            <listitem>
+              <para>time_limit_id - If user_choice is null, the activity will
+              be completed until the time referenced by this id has been
+              expired.</para>
             </listitem>
 
             <listitem>
               <para>on_completion_id - references imsld_on_completions</para>
             </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_support_activity_roles_map. This table maps a support
-          role to an activity</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>support_activity_id - references
-              imsld_support_activities</para>
-            </listitem>
 
             <listitem>
-              <para>role_id - references imsld_roles</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_support_activity_environments_map. This table maps
-          support activities with environments</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>support_activity_id - references
-              imsld_support_activities</para>
-            </listitem>
-
-            <listitem>
-              <para>environment_id - references imsld_environments</para>
+              <para>identifier - unique identifier of the acrivity</para>
             </listitem>
           </itemizedlist>
         </listitem>
@@ -384,6 +289,10 @@
           <itemizedlist>
             <listitem>
               <para>activity_structure_id - references imsld_activities</para>
+            </listitem>
+
+            <listitem>
+              <para>component_id - references imsld_components</para>
             </listitem>
 
             <listitem>
@@ -405,134 +314,33 @@
             </listitem>
 
             <listitem>
-              <para>information_id - references imsld_items</para>
+              <para>information_itemmodel_id - references
+              imsld_itemmodels</para>
+            </listitem>
+
+            <listitem>
+              <para>identifier</para>
             </listitem>
           </itemizedlist>
         </listitem>
 
         <listitem>
-          <para>imsld_activity_structure_choices</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>choice_id</para>
-            </listitem>
-
-            <listitem>
-              <para>learning_activity_id - references
-              imsld_learning_activities</para>
-            </listitem>
-
-            <listitem>
-              <para>support_activity_id - references
-              imsld_support_atcivities</para>
-            </listitem>
-
-            <listitem>
-              <para>unit_of_learning_id - references imsld_imslds</para>
-            </listitem>
-
-            <listitem>
-              <para>activity_structure_id - references
-              imsld_activity_structures</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_activity_structure_choices_map</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>activity_structure_id - references
-              imsld_activity_structures</para>
-            </listitem>
-
-            <listitem>
-              <para>choice_id - references
-              imsld_activity_structure_choices</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_activity_structure_environments_map</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>activity_structure_id - references
-              imsld_activity_structures</para>
-            </listitem>
-
-            <listitem>
-              <para>environment_id - references imsld_environments</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_environments</para>
+          <para>imsld_environments. This table contains the environments of
+          the unit of learning. An environment consists of learning objects,
+          services and other environments, and it can be referentiated by some
+          other tables too.</para>
 
           <itemizedlist>
             <listitem>
               <para>environment_id</para>
             </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_environmnent_instances</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>environment_id - references imsld_environments</para>
-            </listitem>
 
             <listitem>
-              <para>environmen_instance_id</para>
+              <para>parent_environment_id</para>
             </listitem>
 
             <listitem>
               <para>title</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_environment_instance_choices</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>choice_id</para>
-            </listitem>
-
-            <listitem>
-              <para>learning_object_id - references
-              imsld_learning_objects</para>
-            </listitem>
-
-            <listitem>
-              <para>service_id - references imsld_services</para>
-            </listitem>
-
-            <listitem>
-              <para>environment_id - references imsld_environments</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_environment_instances_environment_instance_choices_map</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>choice_id - references
-              imsld_environment_instance_choices</para>
-            </listitem>
-
-            <listitem>
-              <para>environment_instance_id - references
-              imsld_environmnent_instances</para>
             </listitem>
           </itemizedlist>
         </listitem>
@@ -555,7 +363,7 @@
             </listitem>
 
             <listitem>
-              <para>parameter_id - references imsld_parameters</para>
+              <para>parameter_value</para>
             </listitem>
 
             <listitem>
@@ -564,128 +372,11 @@
             </listitem>
 
             <listitem>
-              <para>item_sequence_id - references
-              ims_leanring_object_item_sequences</para>
-            </listitem>
-
-            <listitem>
-              <para>schema_sequence_id - references
-              ims_learning_object_schema_sequences</para>
-            </listitem>
-
-            <listitem>
-              <para>item_id - references imsld_items</para>
-            </listitem>
-
-            <listitem>
               <para>environment_id - references imsld_environments</para>
             </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_learning_object_item_sequences: First sequence of the
-          learning objects</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>sequence_id</para>
-            </listitem>
 
             <listitem>
-              <para>title</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>ims_learning_object_schema_sequences: Second sequence of the
-          learning objects</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>sequence_id</para>
-            </listitem>
-
-            <listitem>
-              <para>schema</para>
-            </listitem>
-
-            <listitem>
-              <para>schemaversion</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_learning_object_item_sequence_items_map</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>sequence_id - references
-              imsld_learning_object_item_sequences</para>
-            </listitem>
-
-            <listitem>
-              <para>item_id - references imsld_items</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_parameters: Table for holding the parameter values. This
-          table will possible dissapear, depending if in the development phase
-          there is the need of storing more information about the
-          parameters</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>parameter_id</para>
-            </listitem>
-
-            <listitem>
-              <para>parameter_value</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_services. It contains all the services</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>service_id</para>
-            </listitem>
-
-            <listitem>
-              <para>class</para>
-            </listitem>
-
-            <listitem>
-              <para>identifier</para>
-            </listitem>
-
-            <listitem>
-              <para>isvisible_p</para>
-            </listitem>
-
-            <listitem>
-              <para>parameter_id</para>
-            </listitem>
-
-            <listitem>
-              <para>email_service - (send_mail) references
-              imsld_email_services</para>
-            </listitem>
-
-            <listitem>
-              <para>conference_service_id - references
-              imsld_conference_services</para>
-            </listitem>
-
-            <listitem>
-              <para>index_search_id - refernces
-              imsld_index_search_services</para>
+              <para>schema_version</para>
             </listitem>
           </itemizedlist>
         </listitem>
@@ -696,7 +387,7 @@
 
           <itemizedlist>
             <listitem>
-              <para>email_id - references imsld_services</para>
+              <para>email_service_id</para>
             </listitem>
 
             <listitem>
@@ -706,6 +397,10 @@
             <listitem>
               <para>title</para>
             </listitem>
+
+            <listitem>
+              <para>is_visible_p</para>
+            </listitem>
           </itemizedlist>
         </listitem>
 
@@ -714,11 +409,16 @@
 
           <itemizedlist>
             <listitem>
-              <para>email_data_id</para>
+              <para>sendmail_service_id - references
+              imsld_email_services</para>
             </listitem>
 
             <listitem>
               <para>role_id - references imsld_roles</para>
+            </listitem>
+
+            <listitem>
+              <para>email_data</para>
             </listitem>
 
             <listitem>
@@ -728,20 +428,6 @@
             <listitem>
               <para>username_property_id - references imsld_properties
               **</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_email_service_email_data_map</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>email_id - references imsld_email_services</para>
-            </listitem>
-
-            <listitem>
-              <para>email_data_id - references imsld_email_data</para>
             </listitem>
           </itemizedlist>
         </listitem>
@@ -764,30 +450,11 @@
             </listitem>
 
             <listitem>
-              <para>conference_manager_id - references imsld_roles</para>
-            </listitem>
-
-            <listitem>
-              <para>moderator_id - references imsld_roles</para>
-            </listitem>
-
-            <listitem>
               <para>item_id - references imsld_items</para>
             </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_conference_participants_or_observers_map</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>conference_id - references
-              imsld_conference_services</para>
-            </listitem>
 
             <listitem>
-              <para>role_id - references imsld_roles</para>
+              <para>is_visible_p</para>
             </listitem>
           </itemizedlist>
         </listitem>
@@ -819,30 +486,13 @@
             </listitem>
 
             <listitem>
-              <para>search - how a user can access the indexed entities</para>
-            </listitem>
-
-            <listitem>
               <para>search_type - type of search facility that is expected at
               runtime: free-text-search, index-with-reference,
               index-without-reference</para>
             </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_learning_objectives. This table contains all the
-          different objectives of the different unit of learning and
-          activities. Each entry of this table is a set of objectives. A set
-          of objectives is symbolized by an itemmodel_id</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>learning_objective_id</para>
-            </listitem>
 
             <listitem>
-              <para>itemmodel_id - references imsld_itemmodels</para>
+              <para>is_visible_p</para>
             </listitem>
           </itemizedlist>
         </listitem>
@@ -874,22 +524,6 @@
         </listitem>
 
         <listitem>
-          <para>imsld_plays_to_complete_method. It contains all the plays that
-          has a method. Each play can be selected in parallel by an user
-          during the delivering of a unit of learning</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>method_id</para>
-            </listitem>
-
-            <listitem>
-              <para>play_id</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
           <para>imsld_plays</para>
 
           <itemizedlist>
@@ -898,7 +532,11 @@
             </listitem>
 
             <listitem>
-              <para>isvisible_p - the user decides when the activity is
+              <para>method_id - references imsld_methods</para>
+            </listitem>
+
+            <listitem>
+              <para>is_visible_p - the user decides when the activity is
               completed?</para>
             </listitem>
 
@@ -907,64 +545,18 @@
             </listitem>
 
             <listitem>
-              <para>complete_play_id - references imsld_complete_play</para>
+              <para>when_last_act_completed the play is completed until the
+              act referenced by this field is completed</para>
+            </listitem>
+
+            <listitem>
+              <para>time_limit_id - references time_limits. If
+              when_last_act_completed is null, the play is completed when the
+              time indicated here has been completed</para>
             </listitem>
 
             <listitem>
               <para>on_completion_id - references imsld_on_completions</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_complete_play</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>complete_play_id</para>
-            </listitem>
-
-            <listitem>
-              <para>when_last_act_completed - references imsld_acts. The play
-              is completed when this act is completed</para>
-            </listitem>
-
-            <listitem>
-              <para>time_limit_id - references imsld_time_limits. The play is
-              completed when this time is completed</para>
-            </listitem>
-
-            <listitem>
-              <para>when_property_value_is_set_id * - references
-              imsld_when_property_value_is_set</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_method_plays_map</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>method_id - references imsld_methods</para>
-            </listitem>
-
-            <listitem>
-              <para>play_id - references imsld_plays</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_play_acts_map</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>play_id - references imsld_plays</para>
-            </listitem>
-
-            <listitem>
-              <para>act_id - references imsld_acts</para>
             </listitem>
           </itemizedlist>
         </listitem>
@@ -978,11 +570,18 @@
             </listitem>
 
             <listitem>
+              <para>play_id - references imsld_plays</para>
+            </listitem>
+
+            <listitem>
               <para>title</para>
             </listitem>
 
             <listitem>
-              <para>complete_act_id - references imsld_complete_acts</para>
+              <para>time_limit_id - if there are no role_parts mapped to this
+              act throug the mapping table (explained later), the act is
+              completed until the the time indicated here has been
+              completed</para>
             </listitem>
 
             <listitem>
@@ -990,79 +589,26 @@
             </listitem>
 
             <listitem>
-              <para>when_condition_true ** - references
-              imsld_when_condition_true</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_complete_acts</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>complete_act_id</para>
-            </listitem>
-
-            <listitem>
-              <para>time_limit_id - references imsld_complete_acts. When not
-              null, the act is completed when this time has been completed,
-              otherwise, the act is completed until all role parts mapped to
-              this complete_act_id trhoug the imsld_act_role_parts are
-              completed</para>
-            </listitem>
-
-            <listitem>
-              <para>when_property_value_is_set_id ** - references
+              <para>when_property_value_is_set ** - references
               imsld_when_property_value_is_set</para>
             </listitem>
           </itemizedlist>
         </listitem>
 
         <listitem>
-          <para>imsld_act_role_parts</para>
+          <para>imsld_role_parts</para>
 
           <itemizedlist>
-            <listitem>
-              <para>complete_act_id - references imsld_acts</para>
-            </listitem>
-
             <listitem>
               <para>role_part_id - references imsld_part_id</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_act_role_parts_map</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>role_part_id - references imsld_role_parts</para>
             </listitem>
 
             <listitem>
               <para>act_id - references imsld_acts</para>
             </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_role_part_choices</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>choice_id</para>
-            </listitem>
 
             <listitem>
-              <para>learning_activity_id - references
-              imsld_learning_activities</para>
-            </listitem>
-
-            <listitem>
-              <para>support_activity_id - references
-              imsld_support_activities</para>
+              <para>role_id</para>
             </listitem>
 
             <listitem>
@@ -1070,34 +616,7 @@
             </listitem>
 
             <listitem>
-              <para>activity_structure_id - references
-              imsld_activity_structures</para>
-            </listitem>
-
-            <listitem>
               <para>environment_id - references imsld_environments</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
-          <para>imsld_role_parts - mapping table between acts and roles</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>role_part_id</para>
-            </listitem>
-
-            <listitem>
-              <para>title</para>
-            </listitem>
-
-            <listitem>
-              <para>role_id - references imsld_roles</para>
-            </listitem>
-
-            <listitem>
-              <para>choice_id - references imsld_role_part_choices</para>
             </listitem>
           </itemizedlist>
         </listitem>
@@ -1145,20 +664,6 @@
         </listitem>
 
         <listitem>
-          <para>imsld_itemmodel_items_map</para>
-
-          <itemizedlist>
-            <listitem>
-              <para>item_id - references imsld_items</para>
-            </listitem>
-
-            <listitem>
-              <para>itemmodel_id - references imsld_itemmodels</para>
-            </listitem>
-          </itemizedlist>
-        </listitem>
-
-        <listitem>
           <para>imsld_items. Items are used for multiple purposes in other
           tables. For example it can describe objectives, prerequisites,
           references to files, etc.</para>
@@ -1173,26 +678,12 @@
             </listitem>
 
             <listitem>
-              <para>identifierref. It references the IMS CP</para>
-            </listitem>
-
-            <listitem>
-              <para>isvisible_p.</para>
-            </listitem>
-
-            <listitem>
-              <para>parameter_id</para>
+              <para>is_visible_p</para>
             </listitem>
 
             <listitem>
               <para>title: A text that can represent a prerequisite, an
               objective, the name of a file, etc.</para>
-            </listitem>
-
-            <listitem>
-              <para>parent_item - references imsld_items. An item can
-              reference to another item, which is a sub-item or child of the
-              one referencing it.</para>
             </listitem>
           </itemizedlist>
         </listitem>
@@ -1214,14 +705,90 @@
             </listitem>
           </itemizedlist>
         </listitem>
-      </itemizedlist>Next, the tables necessary for Level A are draw in the
-    form of an E-R diagram</para>
 
-    <para><ulink url="resources/imsld_diagram_A.GIF"><inlinemediaobject>
-        <imageobject>
-          <imagedata fileref="resources/imsld_diagram_A.GIF" />
-        </imageobject>
-      </inlinemediaobject></ulink></para>
+        <listitem>
+          <para>imsld_parameters</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>parameter_id</para>
+            </listitem>
+
+            <listitem>
+              <para>parameter_value</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+
+        <listitem>
+          <para>imsld_imsld_objects_map. This is a very importan table in this
+          data model, because it is used to map almost every imsld_* to every
+          imsld_*. For instance, the activities that are part of a component
+          are mapped by this table, and the acts to complete play are also
+          mapped using this table. This is just a representation of the
+          acs_rels table, because at the implementation phase, acs_rels will
+          be used with different rel_types</para>
+
+          <itemizedlist>
+            <listitem>
+              <para>imsld_object_one_id - references imsld_*
+              (acs_objects)</para>
+            </listitem>
+
+            <listitem>
+              <para>imsld_object_one_type - wich can be: learning_object,
+              imsld_item, imsld_role, support_activity, etc</para>
+            </listitem>
+
+            <listitem>
+              <para>imsld_object_two_id - references imsld_*
+              (acs_objects)</para>
+            </listitem>
+
+            <listitem>
+              <para>imsld_object_two_type - same as
+              imsld_object_one_type</para>
+            </listitem>
+          </itemizedlist>
+        </listitem>
+      </itemizedlist></para>
+
+    <para>IMPORTANT NOTES:</para>
+
+    <orderedlist>
+      <listitem>
+        <para>The last table will use acs_rels. The rel_types will be
+        completely defined in the implementation phase. By now we can think
+        of: parent_item_rel, role_parts_activites_rel, component_service_rels,
+        service_roles_rel, learning_object_item_rel,
+        plays_to_complete_method_rel and role_parts_to_complete_act.</para>
+      </listitem>
+
+      <listitem>
+        <para>There are some important IMS-LD tags (learning objectives, for
+        instance) that does not have a table for themselves, but this is
+        because such tags consist only of a reference to a itemmodel or
+        another table, so there is no need to create a table just for
+        that.</para>
+      </listitem>
+
+      <listitem>
+        <para>This data model can (and it is 99% sure) change in the
+        implementation phase, but we will base the development on this data
+        model.</para>
+      </listitem>
+
+      <listitem>
+        <para>There are some tables in this data model that will be related to
+        some others of other .LRN packages. For instance, the table
+        imsld_conferences will be used to store the synchronous type (forums)
+        and asynchronous type (chats) of conferences. Also, we will use
+        acs_objects for the imslds, activities, services, learning_objects,
+        components, and for every case we find it useful. We can make use of
+        the cr_items too. But that is something that we will know better in
+        the implementation phase.</para>
+      </listitem>
+    </orderedlist>
   </section>
 
   <section>

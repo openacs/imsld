@@ -3,7 +3,7 @@
 "http://www.oasis-open.org/docbook/xml/4.3/docbookx.dtd">
 <book lang="en">
   <bookinfo>
-    <title>IMS-LD: Integration with .LRN Specification (v 1.1)</title>
+    <title>IMS-LD: Integration with .LRN Specification (v 1.1.2)</title>
   </bookinfo>
   <!-- IMS-LD intro -->
   <xi:include xmlns:xi="http://www.w3.org/2001/XInclude" href="imsld-short-intro.xml">
