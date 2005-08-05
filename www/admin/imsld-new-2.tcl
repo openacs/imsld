@@ -10,6 +10,7 @@ ad_page_contract {
     upload_file:trim
     upload_file.tmpfile:tmpfile
     return_url
+    manifest_id:notnull
 } -properties {
     upload_file
     context:onevalue
@@ -22,10 +23,9 @@ set page_title "<#_ Confirm: New IMS-LD #>"
 set context [list [list "<#_ New IMS-LD #>" "new-imsld"] [list "<#_ Confirm: New IMS-LD #>"]]
 
 set user_id [ad_conn user_id]
-set imsld_id [db_nextval acs_object_id_seq]
 
 # expand file
-set tmp_dir [imsld::parse::expand_file -upload_file $upload_file -tmpfile ${upload_file.tmpfile} -dest_dir_base imsld-${imsld_id}]
+set tmp_dir [imsld::parse::expand_file -upload_file $upload_file -tmpfile ${upload_file.tmpfile} -dest_dir_base manifest-${manifest_id}]
 
 # search for manifest file
 set manifest [imsld::parse::find_manifest -dir $tmp_dir -file_name "imsmanifest.xml"]
@@ -65,12 +65,12 @@ if { [lindex $is_imsld_list 0] } {
         }
 
     # Get the info from the manifest
-    set organizations [$manifest child all organizations]
+    set organizations [$manifest child all imscp:organizations]
     multirow append imsld_info "<#_ Number of Organizations: #>" [llength $organizations]
     set imsld [$organizations child all imsld:learning-design]
     multirow append imsld_info "<#_ Number of IMD LDs #>" [llength $imsld]
-    set imsld_title [imsld::parse::get_title -tree $imsld]
-    set imsld_level [imsld::parse::get_attribute -tree $imsld -attr_name level]
+    set imsld_title [imsld::parse::get_title -node $imsld -prefix imsld]
+    set imsld_level [imsld::parse::get_attribute -node $imsld -attr_name level]
     set imsld_level [expr { [empty_string_p $imsld_level] ? "<#_ Not defined #>" : $imsld_level }]
     multirow append imsld_info "<#_ IMD LD Title #>" [llength $imsld]
     multirow append imsld_info "<#_ IMD LD Level #>" "$imsld_level"
@@ -80,11 +80,13 @@ if { [lindex $is_imsld_list 0] } {
     imsld::parse::validate_multiplicity -tree $components -multiplicity 1 -element_name components -equal
 
     set roles [$components child all imsld:roles]
-    set learners [llength [$roles child all imsld:learner]]
-    set staff [llength [$roles child all imsld:staff]]
-    multirow append imsld_info "<#_ Total Roles #>" [expr $learners + $staff]
-    multirow append imsld_info "<#_ Learners Roles #>" $learners
-    multirow append imsld_info "<#_ Staff Roels #>" $staff
+    if { [llength $roles] } {
+        set learners [llength [$roles child all imsld:learner]]
+        set staff [llength [$roles child all imsld:staff]]
+        multirow append imsld_info "<#_ Total Roles #>" [expr $learners + $staff]
+        multirow append imsld_info "<#_ Learners Roles #>" $learners
+        multirow append imsld_info "<#_ Staff Roels #>" $staff
+    }
 
     set activities [$components child all imsld:activities]
     if { [llength $activities] } {
@@ -102,11 +104,14 @@ if { [lindex $is_imsld_list 0] } {
     imsld::parse::validate_multiplicity -tree $methods -multiplicity 1 -element_name methods -equal
     
     set plays [$methods child all imsld:play]
-    imsld::parse::validate_multiplicity -tree $plays -multiplicity 1 -element_name plays -equal
+    imsld::parse::validate_multiplicity -tree $plays -multiplicity 0 -element_name plays -greather_than
 
-    set acts [$plays child all imsld:act]
-    imsld::parse::validate_multiplicity -tree $acts -multiplicity 0 -element_name acts -greather_than
-    multirow append imsld_info "<#_ Acts #>" [llength $acts]
+    foreach play $plays {
+        set play_identifier [imsld::parse::get_attribute -node $play -attr_name identifier]
+        set acts [$play child all imsld:act]
+        imsld::parse::validate_multiplicity -tree $acts -multiplicity 0 -element_name acts -greather_than
+        multirow append imsld_info "<#_ Acts in play %play_identifier% #>" [llength $acts]
+    }
     
 } else {
     # Not valid (or supported?) IMS LD
@@ -115,7 +120,16 @@ if { [lindex $is_imsld_list 0] } {
 }
 
 ad_form -name imsld_upload -cancel_url $return_url -action imsld-new-3 -html { enctype multipart/form-data } -form {
-    imsld_id:key
-    
     {tmp_dir:text {widget hidden} {value $tmp_dir}}
+    {return_url:text {widget hidden} {value $return_url}}
+    {manifest_id:integer {widget hidden} {value $manifest_id}}
+}
+
+set file_str [imsld::parse::get_files_structure -tmp_dir $tmp_dir]
+
+
+set msg "vamoaver ....  $file_str \n\n en $tmp_dir con largo [llength $file_str] !!"
+append msg "<br> la lista es:"
+foreach fix $file_str {
+    append msg "<br> $fix --FIN--"
 }

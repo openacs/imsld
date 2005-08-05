@@ -45,7 +45,7 @@ ad_proc -public imsld::parse::is_imsld {
     set man_attribute [$tree hasAttribute xmlns:imsld]
 
     # Check manifest organizations
-    set organizations [$tree child all organizations]
+    set organizations [$tree child all imscp:organizations]
 
     if { [llength $organizations] == 1 } {
         
@@ -95,15 +95,15 @@ ad_proc -public imsld::parse::expand_file {
 
     set upload_file [string trim [string tolower $upload_file]]
 
-    if {[regexp {(.tar.gz|.tgz)$} $upload_file]} { 
+    if { [regexp {(.tar.gz|.tgz)$} $upload_file] } { 
         set type tgz 
-    } elseif {[regexp {.tar.z$} $upload_file]} { 
+    } elseif { [regexp {.tar.z$} $upload_file] } { 
         set type tgZ 
-    } elseif {[regexp {.tar$} $upload_file]} { 
+    } elseif { [regexp {.tar$} $upload_file] } { 
         set type tar 
-    } elseif {[regexp {(.tar.bz2|.tbz2)$} $upload_file]} { 
+    } elseif { [regexp {(.tar.bz2|.tbz2)$} $upload_file] } { 
         set type tbz2 
-    } elseif {[regexp {.zip$} $upload_file]} { 
+    } elseif { [regexp {.zip$} $upload_file] } { 
         set type zip 
     } else { 
         set type "<#_ Uknown type #>" 
@@ -159,52 +159,67 @@ ad_proc -public imsld::parse::expand_file {
 }
 
 ad_proc -public imsld::parse::get_title {
-    -tree
+    -node
+    {-prefix ""}
 } {
-    Gets the title of the given doc. If the title is not found (because it's optional), the identifier (which is mandatory) is returned.
+    Returns the tile of the given node or empty string if not found.
 
-    @param doc XML document to analyze.
+    @param node Node
+    @option prefix Prefix for the "title"
+    
 } {
-    set title_list [$tree child all title]
-    if { [llength $title_list] } {
-        return [imsld::parse::get_element -tree $title_list]]
+    set prefix [expr { [empty_string_p $prefix] ? "" : "${prefix}:" }]
+    set titles_list [$node child all ${prefix}title]
+    if { [llength $titles_list] } {
+        imsld::parse::validate_multiplicity -tree $titles_list -multiplicity 1 -element_name title -equal
+        return [imsld::parse::get_element_text -node $titles_list]
     } else {
-        return [imsld::parse::get_attribute -tree $tree -attr_name identifier]
+        return ""
     }
 }
 
-ad_proc -public imsld::parse::get_element {
-    -tree 
-    {-attr_name ""}
+ad_proc -public imsld::parse::get_element_text {
+    -node
 } {
-    Taken from the one with the same name in the LORS package.
-    Datatype Element extractor
-    
-    @param tree Node
-    @param att Attribute
+    Returns the text of the given node
+
+    @param node Node
     
 } {
-    if { ![empty_string_p $attr_name] } {
-        return [list "{[$tree text]} {[imsld::parse::get_attribute -tree $tree -attr_name $attr_name]}"]
-    } else {
-        return [list [$tree text]]
-    }
+    return [$node text]
 }
 
 ad_proc -public imsld::parse::get_attribute {
-    -tree
+    -node
     -attr_name
 } {
     Taken from the one with the same name in the LORS package.
-    Gets attributes for an specific element. Returns the attribute value if fond, emtpy string otherwise
+    Gets attributes for an specific element. Returns the attribute value if found, emtpy string otherwise
+    
+    @param node Node
+    @param attr_name Attribute we want to fetch
+} {
+    if { [$node hasAttribute $attr_name] == 1 } {
+        $node getAttribute $attr_name
+    } else {
+        return ""
+    }
+}
+
+ad_proc -public imsld::parse::get_bool_attribute {
+    -tree
+    -attr_name
+    -default
+} {
+    Gets a boolean attribute for an specific element. Returns the tcl true or false value attribute value if found, -default otherwise.
 
     @param tree Document
     @param attr_name Attribute we want to fetch
 } {
     if { [$tree hasAttribute $attr_name] == 1 } {
-        $tree getAttribute $attr_name
+        return [imsld::parse::sql_boolean -bool [$tree getAttribute $attr_name]]
     } else {
-        return ""
+        return $default
     }
 }
 
@@ -271,10 +286,10 @@ ad_proc -public imsld::parse::remove_dir {
     return 1
 }
 
-ad_proc -public imsld::parse::tcl_boolean {
+ad_proc -public imsld::parse::sql_boolean {
     -bool:required
 } {
-    Convets a boolean string to its corresponding boolean value 0 or 1. 
+    Convets a boolean string to its corresponding boolean value f or t. 
 
     @param bool The boolean value to convert
 } {
@@ -287,56 +302,418 @@ ad_proc -public imsld::parse::tcl_boolean {
         n -
         no -
         false {
-            set result 0
+            set result f
         }
         1 -
         t -
         y -
         yes -
         true {
-            set result 1
+            set result t
         }
         default {
             set result 0
-            ns_log error "Invalid option in imsld::parse::tcl_boolean - $bool"
+            ns_log error "Invalid option in imsld::parse::sql_boolean - $bool"
         }
     }
     return $result 
 }
 
-ad_proc -public imsld::parse::parse_and_create_imsld { 
-    -xmlfile:required
-    -imsld_id:optional
+ad_proc -public imsld::parse::get_folder_contents {
+    -dir:required
+    -type:required
 } {
-    Parse a XML IMS LD file. 
+    Checks if the fs_dir has files or directories, nd returns the list of them in a list.
 
-    Returns the new imsld_id created if there was no errors. Otherwise it returns 0.
+    @param dir File System directory
+    @param type file or directory. If type is file it returns the list of files in the dir. If type is directory it returns the list of directories in the dir.
+} {
+    set return_list [list]
+     foreach f [glob -no complain [file join $dir * ]] {
+         if { [string eq $type [file type $f]] } {
+             lappend return_list $f
+         }
+     }
+    return $return_list
+}
+
+ad_proc -public imsld::parse::get_files_structure { 
+    -tmp_dir:required
+} {
+    Returns a list of lists with the structure of the files that are being parsed which is used to find the files and subdirs in the parsing process.
+    
+    @param tmp_dir The dir where the files where uncompressed to.
+} {
+    if { [file exists $tmp_dir] } {
+        set files_structure [list]
+        
+        # get all the directories and files under those dirs
+        # dirx = directory loop
+        set dirx [list $tmp_dir]
+
+        # for each directory found..
+        while { [llength $dirx] != 0 } {
+            set dir [lindex $dirx 0]
+            set dir_content [list]
+                
+            foreach subdirx [imsld::parse::get_folder_contents -dir $dir -type directory] {
+                lappend dir_content [list [string tolower "$subdirx"] dir]
+                lappend dirx $subdirx
+            }
+            foreach filex [imsld::parse::get_folder_contents -dir $dir -type file] {
+                lappend dir_content [list [string tolower "$filex"] file 0]
+            }
+            lappend files_structure [list [list [string tolower $dir] 0] $dir_content]
+            set dirx [lrange $dirx 1 [expr [llength $dirx] -1]]
+        }
+        return $files_structure
+    }
+}
+
+ad_proc -public imsld::parse::initialize_folders { 
+    -community_id:required
+    -manifest_id:required
+    {-manifest_identifier ""}
+} {
+    Initializes the cr folders where all the cr items of the manifest will be stored in, and sets the respective permissions. There are two folders for each imsld. One to store the files and show them in the fs, and the other to store the items..
+    It won't create the files in the cr since not every file will be handled by the cr (some files may be handled by other packages).
+
+    Returns a list of two elements, the firs one is the folder_id in the fs of the root folder for that manifest, and the ohter one is the folder_id where the cr items and revisions are stored.
+    
+    @param community_id The community_id that owns the folder.
+    @option manifest_identifier The identifier of the manifest that is being parsed uset to create the label of the fs folder.
+    @param manifest_id Id of the manifest being parsed.
+} {
+    if { ![empty_string_p $manifest_identifier] } {
+        set folder_label $manifest_identifier
+        # gets rid of the path and leaves the name of the directory
+        regexp { ([^/\\]+)$ } $folder_label match folder_label
+        # strips out spaces from the name
+        regsub -all { +} $folder_label {_} folder_label
+    } else {
+        set folder_label "IMS-Learning-Design-Folder"
+    }
+
+    # Gets file-storage root folder_id
+    set fs_package_id [site_node_apm_integration::get_child_package_id \
+                           -package_id [dotlrn_community::get_package_id $community_id] \
+                           -package_key "file-storage"]
+    
+    set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
+    
+
+    set fs_folder_id [content::item::get_id -item_path "manifest_${manifest_id}" -root_folder_id $root_folder_id -resolve_index f] 
+    set cr_folder_id [content::item::get_id -item_path "cr_manifest_${manifest_id}" -resolve_index f] 
+
+    if { [empty_string_p $fs_folder_id] } {
+        db_transaction {
+            set folder_name "manifest_${manifest_id}"
+
+            # checks for write permission on the parent folder
+            ad_require_permission $root_folder_id write
+            
+            # create the root cr dir
+            set fs_folder_id [imsld::cr::folder_new -parent_id $root_folder_id -folder_name $folder_name -folder_label $folder_label]
+            
+            # PERMISSIONS FOR FILE-STORAGE
+
+            # Before we go about anything else, lets just set permissions straight.
+            # Disable folder permissions inheritance
+            permission::toggle_inherit -object_id $fs_folder_id
+            
+            # Set read permissions for community/class dotlrn_member_rel
+            set party_id_member [dotlrn_community::get_rel_segment_id -community_id $community_id -rel_type dotlrn_member_rel]
+            permission::grant -party_id $party_id_member -object_id $fs_folder_id -privilege read
+            
+            # Set read permissions for community/class dotlrn_admin_rel
+            set party_id_admin [dotlrn_community::get_rel_segment_id -community_id $community_id -rel_type dotlrn_admin_rel]
+            permission::grant -party_id $party_id_admin -object_id $fs_folder_id -privilege read
+            
+            # Set read permissions for *all* other professors  within .LRN
+            # (so they can see the content)
+            set party_id_professor [dotlrn::user::type::get_segment_id -type professor]
+            permission::grant -party_id $party_id_professor -object_id $fs_folder_id -privilege read
+            
+            # Set read permissions for *all* other admins within .LRN
+            # (so they can see the content)
+            set party_id_admins [dotlrn::user::type::get_segment_id -type admin]
+            permission::grant -party_id $party_id_admins -object_id $fs_folder_id -privilege read
+        }
+        # register content types
+        content::folder::register_content_type -folder_id $fs_folder_id \
+            -content_type imsld_cp_file
+
+        # allow subfolders inside our parent test folder
+        content::folder::register_content_type -folder_id $fs_folder_id \
+            -content_type content_folder
+    } 
+    
+    if { [empty_string_p $cr_folder_id] } {
+        set folder_label "cr_${folder_label}"
+        set folder_name "cr_manifest_${manifest_id}"
+        # create the cr dir
+        set cr_folder_id [imsld::cr::folder_new -folder_name $folder_name -folder_label $folder_label]
+        
+        # register content types
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_learning_object
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_imsld
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_learning_objective
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_prerequisite
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_item
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_component
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_role
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_learning_activity
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_support_activity
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_activity_structure
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_environment
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_send_mail_service
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_send_mail_data
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_conference_service
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_method
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_play
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_act
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_role_part
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_parameter
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_time_limit
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_on_completion
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_cp_manifest
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_cp_organization
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_cp_resource
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_cp_dependency
+    }
+
+    return [list $fs_folder_id $cr_folder_id]
+}
+
+ad_proc -public imsld::parse::parse_and_create_resource { 
+    -manifest
+    -manifest_id
+    -resource_node
+    -parent_id
+    -tmp_dir
+} {
+    Parses an IMS-LD resource and stores all the information in the database, such as files, dependencies, etc
+
+    Returns a list with the new resource_id created if there were no errors, or 0 and an error explanation.
+    
+    @param manifest Manifest tree
+    @param manifestid Manifest ID or the manifest being parsed
+    @param resource_node Resource tree being parsed
+    @param parent_id Parent folder ID
+    @tmp_dir Temporary directory where the files were exctracted
+} {
+    upvar files_struct_list files_struct_list
+    # now we proceed to get all the info of the resource
+    set resource_type [imsld::parse::get_attribute -node $resource_node -attr_name type]
+    set resource_href [imsld::parse::get_attribute -node $resource_node -attr_name href]
+    set resource_identifier [imsld::parse::get_attribute -node $resource_node -attr_name identifier]
+    set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
+                         -identifier $resource_identifier \
+                         -type $resource_type \
+                         -href $resource_href \
+                         -parent_id $parent_id]
+    
+    set found_p 0
+    foreach filex [$resource_node child all imscp:file] {
+        set filex_href [imsld::parse::get_attribute -node $filex -attr_name href]
+        if { ![empty_string_p $resource_href] && [string eq $resource_href $filex_href] } {
+            # check if the referenced file in the resource exists
+            # if we finish with the files and the referenced one doesn't exist we raise an error
+            set found_p 1
+        }
+        set filex_id [imsld::fs::file_new -href $filex_href \
+                          -resource_id $resource_id \
+                          -path_to_file $filex_href \
+                          -type file \
+                          -complete_path "${tmp_dir}/${filex_href}"]
+        if { !$filex_id } {
+            # an error ocurred when creating the file
+            return [list 0 "<#_ The file $filex_href % was not created, it wasn't found in the manifest #>"]
+        }
+    }
+    
+    if { ![empty_string_p $resource_href] && !$found_p } {
+        # we should have fond the referenced file, aborting
+        return [list 0 "<#_ The resource %resource_identifier% has a reference to a non existing file (%resource_href%). #>"]
+    }
+
+    set resource_dependencies [$resource_node child all imscp:dependency]
+    foreach dependency $resource_dependencies {
+        set dependency_identifierref [imsld::parse::get_attribute -node $dependency -attr_name identifierref]
+        set dependency_id [imsld::cp::dependency_new -resource_id $resource_id \
+                               -identifierref $dependency]
+        # look for the resource in the manifest and add it to the CR
+        set resources [$manifest child all imscp:resources]
+        
+        # there must be at least one reource for the learning objective
+        imsld::parse::validate_multiplicity -tree $resources -multiplicity 0 -element_name "resources (dependency)" -greather_than
+
+        set resourcex [$resources find identifier $dependency_identifierref]
+        # this resourcex must match with exactly one resource
+        imsld::parse::validate_multiplicity -tree $resourcex -multiplicity 1 -element_name "resource ($dependency_identifierref) en $resourcex" -equal
+        set dependency_resource_list [imsld::parse::parse_and_create_resource -resource_node $resourcex \
+                                          -manifest $manifest \
+                                          -manifest_id $manifest_id \
+                                          -parent_id $parent_id \
+                                          -tmp_dir $tmp_dir]
+        if { ![lindex $dependency_resource_list 0] } {
+            # return this value and let the user know there was an error (becuase if succeded, it does nothing here)
+            return $dependency_resource_list
+        }
+    }
+    return [list $resource_id {}]
+}
+
+ad_proc -public imsld::parse::parse_and_create_item { 
+    -manifest
+    -manifest_id
+    -item_node
+    -parent_id
+    -tmp_dir
+} {
+    Parse IMS-LD item node and stores all the information in the database, such as the resources, resources items, etc.
+
+    Returns a list with the new imsld_item_id created if there were no errors, or 0 and an explanatio messge if there was an error.
+    
+    @param manifest Manifest tree
+    @param manifestid Manifest ID or the manifest being parsed
+    @param item_node The item node to parse 
+    @param parent_id Parent folder ID
+    @tmp_dir Temporary directory where the files were exctracted
+} {
+    upvar files_struct_list files_struct_list
+    set item_title [imsld::parse::get_title -node $item_node -prefix imsld]
+    set item_identifier [imsld::parse::get_attribute -node $item_node -attr_name identifier]
+    set item_is_visible_p [imsld::parse::get_bool_attribute -tree $item_node -attr_name isvisible -default t]
+    set item_parameters [imsld::parse::get_attribute -node $item_node -attr_name parameters]
+    set item_identifierref [imsld::parse::get_attribute -node $item_node -attr_name identifierref]
+    set item_id [imsld::item_new -title $item_title \
+                     -identifier $item_identifier \
+                     -is_visible_p $item_is_visible_p \
+                     -parameters $item_parameters \
+                     -identifierref $item_identifierref \
+                     -parent_id $parent_id]
+
+    if { ![empty_string_p $item_identifierref] } {
+        # look for the resource in the manifest and add it to the CR
+        set resources [$manifest child all imscp:resources]
+        
+        # there must be at least one reource for the learning objective
+        imsld::parse::validate_multiplicity -tree $resources -multiplicity 0 -element_name "resources (learning objective)" -greather_than
+
+        set resourcex [$resources find identifier $item_identifierref]
+        # this resourcex must match with exactly one resource
+        imsld::parse::validate_multiplicity -tree $resourcex -multiplicity 1 -element_name "resources ($item_identifierref)" -equal
+        set resource_list [imsld::parse::parse_and_create_resource -resource_node $resourcex \
+                               -manifest $manifest \
+                               -manifest_id $manifest_id \
+                               -parent_id $parent_id \
+                               -tmp_dir $tmp_dir]
+        if { ![lindex $resource_list 0] } {
+            # return the error
+            return $resource_list
+        }
+        # MAPEAR RESOURCE A SU ITEM (UN ITEM - N RESOURCES) !!!!!!!!!!!!!!!!!!!!!!!!!!
+    }
+    return [list $item_id {}]
+}
+
+ad_proc -public imsld::parse::parse_and_create_imsld_manifest { 
+    -xmlfile:required
+    -manifest_id:required
+    {-community_id ""}
+    -tmp_dir:required
+} {
+    Parse a XML IMS LD file and store all the information found in the database, such as the manifest, the organization, the imsld with its components, method, activities, etc.
+
+    Returns the new manifest_id created if there was no errors. Otherwise it returns 0.
     
     @param xmlfile The file to parse. This file must be compliant with the IMS LD spec
-    @option imsld_id The imsld_id of the new ims-ld
+    @param manifest_id The manifest_id that is being created
+    @option community_id community_id of the community where the manifest and its contents will be created. Default value is
+    @param tmp_dir tmp dir where the files were extracted to
 } {
+    set community_id [expr { [empty_string_p $community_id] ? [dotlrn_community::get_community_id] : $community_id }]
+
+    # get the files structure
+    set files_struct_list [imsld::parse::get_files_structure -tmp_dir $tmp_dir]
 
 	# Parser
 	# XML => DOM document
 	dom parse [::tDOM::xmlReadFile $xmlfile] document
 
 	# DOM document => DOM root
-	$document documentElement root
-    set organizations [$manifest child all organizations]
+	$document documentElement manifest
+
+    # manifest
+    set manifest_identifier [imsld::parse::get_attribute -node $manifest -attr_name identifier]
+    set manifest_version [imsld::parse::get_attribute -node $manifest -attr_name version]
+
+    # initialize folders
+    set folders_list [imsld::parse::initialize_folders -community_id $community_id \
+                          -manifest_id $manifest_id \
+                          -manifest_identifier $manifest_identifier]
+    set fs_folder_id [lindex $folders_list 0]
+    set cr_folder_id [lindex $folders_list 1]
+    
+    # update file structure
+    set dir_parent_list [list [lindex [lindex [lindex $files_struct_list 0] 0] 0] $fs_folder_id]
+    set dir_list [list $dir_parent_list [lindex [lindex $files_struct_list 0] 1]]
+    set files_struct_list [lreplace $files_struct_list 0 0 $dir_list]
+
+    set manifest_id [imsld::cp::manifest_new -item_id $manifest_id \
+                         -identifier $manifest_identifier \
+                         -version $manifest_version \
+                         -parent_id $cr_folder_id]
+
+    # organizaiton
+    set organizations [$manifest child all imscp:organizations]
+    set organization_id [imsld::cp::organization_new -manifest_id $manifest_id]
 
     # IMS-LD
     set imsld [$organizations child all imsld:learning-design]
-    set imsld_title [imsld::parse::get_title -tree $imsld]
-    set imsld_level [imsld::parse::get_attribute -tree $imsld -attr_name level]
-    set imsld_level [expr { [empty_string_p $imsld_level] ? "null" : [string tolower $imsld_level] }]
-    set imsld_version [imsld::parse::get_attribute -tree $imsld -attr_name version]
-    set imsld_sequence_used [imsld::parse::get_attribute -tree $imsld -attr_name sequence-used]
-    set imsld_sequence_p [expr { [empty_string_p $imsld_sequence_used] ? 0 : [imsld::parse::tcl_boolean -bool $imsld_sequence_used] }]
+    set imsld_title [imsld::parse::get_title -node $imsld -prefix imsld]
+    set imsld_identifier [imsld::parse::get_attribute -node $imsld -attr_name identifier]
+    set imsld_level [imsld::parse::get_attribute -node $imsld -attr_name level]
+    set imsld_level [expr { [empty_string_p $imsld_level] ? "" : [string tolower $imsld_level] }]
+    set imsld_version [imsld::parse::get_attribute -node $imsld -attr_name version]
+    set imsld_sequence_p [imsld::parse::get_bool_attribute -tree $imsld -attr_name sequence_used -default f]
+    set imsld_id [imsld::imsld_new -identifier $imsld_identifier \
+                      -title $imsld_title \
+                      -level $imsld_level \
+                      -version $imsld_version \
+                      -sequence_p $imsld_sequence_p \
+                      -parent_id $cr_folder_id]
 
     # IMS-LD: Learning Objectives (which is an imsld_item that can have a text resource associated.)
     set learning_objectives [$imsld child all imsld:learning-objectives]
-    imsld::parse::validate_multiplicity -tree $learning_objectives -multiplicity 1 -element_name learning-objectives -lower_than
-    
+    if { [llength $learning_objectives] } {
+        imsld::parse::validate_multiplicity -tree $learning_objectives -multiplicity 1 -element_name learning-objectives -lower_than
+        set learning_objective_title [imsld::parse::get_title -node $learning_objectives -prefix imsld]
+        set learning_objective_id [imsld::learning_objective_new -title $learning_objective_title \
+                                       -imsld_id $imsld_id \
+                                       -parent_id $cr_folder_id]
+
+        # IMD-LD: Learning Objectives: Items
+        set learning_objectives_items [$learning_objectives child all imsld:item]
+        if { [llength $learning_objectives_items] } {
+            foreach imsld_item $learning_objectives_items {
+
+                set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
+                                   -manifest_id $manifest_id \
+                                   -item_node $imsld_item \
+                                   -parent_id $cr_folder_id \
+                                   -tmp_dir $tmp_dir]
+
+                set item_id [lindex $item_list 0]
+                if { !$item_id } {
+                    # an error happened, abort
+                    return $item_list
+                }
+                # MAPEAR ITEMS AL OBJECTIVE !!
+            } 
+        }
+    }
 
     # Components
     set components [$imsld child all imsld:components]
@@ -344,8 +721,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld {
 
     # Components: Roles
     set roles [$components child all imsld:roles]
-    set learners [$roles child all imsld:learner]
-    set staff [$roles child all imsld:staff]
+#    set learners [$roles child all imsld:learner]
+#    set staff [$roles child all imsld:staff]
 
     # Componetns: Activities
     set activities [$components child all imsld:activities]
@@ -360,321 +737,14 @@ ad_proc -public imsld::parse::parse_and_create_imsld {
     imsld::parse::validate_multiplicity -tree $methods -multiplicity 1 -element_name methods -equal
     
     # Method: Play
-    set plays [$methods child all imsld:play]
-    imsld::parse::validate_multiplicity -tree $plays -multiplicity 1 -element_name plays -equal
+#     set plays [$methods child all imsld:play]
+#     imsld::parse::validate_multiplicity -tree $plays -multiplicity 1 -element_name plays -equal
 
-    # Method: Acts
-    set acts [$plays child all imsld:act]
-    imsld::parse::validate_multiplicity -tree $acts -multiplicity 0 -element_name acts -greather_than
+#     # Method: Acts
+#     set acts [$plays child all imsld:act]
+#     imsld::parse::validate_multiplicity -tree $acts -multiplicity 0 -element_name acts -greather_than
 
-
-
-    
-	set questestinteropNodes [$root selectNodes {/questestinterop}]
-	foreach questestinterop $questestinteropNodes {
-		# Looks for assessments
-		set assessmentNodes [$questestinterop selectNodes {assessment}]
-		if { [llength $assessmentNodes] > 0 } {
-			# There are assessments
-			foreach assessment $assessmentNodes {
-				set as_assessments__title [$assessment getAttribute {title} {Assessment}]
-				#get assessment's children: section, (qticomment, duration, qtimetadata, objectives, assessmentcontrol, 
-				#rubric, presentation_material, outcomes_processing, assessproc_extension, assessfeedback,
-				#selection_ordering, reference, sectionref)
-				set nodesList [$assessment childNodes]
-				set as_assessments__definition ""
-				set as_assessments__instructions ""
-				set as_assessments__duration ""
-				#for each assessment's child
-				foreach node $nodesList {
-					set nodeName [$node nodeName]
-					#as_assessmentsx.description = <qticomment> or <objectives>
-					if {$nodeName == "qticomment"} {
-						set definitionNodes [$assessment selectNodes {qticomment}]
-						if {[llength $definitionNodes] != 0} {
-							set definition [lindex $definitionNodes 0]
-							set as_assessments__definition [as::qti::mattext_gethtml $definition]
-						}
-					} elseif {$nodeName == "objectives"} {
-						set definitionNodes [$assessment selectNodes {objectives/material/mattext}]
-						if {[llength $definitionNodes] != 0} {
-							set definition [lindex $definitionNodes 0]
-							set as_assessments__definition [as::qti::mattext_gethtml $definition]
-						}
-					#as_assessments.instructions = <rubric>
-					} elseif {$nodeName == "rubric"} {
-						set instructionNodes [$assessment selectNodes {rubric/material/mattext}]
-						if {[llength $instructionNodes] != 0} {
-							set instruction [lindex $instructionNodes 0]
-							set as_assessments__instructions [as::qti::mattext_gethtml $instruction]
-						}
-					#as_assessments.time_for_response = <duration>	
-					} elseif {$nodeName == "duration"} {
-					        set durationNodes [$assessment selectNodes {duration/text()}]
-						if {[llength $durationNodes] != 0} {
-							set duration [lindex $durationNodes 0]
-							set as_assessments__duration [$duration nodeValue]
-						}
-					} 
-				}
-				set qtimetadataNodes [$assessment selectNodes {qtimetadata}]
-				set as_assessments__run_mode ""
-				set as_assessments__anonymous_p f
-				set as_assessments__secure_access_p f
-				set as_assessments__reuse_responses_p f
-				set as_assessments__show_item_name_p f
-				set as_assessments__consent_page ""
-				set as_assessments__return_url ""
-				set as_assessments__start_time ""
-				set as_assessments__end_time ""
-				set as_assessments__number_tries ""
-				set as_assessments__wait_between_tries ""
-				set as_assessments__ip_mask ""
-				set as_assessments__show_feedback "none"
-				set as_assessments__section_navigation "default path"
-								
-				set itemfeedbacknodes [$root selectNodes {/questestinterop/assessment/section/item/itemfeedback}]
-				if { [llength $itemfeedbacknodes] >0} {
-				    set as_assessments__show_feedback "all"
-				}
-				set resprocessNodes [$root selectNodes {/questestinterop/assessment/section/item/resprocessing}]
-				set as_assessments__survey_p {f}				
-				if { [llength $resprocessNodes] == 0 } {				     
-				     set as_assessments__survey_p {t}
-				     #if it's a survey don't show feedback
-				     set as_assessments__show_feedback "none"				     
-				}			
-				
-				if {[llength $qtimetadataNodes] > 0} {
-				    #nodes qtimetadatafield
-				    set qtimetadatafieldNodes [$qtimetadataNodes selectNodes {qtimetadatafield}]
-				    foreach qtimetadatafieldnode $qtimetadatafieldNodes {
-				         set label [$qtimetadatafieldnode selectNodes {fieldlabel/text()}]
-					 set label [$label nodeValue]
-				         set value [$qtimetadatafieldnode selectNodes {fieldentry/text()}]
-					 set value [$value nodeValue]
-					 					 
-					 switch -exact -- $label {
-					     run_mode {
-					         set as_assessments__run_mode $value					 
-					     }
-					     anonymous_p {
-					         set as_assessments__anonymous_p $value					 
-					     }
-					     secure_access_p {
-					         set as_assessments__secure_access_p $value				 
-					     }
-					     reuse_responses_p {
-					         set as_assessments__reuse_responses_p $value				 
-					     }
-					     show_item_name_p {
-					         set as_assessments__show_item_name_p $value				 
-					     }
-					     consent_page {
-					         set as_assessments__consent_page $value				 
-					     }
-					     start_time {
-					         set as_assessments__start_time $value					 
-					     }
-					     end_time {
-					         set as_assessments__end_time $value					 
-					     }
-					     number_tries {
-					         set as_assessments__number_tries $value				 
-					     }
-					     wait_between_tries {
-					         set as_assessments__wait_between_tries $value				 
-					     }
-					     ip_mask {
-					        set as_assessments__ip_mask $value
-					     }
-					     show_feedback {
-					        set as_assessments__show_feedback $value
-					     }
-					     section_navigation {
-					        set as_assessments__section_navigation $value
-					     }
-					 }
-					 
-				    }				    
-				}				
-					
-				# Insert assessment in the CR (and as_assessments table) getting the revision_id (assessment_id)
-				set as_assessments__assessment_id [as::assessment::new \
-				                                   -title $as_assessments__title \
-								   -description $as_assessments__definition \
-								   -instructions $as_assessments__instructions \
-								   -run_mode $as_assessments__run_mode \
-								   -anonymous_p $as_assessments__anonymous_p \
-								   -secure_access_p $as_assessments__secure_access_p \
-								   -reuse_responses_p $as_assessments__reuse_responses_p \
-								   -show_item_name_p $as_assessments__show_item_name_p \
-								   -consent_page $as_assessments__consent_page \
-								   -return_url $as_assessments__return_url \
-								   -start_time $as_assessments__start_time \
-								   -end_time $as_assessments__end_time \
-								   -number_tries $as_assessments__number_tries \
-								   -wait_between_tries $as_assessments__wait_between_tries \
-								   -time_for_response $as_assessments__duration \
-								   -ip_mask $as_assessments__ip_mask \
-								   -show_feedback $as_assessments__show_feedback \
-								   -section_navigation $as_assessments__section_navigation \
-								   -survey_p $as_assessments__survey_p ]			
-				
-				# Section
-				set sectionNodes [$assessment selectNodes {section}]
-				set as_assessment_section_map__sort_order 0
-				foreach section $sectionNodes {					
-					set as_sections__title [$section getAttribute {title} {Section}]
-					#get section's children (qticomment, duration, qtimetadata, objectives, sectioncontrol, 
-					#sectionprecondition, sectionpostcondition, rubric, presentation_material, outcomes_processing,
-					#sectionproc_extension, sectionfeedback, selection_ordering, reference, itemref, item, sectionref,
-					#section)
-					set nodesList [$section childNodes]
-					set as_sections__definition ""
-					set as_sections__instructions ""
-					set as_sections__duration ""
-					set as_sections__sectionfeedback ""
-					#for each section's child
-					foreach node $nodesList {
-						set nodeName [$node nodeName]
-						#as_sectionsx.description = <qticomment> or <objectives>
-						if {$nodeName == "qticomment"} {
-							set definitionNodes [$section selectNodes {qticomment}]
-							if {[llength $definitionNodes] != 0} {
-								set definition [lindex $definitionNodes 0]
-								set as_sections__definition [as::qti::mattext_gethtml $definition]
-							}
-						} elseif {$nodeName == "objectives"} {
-						    set definitionNodes [$section selectNodes {objectives/material/mattext}]
-						    if {[llength $definitionNodes] != 0} {
-							set definition [lindex $definitionNodes 0]
-							set as_sections__definition [as::qti::mattext_gethtml $definition]
-						    }		
-						#as_sections.max_time_to_complete = <duration>    				    
-					        } elseif {$nodeName == "duration"} {
-						    set section_durationNodes [$section selectNodes {duration/text()}]
-						    if {[llength $section_durationNodes] != 0} {
-							set section_duration [lindex $section_durationNodes 0]
-							set as_sections__duration [$section_duration nodeValue]
-						    }				
-						#as_sections.instructions = <rubric>    		    
-					        } elseif {$nodeName == "rubric"} {
-						    set section_instructionNodes [$section selectNodes {rubric/material/mattext}]
-						    if {[llength $section_instructionNodes] != 0} {
-							set section_instruction [lindex $section_instructionNodes 0]
-							set as_sections__instructions [as::qti::mattext_gethtml $section_instruction]
-						    }				
-						#as_sections.feedback_text = <sectionfeedback>    		        
-					        } elseif {$nodeName == "sectionfeedback"} {
-						    set sectionfeedbackNodes [$section selectNodes {sectionfeedback/material/mattext}]
-						    if {[llength $sectionfeedbackNodes] != 0} {
-							set sectionfeedback [lindex $sectionfeedbackNodes 0]
-							set as_sections__sectionfeedback [as::qti::mattext_gethtml $sectionfeedback]
-						    }				
-					        } 							
-					}
-					
-					set qtimetadataNodes [$section selectNodes {qtimetadata}]
-					set as_sections__num_items ""
-					set as_sections__points ""
-					set asdt__display_type none
-					set asdt__s_num_items ""
-					set asdt__adp_chunk ""
-				        set asdt__branched_p f
-					set asdt__back_button_p t
-					set asdt__submit_answer_p f
-					set asdt__sort_order_type order_of_entry
-					
-					if {[llength $qtimetadataNodes] > 0} {
-				    	    #nodes qtimetadatafield
-				            set qtimetadatafieldNodes [$qtimetadataNodes selectNodes {qtimetadatafield}]
-				            foreach qtimetadatafieldnode $qtimetadatafieldNodes {
-				                set label [$qtimetadatafieldnode selectNodes {fieldlabel/text()}]
-					  	set label [$label nodeValue]
-				         	set value [$qtimetadatafieldnode selectNodes {fieldentry/text()}]
-					 	set value [$value nodeValue]
-					 						 
-					 	switch -exact -- $label {
-					     	    num_items {
-					                set as_sections__num_items $value			
-						    }
-					     	    points {
-					                set as_sections__points $value
-						    }
-					            display_type {
-					                set asdt__display_type $value
-						    }
-					     	    s_num_items {
-					                set asdt__s_num_items $value 
-					     	    }
-						    adp_chunk {
-					                set asdt__adp_chunk $value 
-					     	    }	
-						    branched_p {
-						        set asdt__branched_p $value				
-						    }
-						    back_button_p {
-						        set asdt__back_button_p $value
-						    }
-						    submit_answer_p {
-						        set asdt__submit_answer_p $value
-						    }
-						    sort_order_type {
-						        set asdt__sort_order_type $value
-						    }				     
-						 }   
-					     }					 
-				        }	
-					
-					#section display type
-					set display_type_id [as::section_display::new \
-			                                   -title $asdt__display_type \
-							   -num_items $asdt__s_num_items \
-							   -adp_chunk $asdt__adp_chunk \
-							   -branched_p $asdt__branched_p \
-							   -back_button_p $asdt__back_button_p \
-							   -submit_answer_p $asdt__submit_answer_p \
-							   -sort_order_type $asdt__sort_order_type]
-					# Insert section in the CR (and in the as_sections table) getting the revision_id (section_id)
-					set section_id [as::section::new \
-					                             -title $as_sections__title \
-								     -description $as_sections__definition \
-								     -instructions $as_sections__instructions \
-								     -feedback_text $as_sections__sectionfeedback \
-								     -max_time_to_complete $as_sections__duration \
-								     -num_items $as_sections__num_items \
-								     -points $as_sections__points \
-								     -display_type_id $display_type_id]
-									
-					# Relation between as_sections and as_assessments
-					db_dml as_assessment_section_map_insert {}
-					incr as_assessment_section_map__sort_order
-					set as_item_section_map__sort_order 0
-					# Process the items
-					set as_items [as::qti::parse_item $section [file dirname $xmlfile]]
-					# Relation between as_items and as_sections
-					foreach as_item_list $as_items {
-					    array set as_item $as_item_list
-					    set as_item_id $as_item(as_item_id)
-					    set as_item__duration $as_item(duration)
-					    set as_item__points $as_item(points)
-					    db_dml as_item_section_map_insert {}
-					    incr as_item_section_map__sort_order
-					}
-					
-					#get points from a section
-					db_0or1row get_section_points {}
-					#update as_assessment_section_map with section points
-					db_dml update_as_assessment_section_map {}
-				}
-			}
-		} else {
-			# Just items (no assessments)
-			as::qti::parse_item $questestinterop [file dirname $xmlfile]]
-		}
-	}
-	return $as_assessments__assessment_id
+    return [list $manifest_id {}]
 }
 
 

@@ -11,3 +11,5 @@ Pleas, confirm the information you are uploading
 </blockquote>
 <formtemplate id=imsld_upload></formtemplate>
 </else>
+
+@msg;noquote@

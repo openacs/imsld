@@ -18,13 +18,14 @@ set page_title "<#_ New IMS-LD #>"
 set context [list "<#_ New IMS-LD #>"]
 
 set user_id [ad_conn user_id]
+set manifest_id [db_nextval acs_object_id_seq]
 
 # form to upload an IMS LD ZIP file
 
 ad_form -name upload_file_form -html {enctype multipart/form-data} -cancel_url $return_url -action imsld-new-2 -form {
-    imsld_id:key
     {upload_file:file {label "<#_ IMS-LD ZIP File #>"}}
     {return_url:text {widget hidden} {value $return_url}}
+    {manifest_id:integer {widget hidden} {value $manifest_id}}
 } 
 
 

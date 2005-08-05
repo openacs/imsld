@@ -16,8 +16,11 @@
         <provides url="imsld" version="0.0.1d"/>
 
         <callbacks>
+            <callback type="after-install"  proc="imsld::apm_callback::after_install"/>
+            <callback type="before-uninstall"  proc="imsld::apm_callback::before_uninstall"/>
         </callbacks>
         <parameters>
+        <!-- No version parameters -->
         </parameters>
 
     </version>
