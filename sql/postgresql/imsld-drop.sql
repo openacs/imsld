@@ -27,6 +27,8 @@ drop table imsld_activity_structures cascade;
 
 drop table imsld_environments cascade;
 
+drop table imsld_services cascade;
+
 drop table imsld_send_mail_services cascade;
 
 drop table imsld_send_mail_data cascade;

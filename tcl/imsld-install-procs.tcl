@@ -22,11 +22,10 @@ ad_proc -public imsld::install::init_content_repository {
     # learning objects
     content::type::new -content_type imsld_learning_object -supertype content_revision -pretty_name "<#_ Learning Object #>" -pretty_plural "<#_ Learning Objects #>" -table_name imsld_learning_objects -id_column learning_object_id
     
+    content::type::attribute::new -content_type imsld_learning_object -attribute_name identifier -datatype string -pretty_name "<#_ Identifier #>" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_learning_object -attribute_name class -datatype string -pretty_name "<#_ Class #>" -column_spec "varchar(4000)"
-    content::type::attribute::new -content_type imsld_learning_object -attribute_name environment_id -datatype number -pretty_name "<#_ Environment #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_learning_object -attribute_name is_visible_p -datatype string -pretty_name "<#_ Is Visible? #>" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_learning_object -attribute_name type -datatype string -pretty_name "<#_ Type #>" -column_spec "varchar(100)"
-    content::type::attribute::new -content_type imsld_learning_object -attribute_name schema_version -datatype string -pretty_name "<#_ Schema Version #>" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_learning_object -attribute_name parameters -datatype string -pretty_name "<#_ Parameters #>" -column_spec "varchar(4000)"
     
     # imsld 
@@ -36,20 +35,23 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_imsld -attribute_name version -datatype string -pretty_name "<#_ Version #>" -column_spec "varchar(10)"
     content::type::attribute::new -content_type imsld_imsld -attribute_name level -datatype string -pretty_name "<#_ Level #>" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_imsld -attribute_name sequence_used_p -datatype string -pretty_name "<#_ Sequence Used #>" -column_spec "char(1)"
+    content::type::attribute::new -content_type imsld_imsld -attribute_name learning_object_id -datatype number -pretty_name "<#_ Learning Objects ID #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_imsld -attribute_name prerequisite_id -datatype number -pretty_name "<#_ Prerequistes ID #>" -column_spec "integer"
 
     # learning objectives
     content::type::new -content_type imsld_learning_objective -supertype content_revision -pretty_name "<#_ IMS-LD Learning Objective #>" -pretty_plural "<#_ IMS-LD Learning Objectives #>" -table_name imsld_learning_objectives -id_column learning_object_id
 
-    content::type::attribute::new -content_type imsld_learning_objective -attribute_name imsld_id -datatype number -pretty_name "<#_ IMS-LD Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_learning_objective -attribute_name pretty_title -datatype string -pretty_name "<#_ Pretty Title #>" -column_spec "varchar(200)"
 
     # imsld prerequisites
     content::type::new -content_type imsld_prerequisite -supertype content_revision -pretty_name "<#_ IMS-LD Prerequisite #>" -pretty_plural "<#_ IMS-LD Prerequisites #>" -table_name imsld_prerequisites -id_column prerequisite_id
 
-    content::type::attribute::new -content_type imsld_prerequisite -attribute_name imsld_id -datatype number -pretty_name "<#_ IMS-LD Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_prerequisite -attribute_name pretty_title -datatype title -pretty_name "<#_ Pretty Title #>" -column_spec "varchar(200)"
 
     # imsld items
     content::type::new -content_type imsld_item -supertype content_revision -pretty_name "<#_ IMS-LD Item #>" -pretty_plural "<#_ IMS-LD Items #>" -table_name imsld_items -id_column imsld_item_id
 
+    content::type::attribute::new -content_type imsld_item -attribute_name parent_item_id -datatype integer -pretty_name "<#_ Parent Item Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_item -attribute_name identifier -datatype string -pretty_name "<#_ Identifier #>" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_item -attribute_name identifierref -datatype string -pretty_name "<#_ Identifier Reference #>" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_item -attribute_name is_visible_p -datatype string -pretty_name "<#_ Is Visible? #>" -column_spec "char(1)"
@@ -63,6 +65,7 @@ ad_proc -public imsld::install::init_content_repository {
     # imsld roles
     content::type::new -content_type imsld_role -supertype content_revision -pretty_name "<#_ IMS-LD Role #>" -pretty_plural "<#_ IMS-LD Roles #>" -table_name imsld_roles -id_column role_id
 
+    content::type::attribute::new -content_type imsld_role -attribute_name component_id -datatype string -pretty_name "<#_ Component Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_role -attribute_name identifier -datatype string -pretty_name "<#_ Identifier #>" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_role -attribute_name role_type -datatype string  -pretty_name "<#_ Role Type #>" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_role -attribute_name parent_role_id -datatype number -pretty_name "<#_ Parent Role Identifier #>" -column_spec "integer"
@@ -70,18 +73,25 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_role -attribute_name match_persons_p -datatype string -pretty_name "<#_ Match Persons? #>" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_role -attribute_name max_persons -datatype number -pretty_name "<#_ Max Persons #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_role -attribute_name min_persons -datatype number -pretty_name "<#_ Min Persons#>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_role -attribute_name href -datatype string -pretty_name "<#_ Href #>" -column_spec "varchar(2000)"
+
+    # imsld activity description
+    content::type::new -content_type imsld_activity_description -supertype content_revision -pretty_name "<#_ IMS-LD Activity Description #>" -pretty_plural "<#_ IMS-LD Activity Descriptions #>" -table_name imsld_activity_description -id_column description_id
+
+    content::type::attribute::new -content_type imsld_activity_description -attribute_name pretty_title -datatype title -pretty_name "<#_ Pretty Title #>" -column_spec "varchar(200)"
 
     # learning activities
     content::type::new -content_type imsld_learning_activity -supertype content_revision -pretty_name "<#_ IMS-LD Learning Activity #>" -pretty_plural "<#_ IMS-LD Learning Activities #>" -table_name imsld_learning_activities -id_column activity_id
     
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name identifier -datatype string -pretty_name "<#_ Identifier #>" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name component_id -datatype number -pretty_name "<#_ Component Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_learning_activity -attribute_name parameter_id -datatype number -pretty_name "<#_ Parameter Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name is_visible_p -datatype string -pretty_name "<#_ Is Visible? #>" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name user_choice_p -datatype string -pretty_name "<#_ User Choice? #>" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name time_limit_id -datatype number -pretty_name "<#_ Time Limit Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name on_completion_id -datatype number -pretty_name "<#_ On Completion Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name parameters -datatype string -pretty_name "<#_ Parameters #>" -column_spec "varchar(4000)"
+    content::type::attribute::new -content_type imsld_learning_activity -attribute_name learning_objective_id -datatype number -pretty_name "<#_ Learning Objective ID #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_learning_activity -attribute_name prerequisite_id -datatype number -pretty_name "<#_ Prerequistes ID #>" -column_spec "integer"
 
     # support activities
     content::type::new -content_type imsld_support_activity -supertype content_revision -pretty_name "<#_ IMS-LD Support Activity #>" -pretty_plural "<#_ IMS-LD Support Activities #>" -table_name imsld_support_activities -id_column activity_id
@@ -108,12 +118,23 @@ ad_proc -public imsld::install::init_content_repository {
     
     content::type::attribute::new -content_type imsld_environment -attribute_name component_id -datatype number -pretty_name "<#_ Component Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_environment -attribute_name identifier -datatype string -pretty_name "<#_ Identifier #>" -column_spec "varchar(100)"
+    content::type::attribute::new -content_type imsld_environment -attribute_name learning_object_id -datatype number -pretty_name "<#_ Learning Object Identifier #>" -column_spec "integer"
+
+    # services
+    content::type::new -content_type imsld_service -supertype content_revision -pretty_name "<#_ IMS-LD Service #>" -pretty_plural "<#_ IMS-LD Services #>" -table_name imsld_services -id_column service_id
+    
+    content::type::attribute::new -content_type imsld_service -attribute_name environment_id -datatype number -pretty_name "<#_ Environment Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_service -attribute_name identifier -datatype string -pretty_name "<#_ Identifier #>" -column_spec "varchar(100)"
+    content::type::attribute::new -content_type imsld_service -attribute_name class -datatype string -pretty_name "<#_ Class #>" -column_spec "varchar(4000)"
+    content::type::attribute::new -content_type imsld_service -attribute_name is_visible_p -datatype string -pretty_name "<#_ Is Visible? #>" -column_spec "char(1)"
+    content::type::attribute::new -content_type imsld_service -attribute_name parameters -datatype string -pretty_name "<#_ Parameters #>" -column_spec "varchar(4000)"
+    content::type::attribute::new -content_type imsld_service -attribute_name service_type -datatype string -pretty_name "<#_ Service Type #>" -column_spec "varchar(10)"
 
     # send mail services
     content::type::new -content_type imsld_send_mail_service -supertype content_revision -pretty_name "<#_ IMS-LD Sendmail Service #>" -pretty_plural "<#_ IMS-LD Sendmail Services #>" -table_name imsld_send_mail_services -id_column mail_id
     
-    content::type::attribute::new -content_type imsld_send_mail_service -attribute_name environment_id -datatype number -pretty_name "<#_ Environment Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_send_mail_service -attribute_name recipients -datatype string -pretty_name "<#_ Recipients #>" -column_spec "char(1)"
+    content::type::attribute::new -content_type imsld_send_mail_service -attribute_name service_id -datatype number -pretty_name "<#_ Service Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_send_mail_service -attribute_name recipients -datatype string -pretty_name "<#_ Recipients #>" -column_spec "varchar(11)"
     content::type::attribute::new -content_type imsld_send_mail_service -attribute_name is_visible_p -datatype string -pretty_name "<#_ Is Visible? #>" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_send_mail_service -attribute_name parameters -datatype string -pretty_name "<#_ Parameters #>" -column_spec "varchar(4000)"
 
@@ -127,13 +148,10 @@ ad_proc -public imsld::install::init_content_repository {
     # conference services
     content::type::new -content_type imsld_conference_service -supertype content_revision -pretty_name "<#_ IMS-LD Conference Service #>" -pretty_plural "<#_ IMS-LD Conference Services #>" -table_name imsld_conference_services -id_column conference_id
 
-    content::type::attribute::new -content_type imsld_conference_service -attribute_name environment_id -datatype number -pretty_name "<#_ Environment Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_conference_service -attribute_name service_id -datatype number -pretty_name "<#_ Service Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_conference_service -attribute_name conference_type -datatype string -pretty_name "<#_ Conference Type #>" -column_spec "char(12)"
-    content::type::attribute::new -content_type imsld_conference_service -attribute_name is_visible_p -datatype string -pretty_name "<#_ Is Visible? #>" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_conference_service -attribute_name imsld_item_id -datatype number -pretty_name "<#_ Item Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_conference_service -attribute_name manager_id -datatype number -pretty_name "<#_ Manager Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_conference_service -attribute_name moderator_id -datatype number -pretty_name "<#_ Moderator Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_conference_service -attribute_name parameters -datatype string -pretty_name "<#_ Parameters #>" -column_spec "varchar(4000)"
 
     # methods
     content::type::new -content_type imsld_method -supertype content_revision -pretty_name "<#_ IMS-LD Method #>" -pretty_plural "<#_ IMS-LD Methods #>" -table_name imsld_methods -id_column method_id
@@ -185,7 +203,7 @@ ad_proc -public imsld::install::init_content_repository {
     # on completion
     content::type::new -content_type imsld_on_completion -supertype content_revision -pretty_name "<#_ IMS-LD On Completion #>" -pretty_plural "<#_ IMS-LD On Completions #>" -table_name imsld_on_completion -id_column on_completion_id
 
-    content::type::attribute::new -content_type imsld_on_completion -attribute_name feedback_id -datatype number -pretty_name "<#_ Feedbach Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_on_completion -attribute_name feedback_title -datatype string -pretty_name "<#_ Feedbach Title #>" -column_spec "varchar(200)"
 
     ### IMS-LD Content Packagin
 
@@ -225,6 +243,94 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_cp_file -attribute_name href -datatype string -pretty_name "<#_ Href #>" -column_spec "varchar(2000)"
 }
 
+ad_proc -public imsld::install::init_rels {  
+} { 
+    Create default rels between imsld items
+} { 
+    # Learing Objetcives - IMS-LD Items
+    rel_types::new imsld_lo_item_rel "Learing Objective - Imsld Item rel" "Learing Objective - Imsld Item rels"  \
+        imsld_learning_objective 0 {} \
+        imsld_item 0 {}
+
+    # Prerequisites - IMS-LD Items
+    rel_types::new imsld_preq_item_rel "Prerequisite - Imsld Item rel" "Prerequisite - Imsld Item rels"  \
+        imsld_prerequisite 0 {} \
+        imsld_item 0 {}
+
+    # IMS-LD Items - Resources
+    rel_types::new imsld_item_res_rel "Imsld Item - Resources rel" "Imsld Item - Resources rels"  \
+        imsld_item 0 {} \
+        imsld_cp_resource 0 {}
+
+    # Role - IMS-LD Items
+    rel_types::new imsld_role_item_rel "Role - Imslds Item rel" "Role - Imsld items rels"  \
+        imsld_role 0 {} \
+        imsld_item 0 {}
+
+    # IMS-LD - Learning Objectives
+    rel_types::new imsld_imsld_lob_rel "IMS-LD - Learning Objectives rel" "IMS-LD - Learning Objectives rels"  \
+        imsld_imsld 0 {} \
+        imsld_learning_objective 0 {}
+
+    # Learning Object - IMS-LD Item
+    rel_types::new imsld_lobject_item_rel "Learning Object - IMS-LD Item rel" "Learning Object - IMS-LD Item rels"  \
+        imsld_learning_object 0 {} \
+        imsld_item 0 {}
+
+    # Conference Service - Participants
+    rel_types::new imsld_conf_part_rel "Conference Serice - Participants rel" "Conference Serice - Participants rels" \
+        imsld_conference_service 0 {} \
+        imsld_role 0 {}
+
+    # Conference Service - Observers
+    rel_types::new imsld_conf_obser_rel "Conference Serice - Observers rel" "Conference Serice - Observers rels" \
+        imsld_conference_service 0 {} \
+        imsld_role 0 {}
+
+    # Conference Service - Moderators
+    rel_types::new imsld_conf_moder_rel "Conference Serice - Moderators rel" "Conference Serice - Moderators rels" \
+        imsld_conference_service 0 {} \
+        imsld_role 0 {}
+
+    # Environment - Environment
+    rel_types::new imsld_env_env_rel "Environment - Environment rel" "Environment - Environment rels" \
+        imsld_environment 0 {} \
+        imsld_environment 0 {}
+
+    # Activity Description - IMS-LD Items
+    rel_types::new imsld_actdesc_item_rel "Activity Description - Imsld Item rel" "Activity Description - Imsld Item rels"  \
+        imsld_activity_description 0 {} \
+        imsld_item 0 {}
+
+    # Learning Activity - Environment
+    rel_types::new imsld_la_env_rel "Learning Activity - Environment rel" "Learning Activity - Environment rels" \
+        imsld_learning_activity 0 {} \
+        imsld_environment 0 {}
+
+    # On Completion - Feedback
+    rel_types::new imsld_feedback_rel "On Completion - Feedback rel" "On Completion - Feedback rels" \
+        imsld_on_completion 0 {} \
+        imsld_item 0 {}
+
+}
+
+ad_proc -public imsld::install::delete_rels {  
+} { 
+    Delete default rels between imsld items
+} { 
+    imsld::rel_type_delete -rel_type imsld_lo_item_rel
+    imsld::rel_type_delete -rel_type imsld_preq_item_rel
+    imsld::rel_type_delete -rel_type imsld_item_res_rel
+    imsld::rel_type_delete -rel_type imsld_role_item_rel
+    imsld::rel_type_delete -rel_type imsld_lobject_item_rel
+    imsld::rel_type_delete -rel_type imsld_conf_part_rel
+    imsld::rel_type_delete -rel_type imsld_conf_obser_rel
+    imsld::rel_type_delete -rel_type imsld_conf_moder_rel
+    imsld::rel_type_delete -rel_type imsld_env_env_rel
+    imsld::rel_type_delete -rel_type imsld_la_env_rel
+    imsld::rel_type_delete -rel_type imsld_actdesc_item_rel
+}
+
 ad_proc -public imsld::uninstall::empty_content_repository {  
 } { 
     Deletes content types and attributes
@@ -234,11 +340,10 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     ### IMS-LD
 
     # learning objects
+    content::type::attribute::delete -content_type imsld_learning_object -attribute_name identifier
     content::type::attribute::delete -content_type imsld_learning_object -attribute_name class
-    content::type::attribute::delete -content_type imsld_learning_object -attribute_name environment_id 
     content::type::attribute::delete -content_type imsld_learning_object -attribute_name is_visible_p
     content::type::attribute::delete -content_type imsld_learning_object -attribute_name type
-    content::type::attribute::delete -content_type imsld_learning_object -attribute_name schema_version
     content::type::attribute::delete -content_type imsld_learning_object -attribute_name parameters
 
     # imsld
@@ -246,14 +351,17 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_imsld -attribute_name version
     content::type::attribute::delete -content_type imsld_imsld -attribute_name level
     content::type::attribute::delete -content_type imsld_imsld -attribute_name sequence_used_p
+    content::type::attribute::delete -content_type imsld_imsld -attribute_name learning_objective_id
+    content::type::attribute::delete -content_type imsld_imsld -attribute_name prerequisite_id
 
     # learning objectives
-    content::type::attribute::delete -content_type imsld_learning_objective -attribute_name imsld_id
+    content::type::attribute::delete -content_type imsld_learning_objective -attribute_name pretty_title
 
     # imsld prerequisites
-    content::type::attribute::delete -content_type imsld_prerequisite -attribute_name imsld_id
+    content::type::attribute::delete -content_type imsld_prerequisite -attribute_name pretty_title
 
     # imsld items
+    content::type::attribute::delete -content_type imsld_item -attribute_name parent_item_id
     content::type::attribute::delete -content_type imsld_item -attribute_name identifier
     content::type::attribute::delete -content_type imsld_item -attribute_name identifierref
     content::type::attribute::delete -content_type imsld_item -attribute_name is_visible_p
@@ -263,6 +371,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_component -attribute_name imsld_id
 
     # imsld roles
+    content::type::attribute::delete -content_type imsld_role -attribute_name component_id
     content::type::attribute::delete -content_type imsld_role -attribute_name identifier
     content::type::attribute::delete -content_type imsld_role -attribute_name role_type
     content::type::attribute::delete -content_type imsld_role -attribute_name parent_role_id
@@ -270,16 +379,21 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_role -attribute_name match_persons_p
     content::type::attribute::delete -content_type imsld_role -attribute_name max_persons
     content::type::attribute::delete -content_type imsld_role -attribute_name min_persons
+    content::type::attribute::delete -content_type imsld_role -attribute_name href
+
+    # imsld prerequisites
+    content::type::attribute::delete -content_type imsld_activity_description -attribute_name pretty_title
 
     # learning activities
     content::type::attribute::delete -content_type imsld_learning_activity -attribute_name identifier
     content::type::attribute::delete -content_type imsld_learning_activity -attribute_name component_id
-    content::type::attribute::delete -content_type imsld_learning_activity -attribute_name parameter_id
     content::type::attribute::delete -content_type imsld_learning_activity -attribute_name is_visible_p
     content::type::attribute::delete -content_type imsld_learning_activity -attribute_name user_choice_p
     content::type::attribute::delete -content_type imsld_learning_activity -attribute_name time_limit_id
     content::type::attribute::delete -content_type imsld_learning_activity -attribute_name on_completion_id
     content::type::attribute::delete -content_type imsld_learning_activity -attribute_name parameters
+    content::type::attribute::delete -content_type imsld_learning_activity -attribute_name learning_objective_id
+    content::type::attribute::delete -content_type imsld_learning_activity -attribute_name prerequisite_id
 
     # support activities
     content::type::attribute::delete -content_type imsld_support_activity -attribute_name identifier
@@ -300,9 +414,18 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     # environments
     content::type::attribute::delete -content_type imsld_environment -attribute_name component_id
     content::type::attribute::delete -content_type imsld_environment -attribute_name identifier
+    content::type::attribute::delete -content_type imsld_environment -attribute_name learning_object_id
 
     # send mail service
-    content::type::attribute::delete -content_type imsld_send_mail_service -attribute_name environment_id
+    content::type::attribute::delete -content_type imsld_service -attribute_name environment_id
+    content::type::attribute::delete -content_type imsld_service -attribute_name identifier
+    content::type::attribute::delete -content_type imsld_service -attribute_name class
+    content::type::attribute::delete -content_type imsld_service -attribute_name is_visible_p
+    content::type::attribute::delete -content_type imsld_service -attribute_name parameters
+    content::type::attribute::delete -content_type imsld_service -attribute_name service_type
+
+    # send mail service
+    content::type::attribute::delete -content_type imsld_send_mail_service -attribute_name service_id
     content::type::attribute::delete -content_type imsld_send_mail_service -attribute_name recipients
     content::type::attribute::delete -content_type imsld_send_mail_service -attribute_name is_visible_p
     content::type::attribute::delete -content_type imsld_send_mail_service -attribute_name parameters
@@ -313,13 +436,10 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_send_mail_data -attribute_name mail_data
     
     # conference service
-    content::type::attribute::delete -content_type imsld_conference_service -attribute_name environment_id
+    content::type::attribute::delete -content_type imsld_conference_service -attribute_name service_id
     content::type::attribute::delete -content_type imsld_conference_service -attribute_name conference_type
-    content::type::attribute::delete -content_type imsld_conference_service -attribute_name is_visible_p
     content::type::attribute::delete -content_type imsld_conference_service -attribute_name imsld_item_id
     content::type::attribute::delete -content_type imsld_conference_service -attribute_name manager_id
-    content::type::attribute::delete -content_type imsld_conference_service -attribute_name moderator_id
-    content::type::attribute::delete -content_type imsld_conference_service -attribute_name parameters
     
     # methods
     content::type::attribute::delete -content_type imsld_method -attribute_name imsld_id
@@ -356,7 +476,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_time_limit -attribute_name time_in_seconds
 
     # on completion
-    content::type::attribute::delete -content_type imsld_on_completion -attribute_name feedback_id
+    content::type::attribute::delete -content_type imsld_on_completion -attribute_name feedback_title
     
     ### IMS-LD Content Packagin
     
@@ -394,10 +514,12 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::delete -content_type imsld_item -drop_table_p t
     content::type::delete -content_type imsld_component -drop_table_p t
     content::type::delete -content_type imsld_role -drop_table_p t
+    content::type::delete -content_type imsld_activity_description -drop_table_p t
     content::type::delete -content_type imsld_learning_activity -drop_table_p t
     content::type::delete -content_type imsld_support_activity -drop_table_p t
     content::type::delete -content_type imsld_activity_structure -drop_table_p t
     content::type::delete -content_type imsld_environment -drop_table_p t
+    content::type::delete -content_type imsld_service -drop_table_p t
     content::type::delete -content_type imsld_send_mail_service -drop_table_p t
     content::type::delete -content_type imsld_send_mail_data -drop_table_p t
     content::type::delete -content_type imsld_conference_service -drop_table_p t
@@ -409,7 +531,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::delete -content_type imsld_time_limit -drop_table_p t
     content::type::delete -content_type imsld_on_completion -drop_table_p t
 
-    ### IMS-LD Content Packagin
+    ### IMS-LD Content Packaging
     content::type::delete -content_type imsld_cp_manifest -drop_table_p t
     content::type::delete -content_type imsld_cp_organization -drop_table_p t
     content::type::delete -content_type imsld_cp_resource -drop_table_p t

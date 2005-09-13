@@ -12,16 +12,14 @@ create table imsld_learning_objects (
                             on delete cascade
                             constraint imsld_lo_id_pk   
                             primary key, 
+    identifier              varchar(100)
+                            not null,
     class                   varchar(4000),                  
-    environment_id          integer    
-                            constraint imsld_lo_envid_fk    
-                            references cr_items(item_id), --imsld_environments
     is_visible_p            char(1) 
                             check (is_visible_p in ('t','f')) 
                             default 't', 
     type                    varchar(100),
-    schema_version          varchar(100),
-    parameters               varchar(4000)
+    parameters              varchar(4000)
 );
 
 create index imsld_learning_o_env_id_idx on imsld_learning_objects(environment_id);
@@ -60,7 +58,13 @@ create table imsld_imslds (
     sequence_used_p         char(1)
                             constraint imsld_seq_ck
                             check (sequence_used_p in ('t','f'))
-                            default 'f'
+                            default 'f',
+    learning_objective_id   integer
+                            constraint imsld_lobj_id_fk
+                            references cr_items,    --imsld_learning_objectives
+    prerequisite_id         integer
+                            constraint imsld_prereq_id_fk
+                            references cr_items     --imsld_prerequisites
 );
 
 comment on table imsld_imslds is '
@@ -82,14 +86,12 @@ create table imsld_learning_objectives (
                         on delete cascade
                         constraint imsld_leo_pk
                         primary key,
-    imsld_id            integer
-                        constraint ismld_leo_imsldid_fk
-                        references cr_items     --imsld_imslds
+    pretty_title        varchar(200)
 );
 
 comment on table imsld_learning_objectives is '
 This table holds the learning objectives of the IMS-LD. 
-Technically it is just a mapping table between items and the imsld_id, but this table was created to provide simplicity and clarification in the data model';
+Technically it is just a mapping table between items and the imsld_id or learning_activity_id, but this table was created to provide simplicity and clarification in the data model';
 
 create table imsld_prerequisites (
     prerequisite_id     integer
@@ -98,14 +100,12 @@ create table imsld_prerequisites (
                         on delete cascade
                         constraint imsld_prereq_pk
                         primary key,
-    imsld_id            integer
-                        constraint ismld_prereq_imsldid_fk
-                        references cr_items     --imsld_imslds
+    pretty_title        varchar(200)
 );
 
 comment on table imsld_prerequisites is '
 This table holds the prerequisites of the IMS-LD. 
-Technically it is just a mapping table between items and the imsld_id, but this table was created to provide simplicity and clarification in the data model';
+Technically it is just a mapping table between items and the imsld_id or learning_activity_id, but this table was created to provide simplicity and clarification in the data model';
 
 create table imsld_items (
     imsld_item_id   integer
@@ -114,6 +114,9 @@ create table imsld_items (
                     on delete cascade
                     constraint imsld_items_id_pk
                     primary key,
+    parent_item_id  integer
+                    constraint imsld_items_pid_fk
+                    references cr_items,    --imsld_items
     identifier      varchar(100),
     identifierref   varchar(100),
     is_visible_p    char(1)
@@ -124,6 +127,9 @@ create table imsld_items (
 
 comment on table imsld_items is '
 This table holds the imsld items of the unit of learning';
+
+comment on column imsld_items.parent_item_id is '
+In case it is a nested item.';
 
 comment on column imsld_items.identifier is '
 Unique identifier of the item in the unit of learning';
@@ -160,8 +166,13 @@ create table imsld_roles (
                     on delete cascade
                     constraint imsld_roles_id_pk
                     primary key,
+    component_id    integer
+                    constraint imsld_roles_comp_id_fk
+                    references cr_items     --imsld_components
+                    not null,
     identifier      varchar(100),
-    role_type       varchar(100)
+    role_type       varchar(7)
+                    check (role_type in ('learner','staff'))
                     not null,
     parent_role_id  integer
                     constraint imsld_roles_proleid_fk
@@ -170,9 +181,11 @@ create table imsld_roles (
                     check (create_new_p in ('t','f'))
                     default 't',
     match_persons_p char(1)
-                    check (match_persons_p in ('t','f')),
+                    check (match_persons_p in ('t','f'))
+                    default 'f',
     max_persons     integer,
-    min_persons     integer
+    min_persons     integer,
+    href            varchar(2000)
 );
 
 create index imsld_roles_parent_id_idx on imsld_roles(parent_role_id);
@@ -193,6 +206,20 @@ True means allowed and false means not-allowed';
 comment on column imsld_roles.match_persons_p is '
 This attribute is used when there are several sub roles (e.g. chair, secretary, member). Persons can be matched exclusively to the sub roles, meaning that a person, who has the role of chair, may not be bound to one of the other roles at the same time. When it is not exclusive, persons may be bound to more than one sub role (this is the default situation).
 True means exclusively-in-roles and false means not-exlusively.';
+
+create table imsld_activity_description (
+    description_id      integer
+                        constraint imsld_act_desc_fk
+                        references cr_revisions
+                        on delete cascade
+                        constraint imsld_act_desc_pk
+                        primary key,
+    pretty_title        varchar(200)
+);
+
+comment on table iimsld_activity_description is '
+This table holds the descrition of a learning activity.
+Technically it is just a mapping table between items and the learning activity, but this table was created to provide simplicity and clarification in the data model';
 
 create table imsld_learning_activities (
     activity_id             integer
@@ -217,7 +244,13 @@ create table imsld_learning_activities (
                             references cr_items,    --imsld_time_limits
     on_completion_id        integer
                             constraint imdls_la_oncompid_fk
-                            references cr_items     --imsld_on_completion
+                            references cr_items,    --imsld_on_completion
+    learning_objective_id   integer
+                            constraint imsld_la_lobjid_fk
+                            references cr_items,    --imsld_learning_objectives
+    prerequisite_id         integer
+                            constraint imsld_la_prereqid_fk
+                            references cr_items     --imsld_prerequisites
 );
 
 create index imsld_la_comp_id_idx on imsld_learning_activities(component_id);
@@ -319,7 +352,10 @@ create table imsld_environments (
                         constraint imsld_env_compid_fk
                         references cr_items     --imsld_components
                         not null,
-    identifier          varchar(100)
+    identifier          varchar(100),
+    learning_object_id  integer
+                        constraint imsld_env_loid_fk
+                        references cr_items,    --imsld_learning_objects
 );
 
 create index imsld_envs_comp_id_idx on imsld_environments(component_id);
@@ -329,6 +365,41 @@ The environments are learning objects, services or more environments that comple
 The learning objects and services are mapped to this table through those tables 
 and the nested environments are mapped through a mapping table.';
 
+create table imsld_services (
+    service_id      integer
+                    constraint imsld_serv_fk
+                    references cr_revisions
+                    on delete cascade
+                    constraint imsld_serv_pk
+                    primary key,
+    environment_id  integer
+                    constraint imsld_serv_env_fk
+                    references cr_items     --imsld_environments
+                    not null,
+    identifier      varchar(100),
+    class           varchar(4000),
+    is_visible_p    char(1) 
+                    check (is_visible_p in ('t','f')) 
+                    default 't',
+    parameters      varchar(4000),
+    service_type    varchar(10)
+                    check (service_type in ('send-mail','conference'))
+);
+
+create index imsld_serv_env_id_idx on imsld_services(environment_id);
+
+comment on table imsld_services is '
+This table stores all the services that are found in the IMS-LD.
+The services are supposed to use the other .LRN packages (because that is how
+the service is provided) but we also hold the information in this table.'
+
+comment on column imsld_services.is_visible_p is '
+Initial visibility attribute';
+
+comment on column imsld_services.service_type is '
+Service type. Currently only send-mail and conference service types are supported
+and their respective information is sotred in the tables imsld_send_mail_services and imsld_conference_services, respectively.';
+
 create table imsld_send_mail_services (
     mail_id         integer 
                     constraint imsld_emailserv_fk 
@@ -336,25 +407,18 @@ create table imsld_send_mail_services (
                     on delete cascade
                     constraint imsld_emailserv_pk 
                     primary key, 
-    environment_id  integer
-                    constraint imsld_emailsevr_env_fk
-                    references cr_items     --imsld_environments
+    service_id      integer
+                    constraint imsld_emailsevr_service_fk
+                    references cr_items     --imsld_services
                     not null,
-    recipients      char(11)
+    recipients      varchar(11)
                     check (recipients in ('all-in-role','selection')),
-    is_visible_p    char(1) 
-                    check (is_visible_p in ('t','f')) 
-                    default 't',
-    parameters      varchar(4000)
 );
 
-create index imsld_send_m_env_id_idx on imsld_send_mail_services(environment_id);
+create index imsld_send_m_serv_id_idx on imsld_send_mail_services(service_id);
 
 comment on column imsld_send_mail_services.recipients is '
 Fixed choice: ''all-in-role'' or ''selection''. With the first choice, the user agent only allows messages to be sent to the role, indicating that all persons in the role get the message. With the second choice, the user agent allows a user to select one or more individuals within the specified role to send the message to';
-
-comment on column imsld_send_mail_services.is_visible_p is '
-Initial visibility attribute';
 
 create table imsld_send_mail_data (
     data_id         integer  
@@ -384,30 +448,22 @@ create table imsld_conference_services (
                         on delete cascade
                         constraint imsld_confs_pk   
                         primary key,   
-    environment_id      integer 
-                        constraint imsld_confs_env_fk 
-                        references cr_items     --imsld_environments
-                        not null, 
+    service_id          integer
+                        constraint imsld_emailsevr_service_fk
+                        references cr_items     --imsld_services
+                        not null,
     conference_type     char(12)
                         check (conference_type in ('synchronous','asynchronous','announcement')),
-    is_visible_p        char(1)  
-                        check (is_visible_p in ('t','f'))  
-                        default 't', 
     imsld_item_id       integer
                         constraint imsld_confs_item_itemid_fk
                         references cr_items,    --imsld_items
-    manager_id          integer
-                        constraint imsld_confs_manager_fk
-                        references cr_items,    --imsld_roles
     moderator_id        integer 
                         constraint imsld_confs_moderator_fk 
-                        references cr_items,    --imsld_roles
-    parameters          varchar(4000)
+                        references cr_items     --imsld_roles
 );
 
-create index imsld_confs_env_id on imsld_conference_services(environment_id);
+create index imsld_confs_serv_id on imsld_conference_services(service_id);
 create index imsld_confs_item_id on imsld_conference_services(imsld_item_id);
-create index imsld_confs_manag_id on imsld_conference_services(manager_id);
 create index imsld_confs_moder_id on imsld_conference_services(moderator_id);
 
 comment on table imsld_conference_services is '
@@ -575,18 +631,14 @@ create table imsld_on_completion (
                             on delete cascade
                             constraint imsld_oncomp_id_pk  
                             primary key, 
-    feedback_id             integer             -- a feedback is an imsld_item
-                            constraint imsld_oncomp_feedbid_fk   
-                            references cr_items(item_id)
-                            not null
+    feedback_title          varchar(200)
 );
 
 create index imsld_oncomp_feedb_id_idx on imsld_on_completion(feedback_id);
 
-comment on table imsld_on_completion is'
-The underlying item elements point to a resource (of type webcontent or imsldcontent), where the feedback description can be found. After completion (of the component pointing to this row) this text becomes visible.';
+comment on table imsld_on_completion is '
+The underlying item elements point to a resource (of type webcontent or imsldcontent), where the feedback description can be found. After completion (of the component pointing to this row) this text becomes visible.
 
-comment on column imsld_on_completion.feedback_id is '
-Reference to the item that holds the feedback.';
+Feedback are items that are mapped to this table with the imsld_feedback_rel.';
 
 \i imsld-cp-create.sql
