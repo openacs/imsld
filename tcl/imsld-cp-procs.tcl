@@ -51,7 +51,6 @@ ad_proc -public imsld::cp::manifest_new {
     set content_type imsld_cp_manifest 
     set item_name "${item_id}_[string tolower $identifier]"
 
-    ns_log notice "edit p viene $edit_p !!!!!!!!!!! y version $version"
     if { !$edit_p } {
         # create
         set item_id [content::item::new -item_id $item_id \

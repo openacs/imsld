@@ -59,6 +59,7 @@ ad_proc -public imsld::fs::file_new {
     # structx = directory loop, count_y and count_x are going to be used to update the files_structure_list
     set structx $files_struct_list
     set count_y 0
+    ns_log notice "a buscar en $structx \n\n\n" 
     while { [llength $structx] > 0 && $found_p == 0 } {
         # for each directory
         set dirx [lindex $structx 0]

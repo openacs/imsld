@@ -22,8 +22,6 @@ create table imsld_learning_objects (
     parameters              varchar(4000)
 );
 
-create index imsld_learning_o_env_id_idx on imsld_learning_objects(environment_id);
-
 comment on table imsld_learning_objects is '
 Learning objects are incorporated (in dotLRN) by referencing resources through the item elements.';
 
@@ -32,9 +30,6 @@ The class attribute refers to the value of class attributes available in learnin
 
 comment on column imsld_learning_objects.type is '
 The type of learning object (e.g. knowledge-object, tool-object test-object). Vocabulary used can be the one of ''learning resource type'' element from the IEEE LTSC LOM.';
-
-comment on column imsld_learning_objects.schema_version is '
-Indicate the version of the schema to be used.';
 
 comment on column imsld_learning_objects.is_visible_p is '
 Initial visibility attribute';
@@ -66,6 +61,9 @@ create table imsld_imslds (
                             constraint imsld_prereq_id_fk
                             references cr_items     --imsld_prerequisites
 );
+
+create index imsld_imsld_loid_idx on imsld_imslds(learning_objective_id);
+create index imsld_imsld_pid_idx on imsld_imslds(prerequisite_id);
 
 comment on table imsld_imslds is '
 IMS-LD main table, where the imsld general information is stored.';
@@ -124,6 +122,8 @@ create table imsld_items (
                     default 't',
     parameters      varchar(4000)
 );
+
+create index imsld_items_pid_idx on imsld_items(parent_item_id);
 
 comment on table imsld_items is '
 This table holds the imsld items of the unit of learning';
@@ -189,6 +189,7 @@ create table imsld_roles (
 );
 
 create index imsld_roles_parent_id_idx on imsld_roles(parent_role_id);
+create index imsld_roles_comp_id_idx on imsld_roles(component_id);
 
 comment on table imsld_roles is '
 Roles of the unit of learning. Whenever possible, they are treated just like the roles in dotLRN';
@@ -207,7 +208,7 @@ comment on column imsld_roles.match_persons_p is '
 This attribute is used when there are several sub roles (e.g. chair, secretary, member). Persons can be matched exclusively to the sub roles, meaning that a person, who has the role of chair, may not be bound to one of the other roles at the same time. When it is not exclusive, persons may be bound to more than one sub role (this is the default situation).
 True means exclusively-in-roles and false means not-exlusively.';
 
-create table imsld_activity_description (
+create table imsld_activity_desc (
     description_id      integer
                         constraint imsld_act_desc_fk
                         references cr_revisions
@@ -217,7 +218,7 @@ create table imsld_activity_description (
     pretty_title        varchar(200)
 );
 
-comment on table iimsld_activity_description is '
+comment on table imsld_activity_desc is '
 This table holds the descrition of a learning activity.
 Technically it is just a mapping table between items and the learning activity, but this table was created to provide simplicity and clarification in the data model';
 
@@ -232,6 +233,10 @@ create table imsld_learning_activities (
     component_id            integer
                             constraint imsld_la_component_id_fk
                             references cr_items     --imsld_components
+                            not null,
+    activity_description_id integer
+                            constraint imsld_la_desc_id_fk
+                            references cr_items     --imsld_activity_descs
                             not null,
     parameters              varchar(4000),
     is_visible_p            char(1)
@@ -254,8 +259,11 @@ create table imsld_learning_activities (
 );
 
 create index imsld_la_comp_id_idx on imsld_learning_activities(component_id);
+create index imsld_la_ad_id_idx on imsld_learning_activities(activity_description_id);
 create index imsld_la_timel_id_idx on imsld_learning_activities(time_limit_id);
 create index imsld_la_oncomp_id_idx on imsld_learning_activities(on_completion_id);
+create index imsld_la_lo_id_idx on imsld_learning_activities(learning_objective_id);
+create index imsld_la_prereq_id_idx on imsld_learning_activities(prerequisite_id);
 
 comment on table imsld_learning_activities is '
 This table stores the learning activitis of the component of the unit of learning.';
@@ -322,13 +330,19 @@ create table imsld_activity_structures (
                                 constraint imsld_as_component_id_fk 
                                 references cr_items     --imsld_components
                                 not null,
+    information_id              integer 
+                                constraint imsld_as_info_id_fk 
+                                references cr_items     --imsld_components
+                                not null,
     identifier                  varchar(100),
     number_to_select            integer,
     structure_type              char(9)
-                                check (structure_type in ('selection','sequence'))
+                                check (structure_type in ('selection','sequence')),
+    sort                        varchar(4)
 );
 
 create index imsld_as_comp_id_idx on imsld_activity_structures(component_id);
+create index imsld_as_info_id_idx on imsld_activity_structures(information_id);
 
 comment on table imsld_activity_structures is '
 The activity structures of a component determine the sets and order of activities in the unit of learning, as well as the
@@ -355,10 +369,11 @@ create table imsld_environments (
     identifier          varchar(100),
     learning_object_id  integer
                         constraint imsld_env_loid_fk
-                        references cr_items,    --imsld_learning_objects
+                        references cr_items     --imsld_learning_objects
 );
 
 create index imsld_envs_comp_id_idx on imsld_environments(component_id);
+create index imsld_learno_id_idx on imsld_environments(learning_object_id);
 
 comment on table imsld_environments is '
 The environments are learning objects, services or more environments that complement a given activity.
@@ -391,7 +406,7 @@ create index imsld_serv_env_id_idx on imsld_services(environment_id);
 comment on table imsld_services is '
 This table stores all the services that are found in the IMS-LD.
 The services are supposed to use the other .LRN packages (because that is how
-the service is provided) but we also hold the information in this table.'
+the service is provided) but we also hold the information in this table.';
 
 comment on column imsld_services.is_visible_p is '
 Initial visibility attribute';
@@ -412,7 +427,7 @@ create table imsld_send_mail_services (
                     references cr_items     --imsld_services
                     not null,
     recipients      varchar(11)
-                    check (recipients in ('all-in-role','selection')),
+                    check (recipients in ('all-in-role','selection'))
 );
 
 create index imsld_send_m_serv_id_idx on imsld_send_mail_services(service_id);
@@ -519,9 +534,9 @@ create table imsld_plays (
                                 check (is_visible_p in ('t','f'))   
                                 default 't',  
     identifier                  varchar(100),
-    when_last_act_completed_id  integer
-                                constraint imsld_plays_lastact_fk
-                                references cr_items,    --imsld_acts
+    when_last_act_completed_p   char(1)   
+                                check (when_last_act_completed_p in ('t','f'))   
+                                default 't',
     time_limit_id               integer
                                 constraint imsld_plays_timelid_fk
                                 references cr_items,    --imsld_time_limits
@@ -531,7 +546,6 @@ create table imsld_plays (
 );
 
 create index imsld_plays_meth_id_idx on imsld_plays(method_id);
-create index imsld_plays_act_id_idx on imsld_plays(when_last_act_completed_id);
 create index imsld_plays_timel_id_idx on imsld_plays(time_limit_id);
 create index imsld_plays_oncomp_id_idx on imsld_plays(on_completion_id);
 
@@ -585,9 +599,6 @@ create table imsld_role_parts (
     support_activity_id     integer
                             constraint imsld_rp_said_fk  
                             references cr_items,    --imsld_support_activities
-    unit_of_learning_id     integer
-                            constraint imsld_rp_imslds_fk  
-                            references cr_items,    --imsld_imslds
     activity_structure_id   integer
                             constraint imsld_rp_asid_fk  
                             references cr_items,    --imsld_activity_structures
@@ -599,7 +610,6 @@ create table imsld_role_parts (
 create index imsld_rp_role_id_idx on imsld_role_parts(role_id);
 create index imsld_rp_la_id_idx on imsld_role_parts(learning_activity_id);
 create index imsld_rp_sa_id_idx on imsld_role_parts(support_activity_id);
-create index imsld_rp_imsld_id_idx on imsld_role_parts(unit_of_learning_id);
 create index imsld_rp_as_id_idx on imsld_role_parts(activity_structure_id);
 create index imsld_rp_env_id_idx on imsld_role_parts(environment_id);
 
@@ -633,8 +643,6 @@ create table imsld_on_completion (
                             primary key, 
     feedback_title          varchar(200)
 );
-
-create index imsld_oncomp_feedb_id_idx on imsld_on_completion(feedback_id);
 
 comment on table imsld_on_completion is '
 The underlying item elements point to a resource (of type webcontent or imsldcontent), where the feedback description can be found. After completion (of the component pointing to this row) this text becomes visible.

@@ -19,7 +19,9 @@ ad_proc -public imsld::apm_callback::after_install {
     imsld::install::init_content_repository
     
     # create default relationships
-    ismld::install::init_rels
+    imsld::install::init_rels
+
+    return 1
 }
 
 ad_proc -public imsld::apm_callback::before_uninstall {  
@@ -31,5 +33,7 @@ ad_proc -public imsld::apm_callback::before_uninstall {
 
     # clean the cr
     imsld::uninstall::empty_content_repository
+
+    return 1
 }
 
