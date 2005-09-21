@@ -182,6 +182,7 @@ ad_proc -public imsld::install::init_content_repository {
     # role parts
     content::type::new -content_type imsld_role_part -supertype content_revision -pretty_name "<#_ IMS-LD Role Part #>" -pretty_plural "<#_ IMS-LD Role Parts #>" -table_name imsld_role_parts -id_column role_part_id
 
+    content::type::attribute::new -content_type imsld_role_part -attribute_name act_id -datatype number -pretty_name "<#_ Act Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_role_part -attribute_name identifier -datatype string -pretty_name "<#_ Identifier #>" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_role_part -attribute_name role_id -datatype number -pretty_name "<#_ Role Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_role_part -attribute_name learning_activity_id -datatype number -pretty_name "<#_ Learning Activity Identifier #>" -column_spec "integer"
@@ -515,6 +516,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_act -attribute_name on_completion_id
 
     # role parts
+    content::type::attribute::delete -content_type imsld_role_part -attribute_name act_id
     content::type::attribute::delete -content_type imsld_role_part -attribute_name identifier
     content::type::attribute::delete -content_type imsld_role_part -attribute_name role_id
     content::type::attribute::delete -content_type imsld_role_part -attribute_name learning_activity_id

@@ -46,21 +46,17 @@ ad_proc -public imsld::parse::is_imsld {
 
     # Check manifest organizations
     set organizations [$tree child all imscp:organizations]
-
-    if { [llength $organizations] == 1 } {
-        
-        set imsld [$organizations child all imsld:learning-design]
-        
-        if { [llength $imsld] > 1 } {
-            # There are more than one imsld in the organization, not supported
-            return [list 0 "<#_ The manifest has more than one imsld:learning design. Right now this is not supported, sorry. #>"]
-        }
-
-    } else {
-        # There are more than one organizations, or there is none. None of those cases supported, aborting
-        return [list 0 "<#_ The manifest doesn't contain any organizations or there are more than one. None of those cases are supported in this version, sorry. #>"]
+    if { ![llength $organizations] } {
+        set organizations [$tree child all organizations]
     }
+    imsld::parse::validate_multiplicity -tree $organizations -multiplicity 1 -element_name organizations -equal
 
+    set imsld [$organizations child all imsld:learning-design]
+    if { ![llength $imsld] } {
+        set imsld [$organizations child all learning-design]
+    }
+    imsld::parse::validate_multiplicity -tree $imsld -multiplicity 1 -element_name IMD-LD -equal
+        
     # After validating the cases above, we can say that this seems a well formed IMS LD
     return [list 1 {}]
 }
@@ -505,7 +501,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
     # now we proceed to get all the info of the resource
     set resource_type [imsld::parse::get_attribute -node $resource_node -attr_name type]
     set resource_href [imsld::parse::get_attribute -node $resource_node -attr_name href]
-    set resource_identifier [imsld::parse::get_attribute -node $resource_node -attr_name identifier]
+    set resource_identifier [string tolower [imsld::parse::get_attribute -node $resource_node -attr_name identifier]]
     set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
                          -identifier $resource_identifier \
                          -type $resource_type \
@@ -513,7 +509,11 @@ ad_proc -public imsld::parse::parse_and_create_resource {
                          -parent_id $parent_id]
     
     set found_p 0
-    foreach filex [$resource_node child all imscp:file] {
+    set filex_list [$resource_node child all imscp:file]
+    if { ![llength $filex_list] } {
+        set filex_list [$resource_node child all file]
+    }
+    foreach filex $filex_list {
         set filex_href [imsld::parse::get_attribute -node $filex -attr_name href]
         if { ![empty_string_p $resource_href] && [string eq $resource_href $filex_href] } {
             # check if the referenced file in the resource exists
@@ -533,16 +533,22 @@ ad_proc -public imsld::parse::parse_and_create_resource {
     
     if { ![empty_string_p $resource_href] && !$found_p } {
         # we should have fond the referenced file, aborting
-        return [list 0 "<#_ The resource %resource_identifier% has a reference to a non existing file (%resource_href%). #>"]
+        return [list 0 "<#_ The resource $resource_identifier % has a reference to a non existing file ($resource_href %). #>"]
     }
 
     set resource_dependencies [$resource_node child all imscp:dependency]
+    if { ![llength $resource_dependencies] } {
+        set resource_dependencies [$resource_node child all dependency]
+    }
     foreach dependency $resource_dependencies {
         set dependency_identifierref [imsld::parse::get_attribute -node $dependency -attr_name identifierref]
         set dependency_id [imsld::cp::dependency_new -resource_id $resource_id \
                                -identifierref $dependency]
         # look for the resource in the manifest and add it to the CR
         set resources [$manifest child all imscp:resources]
+        if { ![llength $resources] } {
+            set imsld [$manifest child all resources]
+        }
         
         # there must be at least one reource for the learning objective
         imsld::parse::validate_multiplicity -tree $resources -multiplicity 0 -element_name "resources (dependency)" -greather_than
@@ -585,7 +591,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
     upvar files_struct_list files_struct_list
 
     set item_title [imsld::parse::get_title -node $item_node -prefix imsld]
-    set item_identifier [imsld::parse::get_attribute -node $item_node -attr_name identifier]
+    set item_identifier [string tolower [imsld::parse::get_attribute -node $item_node -attr_name identifier]]
     set item_is_visible_p [imsld::parse::get_bool_attribute -node $item_node -attr_name isvisible -default t]
     set item_parameters [imsld::parse::get_attribute -node $item_node -attr_name parameters]
     set item_identifierref [imsld::parse::get_attribute -node $item_node -attr_name identifierref]
@@ -594,16 +600,19 @@ ad_proc -public imsld::parse::parse_and_create_item {
                      -attributes [list [list identifier $item_identifier] \
                                       [list is_visible_p $item_is_visible_p] \
                                       [list parameters $item_parameters] \
-                                      [list identifierref $item_identifierref] \
+                                      [list identifierref [string tolower $item_identifierref]] \
                                       [list parent_item_id $parent_item_id]] \
                      -parent_id $parent_id]
 
     if { ![empty_string_p $item_identifierref] } {
         # look for the resource in the manifest and add it to the CR
         set resources [$manifest child all imscp:resources]
+        if { ![llength $resources] } {
+            set resources [$manifest child all resources]
+        }
         
         # there must be at least one reource for the learning objective
-        imsld::parse::validate_multiplicity -tree $resources -multiplicity 0 -element_name "resources (item)" -greather_than
+        imsld::parse::validate_multiplicity -tree $resources -multiplicity 1 -element_name "resources (referenced from item $item_identifier)" -greather_than
 
         set resourcex [$resources find identifier $item_identifierref]
         # this resourcex must match with exactly one resource
@@ -628,7 +637,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
         foreach nested_item $nested_item_list {
             set nested_item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                       -manifest_id $manifest_id \
-                                      -item_node $information_item \
+                                      -item_node $nested_item \
                                       -parent_id $parent_id \
                                       -tmp_dir $tmp_dir \
                                       -parent_item_id $item_id]
@@ -682,8 +691,8 @@ ad_proc -public imsld::parse::parse_and_create_role {
         }
     }
     set role_href [imsld::parse::get_attribute -node $roles_node -attr_name href]
-    set role_identifier [imsld::parse::get_attribute -node $roles_node -attr_name identifier]
-    set role_match_persons [imsld::parse::get_attribute -node $roles_node -attr_name identifier]
+    set role_identifier [string tolower [imsld::parse::get_attribute -node $roles_node -attr_name identifier]]
+    set role_match_persons [imsld::parse::get_attribute -node $roles_node -attr_name match-persons]
     switch [string tolower $role_match_persons] {
         exclusively-in-roles {
             set role_match_persons_p t
@@ -719,7 +728,7 @@ ad_proc -public imsld::parse::parse_and_create_role {
         # parse the item, create it and map it to the role
         set information_item [$role_information child all imsld:item]
         if { ![llength $information_item] } {
-            return [list 0 "<#_ Information given but no item associated to it for the role %role_title% #>"]
+            return [list 0 "<#_ Information given but no item associated to it for the role $role_title % #>"]
         }
 
         set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
@@ -740,14 +749,19 @@ ad_proc -public imsld::parse::parse_and_create_role {
     # nested roles
     set nested_role [$roles_node child all "imsld:${role_type}"]
     if { [llength $nested_role] } {
-        imsld::parse::parse_and_create_role -role_type $role_type \
-            -manifest $manifest \
-            -manifest_id $manifest_id \
-            -parent_id $parent_id \
-            -tmp_dir $tmp_dir \
-            -roles_node $nested_role \
-            -parent_role_id $role_id \
-            -component_id $component_id
+        set role_list [imsld::parse::parse_and_create_role -role_type $role_type \
+                           -manifest $manifest \
+                           -manifest_id $manifest_id \
+                           -parent_id $parent_id \
+                           -tmp_dir $tmp_dir \
+                           -roles_node $nested_role \
+                           -parent_role_id $role_id \
+                           -component_id $component_id]
+        set role_id [lindex $role_list 0]
+        if { !$role_id } {
+            # an error happened, abort and return the list whit the error
+            return $role_list
+        }
     }
 
     return $role_id
@@ -918,7 +932,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_object {
 
     # get learning object info
     set learning_object_class [imsld::parse::get_attribute -node $learning_object_node -attr_name class]
-    set identifier [imsld::parse::get_attribute -node $learning_object_node -attr_name identifier]
+    set identifier [string tolower [imsld::parse::get_attribute -node $learning_object_node -attr_name identifier]]
     set is_visible_p [imsld::parse::get_bool_attribute -node $learning_object_node -attr_name isvisible -default t]
     set parameters [imsld::parse::get_attribute -node $learning_object_node -attr_name parameters]
     set type [imsld::parse::get_attribute -node $learning_object_node -attr_name type]
@@ -926,9 +940,9 @@ ad_proc -public imsld::parse::parse_and_create_learning_object {
 
     set learning_object_id [imsld::item_revision_new -attributes [list [list class $learning_object_class] \
                                                                       [list identifier $identifier] \
-                                                                      [listis_visible_p $is_visible_p] \
-                                                                      [listparameters $parameters] \
-                                                                      [listtype $type]] \
+                                                                      [list is_visible_p $is_visible_p] \
+                                                                      [list parameters $parameters] \
+                                                                      [list type $type]] \
                                 -content_type imsld_learning_object \
                                 -title $title \
                                 -parent_id $parent_id]
@@ -939,7 +953,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_object {
         imsld::parse::validate_multiplicity -tree $learning_object_node -multiplicity 1 -element_name item(learning-object) -equal
         set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                            -manifest_id $manifest_id \
-                           -item_node $imsld_item \
+                           -item_node $learning_object_item \
                            -parent_id $parent_id \
                            -tmp_dir $tmp_dir]
         
@@ -977,10 +991,17 @@ ad_proc -public imsld::parse::parse_and_create_service {
 
     # get service info
     set service_class [imsld::parse::get_attribute -node $service_node -attr_name class]
-    set identifier [imsld::parse::get_attribute -node $service_node -attr_name identifier]
+    set identifier [string tolower [imsld::parse::get_attribute -node $service_node -attr_name identifier]]
     set is_visible_p [imsld::parse::get_bool_attribute -node $service_node -attr_name isvisible -default t]
     set parameters [imsld::parse::get_attribute -node $service_node -attr_name parameters]
     
+    set component_id [db_string get_component_id {
+        select env.component_id
+        from imsld_environmentsi env
+        where content_revision__is_live(env.environment_id) = 't'
+        and env.item_id = :environment_id
+    }]
+
     set send_mail [$service_node child all imsld:send-mail]
     if { [llength $send_mail] } {
         # it's a send mail service, get the info and create the service
@@ -1010,13 +1031,19 @@ ad_proc -public imsld::parse::parse_and_create_service {
         imsld::parse::validate_multiplicity -tree $email_data_list -multiplicity 1 -element_name email-data -greather_than
         foreach email_data $email_data_list {
             set role_ref [$email_data child all imsld:role-ref]
-            imsld::parse::validate_multiplicity -tree $email_data -multiplicity 1 -element_name role-ref(email-data) -equal
+            imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name role-ref(email-data) -equal
             set ref [string tolower [imsld::parse::get_attribute -node $role_ref -attr_name ref]]
-            if { ![db_0or1row get_role_id {select role_id from imsld_roles where identifier = :ref and content_revision__is_live(role_id) = 't' }] } {
+            if { ![db_0or1row get_role_id {
+                select ir.item_id as role_id
+                from imsld_rolesi ir
+                where ir.identifier = :ref 
+                and content_revision__is_live(ir.role_id) = 't' 
+                and ir.component_id = :component_id
+            }] } {
                 # there is no role with that identifier, return the error
-                return [list 0 "<#_ There is no role with the identifier %ref% (referenced by an email data) #>"]
+                return [list 0 "<#_ There is no role with the identifier % $role_ref % (referenced by an email data) #>"]
             }
-            set email_data_id [imsld::item_revision_new -attributes [list [list send_mail_service_id $send_mail_id] \
+            set email_data_id [imsld::item_revision_new -attributes [list [list send_mail_id $send_mail_id] \
                                                                          [list role_id $role_id] \
                                                                          [list mail_data {}]] \
                                    -content_type imsld_send_mail_data \
@@ -1033,12 +1060,18 @@ ad_proc -public imsld::parse::parse_and_create_service {
         
         # manager
         set manager [$conference child all imsld:manager]
+        set manager_id ""
         if { [llength $manager] } {
             imsld::parse::validate_multiplicity -tree $manager -multiplicity 1 -element_name conference-manager -equal
             set role_ref [string tolower [imsld::parse::get_attribute -node $manager -attr_name role-ref]]
-            if { ![db_0or1row get_role_id {select role_id as manager_id from imsld_roles where identifier = :role_ref and content_revision__is_live(role_id) = 't' }] } {
+            if { ![db_0or1row get_role_id {
+                select item_id as manager_id 
+                from imsld_rolesi 
+                where identifier = :role_ref 
+                and content_revision__is_live(role_id) = 't' 
+                and component_id = :component_id }] } {
                 # there is no role with that identifier, return the error
-                return [list 0 "<#_ There is no role with the identifier %ref% (referenced by: manager) #>"]
+                return [list 0 "<#_ There is no role with the identifier % $role_ref % (referenced by: manager) #>"]
             }
         }
 
@@ -1063,13 +1096,13 @@ ad_proc -public imsld::parse::parse_and_create_service {
                                                                   [list identifier $identifier] \
                                                                   [list is_visible_p $is_visible_p] \
                                                                   [list parameters $parameters] \
-                                                                  [list service_type conferencel]] \
+                                                                  [list service_type conference]] \
                             -content_type imsld_service \
                             -parent_id $parent_id]
         
         # create the conference service
-        set conference_id [imsld::conference_service_new -attributes [list [list service_id $service_id] \ 
-                                                                      [list manager_id $manager_id] \
+        set conference_id [imsld::item_revision_new -attributes [list [list service_id $service_id] \
+                                                                          [list manager_id $manager_id] \
                                                                           [list conference_type $conference_type] \
                                                                           [list imsld_item_id $imsld_item_id]] \
                                -content_type imsld_conference_service \
@@ -1080,9 +1113,15 @@ ad_proc -public imsld::parse::parse_and_create_service {
         imsld::parse::validate_multiplicity -tree $participant_list -multiplicity 1 -element_name conference-participant -greather_than
         foreach participant $participant_list {
             set role_ref [string tolower [imsld::parse::get_attribute -node $participant -attr_name role-ref]]
-            if { ![db_0or1row get_role_id {select role_id as participant_id from imsld_roles where identifier = :role_ref and content_revision__is_live(role_id) = 't' }] } {
+            if { ![db_0or1row get_role_id {
+                select item_id as participant_id 
+                from imsld_rolesi 
+                where identifier = :role_ref 
+                and content_revision__is_live(role_id) = 't' 
+                and component_id = :component_id
+            }] } {
                 # there is no role with that identifier, return the error
-                return [list 0 "<#_ There is no role with the identifier %ref% (referenced by: participant) #>"]
+                return [list 0 "<#_ There is no role with the identifier % $role_ref % (referenced by: participant) buscando con component $component_id y env $environment_id #>"]
             }
             # map conference with participant role
             relation_add imsld_conf_part_rel $conference_id $participant_id
@@ -1093,9 +1132,15 @@ ad_proc -public imsld::parse::parse_and_create_service {
         if { [llength $observer_list] } {
             foreach observer $observer_list {
                 set role_ref [string tolower [imsld::parse::get_attribute -node $observer -attr_name role-ref]]
-                if { ![db_0or1row get_role_id {select role_id as observer_id from imsld_roles where identifier = :role_ref and content_revision__is_live(role_id) = 't' }] } {
+                if { ![db_0or1row get_role_id {
+                    select item_id as observer_id 
+                    from imsld_rolesi 
+                    where identifier = :role_ref 
+                    and content_revision__is_live(role_id) = 't' 
+                    and component_id = :component_id 
+                }] } {
                     # there is no role with that identifier, return the error
-                    return [list 0 "<#_ There is no role with the identifier %ref% (referenced by: observer) #>"]
+                    return [list 0 "<#_ There is no role with the identifier % $role_ref % (referenced by: observer) #>"]
                 }
                 # map conference with observer role
                 relation_add imsld_conf_obser_rel $conference_id $observer_id
@@ -1107,9 +1152,15 @@ ad_proc -public imsld::parse::parse_and_create_service {
         if { [llength $moderator_list] } {
             foreach moderator $moderator_list {
                 set role_ref [string tolower [imsld::parse::get_attribute -node $moderator -attr_name role-ref]]
-                if { ![db_0or1row get_role_id {select role_id as moderator_id from imsld_roles where identifier = :role_ref and content_revision__is_live(role_id) = 't' }] } {
+                if { ![db_0or1row get_role_id {
+                    select item_id as moderator_id 
+                    from imsld_rolesi 
+                    where identifier = :role_ref 
+                    and content_revision__is_live(role_id) = 't' 
+                    and component_id = :component_id 
+                }] } {
                     # there is no role with that identifier, return the error
-                    return [list 0 "<#_ There is no role with the identifier %ref% (referenced by: moderator) #>"]
+                    return [list 0 "<#_ There is no role with the identifier % $role_ref % (referenced by: moderator) #>"]
                 }
                 # map conference with moderator role
                 relation_add imsld_conf_moder_rel $conference_id $moderator_id
@@ -1127,6 +1178,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
 }
 
 ad_proc -public imsld::parse::parse_and_create_environment { 
+    -component_id:required
     -environment_node
     -manifest
     -manifest_id
@@ -1143,25 +1195,30 @@ ad_proc -public imsld::parse::parse_and_create_environment {
     @param parent_id Parent folder ID
     @param tmp_dir Temporary directory where the files were exctracted
 } {
+    upvar files_struct_list files_struct_list
+
     # get environment info
-    set identifier [imsld::parse::get_attribute -node $environment_node -attr_name identifier]
+    set identifier [string tolower [imsld::parse::get_attribute -node $environment_node -attr_name identifier]]
     set title [imsld::parse::get_title -node $environment_node -prefix imsld]
     
     # environment: learning object
-    set learning_object [$environment_node child all imsld:learning_object]
-    imsld::parse::validate_multiplicity -tree $learning_object -multiplicity 1 -element_name learning-object -equal
-    set learning_object_list [imsld::parse::parse_and_create_learning_object -learning_object_node $learning_object \
-                                  -manifest_id $manifest_id \
-                                  -item_node $imsld_item \
-                                  -parent_id $parent_id \
-                                  -tmp_dir $tmp_dir]
-
-    set learning_object_id [lindex $learning_object_list 0]
-    if { !$learning_object_id } {
-        # there is an error, abort and return the list with the error
-        return $learning_object_list
+    set learning_object [$environment_node child all imsld:learning-object]
+    set learning_object_id ""
+    if { [llength $learning_object] } {
+        imsld::parse::validate_multiplicity -tree $learning_object -multiplicity 1 -element_name "learning-object(environment $identifier %)" -equal
+        set learning_object_list [imsld::parse::parse_and_create_learning_object -learning_object_node $learning_object \
+                                      -manifest_id $manifest_id \
+                                      -manifest $manifest \
+                                      -parent_id $parent_id \
+                                      -tmp_dir $tmp_dir]
+        
+        set learning_object_id [lindex $learning_object_list 0]
+        if { !$learning_object_id } {
+            # there is an error, abort and return the list with the error
+            return $learning_object_list
+        }
     }
-
+    
     # create the environment
     set environment_id [imsld::item_revision_new -attributes [list [list component_id $component_id] \
                                                                 [list identifier $identifier] \
@@ -1171,17 +1228,20 @@ ad_proc -public imsld::parse::parse_and_create_environment {
 
     # environment: service
     set service [$environment_node child all imsld:service]
-    imsld::parse::validate_multiplicity -tree $service -multiplicity 1 -element_name service(environment) -equal
-    set service_list [imsld::parse::parse_and_create_service -service_node $service \
-                          -environment_id $environment_id \
-                          -manifest_id $manifest_id \
-                          -item_node $imsld_item \
-                          -parent_id $parent_id \
-                          -tmp_dir $tmp_dir]
-    set service_id [lindex $service_list 0]
-    if { !$service_id } {
-        # there is an error, abort and return the list with the error
-        return $service_list
+    set service_id ""
+    if { [llength $service] } {
+        imsld::parse::validate_multiplicity -tree $service -multiplicity 1 -element_name service(environment) -equal
+        set service_list [imsld::parse::parse_and_create_service -service_node $service \
+                              -environment_id $environment_id \
+                              -manifest_id $manifest_id \
+                              -manifest $manifest \
+                              -parent_id $parent_id \
+                              -tmp_dir $tmp_dir]
+        set service_id [lindex $service_list 0]
+        if { !$service_id } {
+            # there is an error, abort and return the list with the error
+            return $service_list
+        }
     }
 
     # environment: environment ref
@@ -1193,13 +1253,22 @@ ad_proc -public imsld::parse::parse_and_create_environment {
             # 1. the referenced environment has been created: get the id from the database and do the mappings
             # 2. the referenced environment hasn't been created: invoke the parse_and_create_environment proc,
             #    but first verify that the environment exists in the manifest
-            if { [db_0or1row get_env_id {select environment_id as refrenced_env_id from imsld_environments where identifier = :ref and content_revision__is_live(environment_id) = 't'}] } {
+            if { [db_0or1row get_env_id {
+                select item_id as refrenced_env_id 
+                from imsld_environmentsi 
+                where identifier = :ref 
+                and content_revision__is_live(environment_id) = 't' 
+                and component_id = :component_id
+            }] } {
                 # case one, just do the mappings
                 relation_add imsld_env_env_rel $environment_id $refrenced_env_id
             } else {
                 # case two, first verify that the referenced environment exists
-                set environments [[[[$manifest child all imscp:organizations] child all imsld:learning-design] child all imsld:components] child all imsld:environments]
-
+                set organizations [$manifest child all imscp:organizations]
+                if { ![llength $organizations] } {
+                    set organizations [$manifest child all organizations]
+                }                    
+                set environments [[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:environments]
                 set found_p 0
                 foreach referenced_environment $environments {
                     set referenced_identifier [string tolower [imsld::parse::get_attribute -node $referenced_environment -attr_name identifier]]
@@ -1212,8 +1281,9 @@ ad_proc -public imsld::parse::parse_and_create_environment {
                         # ok, let's create the environment
                     set environment_ref_list [imsld::parse::parse_and_create_environment -environment_node $environment_referenced_node \
                                                   -manifest_id $manifest_id \
-                                                  -item_node $imsld_item \
+                                                  -manifest $manifest \
                                                   -parent_id $parent_id \
+                                                  -component_id $component_id \
                                                   -tmp_dir $tmp_dir]
                     set environment_ref_id [lindex $environment_ref_list 0]
                     if { !$environment_ref_id } {
@@ -1224,7 +1294,7 @@ ad_proc -public imsld::parse::parse_and_create_environment {
                     relation_add imsld_env_env_rel $environment_id $environment_ref_id
                 } else {
                     # error, return
-                    return [list 0 "<#_ Referenced environment %referenced_identifier% does not exist #>"]
+                    return [list 0 "<#_ Referenced environment % $referenced_identifier % does not exist #>"]
                 }
             }
         }
@@ -1254,7 +1324,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     upvar files_struct_list files_struct_list
 
     # get the info of the learning activity and create it
-    set identifier [imsld::parse::get_attribute -node $activity_node -attr_name identifier]
+    set identifier [string tolower [imsld::parse::get_attribute -node $activity_node -attr_name identifier]]
     set is_visible_p [imsld::parse::get_bool_attribute -node $activity_node -attr_name isvisible -default t]
     set parameters [imsld::parse::get_attribute -node $activity_node -attr_name parameters]
     set title [imsld::parse::get_title -node $activity_node -prefix imsld]
@@ -1394,9 +1464,15 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             # so the referenced environment has to be in the database.
             # If not found, return the error
             set environment_ref [string tolower [imsld::parse::get_attribute -node $environment_ref_node -attr_name ref]]
-            if { ![db_0or1row get_environment_id {select environment_id from imsld_environments where identifier = :environment_ref}] } {
+            if { ![db_0or1row get_environment_id {
+                select item_id as environment_id
+                from imsld_environmentsi
+                where identifier = :environment_ref 
+                and content_revision__is_live(environment_id) = 't' and 
+                component_id = :component_id
+            }] } {
                 # error, referenced environment does not exist
-                return [list 0 "<#_ Referenced environment (%environment_ref%) in learning activity does not exist. #>"]
+                return [list 0 "<#_ Referenced environment (% $environment_ref %) in learning activity does not exist. #>"]
             }
 
             # map environment with learning-activity
@@ -1430,7 +1506,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     upvar files_struct_list files_struct_list
 
     # get the info of the support activity and create it
-    set identifier [imsld::parse::get_attribute -node $activity_node -attr_name identifier]
+    set identifier [string tolower [imsld::parse::get_attribute -node $activity_node -attr_name identifier]]
     set is_visible_p [imsld::parse::get_bool_attribute -node $activity_node -attr_name isvisible -default t]
     set parameters [imsld::parse::get_attribute -node $activity_node -attr_name parameters]
     set title [imsld::parse::get_title -node $activity_node -prefix imsld]
@@ -1440,7 +1516,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
 
     set activity_description_list [imsld::parse::parse_and_create_activity_description -activity_description_node $activity_description \
                                        -manifest_id $manifest_id \
-                                       -item_node $imsld_item \
+                                       -manifest $manifest \
                                        -parent_id $parent_id \
                                        -tmp_dir $tmp_dir]
 
@@ -1527,9 +1603,15 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     set role_ref_list [$activity_node child all imsld:role-ref]
     foreach role_ref $role_ref_list {
         set ref [string tolower [imsld::parse::get_attribute -node $role_ref -attr_name role-ref]]
-        if { ![db_0or1row get_role_id {select role_id as role_id from imsld_roles where identifier = :ref and content_revision__is_live(role_id) = 't' }] } {
+        if { ![db_0or1row get_role_id {
+            select item_id as role_id 
+            from imsld_rolesi 
+            where identifier = :ref 
+            and content_revision__is_live(role_id) = 't' 
+            and component_id = :component_id
+        }] } {
             # there is no role with that identifier, return the error
-            return [list 0 "<#_ There is no role with the identifier %ref% (referenced by: support activity) #>"]
+            return [list 0 "<#_ There is no role with the identifier % $ref % (referenced by: support activity) #>"]
         }
         # map support activity with the role
         relation_add imsld_sa_role_rel $support_activity_id $role_id
@@ -1543,9 +1625,15 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             # so the referenced environment has to be in the database.
             # If not found, return the error
             set environment_ref [string tolower [imsld::parse::get_attribute -node $environment_ref_node -attr_name ref]]
-            if { ![db_0or1row get_environment_id {select environment_id from imsld_environments where identifier = :environment_ref}] } {
+            if { ![db_0or1row get_environment_id {
+                select item_id as environment_id
+                from imsld_environmentsi 
+                where identifier = :environment_ref 
+                and content_revision__is_live(environment_id) = 't' 
+                and component_id = :component_id
+            }] } {
                 # error, referenced environment does not exist
-                return [list 0 "<#_ Referenced environment (%environment_ref%) in support activity does not exist. #>"]
+                return [list 0 "<#_ Referenced environment (% $environment_ref %) in support activity does not exist. #>"]
             }
 
             # map environment with support-activity
@@ -1577,8 +1665,8 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
     upvar files_struct_list files_struct_list
 
     # get the info of the activity structure and create it
-    set identifier [imsld::parse::get_attribute -node $activity_node -attr_name identifier]
-    set number_to_select [imsld::parse::get_attribute -tree $activity_node -attr_name number-to-select]
+    set identifier [string tolower [imsld::parse::get_attribute -node $activity_node -attr_name identifier]]
+    set number_to_select [imsld::parse::get_attribute -node $activity_node -attr_name number-to-select]
     set sort [imsld::parse::get_attribute -node $activity_node -attr_name sort]
     set structure_type [imsld::parse::get_attribute -node $activity_node -attr_name structure-type]
     set title [imsld::parse::get_title -node $activity_node -prefix imsld]
@@ -1599,7 +1687,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
         # parse the item, create it and map it to the activity structure
         set information_item [$activity_node child all imsld:item]
         if { ![llength $information_item] } {
-            return [list 0 "<#_ Information given but no item associated to it for the activity structure %identifier% #>"]
+            return [list 0 "<#_ Information given but no item associated to it for the activity structure % $identifier % #>"]
         }
 
         set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
@@ -1608,13 +1696,13 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                            -parent_id $parent_id \
                            -tmp_dir $tmp_dir]
         
-        set item_id [lindex $item_list 0]
-        if { !$item_id } {
+        set information_id [lindex $item_list 0]
+        if { !$iinformation_id } {
             # an error happened, abort and return the list whit the error
             return $item_list
         }
         # map information item with the activity structure
-        relation_add imsld_as_info_i_rel $activity_structure_id $item_id
+        relation_add imsld_as_info_i_rel $activity_structure_id $information_id
     }
 
     # Activity Structure: Environments
@@ -1625,9 +1713,15 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
             # so the referenced environment has to be in the database.
             # If not found, return the error
             set environment_ref [string tolower [imsld::parse::get_attribute -node $environment_ref_node -attr_name ref]]
-            if { ![db_0or1row get_environment_id {select environment_id from imsld_environments where identifier = :environment_ref}] } {
+            if { ![db_0or1row get_environment_id {
+                select item_id as environment_id 
+                from imsld_environmentsi
+                where identifier = :environment_ref 
+                and content_revision__is_live(environment_id) = 't' 
+                and component_id = :component_id
+            }] } {
                 # error, referenced environment does not exist
-                return [list 0 "<#_ Referenced environment (%environment_ref%) in activity structure %identifier% does not exist. #>"]
+                return [list 0 "<#_ Referenced environment (% $environment_ref %) in activity structure % $identifier % does not exist. #>"]
             }
 
             # map environment with activity structure
@@ -1636,37 +1730,52 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
     }
 
     # Activity Structure: Learning Activities ref
-    set learning_activity_ref_node [$activity_node child all imsld:learning-activity-ref]
-    if { [llength $learning_activity_ref_node] } {
-        imsld::parse::validate_multiplicity -tree $learning_activity_ref_node -multiplicity 1 -element_name learning-activity-ref(activity-structure) -equal
-        
-        # the learning activities have been already parsed by now, so the referenced learning activity has to be in the database.
-        # If not, return the error
-        set learning_activity_ref [string tolower [imsld::parse::get_attribute -node $learning_activity_ref_node -attr_name ref]]
-        if { ![db_0or1row get_learning_activity_id {select learning_activity_id from imsld_learning_activities where identifier = :learning_activity_ref}] } {
-            # error, referenced learning activity does not exist
-            return [list 0 "<#_ Referenced learning activity (%learning_activity_ref%) in activity structure %identifier% does not exist. #>"]
+    set learning_activity_ref_nodes [$activity_node child all imsld:learning-activity-ref]
+    if { [llength $learning_activity_ref_nodes] } {
+        foreach learning_activity_ref_node $learning_activity_ref_nodes {
+            
+            # the learning activities have been already parsed by now, so the referenced learning activity has to be in the database.
+            # If not, return the error
+            set learning_activity_ref [string tolower [imsld::parse::get_attribute -node $learning_activity_ref_node -attr_name ref]]
+            if { ![db_0or1row get_learning_activity_id {
+                select item_id as activity_id 
+                from imsld_learning_activitiesi
+                where identifier = :learning_activity_ref 
+                and content_revision__is_live(activity_id) = 't' 
+                and component_id = :component_id
+            }] } {
+                # error, referenced learning activity does not exist
+                return [list 0 "<#_ Referenced learning activity (% $learning_activity_ref %) in activity structure % $identifier % does not exist. comp $component_id  #>"]
+            }
+            
+            # map learning activity with activity structure
+            relation_add imsld_as_la_rel $activity_structure_id $activity_id
         }
-        
-        # map learning activity with activity structure
-        relation_add imsld_as_la_rel $activity_structure_id $learning_activity_id
     }
 
     # Activity Structure: Support Activities ref
-    set support_activity_ref_node [$activity_node child all imsld:support-activity-ref]
-    if { [llength $support_activity_ref_node] } {
-        imsld::parse::validate_multiplicity -tree $support_activity_ref_node -multiplicity 1 -element_name support-activity-ref(activity-structure) -equal
-        
-        # the support activities have been already parsed by now, so the referenced support activity has to be in the database.
-        # If not, return the error
-        set support_activity_ref [string tolower [imsld::parse::get_attribute -node $support_activity_ref_node -attr_name ref]]
-        if { ![db_0or1row get_support_activity_id {select support_activity_id from imsld_support_activities where identifier = :support_activity_ref}] } {
-            # error, referenced support activity does not exist
-            return [list 0 "<#_ Referenced support activity (%support_activity_ref%) in activity structure %identifier% does not exist. #>"]
+    set support_activity_ref_nodes [$activity_node child all imsld:support-activity-ref]
+    if { [llength $support_activity_ref_nodes] } {
+        foreach support_activity_ref_node $support_activity_ref_nodes {
+            imsld::parse::validate_multiplicity -tree $support_activity_ref_node -multiplicity 1 -element_name support-activity-ref(activity-structure) -equal
+            
+            # the support activities have been already parsed by now, so the referenced support activity has to be in the database.
+            # If not, return the error
+            set support_activity_ref [string tolower [imsld::parse::get_attribute -node $support_activity_ref_node -attr_name ref]]
+            if { ![db_0or1row get_support_activity_id {
+                select item_id as activity_id 
+                from imsld_support_activitiesi 
+                where identifier = :support_activity_ref 
+                and content_revision__is_live(activity_id) ='t' 
+                and component_id = :component_id
+            }] } {
+                # error, referenced support activity does not exist
+                return [list 0 "<#_ Referenced support activity (% %support_activity_ref %) in activity structure % $identifier % does not exist. #>"]
+            }
+            
+            # map support activity with activity structure
+            relation_add imsld_as_sa_rel $activity_structure_id $activity_id
         }
-        
-        # map support activity with activity structure
-        relation_add imsld_as_sa_rel $activity_structure_id $support_activity_id
     }
 
     # TO-DO: Unit of Learning ref ?
@@ -1680,16 +1789,28 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
             # 1. the referenced activity structure has already been created: get the id from the database and do the mappings
             # 2. the referenced activity structure hasn't been created: invoke the parse_and_create_activity_structure proc,
             #    but first verify that the activity structure exists in the manifest
-            if { [db_0or1row get_struct_id {select activity_structure_id as refrenced_struct_id from imsld_activity_structures where identifier = :ref and content_revision__is_live(activity_structure_id) = 't'}] } {
+            if { [db_0or1row get_struct_id {
+                select item_id as refrenced_struct_id 
+                from imsld_activity_structuresi 
+                where identifier = :ref 
+                and content_revision__is_live(structure_id) = 't' 
+                and component_id = :component_id
+            }] } {
                 # case one, just do the mappings
                 relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
             } else {
                 # case two, first verify that the referenced activity structure exists
-                set activity_structures [[[[[$manifest child all imscp:organizations] child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structures]
+                set organizations [$manifest child all imscp:organizations]
+                if { ![llength $organizations] } {
+                    set organizations [$manifest child all organizations]
+                }                    
+                set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
+                ns_log notice "LARGO [llength $activity_structures] !! \n\n\n"
 
                 set found_p 0
                 foreach referenced_activity_structure $activity_structures {
                     set referenced_identifier [string tolower [imsld::parse::get_attribute -node $referenced_activity_structure -attr_name identifier]]
+                    ns_log notice "comparando $ref con $referenced_identifier !! \n\n\n"
                     if { [string eq $ref $referenced_identifier] } {
                         set found_p 1
                         set referenced_structure_node $referenced_activity_structure
@@ -1700,7 +1821,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     set activity_structure_ref_list [imsld::parse::parse_and_create_activity_structure -activity_node $referenced_structure_node \
                                                          -component_id $component_id \
                                                          -manifest_id $manifest_id \
-                                                         -item_node $imsld_item \
+                                                         -manifest $manifest \
                                                          -parent_id $parent_id \
                                                          -tmp_dir $tmp_dir]
 
@@ -1713,7 +1834,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
                 } else {
                     # error, return
-                    return [list 0 "<#_ Referenced activity structure %referenced_identifier% does not exist #>"]
+                    return [list 0 "<#_ Referenced activity structure % $ref % does not exist #>"]
                 }
             }
         }
@@ -1742,8 +1863,24 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
     @param tmp_dir Temporary directory where the files were exctracted
 } {
     # get the info of the role part and create it
-    set identifier [imsld::parse::get_attribute -node $role_part_node -attr_name identifier]
+    set identifier [string tolower [imsld::parse::get_attribute -node $role_part_node -attr_name identifier]]
     set title [imsld::parse::get_title -node $role_part_node -prefix imsld]
+    set component_id [db_string get_component_id {
+        select cr4.item_id as component_id 
+        from imsld_components ic, imsld_methods im, imsld_plays ip, imsld_acts ia,
+        cr_revisions cr0, cr_revisions cr1, cr_revisions cr2, cr_revisions cr3, cr_revisions cr4
+        where cr4.revision_id = ic.component_id
+        and content_revision__is_live(ic.component_id) = 't'
+        and ic.imsld_id = cr3.item_id
+        and content_revision__is_live(cr3.revision_id) = 't'
+        and cr3.item_id = im.imsld_id
+        and im.method_id = cr2.revision_id
+        and cr2.item_id = ip.method_id
+        and ip.play_id = cr1.revision_id
+        and cr1.item_id = ia.play_id
+        and ia.act_id = cr0.revision_id
+        and cr0.item_id = :act_id
+    }]
 
     # Role Part: Roles
     set role_id ""
@@ -1753,9 +1890,14 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
         # the roles have already been parsed by now, so the referenced role has to be in the database.
         # If not, return the error
         set role_ref_ref [string tolower [imsld::parse::get_attribute -node $role_ref -attr_name ref]]
-        if { ![db_0or1row get_role_id {select role_id from imsld_roles where identifier = :role_ref_ref}] } {
+        if { ![db_0or1row get_role_id {
+            select ir.item_id as role_id
+            from imsld_rolesi ir
+            where ir.identifier = :role_ref_ref 
+            and content_revision__is_live(ir.role_id) = 't' 
+            and ir.component_id = :component_id}] } {
             # error, referenced role does not exist
-            return [list 0 "<#_ Referenced role (%role_ref_ref%) in role part %identifier% does not exist. #>"]
+            return [list 0 "<#_ Referenced role (% $role_ref_ref %) in role part % $identifier % does not exist. #>"]
         }
     }
 
@@ -1767,22 +1909,35 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
         # the learning activities have already been parsed by now, so the referenced learning activity has to be in the database.
         # If not, return the error
         set learning_activity_ref_ref [string tolower [imsld::parse::get_attribute -node $learning_activity_ref -attr_name ref]]
-        if { ![db_0or1row get_learning_activity_id {select activity_id as learning_activity_id from imsld_learning_activities where identifier = :learning_activity_ref_ref}] } {
+        if { ![db_0or1row get_learning_activity_id {
+            select la.item_id as learning_activity_id
+            from imsld_learning_activitiesi la
+            where la.identifier = :learning_activity_ref_ref 
+            and content_revision__is_live(la.activity_id) = 't' 
+            and la.component_id = :component_id
+        }] } {
             # error, referenced learning activity does not exist
-            return [list 0 "<#_ Referenced role (%learning_activity_ref_ref%) in role part %identifier% does not exist. #>"]
+            return [list 0 "<#_ Referenced learning activity (% $learning_activity_ref_ref %) in role part % $identifier % does not exist. #>"]
         }
     }
 
     # Role Part: Support Activities
+    set support_activity_id ""
     set support_activity_ref [$role_part_node child all imsld:support-activity-ref]
     if { [llength $support_activity_ref] } {
         imsld::parse::validate_multiplicity -tree $support_activity_ref -multiplicity 1 -element_name support-activity-ref(role-part) -equal
         # the support activities have already been parsed by now, so the referenced support activity has to be in the database.
         # If not, return the error
         set support_activity_ref_ref [string tolower [imsld::parse::get_attribute -node $support_activity_ref -attr_name ref]]
-        if { ![db_0or1row get_support_activity_id {select activity_id as support_activity_id from imsld_support_activities where identifier = :support_activity_ref_ref}] } {
+        if { ![db_0or1row get_support_activity_id {
+            select sa.item_id as support_activity_id 
+            from imsld_support_activitiesi sa
+            where sa.identifier = :support_activity_ref_ref 
+            and content_revision__is_live(sa.activity_id) = 't' 
+            and sa.component_id = :component_id
+        }] } {
             # error, referenced support activity does not exist
-            return [list 0 "<#_ Referenced role (%support_activity_ref_ref%) in role part %identifier% does not exist. #>"]
+            return [list 0 "<#_ Referenced support activity (% $support_activity_ref_ref %) in role part % $identifier % does not exist. #>"]
         }
     }
 
@@ -1790,32 +1945,47 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
 
     # Role Part: Activity Structures
     set activity_structure_ref [$role_part_node child all imsld:activity-structure-ref]
+    set activity_structure_id ""
     if { [llength $activity_structure_ref] } {
         imsld::parse::validate_multiplicity -tree $activity_structure_ref -multiplicity 1 -element_name activity-structure-ref(role-part) -equal
         # the activity structures have already been parsed by now, so the referenced activity structure has to be in the database.
         # If not, return the error
         set activity_structure_ref_ref [string tolower [imsld::parse::get_attribute -node $activity_structure_ref -attr_name ref]]
-        if { ![db_0or1row get_activity_structure_id {select structure_id as activity_structure_id from imsld_structures where identifier = :activity_structure_ref_ref}] } {
+        if { ![db_0or1row get_activity_structure_id {
+            select ias.item_id as activity_structure_id 
+            from imsld_activity_structuresi ias
+            where ias.identifier = :activity_structure_ref_ref 
+            and content_revision__is_live(ias.structure_id) = 't' 
+            and ias.component_id = :component_id
+        }] } {
             # error, referenced activity structure does not exist
-            return [list 0 "<#_ Referenced activity structure (%activity_structure_ref_ref%) in role part %identifier% does not exist. #>"]
+            return [list 0 "<#_ Referenced activity structure (% $activity_structure_ref_ref %) in role part % $identifier % does not exist. #>"]
         }
     }
 
     # Role Part: Environments
     set environment_ref [$role_part_node child all imsld:environment-ref]
+    set environment_id ""
     if { [llength $environment_ref] } {
         imsld::parse::validate_multiplicity -tree $environment_ref -multiplicity 1 -element_name environment-ref(role-part) -equal
         # the environments have already been parsed by now, so the referenced environment has to be in the database.
         # If not, return the error
         set environment_ref_ref [string tolower [imsld::parse::get_attribute -node $environment_ref -attr_name ref]]
-        if { ![db_0or1row get_env_id {select environment_id from imsld_environments where identifier = :environment_ref_ref}] } {
+        if { ![db_0or1row get_env_id {
+            select env.item_id as environment_id 
+            from imsld_environmentsi env
+            where env.identifier = :environment_ref_ref 
+            and content_revision__is_live(env.environment_id) = 't' 
+            and env.component_id = :component_id
+        }] } {
             # error, referenced environment does not exist
-            return [list 0 "<#_ Referenced environment (%environment_ref_ref%) in role part %identifier% does not exist. #>"]
+            return [list 0 "<#_ Referenced environment (% $environment_ref_ref %) in role part % $identifier % does not exist. #>"]
         }
     }
     
     set role_part_id [imsld::item_revision_new -attributes [list [list identifier $identifier] \
                                                                 [list role_id $role_id] \
+                                                                [list act_id $act_id] \
                                                                 [list learning_activity_id $learning_activity_id] \
                                                                 [list support_activity_id $support_activity_id] \
                                                                 [list activity_structure_id $activity_structure_id] \
@@ -1849,7 +2019,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
     upvar files_struct_list files_struct_list
 
     # get the info of the act and create it
-    set identifier [imsld::parse::get_attribute -node $act_node -attr_name identifier]
+    set identifier [string tolower [imsld::parse::get_attribute -node $act_node -attr_name identifier]]
     set title [imsld::parse::get_title -node $act_node -prefix imsld]
     
     # Act: Complete Act: Time Limit
@@ -1910,12 +2080,17 @@ ad_proc -public imsld::parse::parse_and_create_act {
     set role_parts [$act_node child all imsld:role-part]
     imsld::parse::validate_multiplicity -tree $role_parts -multiplicity 1 -element_name role-parts -greather_than
     foreach role_part $role_parts {
-        imsld::parse::parse_and_create_role_part -act_id $act_id \
-            -role_part_node $role_part \
-            -manifest $manifest \
-            -manifest_id $manifest_id \
-            -parent_id $parent_id \
-            -tmp_dir $tmp_dir
+        set role_part_list [imsld::parse::parse_and_create_role_part -act_id $act_id \
+                                -role_part_node $role_part \
+                                -manifest $manifest \
+                                -manifest_id $manifest_id \
+                                -parent_id $parent_id \
+                                -tmp_dir $tmp_dir]
+        set role_part_id [lindex $role_part_list 0]
+        if { !$role_part_id } {
+            # an error happened, abort and return the list whit the error
+            return $role_part_list
+        }
     }
     
     # Act: Complete Act: When role part comleted
@@ -1926,10 +2101,16 @@ ad_proc -public imsld::parse::parse_and_create_act {
         imsld::parse::validate_multiplicity -tree $complete_act -multiplicity 1 -element_name complete-act -equal
         set when_rp_completed_list [$complete_act child all imsld:when-role-part-completed]
         foreach when_rp_completed $when_rp_completed_list {
-            set ref [strint tolower [imsld::parse::get_attribute -node $when_rp_completed -attr_name ref]]
+            set ref [string tolower [imsld::parse::get_attribute -node $when_rp_completed -attr_name ref]]
             # verify that the referenced role part exists
-            if { ![db_0or1row get_rp_id {select role_part_id from imsld_role_parts where identifier = :ref and content_revision__is_live(role_part_id) = 't'} ] } {
-                return [list 0 "<#_ The referenced role part in 'when role part completed' of the act %identifier% does not exist #>"]
+            if { ![db_0or1row get_rp_id {
+                select item_id as role_part_id 
+                from imsld_role_partsi 
+                where identifier = :ref 
+                and content_revision__is_live(role_part_id) = 't' 
+                and act_id = :act_id
+            }] } {
+                return [list 0 "<#_ The referenced role part in 'when role part completed' of the act % $identifier % does not exist #>"]
             }
             # found, map the role part (with the imsld_act_rp_completed_rel) with the act
             relation_add imsld_act_rp_completed_rel $act_id $role_part_id
@@ -1961,7 +2142,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
     upvar files_struct_list files_struct_list
 
     # get the info of the play and create it
-    set identifier [imsld::parse::get_attribute -node $play_node -attr_name identifier]
+    set identifier [string tolower [imsld::parse::get_attribute -node $play_node -attr_name identifier]]
     set is_visible_p [imsld::parse::get_bool_attribute -node $play_node -attr_name isvisible -default t]
     set title [imsld::parse::get_title -node $play_node -prefix imsld]
     
@@ -2031,14 +2212,19 @@ ad_proc -public imsld::parse::parse_and_create_play {
     set acts [$play_node child all imsld:act]
     imsld::parse::validate_multiplicity -tree $acts -multiplicity 1 -element_name acts -greather_than
     foreach act $acts {
-        set act_identifier [imsld::parse::get_attribute -node $act -attr_name identifier]
+        set act_identifier [string tolower [imsld::parse::get_attribute -node $act -attr_name identifier]]
         set act_title [imsld::parse::get_title -node $act -prefix imsld]
-        imsld::parse::parse_and_create_act -play_id $play_id \
-            -act_node $act \
-            -manifest $manifest \
-            -manifest_id $manifest_id \
-            -parent_id $parent_id \
-            -tmp_dir $tmp_dir
+        set act_list [imsld::parse::parse_and_create_act -play_id $play_id \
+                          -act_node $act \
+                          -manifest $manifest \
+                          -manifest_id $manifest_id \
+                          -parent_id $parent_id \
+                          -tmp_dir $tmp_dir]
+        set act_id [lindex $act_list 0]
+        if { !$act_id } {
+            # an error happened, abort and return the list whit the error
+            return $act_list
+        }
     }
     
     return $play_id
@@ -2072,7 +2258,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
 	$document documentElement manifest
 
     # manifest
-    set manifest_identifier [imsld::parse::get_attribute -node $manifest -attr_name identifier]
+    set manifest_identifier [string tolower [imsld::parse::get_attribute -node $manifest -attr_name identifier]]
     set manifest_version [imsld::parse::get_attribute -node $manifest -attr_name version]
 
     # initialize folders
@@ -2094,12 +2280,20 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
 
     # organizaiton
     set organizations [$manifest child all imscp:organizations]
+    if { ![llength $organizations] } {
+        set organizations [$manifest child all organizations]
+    }
+    imsld::parse::validate_multiplicity -tree $organizations -multiplicity 1 -element_name organizations -equal
     set organization_id [imsld::cp::organization_new -manifest_id $manifest_id]
 
     # IMS-LD
     set imsld [$organizations child all imsld:learning-design]
+    if { ![llength $imsld] } {
+        set imsld [$organizations child all learning-design]
+    }
+    imsld::parse::validate_multiplicity -tree $imsld -multiplicity 1 -element_name IMD-LD -equal
     set imsld_title [imsld::parse::get_title -node $imsld -prefix imsld]
-    set imsld_identifier [imsld::parse::get_attribute -node $imsld -attr_name identifier]
+    set imsld_identifier [string tolower [imsld::parse::get_attribute -node $imsld -attr_name identifier]]
     set imsld_level [imsld::parse::get_attribute -node $imsld -attr_name level]
     set imsld_level [expr { [empty_string_p $imsld_level] ? "" : [string tolower $imsld_level] }]
     set imsld_version [imsld::parse::get_attribute -node $imsld -attr_name version]
@@ -2170,26 +2364,34 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     imsld::parse::validate_multiplicity -tree $learner_list -multiplicity 1 -element_name learners(roles) -greather_than
 
     foreach learner $learner_list {
-        imsld::parse::parse_and_create_role -role_type learner \
-            -manifest $manifest \
-            -manifest_id $manifest_id \
-            -parent_id $cr_folder_id \
-            -tmp_dir $tmp_dir \
-            -roles_node $learner \
-            -component_id $component_id
+        set learner_parse_list [imsld::parse::parse_and_create_role -role_type learner \
+                                    -manifest $manifest \
+                                    -manifest_id $manifest_id \
+                                    -parent_id $cr_folder_id \
+                                    -tmp_dir $tmp_dir \
+                                    -roles_node $learner \
+                                    -component_id $component_id]
+        if { ![lindex $learner_parse_list 0] } {
+                    # an error happened, abort and return the list whit the error
+            return $learner_parse_list
+        }
     }
 
     # Components: Roles: Staff
     set staff_list [$roles child all imsld:staff]
     if { [llength $staff_list] } {
         foreach staff $staff_list {
-            imsld::parse::parse_and_create_role -role_type staff \
+            set staff_parse_list [imsld::parse::parse_and_create_role -role_type staff \
                 -manifest $manifest \
-                -manifest_id $manifest_id \
-                -parent_id $cr_folder_id \
-                -tmp_dir $tmp_dir \
-                -roles_node $staff \
-                -component_id $component_id
+                                      -manifest_id $manifest_id \
+                                      -parent_id $cr_folder_id \
+                                      -tmp_dir $tmp_dir \
+                                      -roles_node $staff \
+                                      -component_id $component_id]
+            if { ![lindex $staff_parse_list 0] } {
+                    # an error happened, abort and return the list whit the error
+                return $staff_parse_list
+            }
         }
     }
 
@@ -2201,13 +2403,19 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     if { [llength $environment_component] } {
         imsld::parse::validate_multiplicity -tree $environment_component -multiplicity 1 -element_name environments -equal
         set environments [$environment_component child all imsld:environment]
-        imsld::parse::validate_multiplicity -tree $environments -multiplicity 1 -element_name environments -greather than
+        imsld::parse::validate_multiplicity -tree $environments -multiplicity 1 -element_name environments -greather_than
         foreach environment $environments {
-            imsld::parse::parse_and_create_environment -environment_node $environment \
-                -manifest_id $manifest_id \
-                -item_node $imsld_item \
-                -parent_id $cr_folder_id \
-                -tmp_dir $tmp_dir
+            set environment_ref_list [imsld::parse::parse_and_create_environment -environment_node $environment \
+                                          -component_id $component_id \
+                                          -manifest_id $manifest_id \
+                                          -manifest $manifest \
+                                          -parent_id $cr_folder_id \
+                                          -tmp_dir $tmp_dir]
+            set environment_ref_id [lindex $environment_ref_list 0]
+            if { !$environment_ref_id } {
+                # there is an error, abort and return the list with the error
+                return $environment_ref_list
+            }
         }
     }
     
@@ -2221,36 +2429,48 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         imsld::parse::validate_multiplicity -tree $learning_activities -multiplicity 1 -element_name learning-activities -greather_than
         
         foreach learning_activity $learning_activities {
-            imsld::parse::parse_and_create_learning_activity -component_id $component_id \
-                -activity_node $learning_activity \
-                -manifest $manifest \
-                -manifest_id $manifest_id \
-                -parent_id $cr_folder_id \
-                -tmp_dir $tmp_dir
+            set learning_activity_list [imsld::parse::parse_and_create_learning_activity -component_id $component_id \
+                                            -activity_node $learning_activity \
+                                            -manifest $manifest \
+                                            -manifest_id $manifest_id \
+                                            -parent_id $cr_folder_id \
+                                            -tmp_dir $tmp_dir]
+            if { ![lindex $learning_activity_list 0] } {
+                    # an error happened, abort and return the list whit the error
+                return $learning_activity_list
+            }
         }
 
         # Componets: Activities: Support Activities
         set support_activities [$activities child all imsld:support-activity]
         
         foreach support_activity $support_activities {
-            imsld::parse::parse_and_create_support_activity -component_id $component_id \
-                -activity_node $support_activity \
-                -manifest $manifest \
-                -manifest_id $manifest_id \
-                -parent_id $cr_folder_id \
-                -tmp_dir $tmp_dir
+            set support_activity_list [imsld::parse::parse_and_create_support_activity -component_id $component_id \
+                                           -activity_node $support_activity \
+                                           -manifest $manifest \
+                                           -manifest_id $manifest_id \
+                                           -parent_id $cr_folder_id \
+                                           -tmp_dir $tmp_dir]
+            if { ![lindex $support_activity_list 0] } {
+                    # an error happened, abort and return the list whit the error
+                return $support_activity_list
+            }
         }
 
         # Componets: Activities: Activity Structures
         set actvity_structures [$activities child all imsld:activity-structure]
         
-        foreach support_activity $actvity_structures {
-            imsld::parse::parse_and_create_activity_structure -component_id $component_id \
-                -activity_node $actvity_structure \
-                -manifest $manifest \
-                -manifest_id $manifest_id \
-                -parent_id $cr_folder_id \
-                -tmp_dir $tmp_dir
+        foreach activity_structure $actvity_structures {
+            set activity_structure_list [imsld::parse::parse_and_create_activity_structure -component_id $component_id \
+                                             -activity_node $activity_structure \
+                                             -manifest $manifest \
+                                             -manifest_id $manifest_id \
+                                             -parent_id $cr_folder_id \
+                                             -tmp_dir $tmp_dir]
+            if { ![lindex $activity_structure_list 0] } {
+                    # an error happened, abort and return the list whit the error
+                return $activity_structure_list
+            }
         }
     }
 
@@ -2316,12 +2536,16 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     imsld::parse::validate_multiplicity -tree $plays -multiplicity 1 -element_name plays -greather_than
     
     foreach play $plays {
-        imsld::parse::parse_and_create_play -method_id $method_id \
-            -play_node $play \
-            -manifest $manifest \
-            -manifest_id $manifest_id \
-            -parent_id $cr_folder_id \
-            -tmp_dir $tmp_dir
+        set play_list [imsld::parse::parse_and_create_play -method_id $method_id \
+                           -play_node $play \
+                           -manifest $manifest \
+                           -manifest_id $manifest_id \
+                           -parent_id $cr_folder_id \
+                           -tmp_dir $tmp_dir]
+        if { ![lindex $play_list 0] } {
+            # an error happened, abort and return the list whit the error
+            return $play_list
+        }
     }
 
     # Method: Complete Method: When play comleted
@@ -2333,7 +2557,13 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         foreach when_play_completed $when_play_completed_list {
             set ref [string tolower [imsld::parse::get_attribute -node $when_play_completed -attr_name ref]]
             # verify that the referenced play exists
-            if { ![db_0or1row get_rp_id {select play_id from imsld_plays where identifier = :ref and content_revision__is_live(play_id) = 't'} ] } {
+            if { ![db_0or1row get_rp_id {
+                select item_id as play_id 
+                from imsld_playsi 
+                where identifier = :ref 
+                and content_revision__is_live(play_id) = 't' 
+                and method_id = :method_id
+            } ] } {
                 return [list 0 "<#_ The referenced play in 'when play completed' in the method does not exist #>"]
             }
             # found, map the play (with the imsld_mp_completed_rel) with the method

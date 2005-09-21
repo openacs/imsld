@@ -66,13 +66,19 @@ if { [lindex $is_imsld_list 0] } {
 
     # Get the info from the manifest
     set organizations [$manifest child all imscp:organizations]
+    if { ![llength $organizations] } {
+        set organizations [$manifest child all organizations]
+    }
     multirow append imsld_info "<#_ Number of Organizations: #>" [llength $organizations]
     set imsld [$organizations child all imsld:learning-design]
+    if { ![llength $imsld] } {
+        set imsld [$organizations child all learning-design]
+    }
     multirow append imsld_info "<#_ Number of IMD LDs #>" [llength $imsld]
     set imsld_title [imsld::parse::get_title -node $imsld -prefix imsld]
     set imsld_level [imsld::parse::get_attribute -node $imsld -attr_name level]
     set imsld_level [expr { [empty_string_p $imsld_level] ? "<#_ Not defined #>" : $imsld_level }]
-    multirow append imsld_info "<#_ IMD LD Title #>" [llength $imsld]
+    multirow append imsld_info "<#_ IMD LD Title #>" "$imsld_title"
     multirow append imsld_info "<#_ IMD LD Level #>" "$imsld_level"
     
     # Components
@@ -110,7 +116,7 @@ if { [lindex $is_imsld_list 0] } {
         set play_identifier [imsld::parse::get_attribute -node $play -attr_name identifier]
         set acts [$play child all imsld:act]
         imsld::parse::validate_multiplicity -tree $acts -multiplicity 0 -element_name acts -greather_than
-        multirow append imsld_info "<#_ Acts in play %play_identifier% #>" [llength $acts]
+        multirow append imsld_info "<#_ Acts in play $play_identifier % #>" [llength $acts]
     }
     
 } else {

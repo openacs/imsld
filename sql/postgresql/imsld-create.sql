@@ -330,10 +330,6 @@ create table imsld_activity_structures (
                                 constraint imsld_as_component_id_fk 
                                 references cr_items     --imsld_components
                                 not null,
-    information_id              integer 
-                                constraint imsld_as_info_id_fk 
-                                references cr_items     --imsld_components
-                                not null,
     identifier                  varchar(100),
     number_to_select            integer,
     structure_type              char(9)
@@ -342,7 +338,6 @@ create table imsld_activity_structures (
 );
 
 create index imsld_as_comp_id_idx on imsld_activity_structures(component_id);
-create index imsld_as_info_id_idx on imsld_activity_structures(information_id);
 
 comment on table imsld_activity_structures is '
 The activity structures of a component determine the sets and order of activities in the unit of learning, as well as the
@@ -589,6 +584,10 @@ create table imsld_role_parts (
                             on delete cascade
                             constraint imsld_rp_pk  
                             primary key,  
+    act_id                  integer 
+                            constraint imsld_rp_aid_fk
+                            references cr_items     --imsld_acts
+                            not null,
     identifier              varchar(100),
     role_id                 integer
                             constraint imsld_rp_roleid_fk
@@ -607,6 +606,7 @@ create table imsld_role_parts (
                             references cr_items     --imsld_environments
 );
 
+create index imsld_rp_act_id_idx on imsld_role_parts(act_id);
 create index imsld_rp_role_id_idx on imsld_role_parts(role_id);
 create index imsld_rp_la_id_idx on imsld_role_parts(learning_activity_id);
 create index imsld_rp_sa_id_idx on imsld_role_parts(support_activity_id);
