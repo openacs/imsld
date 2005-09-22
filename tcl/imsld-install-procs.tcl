@@ -246,113 +246,113 @@ ad_proc -public imsld::install::init_rels {
 
     # Learing Objetcives - IMS-LD Items
     rel_types::new imsld_lo_item_rel "Learing Objective - Imsld Item rel" "Learing Objective - Imsld Item rels"  \
-        imsld_learning_objective 0 {} \
-        imsld_item 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Prerequisites - IMS-LD Items
     rel_types::new imsld_preq_item_rel "Prerequisite - Imsld Item rel" "Prerequisite - Imsld Item rels"  \
-        imsld_prerequisite 0 {} \
-        imsld_item 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # IMS-LD Items - Resources (resource-ref)
     rel_types::new imsld_item_res_rel "Imsld Item - Resources rel" "Imsld Item - Resources rels"  \
-        imsld_item 0 {} \
-        imsld_cp_resource 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Role - IMS-LD Items
     rel_types::new imsld_role_item_rel "Role - Imslds Item rel" "Role - Imsld items rels"  \
-        imsld_role 0 {} \
-        imsld_item 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # IMS-LD - Learning Objectives
     rel_types::new imsld_imsld_lob_rel "IMS-LD - Learning Objectives rel" "IMS-LD - Learning Objectives rels"  \
-        imsld_imsld 0 {} \
-        imsld_learning_objective 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Learning Object - IMS-LD Item
     rel_types::new imsld_l_object_item_rel "Learning Object - IMS-LD Item rel" "Learning Object - IMS-LD Item rels"  \
-        imsld_learning_object 0 {} \
-        imsld_item 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Conference Service - Participants (role-ref)
     rel_types::new imsld_conf_part_rel "Conference Serice - Participants rel" "Conference Serice - Participants rels" \
-        imsld_conference_service 0 {} \
-        imsld_role 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Conference Service - Observers (role-ref)
     rel_types::new imsld_conf_obser_rel "Conference Serice - Observers rel" "Conference Serice - Observers rels" \
-        imsld_conference_service 0 {} \
-        imsld_role 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Conference Service - Moderators
     rel_types::new imsld_conf_moder_rel "Conference Serice - Moderators rel" "Conference Serice - Moderators rels" \
-        imsld_conference_service 0 {} \
-        imsld_role 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Environment - Environment (environment-ref)
     rel_types::new imsld_env_env_rel "Environment - Environment rel" "Environment - Environment rels" \
-        imsld_environment 0 {} \
-        imsld_environment 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Activity Description - IMS-LD Items 
     rel_types::new imsld_actdesc_item_rel "Activity Description - Imsld Item rel" "Activity Description - Imsld Item rels"  \
-        imsld_activity_desc 0 {} \
-        imsld_item 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Learning Activity - Environment (environment-ref)
     rel_types::new imsld_la_env_rel "Learning Activity - Environment rel" "Learning Activity - Environment rels" \
-        imsld_learning_activity 0 {} \
-        imsld_environment 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Support Activity - Environment (environment-ref)
     rel_types::new imsld_sa_env_rel "Support Activity - Environment rel" "Support Activity - Environment rels" \
-        imsld_support_activity 0 {} \
-        imsld_environment 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # On Completion - Feedback
     rel_types::new imsld_feedback_rel "On Completion - Feedback rel" "On Completion - Feedback rels" \
-        imsld_on_completion 0 {} \
-        imsld_item 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Support Activity - Role (role-ref)
     rel_types::new imsld_sa_role_rel "Support Activity - Role rel" "Support Activity - Role rels" \
-        imsld_support_activity 0 {} \
-        imsld_role 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Activity Structure - Items (information)
     rel_types::new imsld_as_info_i_rel "Activity Structure - Item (information) rel" "Activity Structure - Item (information) rels" \
-        imsld_activity_structure 0 {} \
-        imsld_item 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Activity Structure - Environments (environment-ref)
     rel_types::new imsld_as_env_rel "Activity Structure - Environment (environment-ref) rel" "Activity Structure - Environment (environment-ref) rels" \
-        imsld_activity_structure 0 {} \
-        imsld_environment 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Activity Structure - Learning Activities (learning-activity-ref)
     rel_types::new imsld_as_la_rel "Activity Structure - Learning Activities (learning-activity-ref) rel" "Activity Structure - Learning Activities (learning-activity-ref) rels" \
-        imsld_activity_structure 0 {} \
-        imsld_learning_activity 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Activity Structure - Support Activities (support-activity-ref)
     rel_types::new imsld_as_sa_rel "Activity Structure - Support Activities (support-activity-ref) rel" "Activity Structure - Support Activities (support-activity-ref) rels" \
-        imsld_activity_structure 0 {} \
-        imsld_support_activity 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Activity Structure - Activity Structures (activity-structure-ref)
     rel_types::new imsld_as_as_rel "Activity Structure - Activity Structures (activity-structure-ref) rel" "Activity Structure - Activity Structures (activity-structure-ref) rels" \
-        imsld_activity_structure 0 {} \
-        imsld_activity_structure 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Act - Role Parts (when-role-part-completed)
     rel_types::new imsld_act_rp_completed_rel "Act - Role Parts (when-role-part-completed) rel" "Act - Role Parts (when-role-part-completed) rels" \
-        imsld_act 0 {} \
-        imsld_role_part 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
     # Method - Plays (when-play-completed)
     rel_types::new imsld_mp_completed_rel "Method - Plays (when-play-completed) rel" "Method - Plays (when-play-completed) rels" \
-        imsld_method 0 {} \
-        imsld_play 0 {}
+        content_item 0 {} \
+        content_item 0 {}
 
 }
 

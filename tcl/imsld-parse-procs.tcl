@@ -1805,12 +1805,10 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     set organizations [$manifest child all organizations]
                 }                    
                 set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
-                ns_log notice "LARGO [llength $activity_structures] !! \n\n\n"
 
                 set found_p 0
                 foreach referenced_activity_structure $activity_structures {
                     set referenced_identifier [string tolower [imsld::parse::get_attribute -node $referenced_activity_structure -attr_name identifier]]
-                    ns_log notice "comparando $ref con $referenced_identifier !! \n\n\n"
                     if { [string eq $ref $referenced_identifier] } {
                         set found_p 1
                         set referenced_structure_node $referenced_activity_structure
