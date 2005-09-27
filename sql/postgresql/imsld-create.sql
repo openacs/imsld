@@ -537,7 +537,8 @@ create table imsld_plays (
                                 references cr_items,    --imsld_time_limits
     on_completion_id            integer 
                                 constraint imsld_plays_oncomp_fk 
-                                references cr_items     --imsld_on_completion
+                                references cr_items,    --imsld_on_completion
+    sort_order                  integer
 );
 
 create index imsld_plays_meth_id_idx on imsld_plays(method_id);
@@ -566,7 +567,8 @@ create table imsld_acts (
     identifier          varchar(100),
     on_completion_id    integer  
                         constraint imsld_acts_oncomp_fk  
-                        references cr_items     --imsld_on_completion
+                        references cr_items,    --imsld_on_completion
+    sort_order          integer
 );
 
 create index imsld_acts_play_id_idx on imsld_acts(play_id);
@@ -603,7 +605,8 @@ create table imsld_role_parts (
                             references cr_items,    --imsld_activity_structures
     environment_id          integer
                             constraint imsld_rp_envid_fk   
-                            references cr_items     --imsld_environments
+                            references cr_items,    --imsld_environments
+    sort_order              integer
 );
 
 create index imsld_rp_act_id_idx on imsld_role_parts(act_id);
@@ -650,3 +653,5 @@ The underlying item elements point to a resource (of type webcontent or imsldcon
 Feedback are items that are mapped to this table with the imsld_feedback_rel.';
 
 \i imsld-cp-create.sql
+
+\i imsld-status-create.sql

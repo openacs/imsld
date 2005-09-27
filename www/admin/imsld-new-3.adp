@@ -2,4 +2,4 @@
   <property name="title">titulin</property>
   <property name="context">contextin</property>
 
-success
+success @warnings;noquote@

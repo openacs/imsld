@@ -50,3 +50,5 @@ drop table imsld_time_limits cascade;
 drop table imsld_on_completion cascade;
 
 \i imsld-cp-drop.sql
+
+\i imsld-status-drop.sql

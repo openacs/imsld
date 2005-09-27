@@ -406,11 +406,14 @@ ad_proc -public imsld::parse::initialize_folders {
             set folder_name "manifest_${manifest_id}"
 
             # checks for write permission on the parent folder
-            ad_require_permission $root_folder_id write
-            
+            if { ![empty_string_p $root_folder_id] } {
+                ad_require_permission $root_folder_id write
+            }
+
             # create the root cr dir
+
             set fs_folder_id [imsld::cr::folder_new -parent_id $root_folder_id -folder_name $folder_name -folder_label $folder_label]
-            
+
             # PERMISSIONS FOR FILE-STORAGE
 
             # Before we go about anything else, lets just set permissions straight.
@@ -1205,7 +1208,11 @@ ad_proc -public imsld::parse::parse_and_create_environment {
     set learning_object [$environment_node child all imsld:learning-object]
     set learning_object_id ""
     if { [llength $learning_object] } {
-        imsld::parse::validate_multiplicity -tree $learning_object -multiplicity 1 -element_name "learning-object(environment $identifier %)" -equal
+        if { [llength $learning_object] > 1 } {
+            set learning_object [lindex $learning_object 0]
+            global warnings
+            append warnings "<li> <#_ Warning: More than one learning object in environment % $identifier %. Just one used (the first one) #> </li>"
+        }
         set learning_object_list [imsld::parse::parse_and_create_learning_object -learning_object_node $learning_object \
                                       -manifest_id $manifest_id \
                                       -manifest $manifest \
@@ -1744,12 +1751,78 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 and content_revision__is_live(activity_id) = 't' 
                 and component_id = :component_id
             }] } {
-                # error, referenced learning activity does not exist
-                return [list 0 "<#_ Referenced learning activity (% $learning_activity_ref %) in activity structure % $identifier % does not exist. comp $component_id  #>"]
+                # may be the reference is wrong, search in the support activityes before returning an error
+                if { ![db_0or1row get_learning_support_activity_id {
+                    select item_id as activity_id 
+                    from imsld_support_activitiesi
+                    where identifier = :learning_activity_ref 
+                    and content_revision__is_live(activity_id) = 't' 
+                    and component_id = :component_id
+                }] } {
+                    # ok, last try: searching in the rest of activity structures...
+                    if { [db_0or1row get_struct_id {
+                        select item_id as refrenced_struct_id 
+                        from imsld_activity_structuresi 
+                        where identifier = :learning_activity_ref 
+                        and content_revision__is_live(structure_id) = 't' 
+                        and component_id = :component_id
+                    }] } {
+                        # warning message
+                        global warnings
+                        append warnings "<li> <#_ Referenced support activity % $learning_activity_ref % is actually an activity structure!. #> </li>"
+                        # do the mappings
+                        relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
+                    } else {
+                        # search in the manifest ...
+                        set organizations [$manifest child all imscp:organizations]
+                        if { ![llength $organizations] } {
+                            set organizations [$manifest child all organizations]
+                        }                    
+                        set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
+                        
+                        set found_p 0
+                        foreach referenced_activity_structure $activity_structures {
+                            set referenced_identifier [string tolower [imsld::parse::get_attribute -node $referenced_activity_structure -attr_name identifier]]
+                            if { [string eq $learning_activity_ref $referenced_identifier] } {
+                                set found_p 1
+                                set referenced_structure_node $referenced_activity_structure
+                            }
+                        }
+                        if { $found_p } {
+                            # ok, let's create the activity structure
+                            set activity_structure_ref_list [imsld::parse::parse_and_create_activity_structure -activity_node $referenced_structure_node \
+                                                                 -component_id $component_id \
+                                                                 -manifest_id $manifest_id \
+                                                                 -manifest $manifest \
+                                                                 -parent_id $parent_id \
+                                                                 -tmp_dir $tmp_dir]
+                            
+                            set activity_structure_ref_id [lindex $activity_structure_ref_list 0]
+                            if { !$activity_structure_ref_id } {
+                                # there is an error, abort and return the list with the error
+                                return $activity_structure_ref_list
+                            }
+                            # warning message
+                            global warnings
+                            append warnings "<li> <#_ Referenced learning activity % $learning_activity_ref % is actually an activity structure!. #> </li>"
+                            # finally, do the mappings
+                            relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
+                        } else {
+                            # error, referenced learning activity does not exist
+                            return [list 0 "<#_ Referenced learning activity (% $learning_activity_ref %) in activity structure % $identifier % does not exist. comp $component_id  #>"]
+                        }
+                    }
+                } else {
+                    # warning message
+                    global warnings
+                    append warnings "<li> <#_ Referenced learning activity % $learning_activity_ref % is actually a support activity. #> </li>"
+                    # map support activity with activity structure
+                    relation_add imsld_as_sa_rel $activity_structure_id $activity_id
+                }
+            } else {
+                # map learning activity with activity structure
+                relation_add imsld_as_la_rel $activity_structure_id $activity_id
             }
-            
-            # map learning activity with activity structure
-            relation_add imsld_as_la_rel $activity_structure_id $activity_id
         }
     }
 
@@ -1769,12 +1842,78 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 and content_revision__is_live(activity_id) ='t' 
                 and component_id = :component_id
             }] } {
-                # error, referenced support activity does not exist
-                return [list 0 "<#_ Referenced support activity (% %support_activity_ref %) in activity structure % $identifier % does not exist. #>"]
+                # may be the reference is wrong, search in the support activityes before returning an error
+                if { ![db_0or1row get_support_learning_activity_id {
+                    select item_id as activity_id 
+                    from imsld_learning_activitiesi
+                    where identifier = :support_activity_ref 
+                    and content_revision__is_live(activity_id) = 't' 
+                    and component_id = :component_id
+                }] } {
+                    # ok, last try: searching in the rest of activity structures...
+                    if { [db_0or1row get_struct_id {
+                        select item_id as refrenced_struct_id 
+                        from imsld_activity_structuresi 
+                        where identifier = :support_activity_ref 
+                        and content_revision__is_live(structure_id) = 't' 
+                        and component_id = :component_id
+                    }] } {
+                        # warning message
+                        global warnings
+                        append warnings "<li> <#_ Referenced support activity % $support_activity_ref % is actually an activity structure!. #> </li>"
+                        # do the mappings
+                        relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
+                    } else {
+                        # search in the manifest ...
+                        set organizations [$manifest child all imscp:organizations]
+                        if { ![llength $organizations] } {
+                            set organizations [$manifest child all organizations]
+                        }                    
+                        set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
+                        
+                        set found_p 0
+                        foreach referenced_activity_structure $activity_structures {
+                            set referenced_identifier [string tolower [imsld::parse::get_attribute -node $referenced_activity_structure -attr_name identifier]]
+                            if { [string eq $support_activity_ref $referenced_identifier] } {
+                            set found_p 1
+                                set referenced_structure_node $referenced_activity_structure
+                            }
+                        }
+                        if { $found_p } {
+                        # ok, let's create the activity structure
+                            set activity_structure_ref_list [imsld::parse::parse_and_create_activity_structure -activity_node $referenced_structure_node \
+                                                                 -component_id $component_id \
+                                                                 -manifest_id $manifest_id \
+                                                                 -manifest $manifest \
+                                                                 -parent_id $parent_id \
+                                                                 -tmp_dir $tmp_dir]
+                            
+                            set activity_structure_ref_id [lindex $activity_structure_ref_list 0]
+                            if { !$activity_structure_ref_id } {
+                                # there is an error, abort and return the list with the error
+                                return $activity_structure_ref_list
+                            }
+                            # warning message
+                            global warnings
+                            append warnings "<li> <#_ Referenced support activity % $support_activity_ref % is actually an activity structure!. #> </li>"
+                            # finally, do the mappings
+                            relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
+                        } else {
+                            # error, referenced support activity does not exist
+                            return [list 0 "<#_ Referenced support activity (% $support_activity_ref %) in activity structure % $identifier % does not exist. #>"]
+                        }
+                    }
+                } else {
+                    # warning message
+                    global warnings
+                    append warnings "<li> <#_ Referenced support activity % $support_activity_ref % is actually a learning activity. #> </li>"
+                    # map the learning activity with activity structure
+                    relation_add imsld_as_la_rel $activity_structure_id $activity_id
+                }
+            } else {
+                # map support activity with activity structure
+                relation_add imsld_as_sa_rel $activity_structure_id $activity_id
             }
-            
-            # map support activity with activity structure
-            relation_add imsld_as_sa_rel $activity_structure_id $activity_id
         }
     }
 
@@ -1799,7 +1938,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 # case one, just do the mappings
                 relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
             } else {
-                # case two, first verify that the referenced activity structure exists
+                 # case two, first verify that the referenced activity structure exists
                 set organizations [$manifest child all imscp:organizations]
                 if { ![llength $organizations] } {
                     set organizations [$manifest child all organizations]
@@ -1848,6 +1987,7 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
     -manifest_id
     -parent_id
     -tmp_dir
+    -sort_order
 } {
     Parse a role part and stores all the information in the database.
 
@@ -1859,6 +1999,7 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
     @param tmp_dir Temporary directory where the files were exctracted
+    @param sort_order
 } {
     # get the info of the role part and create it
     set identifier [string tolower [imsld::parse::get_attribute -node $role_part_node -attr_name identifier]]
@@ -1901,6 +2042,9 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
 
     # Role Part: Learning Activities
     set learning_activity_id ""
+    set support_activity_id ""
+    set activity_structure_id ""
+
     set learning_activity_ref [$role_part_node child all imsld:learning-activity-ref]
     if { [llength $learning_activity_ref] } {
         imsld::parse::validate_multiplicity -tree $learning_activity_ref -multiplicity 1 -element_name learning-activity-ref(role-part) -equal
@@ -1914,13 +2058,38 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
             and content_revision__is_live(la.activity_id) = 't' 
             and la.component_id = :component_id
         }] } {
-            # error, referenced learning activity does not exist
-            return [list 0 "<#_ Referenced learning activity (% $learning_activity_ref_ref %) in role part % $identifier % does not exist. #>"]
+            # may be the reference is wrong, search in the support activityes before returning an error
+            if { ![db_0or1row get_learning_support_activity_id {
+                select item_id as support_activity_id 
+                from imsld_support_activitiesi
+                where identifier = :learning_activity_ref_ref 
+                and content_revision__is_live(activity_id) = 't' 
+                and component_id = :component_id
+            }] } {
+                # may be the reference is wrong, search in the activity structures before returning an error
+                if { ![db_0or1row get_learning_activity_struct_id {
+                    select item_id as activity_structure_id 
+                    from imsld_activity_structuresi
+                    where identifier = :learning_activity_ref_ref 
+                    and content_revision__is_live(structure_id) = 't' 
+                    and component_id = :component_id
+                }] } {
+                    # error, referenced learning activity does not exist
+                    return [list 0 "<#_ Referenced learning activity (% $learning_activity_ref_ref %) in role part % $identifier % does not exist. #>"]
+                } else {
+                    # warning message
+                    global warnings
+                    append warnings "<li> <#_ Referenced learning activity % $learning_activity_ref_ref % in role part % $identifier % is actually an activity structure. #> </li>"
+                }
+            } else {
+                # warning message
+                global warnings
+                append warnings "<li> <#_ Referenced learning activity % $learning_activity_ref_ref % in role part % $identifier % is actually a support activity. #> </li>"
+            }
         }
     }
 
     # Role Part: Support Activities
-    set support_activity_id ""
     set support_activity_ref [$role_part_node child all imsld:support-activity-ref]
     if { [llength $support_activity_ref] } {
         imsld::parse::validate_multiplicity -tree $support_activity_ref -multiplicity 1 -element_name support-activity-ref(role-part) -equal
@@ -1934,8 +2103,34 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
             and content_revision__is_live(sa.activity_id) = 't' 
             and sa.component_id = :component_id
         }] } {
-            # error, referenced support activity does not exist
-            return [list 0 "<#_ Referenced support activity (% $support_activity_ref_ref %) in role part % $identifier % does not exist. #>"]
+            # may be the reference is wrong, search in the learning activities before returning an error
+            if { ![db_0or1row get_support_learning_activity_id {
+                select item_id as learning_activity_id 
+                from imsld_learning_activitiesi
+                where identifier = :support_activity_ref_ref 
+                and content_revision__is_live(activity_id) = 't' 
+                and component_id = :component_id
+            }] } {
+                # may be the reference is wrong, search in the activity structures before returning an error
+                if { ![db_0or1row get_support_activity_struct_id {
+                    select item_id as activity_structure_id 
+                    from imsld_activity_structuresi
+                    where identifier = :support_activity_ref_ref 
+                    and content_revision__is_live(structure_id) = 't' 
+                    and component_id = :component_id
+                }] } {
+                    # error, referenced support activity does not exist
+                    return [list 0 "<#_ Referenced support activity (% $support_activity_ref_ref %) in role part % $identifier % does not exist. #>"]
+                } else {
+                    # warning message
+                    global warnings
+                    append warnings "<li> <#_ Referenced support activity % $support_activity_ref_ref % in role part % $identifier % is actually an activity structure. #> </li>"
+                }
+            } else {
+                # warning message
+                global warnings
+                append warnings "<li> <#_ Referenced support activity % $support_activity_ref % in role part % $identifier % is actually a learning activity. #> </li>"
+            }
         }
     }
 
@@ -1943,7 +2138,6 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
 
     # Role Part: Activity Structures
     set activity_structure_ref [$role_part_node child all imsld:activity-structure-ref]
-    set activity_structure_id ""
     if { [llength $activity_structure_ref] } {
         imsld::parse::validate_multiplicity -tree $activity_structure_ref -multiplicity 1 -element_name activity-structure-ref(role-part) -equal
         # the activity structures have already been parsed by now, so the referenced activity structure has to be in the database.
@@ -1956,8 +2150,34 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
             and content_revision__is_live(ias.structure_id) = 't' 
             and ias.component_id = :component_id
         }] } {
-            # error, referenced activity structure does not exist
-            return [list 0 "<#_ Referenced activity structure (% $activity_structure_ref_ref %) in role part % $identifier % does not exist. #>"]
+            # may be the reference is wrong, search in the learning activities before returning an error
+            if { ![db_0or1row get_struct_learning_activity_id {
+                select item_id as learning_activity_id 
+                from imsld_learning_activitiesi
+                where identifier = :activity_structure_ref_ref 
+                and content_revision__is_live(activity_id) = 't' 
+                and component_id = :component_id
+            }] } {
+                # may be the reference is wrong, search in the support activities before returning an error
+                if { ![db_0or1row get_struct_support_activity_id {
+                    select item_id as support_activity_id 
+                    from imsld_support_activitiesi
+                    where identifier = :activity_structure_ref_ref 
+                    and content_revision__is_live(activity_id) = 't' 
+                    and component_id = :component_id
+                }] } {
+                    # error, referenced activity structure does not exist
+                    return [list 0 "<#_ Referenced activity structure (% $activity_structure_ref_ref %) in role part % $identifier % does not exist. #>"]
+                } else {
+                    # warning message
+                    global warnings
+                    append warnings "<li> <#_ Referenced activity structure % $activity_structure_ref_ref % in role part % $identifier % is actually an support activity. #> </li>"
+                }
+            } else {
+                # warning message
+                global warnings
+                append warnings "<li> <#_ Referenced activity structure % $activity_structure_ref_ref % in role part % $identifier % is actually a learning activity. #> </li>"
+            }
         }
     }
 
@@ -1987,7 +2207,8 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
                                                                 [list learning_activity_id $learning_activity_id] \
                                                                 [list support_activity_id $support_activity_id] \
                                                                 [list activity_structure_id $activity_structure_id] \
-                                                                [list environment_id $environment_id]] \
+                                                                [list environment_id $environment_id] \
+                                                                [list sort_order $sort_order]] \
                           -content_type imsld_role_part \
                           -title $title \
                           -parent_id $parent_id]
@@ -2002,6 +2223,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
     -manifest_id
     -parent_id
     -tmp_dir
+    -sort_order
 } {
     Parse a act and stores all the information in the database.
 
@@ -2013,6 +2235,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
     @param tmp_dir Temporary directory where the files were exctracted
+    @param sort_order
 } {
     upvar files_struct_list files_struct_list
 
@@ -2069,7 +2292,8 @@ ad_proc -public imsld::parse::parse_and_create_act {
     set act_id [imsld::item_revision_new -attributes [list [list play_id $play_id] \
                                                           [list identifier $identifier] \
                                                           [list time_limit_id $time_limit_id] \
-                                                          [list on_completion_id $on_completion_id]] \
+                                                          [list on_completion_id $on_completion_id] \
+                                                          [list sort_order $sort_order]] \
                     -content_type imsld_act \
                     -parent_id $parent_id \
                     -title $title]
@@ -2077,18 +2301,21 @@ ad_proc -public imsld::parse::parse_and_create_act {
     # Act: Role Parts
     set role_parts [$act_node child all imsld:role-part]
     imsld::parse::validate_multiplicity -tree $role_parts -multiplicity 1 -element_name role-parts -greather_than
+    set count 1
     foreach role_part $role_parts {
         set role_part_list [imsld::parse::parse_and_create_role_part -act_id $act_id \
                                 -role_part_node $role_part \
                                 -manifest $manifest \
                                 -manifest_id $manifest_id \
                                 -parent_id $parent_id \
-                                -tmp_dir $tmp_dir]
+                                -tmp_dir $tmp_dir \
+                                -sort_order $count]
         set role_part_id [lindex $role_part_list 0]
         if { !$role_part_id } {
             # an error happened, abort and return the list whit the error
             return $role_part_list
         }
+        incr count
     }
     
     # Act: Complete Act: When role part comleted
@@ -2125,6 +2352,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
     -manifest_id
     -parent_id
     -tmp_dir
+    -sort_order
 } {
     Parse a play and stores all the information in the database.
 
@@ -2136,6 +2364,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
     @param tmp_dir Temporary directory where the files were exctracted
+    @param sort_order 
 } {
     upvar files_struct_list files_struct_list
 
@@ -2201,7 +2430,8 @@ ad_proc -public imsld::parse::parse_and_create_play {
                                                            [list identifier $identifier] \
                                                            [list when_last_act_completed_p $when_last_act_completed_p] \
                                                            [list time_limit_id $time_limit_id] \
-                                                           [list on_completion_id $on_completion_id]] \
+                                                           [list on_completion_id $on_completion_id] \
+                                                           [list sort_order $sort_order]] \
                      -content_type imsld_play \
                      -title $title \
                      -parent_id $parent_id]
@@ -2209,6 +2439,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
     # Play: Acts
     set acts [$play_node child all imsld:act]
     imsld::parse::validate_multiplicity -tree $acts -multiplicity 1 -element_name acts -greather_than
+    set count 1
     foreach act $acts {
         set act_identifier [string tolower [imsld::parse::get_attribute -node $act -attr_name identifier]]
         set act_title [imsld::parse::get_title -node $act -prefix imsld]
@@ -2217,12 +2448,14 @@ ad_proc -public imsld::parse::parse_and_create_play {
                           -manifest $manifest \
                           -manifest_id $manifest_id \
                           -parent_id $parent_id \
-                          -tmp_dir $tmp_dir]
+                          -tmp_dir $tmp_dir \
+                          -sort_order $count]
         set act_id [lindex $act_list 0]
         if { !$act_id } {
             # an error happened, abort and return the list whit the error
             return $act_list
         }
+        incr count
     }
     
     return $play_id
@@ -2236,7 +2469,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
 } {
     Parse a XML IMS LD file and store all the information found in the database, such as the manifest, the organization, the imsld with its components, method, activities, etc.
 
-    Returns the new manifest_id created if there was no errors. Otherwise it returns 0.
+    Returns a list with the new manifest_id and the warnings, if thera are any, and if there was no errors. Otherwise it returns 0 and the error.
     
     @param xmlfile The file to parse. This file must be compliant with the IMS LD spec
     @param manifest_id The manifest_id that is being created
@@ -2244,6 +2477,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     @param tmp_dir tmp dir where the files were extracted to
 } {
     set community_id [expr { [empty_string_p $community_id] ? [dotlrn_community::get_community_id] : $community_id }]
+    global warnings
+    set warnings ""
 
     # get the files structure
     set files_struct_list [imsld::parse::get_files_structure -tmp_dir $tmp_dir]
@@ -2263,6 +2498,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     set folders_list [imsld::parse::initialize_folders -community_id $community_id \
                           -manifest_id $manifest_id \
                           -manifest_identifier $manifest_identifier]
+
     set fs_folder_id [lindex $folders_list 0]
     set cr_folder_id [lindex $folders_list 1]
     
@@ -2275,6 +2511,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                          -identifier $manifest_identifier \
                          -version $manifest_version \
                          -parent_id $cr_folder_id]
+
 
     # organizaiton
     set organizations [$manifest child all imscp:organizations]
@@ -2533,17 +2770,20 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     set plays [$method child all imsld:play]
     imsld::parse::validate_multiplicity -tree $plays -multiplicity 1 -element_name plays -greather_than
     
+    set count 1
     foreach play $plays {
         set play_list [imsld::parse::parse_and_create_play -method_id $method_id \
                            -play_node $play \
                            -manifest $manifest \
                            -manifest_id $manifest_id \
                            -parent_id $cr_folder_id \
-                           -tmp_dir $tmp_dir]
+                           -tmp_dir $tmp_dir \
+                           -sort_order $count]
         if { ![lindex $play_list 0] } {
             # an error happened, abort and return the list whit the error
             return $play_list
         }
+        incr count
     }
 
     # Method: Complete Method: When play comleted
@@ -2569,7 +2809,11 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         }
     }
     
-    return [list $manifest_id {}]
+    global warnings
+    if { ![empty_string_p $warnings] } {
+        set warnings "<#_ <br /> Warnings: <ul> $warnings </ul> #>"
+    }
+    return [list $manifest_id "$warnings"]
 }
 
 

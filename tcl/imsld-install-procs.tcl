@@ -170,6 +170,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_play -attribute_name when_last_act_completed_p -datatype string -pretty_name "<#_ When Last Act Completed? #>" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_play -attribute_name time_limit_id -datatype number -pretty_name "<#_ Time Limit Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_play -attribute_name on_completion_id -datatype number -pretty_name "<#_ On Completion Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_play -attribute_name sort_order -datatype number -pretty_name "<#_ Sort Order #>" -column_spec "integer"
     
     # acts
     content::type::new -content_type imsld_act -supertype content_revision -pretty_name "<#_ IMS-LD Act #>" -pretty_plural "<#_ IMS-LD Acts #>" -table_name imsld_acts -id_column act_id
@@ -178,6 +179,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_act -attribute_name time_limit_id -datatype number -pretty_name "<#_ Time Limit Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_act -attribute_name identifier -datatype string -pretty_name "<#_ Identifier #>" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_act -attribute_name on_completion_id -datatype number -pretty_name "<#_ On Completion Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_act -attribute_name sort_order -datatype number -pretty_name "<#_ Sort Order #>" -column_spec "integer"
 
     # role parts
     content::type::new -content_type imsld_role_part -supertype content_revision -pretty_name "<#_ IMS-LD Role Part #>" -pretty_plural "<#_ IMS-LD Role Parts #>" -table_name imsld_role_parts -id_column role_part_id
@@ -189,6 +191,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_role_part -attribute_name support_activity_id -datatype number -pretty_name "<#_ Support Activity Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_role_part -attribute_name activity_structure_id -datatype number -pretty_name "<#_ Activity Structure Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_role_part -attribute_name environment_id -datatype number -pretty_name "<#_ Environment Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_role_part -attribute_name sort_order -datatype number -pretty_name "<#_ Sort Order #>" -column_spec "integer"
 
     # time limits
     content::type::new -content_type imsld_time_limit -supertype content_revision -pretty_name "<#_ IMS-LD Time Limit #>" -pretty_plural "<#_ IMS-LD Time Limits #>" -table_name imsld_time_limits -id_column time_limit_id
@@ -508,12 +511,14 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_play -attribute_name when_last_act_completed_p
     content::type::attribute::delete -content_type imsld_play -attribute_name time_limit_id
     content::type::attribute::delete -content_type imsld_play -attribute_name on_completion_id
+    content::type::attribute::delete -content_type imsld_play -attribute_name sort_order
 
     # acts
     content::type::attribute::delete -content_type imsld_act -attribute_name play_id
     content::type::attribute::delete -content_type imsld_act -attribute_name time_limit_id
     content::type::attribute::delete -content_type imsld_act -attribute_name identifier
     content::type::attribute::delete -content_type imsld_act -attribute_name on_completion_id
+    content::type::attribute::delete -content_type imsld_act -attribute_name sort_order
 
     # role parts
     content::type::attribute::delete -content_type imsld_role_part -attribute_name act_id
@@ -523,6 +528,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_role_part -attribute_name support_activity_id
     content::type::attribute::delete -content_type imsld_role_part -attribute_name activity_structure_id
     content::type::attribute::delete -content_type imsld_role_part -attribute_name environment_id
+    content::type::attribute::delete -content_type imsld_role_part -attribute_name sort_order
 
     # time limits
     content::type::attribute::delete -content_type imsld_time_limit -attribute_name time_in_seconds

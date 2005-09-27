@@ -34,7 +34,7 @@ set user_id [ad_conn user_id]
 set manifest_list [imsld::parse::parse_and_create_imsld_manifest -xmlfile $tmp_dir/imsmanifest.xml \
                     -manifest_id $manifest_id \
                     -tmp_dir $tmp_dir \
-                    -community_id 2040]
+                    -community_id 2142]
 
 set manifest_id [lindex $manifest_list 0]
 
@@ -44,6 +44,7 @@ if { !$manifest_id } {
     ad_script_abort
 }
 
+set warnings [lindex $manifest_list 1]
 # delete the tmpdir
 imsld::parse::remove_dir -dir $tmp_dir    
 

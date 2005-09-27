@@ -6,6 +6,9 @@ set context {}
 
 
 ad_proc beta {} {} {
+    global sms
+    set sms "JA! vemonos los pies : "
+
     upvar lista lista
     set compy $lista
     lappend lista [list c d]
@@ -20,12 +23,19 @@ ad_proc zeta {} {} {
 
 ad_proc teta {} {} {
     upvar lista lista
+    global sms
+    append sms sipuesdostres
+
+    set variabfle $sms
+
     set stypmy $lista
     lappend lista [list z z j]
+    lappend lista $sms
 }
 
 set lista [list a b]
 beta
+
 
 if { 1==2 } {
 
