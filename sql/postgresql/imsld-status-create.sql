@@ -15,6 +15,9 @@ create table imsld_status_learner (
     user_id                 integer
                             constraint imsld_stat_user_fk  
                             references users
+                            not null,
+    finished_date           timestamptz
+                            default current_timestamp
                             not null
 );
 
