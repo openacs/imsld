@@ -247,6 +247,11 @@ ad_proc -public imsld::install::init_rels {
     Create default rels between imsld items
 } { 
 
+    # dotLRN Community - IMS LD Manifests
+    rel_types::new imsld_lo_item_rel "Learing Objective - Imsld Item rel" "Learing Objective - Imsld Item rels"  \
+        content_item 0 {} \
+        content_item 0 {}
+
     # Learing Objetcives - IMS-LD Items
     rel_types::new imsld_lo_item_rel "Learing Objective - Imsld Item rel" "Learing Objective - Imsld Item rels"  \
         content_item 0 {} \

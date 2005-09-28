@@ -2512,6 +2512,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                          -version $manifest_version \
                          -parent_id $cr_folder_id]
 
+    # map manifest with the community
+    relation_add $community_id $manifest_id
 
     # organizaiton
     set organizations [$manifest child all imscp:organizations]
