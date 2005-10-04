@@ -101,15 +101,10 @@ create table imsld_cp_files (
                     on delete cascade
                     constraint imsld_cp_files_pk
                     primary key,
-    resource_id     integer
-                    constraint imsld__file_res_id_fk
-                    references cr_items,
-    path_to_file      varchar(2000),
+    path_to_file    varchar(2000),
     file_name        varchar(2000),
     href            varchar(2000)
 );
     
--- create index for imsld_cp_files
-create index imsld_cp_files_res_id_idx on imsld_cp_files(resource_id);
 
 

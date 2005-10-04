@@ -44,6 +44,10 @@ create table imsld_imslds (
                             on delete cascade
                             constraint imsld_id_pk 
                             primary key,
+    organization_id         integer
+                            constraint imsld_org_id_fk
+                            references cr_items     --imsld_cp_organizations
+                            not null,
     identifier              varchar(100)
                             not null,
     version                 varchar(10),
@@ -62,6 +66,7 @@ create table imsld_imslds (
                             references cr_items     --imsld_prerequisites
 );
 
+create index imsld_imsld_orgid_idx on imsld_imslds(organization_id);
 create index imsld_imsld_loid_idx on imsld_imslds(learning_objective_id);
 create index imsld_imsld_pid_idx on imsld_imslds(prerequisite_id);
 
@@ -208,7 +213,7 @@ comment on column imsld_roles.match_persons_p is '
 This attribute is used when there are several sub roles (e.g. chair, secretary, member). Persons can be matched exclusively to the sub roles, meaning that a person, who has the role of chair, may not be bound to one of the other roles at the same time. When it is not exclusive, persons may be bound to more than one sub role (this is the default situation).
 True means exclusively-in-roles and false means not-exlusively.';
 
-create table imsld_activity_desc (
+create table imsld_activity_descs (
     description_id      integer
                         constraint imsld_act_desc_fk
                         references cr_revisions
@@ -218,7 +223,7 @@ create table imsld_activity_desc (
     pretty_title        varchar(200)
 );
 
-comment on table imsld_activity_desc is '
+comment on table imsld_activity_descs is '
 This table holds the descrition of a learning activity.
 Technically it is just a mapping table between items and the learning activity, but this table was created to provide simplicity and clarification in the data model';
 

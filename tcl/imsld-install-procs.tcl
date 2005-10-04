@@ -30,6 +30,7 @@ ad_proc -public imsld::install::init_content_repository {
     # imsld 
     content::type::new -content_type imsld_imsld -supertype content_revision -pretty_name "<#_ IMS-LD #>" -pretty_plural "<#_ IMS-LDs #>" -table_name imsld_imslds -id_column imsld_id 
 
+    content::type::attribute::new -content_type imsld_imsld -attribute_name organization_id -datatype number -pretty_name "<#_ Organization Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_imsld -attribute_name identifier -datatype string -pretty_name "<#_ Identifier #>" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_imsld -attribute_name version -datatype string -pretty_name "<#_ Version #>" -column_spec "varchar(10)"
     content::type::attribute::new -content_type imsld_imsld -attribute_name level -datatype string -pretty_name "<#_ Level #>" -column_spec "char(1)"
@@ -75,7 +76,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_role -attribute_name href -datatype string -pretty_name "<#_ Href #>" -column_spec "varchar(2000)"
 
     # imsld activity description
-    content::type::new -content_type imsld_activity_desc -supertype content_revision -pretty_name "<#_ IMS-LD Activity Description #>" -pretty_plural "<#_ IMS-LD Activity Descriptions #>" -table_name imsld_activity_desc -id_column description_id
+    content::type::new -content_type imsld_activity_desc -supertype content_revision -pretty_name "<#_ IMS-LD Activity Description #>" -pretty_plural "<#_ IMS-LD Activity Descriptions #>" -table_name imsld_activity_descs -id_column description_id
 
     content::type::attribute::new -content_type imsld_activity_desc -attribute_name pretty_title -datatype string -pretty_name "<#_ Pretty Title #>" -column_spec "varchar(200)"
 
@@ -235,7 +236,6 @@ ad_proc -public imsld::install::init_content_repository {
     # imsld cp files
     content::type::new -content_type imsld_cp_file -supertype content_revision -pretty_name "<#_ IMS-LD CP File #>" -pretty_plural "<#_ IMS-LD CP Filed #>" -table_name imsld_cp_files -id_column imsld_file_id
 
-    content::type::attribute::new -content_type imsld_cp_file -attribute_name resource_id -datatype number -pretty_name "<#_ Resource Identifier #>" -column_spec "integer"
     content::type::attribute::new -content_type imsld_cp_file -attribute_name path_to_file -datatype string -pretty_name "<#_ Path to File #>" -column_spec "varchar(2000)"
     content::type::attribute::new -content_type imsld_cp_file -attribute_name file_name -datatype string -pretty_name "<#_ File name #>" -column_spec "varchar(2000)"
     content::type::attribute::new -content_type imsld_cp_file -attribute_name href -datatype string -pretty_name "<#_ Href #>" -column_spec "varchar(2000)"
@@ -247,13 +247,13 @@ ad_proc -public imsld::install::init_rels {
     Create default rels between imsld items
 } { 
 
-    # dotLRN Community - IMS LD Manifests
+    # Learing Objetcives - IMS-LD Items
     rel_types::new imsld_lo_item_rel "Learing Objective - Imsld Item rel" "Learing Objective - Imsld Item rels"  \
         content_item 0 {} \
         content_item 0 {}
 
-    # Learing Objetcives - IMS-LD Items
-    rel_types::new imsld_lo_item_rel "Learing Objective - Imsld Item rel" "Learing Objective - Imsld Item rels"  \
+    # Resource - Files
+    rel_types::new imsld_res_files_rel "Resource - Files rel" "Resource - Files rels"  \
         content_item 0 {} \
         content_item 0 {}
 
@@ -369,6 +369,7 @@ ad_proc -public imsld::uninstall::delete_rels {
     Delete default rels between imsld items
 } { 
     imsld::rel_type_delete -rel_type imsld_lo_item_rel
+    imsld::rel_type_delete -rel_type imsld_res_files_rel
     imsld::rel_type_delete -rel_type imsld_preq_item_rel
     imsld::rel_type_delete -rel_type imsld_item_res_rel
     imsld::rel_type_delete -rel_type imsld_role_item_rel
@@ -408,6 +409,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_learning_object -attribute_name parameters
 
     # imsld
+    content::type::attribute::delete -content_type imsld_imsld -attribute_name organization_id
     content::type::attribute::delete -content_type imsld_imsld -attribute_name identifier
     content::type::attribute::delete -content_type imsld_imsld -attribute_name version
     content::type::attribute::delete -content_type imsld_imsld -attribute_name level

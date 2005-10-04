@@ -53,7 +53,6 @@ ad_proc -public imsld::cr::folder_new {
 
 ad_proc -public imsld::cr::file_new {
     -href
-    -resource_id
     -path_to_file
     -file_name
     {-item_id ""}
@@ -70,7 +69,6 @@ ad_proc -public imsld::cr::file_new {
     Creates a new file in the file storage. Returns the item_id for that file.
 
     @param href href of the file (the path to the item in the file system)
-    @param resource_id resource id to which the resource belongs to
     @param path_to_file path to file in the fs
     @param file_name file name
     @option item_id Item_id of the file. [db_nextval "acs_object_id_seq"] used by default.
@@ -100,8 +98,7 @@ ad_proc -public imsld::cr::file_new {
             select 1 
             from imsld_cp_files icf, cr_items cri
             where cri.item_id = :item_id 
-            and cri.live_revision = icf.imsld_file_id
-            and icf.resource_id = :resource_id}]
+            and cri.live_revision = icf.imsld_file_id}]
 
         if { !$file_exists_p } {
             set item_id [content::item::new -item_id $item_id \
@@ -124,8 +121,7 @@ ad_proc -public imsld::cr::file_new {
                          -item_id $item_id \
                          -mime_type $mime_type \
                          -is_live "t" \
-                         -attributes [list [list resource_id $resource_id] \
-                                          [list path_to_file $path_to_file] \
+                         -attributes [list [list path_to_file $path_to_file] \
                                           [list file_name $file_name] \
                                           [list href $href]]]
     

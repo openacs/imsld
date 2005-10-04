@@ -5,5 +5,5 @@
 -- @creation-date sept-2005
 --
 
-drop table imsld_status_learner;
+drop table imsld_status_user;
 

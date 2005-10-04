@@ -19,7 +19,7 @@ drop table imsld_components cascade;
  
 drop table imsld_roles cascade;
 
-drop table imsld_activity_desc;
+drop table imsld_activity_descs;
 
 drop table imsld_learning_activities cascade;
 

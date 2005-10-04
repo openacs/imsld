@@ -524,7 +524,6 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             set found_p 1
         }
         set filex_id [imsld::fs::file_new -href $filex_href \
-                          -resource_id $resource_id \
                           -path_to_file $filex_href \
                           -type file \
                           -complete_path "${tmp_dir}/${filex_href}"]
@@ -532,6 +531,8 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             # an error ocurred when creating the file
             return [list 0 "<#_ The file $filex_href % was not created, it wasn't found in the manifest #>"]
         }
+        # map resource with file
+        relation_add imsld_res_files_rel $resource_id $filex_id
     }
     
     if { ![empty_string_p $resource_href] && !$found_p } {
@@ -2513,7 +2514,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                          -parent_id $cr_folder_id]
 
     # map manifest with the community
-    relation_add $community_id $manifest_id
+    relation_add imsld_community_manifest_rel $community_id $manifest_id
 
     # organizaiton
     set organizations [$manifest child all imscp:organizations]
@@ -2580,7 +2581,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                                             [list version $imsld_version] \
                                                             [list sequence_p $imsld_sequence_p] \
                                                             [list learning_objectives $learning_objective_id] \
-                                                            [list prerequisite_id $prerequisite_id]] \
+                                                            [list prerequisite_id $prerequisite_id] \
+                                                            [list organization_id $organization_id]] \
                       -content_type imsld_imsld \
                       -title $imsld_title \
                       -parent_id $cr_folder_id]

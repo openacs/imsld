@@ -4,15 +4,32 @@ ad_page_contract {
 set page_title index
 set context {}
 
-db_foreach imsld_in_class {
-    select all imslds in the class
-} {
-#     set next_activity [imsld::get_next_activity]
-#     display ismld_name
-#     display copmleted activities
-#     display next activity with "finished" link and with link to the activity: if it is an activity structure?
-}
+db_foreach objeto {
+    select object_id, last_modified
+    from acs_objects
+    order by last_modified asc
+} {}
 
+set ultimo "$object_id, $last_modified"
+
+if {2==2} {
+    ############## BEGIN
+    # THIS CALLS MUST BE DONE IN DOTLRN APLET ADD APPLET TO COMMUNITY
+    set community_id 2148
+    
+    # create relationship: dotLRN Community - IMS LD Manifests
+    rel_types::new imsld_community_manifest_rel "dotLRN Community - IMS LD Manifests rel" "dotLRN Community - IMS LD Manifests rels"  \
+        [acs_object::get_element -object_id $community_id -element object_type] 0 {} \
+    content_item 0 {}
+    
+    ############## END
+} else {
+    ############## BEGIN
+    # THIS CALLS MUST BE DONE IN DOTLRN APLET REMOVE APPLET TO COMMUNITY
+    imsld::rel_type_delete -rel_type imsld_community_manifest_rel
+    
+    ############## END
+}
 
 # ad_proc beta {} {} {
 #     global sms
@@ -35,7 +52,7 @@ db_foreach imsld_in_class {
 #     global sms
 #     append sms sipuesdostres
 
-#     set variabfle $sms
+#     set variable $sms
 
 #     set stypmy $lista
 #     lappend lista [list z z j]
