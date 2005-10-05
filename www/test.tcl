@@ -15,12 +15,9 @@ set ultimo "$object_id, $last_modified"
 if {2==2} {
     ############## BEGIN
     # THIS CALLS MUST BE DONE IN DOTLRN APLET ADD APPLET TO COMMUNITY
-    set community_id 2148
+    set community_id 2146
     
     # create relationship: dotLRN Community - IMS LD Manifests
-    rel_types::new imsld_community_manifest_rel "dotLRN Community - IMS LD Manifests rel" "dotLRN Community - IMS LD Manifests rels"  \
-        [acs_object::get_element -object_id $community_id -element object_type] 0 {} \
-    content_item 0 {}
     
     ############## END
 } else {

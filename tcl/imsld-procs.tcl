@@ -136,7 +136,7 @@ ad_proc -public imsld::finish_component_element {
     # get the url for parse it and get the info
     set url [ns_conn url]
     regexp {finish-component-element-([0-9]+)-([0-9]+)-([0-9]+)-([a-z]+).imsld$} $url match imsld_id role_part_id element_id type
-    regsub {finish-component-element.*} $url "" return_url 
+    regsub {/finish-component-element.*} $url "" return_url 
     set user_id [ad_conn user_id]
     # now that we have the necessary info, mark the finished element completed and return
     db_dml insert_entry {
@@ -167,7 +167,6 @@ ad_proc -public imsld::next_activity {
     
     @return The list (activity_name, list of associated urls) of the next activity for the user in the IMS-LD.
 } {
-    set community_id 2148
     set community_id [expr { [empty_string_p $community_id] ? "[dotlrn_community::get_community_id]" : $community_id }]
     # Gets file-storage root folder_id
     set fs_package_id [site_node_apm_integration::get_child_package_id \
@@ -373,7 +372,7 @@ ad_proc -public imsld::next_activity {
                 where fs.live_revision = :imsld_file_id
             }]
             set file_url "[ad_url][apm_package_url_from_id $fs_package_id]view/${file_url}"
-            append activity_urls "<#_ <li> % <a href=[export_vars -base $file_url]> % $file_name % </a> \[ <a href=[ad_url][ad_conn url]finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld>finishim!oo</a> \] </li> #>"
+            append activity_urls "<#_ <li> % <a href=[export_vars -base $file_url]> % $file_name % </a> \[ <a href=[ad_url][ad_conn url]/finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld>finishim!</a> \] </li> #>"
         } if_no_rows {
             # the activity doesn't have any resource associated, display the default page
             append activity_urls "<#_ <li> desc (no file associated) </li> #>"

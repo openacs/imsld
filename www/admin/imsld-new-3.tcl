@@ -32,9 +32,9 @@ set user_id [ad_conn user_id]
 # Atempting to create the new IMS LD.
 # The proc imsld::parse::parse_and_create_imsld_manifest return a pair of values (manifest_id and a message)
 set manifest_list [imsld::parse::parse_and_create_imsld_manifest -xmlfile $tmp_dir/imsmanifest.xml \
-                    -manifest_id $manifest_id \
-                    -tmp_dir $tmp_dir \
-                    -community_id 2148]
+                       -manifest_id $manifest_id \
+                       -tmp_dir $tmp_dir \
+                       -community_id [dotlrn_community::get_community_id]]
 
 set manifest_id [lindex $manifest_list 0]
 

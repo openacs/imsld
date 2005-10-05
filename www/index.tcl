@@ -3,7 +3,7 @@ ad_page_contract {
 
 set page_title index
 set context {}
-set community_id 2148
+set community_id [dotlrn_community::get_community_id]
 
 db_multirow imslds_in_class get_manifests {
     select cr3.item_id as imsld_id,
