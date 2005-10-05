@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <message_catalog package_key="imsld" package_version="0.1d" locale="en_US" charset="ISO-8859-1">
 
-  <msg key="_Component">Identifier</msg>
+  <msg key="_Component">Component Identifier</msg>
   <msg key="Act_Identifier">Act Identifier</msg>
   <msg key="Activity_Structures">Activity Structures</msg>
   <msg key="Acts_in_play_count">Acts in play %count%</msg>
