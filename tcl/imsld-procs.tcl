@@ -206,7 +206,7 @@ ad_proc -public imsld::next_activity {
     } else {
         # get the completed activities in order to display them
         # save the last one because we will use it latter
-        set completed_activities "<#_ <ul> Completed <br /> #>"
+        set completed_activities "[_ imsld.lt_ul_Completed_Activiti]"
         db_foreach completed_activity {
             select stat.completed_id,
             stat.role_part_id,
@@ -234,10 +234,10 @@ ad_proc -public imsld::next_activity {
                             from imsld_learning_activitiesi
                             where activity_id = :completed_id
                         }
-                        append completed_activities "<#_ <li> % $activity_title % </li> #>"
+                        append completed_activities "[_ imsld.li_activity_title_li]"
                     } else {
                         # the learning activity is referenced from an activity structure... digg more
-                        append completed_activities "<#_ <li> impozzible </li> #>"
+                        append completed_activities "[_ imsld.li_impozzible_li]"
                     }
                 }
                 support {
@@ -245,7 +245,7 @@ ad_proc -public imsld::next_activity {
                 structure {
                 }
                 default {
-                    ad_return_error "<#_ Invalid type $type in imsld::next_activity #>" "<#_ Valid types are learning, support and structure#>"
+                    ad_return_error "[_ imsld.lt_Invalid_type_type_in_]" "[_ imsld.lt_Valid_types_are_learn]"
                     ad_script_abort
                 }
             }
@@ -308,7 +308,7 @@ ad_proc -public imsld::next_activity {
                     and rp.sort_order = (select min(irp2.sort_order) from imsld_role_parts irp2 where irp2.act_id = ia.item_id)
                 }] } {
                     # there is no more to search, we reached the end of the unit of learning
-                    return [list "finished!" {} "$completed_activities"]
+                    return [list { "[_ imsld.finished]" } {} "$completed_activities"]
                 }
             }
         }
@@ -337,7 +337,7 @@ ad_proc -public imsld::next_activity {
         # !!! HERE IS WHERE WE DECIDE IF WE CALL A DOTLRN SERVICE TO SERVE THE ACTIVITY, DEPENDING ON THE IDENTIFIER ???
         # BY DEFAULT GET THE RESOURCE AND DISPLAY IT FROM THE FILE STORAGE
         set activity_name [expr { [empty_string_p $title] ? $identifier : $title }]
-        set activity_urls "<#_ <ul> Todo: % $activity_name % <br /> #>"
+        set activity_urls "[_ imsld.lt_ul_Next_Activity_acti]"
         db_foreach la_associated_files {
             select cpf.imsld_file_id,
             cpf.file_name,
@@ -372,10 +372,10 @@ ad_proc -public imsld::next_activity {
                 where fs.live_revision = :imsld_file_id
             }]
             set file_url "[ad_url][apm_package_url_from_id $fs_package_id]view/${file_url}"
-            append activity_urls "<#_ <li> % <a href=[export_vars -base $file_url]> % $file_name % </a> \[ <a href=[ad_url][ad_conn url]/finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld>finishim!</a> \] </li> #>"
+            append activity_urls "<li> <a href=[export_vars -base $file_url]> $file_name </a> \[ <a href=[ad_url][ad_conn url]/finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld>finish</a> \] </li>"
         } if_no_rows {
             # the activity doesn't have any resource associated, display the default page
-            append activity_urls "<#_ <li> desc (no file associated) </li> #>"
+            append activity_urls "[_ imsld.lt_li_desc_no_file_assoc]"
         }
         append activity_urls "</ul>"
     } elseif { [db_0or1row support_activity {
@@ -394,7 +394,7 @@ ad_proc -public imsld::next_activity {
         # !!! HERE IS WHERE WE DECIDE IF WE CALL A DOTLRN SERVICE TO SERVE THE ACTIVITY, DEPENDING ON THE IDENTIFIER ???
         # BY DEFAULT GET THE RESOURCE AND DISPLAY IT FROM THE FILE STORAGE
         set activity_name [expr { [empty_string_p $title] ? $identifier : $title }]
-        set activity_urls "<#_ <ul> % $activity_name % <br /> #>"
+        set activity_urls "[_ imsld.ul_activity_name_br_]"
         db_foreach la_associated_files {
             select cpf.imsld_file_id,
             cpf.file_name
@@ -414,10 +414,10 @@ ad_proc -public imsld::next_activity {
             and cpf.resource_id = cr4.item_id
             and content_revision__is_live(cpf.imsld_file_id) = 't'
         } {
-            append activity_urls "<#_ <li> % $file_name % </li> #>"
+            append activity_urls "[_ imsld.li_file_name_li]"
         } if_no_rows {
             # the activity doesn't have any resource associated, display the default page
-            append activity_urls "<#_ <li> desc (no file associated) </li> #>"
+            append activity_urls "[_ imsld.lt_li_desc_no_file_assoc]"
         }
         append activity_urls "</ul>"
     } elseif { 1==3 } {
@@ -429,8 +429,8 @@ ad_proc -public imsld::next_activity {
         set activity_name "... environment?"
         set activity_urls "?????"
     }
-
-    return [list "$activity_name" "$activity_urls" "$completed_activities"]
+    # !! first parameter: activity name
+    return [list "" "$activity_urls" "$completed_activities"]
 }
 
 ad_register_proc GET /finish-component-element* imsld::finish_component_element

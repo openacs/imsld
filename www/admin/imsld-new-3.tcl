@@ -17,16 +17,16 @@ ad_page_contract {
 set package_id [ad_conn package_id]
 permission::require_permission -object_id $package_id -privilege create
 
-set page_title "<#_ Creating new IMS-LD... #>"
-set context [list [list "<#_ New IMS-LD #>" "new-imsld"] [list "<#_ Creaginting new IMS-LD #>"]]
+set page_title "[_ imsld.Creating_new_IMS-LD]"
+set context [list [list "[_ imsld.New_IMS-LD]" "new-imsld"] [list "[_ imsld.lt_Creaginting_new_IMS-L]"]]
 
 set user_id [ad_conn user_id]
 
 # Display progress bar
 # ad_progress_bar_begin \
-#     -title "<#_ Uploading IMS LD #>" \
-#     -message_1 "<#_ Uploading and processing your course, please wait... #>" \
-#     -message_2 "<#_ We will continue automatically when processing is complete. #>"
+#     -title "[_ imsld.Uploading_IMS_LD]" \
+#     -message_1 "[_ imsld.lt_Uploading_and_process]" \
+#     -message_2 "[_ imsld.lt_We_will_continue_auto]"
 
 
 # Atempting to create the new IMS LD.
@@ -40,7 +40,7 @@ set manifest_id [lindex $manifest_list 0]
 
 if { !$manifest_id } {
     set errmsg [lindex $manifest_list 1]
-    ad_return_error "<#_ Error parsing manifest. #>" "<#_ There was an error parsing the manifest. Please correct it and try again. <br /><code>$errmsg %</code> #>"
+    ad_return_error "[_ imsld.lt_Error_parsing_manifes]" "[_ imsld.lt_There_was_an_error_pa]"
     ad_script_abort
 }
 

@@ -79,13 +79,13 @@ ad_proc -public imsld::parse::expand_file {
 
     # Generate a random directory name
     if { [catch {set tmp_dir [file join [file dirname $tmpfile] [ns_mktemp "$dest_dir_base-XXXXXX"]]} errmsg] } {
-        form set_error upload_file_form upload_file "<#_ There was an error generating the tmp_dir to unzip the file. #> $errmsg"
+        form set_error upload_file_form upload_file "[_ imsld.lt_There_was_an_error_ge] $errmsg"
         return -code error "IMSLD::imsld::parse::expand_file: Error generating tmp directory: $errmsg"
     }
 
     # Create a temporary directory
     if { [catch {file mkdir $tmp_dir} errmsg] } {
-        form set_error upload_file_form upload_file "<#_ There was an error creating the tmp_dir to unzip the file. #> $errmsg"
+        form set_error upload_file_form upload_file "[_ imsld.lt_There_was_an_error_cr_1] $errmsg"
         return -code error "IMSLD::imsld::parse::expand_file: Error creating tmp directory: $errmsg"
     }
 
@@ -102,7 +102,7 @@ ad_proc -public imsld::parse::expand_file {
     } elseif { [regexp {.zip$} $upload_file] } { 
         set type zip 
     } else { 
-        set type "<#_ Uknown type #>" 
+        set type "[_ imsld.Uknown_type]" 
     } 
     
     switch $type {
@@ -142,7 +142,7 @@ ad_proc -public imsld::parse::expand_file {
         }
         default {
             set error_p 1
-            set errmsg "<#_ Could not determine whit what program uncompress the file $upload_file has. Aborting #>"
+            set errmsg "[_ imsld.lt_Could_not_determine_w]"
         }
     }
     
@@ -239,7 +239,7 @@ ad_proc -public imsld::parse::validate_multiplicity {
     @option lower_than If passed, the number of roots of the tree must be lower or equal than multiplicity
 } {
     if { [expr $equal_p + $greather_than_p + $lower_than_p] > 1 } {
-        return -code error "IMSLD:imsld::parse::validate_multiplicity: <#_ More than one validation tried at the same time#>"
+        return -code error "IMSLD:imsld::parse::validate_multiplicity: [_ imsld.lt_More_than_one_validat]"
     }
     if { ![expr $equal_p + $greather_than_p + $lower_than_p] } {
         set equal_p 1
@@ -247,17 +247,17 @@ ad_proc -public imsld::parse::validate_multiplicity {
 
     if { $equal_p } {
         if { [llength $tree] != $multiplicity } {
-            ad_return_error "<#_ Error parsing file #>" "<#_ There must be exactly $multiplicity $element_name and there are [llength $tree]. This is not supported, sorry. #>"
+            ad_return_error "[_ imsld.Error_parsing_file]" "[_ imsld.lt_There_must_be_exactly]"
             ad_script_abort
         }
     } elseif { $greather_than_p } {
         if { [llength $tree] < $multiplicity } {
-            ad_return_error "<#_ Error parsing file #>" "<#_ There can't be less than $multiplicity $element_name and there are [llength $tree]. This is not supported, sorry. #>"
+            ad_return_error "[_ imsld.Error_parsing_file]" "[_ imsld.lt_There_cant_be_less_th]"
             ad_script_abort
         } 
     } else {
         if { [llength $tree] > $multiplicity } {
-            ad_return_error "<#_ Error parsing file #>" "<#_ There can't greather than $multiplicity $element_name and there are [llength $tree]. This is not supported, sorry. #>"
+            ad_return_error "[_ imsld.Error_parsing_file]" "[_ imsld.lt_There_cant_greather_t]"
             ad_script_abort
         } 
     }
@@ -275,7 +275,7 @@ ad_proc -public imsld::parse::remove_dir {
 } {
     if { [file exist $dir] } {
         if { [catch {exec rm -rf $dir} errmsg] } {
-            return -code error "IMSLD:imsld::parse::remove_dir: <#_ There was an error trying to delete the dir $dir. #> $errmsg"
+            return -code error "IMSLD:imsld::parse::remove_dir: [_ imsld.lt_There_was_an_error_tr] $errmsg"
         }
     }
 
@@ -529,7 +529,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
                           -complete_path "${tmp_dir}/${filex_href}"]
         if { !$filex_id } {
             # an error ocurred when creating the file
-            return [list 0 "<#_ The file $filex_href % was not created, it wasn't found in the manifest #>"]
+            return [list 0 "[_ imsld.lt_The_file_filex_href_w]"]
         }
         # map resource with file
         relation_add imsld_res_files_rel $resource_id $filex_id
@@ -537,7 +537,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
     
     if { ![empty_string_p $resource_href] && !$found_p } {
         # we should have fond the referenced file, aborting
-        return [list 0 "<#_ The resource $resource_identifier % has a reference to a non existing file ($resource_href %). #>"]
+        return [list 0 "[_ imsld.lt_The_resource_resource]"]
     }
 
     set resource_dependencies [$resource_node child all imscp:dependency]
@@ -732,7 +732,7 @@ ad_proc -public imsld::parse::parse_and_create_role {
         # parse the item, create it and map it to the role
         set information_item [$role_information child all imsld:item]
         if { ![llength $information_item] } {
-            return [list 0 "<#_ Information given but no item associated to it for the role $role_title % #>"]
+            return [list 0 "[_ imsld.lt_Information_given_but]"]
         }
 
         set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
@@ -1045,7 +1045,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
                 and ir.component_id = :component_id
             }] } {
                 # there is no role with that identifier, return the error
-                return [list 0 "<#_ There is no role with the identifier % $role_ref % (referenced by an email data) #>"]
+                return [list 0 "[_ imsld.lt_There_is_no_role_with]"]
             }
             set email_data_id [imsld::item_revision_new -attributes [list [list send_mail_id $send_mail_id] \
                                                                          [list role_id $role_id] \
@@ -1075,7 +1075,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
                 and content_revision__is_live(role_id) = 't' 
                 and component_id = :component_id }] } {
                 # there is no role with that identifier, return the error
-                return [list 0 "<#_ There is no role with the identifier % $role_ref % (referenced by: manager) #>"]
+                return [list 0 "[_ imsld.lt_There_is_no_role_with_1]"]
             }
         }
 
@@ -1125,7 +1125,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
                 and component_id = :component_id
             }] } {
                 # there is no role with that identifier, return the error
-                return [list 0 "<#_ There is no role with the identifier % $role_ref % (referenced by: participant) buscando con component $component_id y env $environment_id #>"]
+                return [list 0 "[_ imsld.lt_There_is_no_role_with_2]"]
             }
             # map conference with participant role
             relation_add imsld_conf_part_rel $conference_id $participant_id
@@ -1144,7 +1144,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
                     and component_id = :component_id 
                 }] } {
                     # there is no role with that identifier, return the error
-                    return [list 0 "<#_ There is no role with the identifier % $role_ref % (referenced by: observer) #>"]
+                    return [list 0 "[_ imsld.lt_There_is_no_role_with_3]"]
                 }
                 # map conference with observer role
                 relation_add imsld_conf_obser_rel $conference_id $observer_id
@@ -1164,7 +1164,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
                     and component_id = :component_id 
                 }] } {
                     # there is no role with that identifier, return the error
-                    return [list 0 "<#_ There is no role with the identifier % $role_ref % (referenced by: moderator) #>"]
+                    return [list 0 "[_ imsld.lt_There_is_no_role_with_4]"]
                 }
                 # map conference with moderator role
                 relation_add imsld_conf_moder_rel $conference_id $moderator_id
@@ -1176,7 +1176,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
     set index_search [$service_node child all imsld:index-search]
     if { [llength $index_search] } {
         ns_log error "Index-search service not supported"
-        return [list 0 "<#_ Index search service not supported #>"]
+        return [list 0 "[_ imsld.lt_Index_search_service_]"]
     }
     return $service_id
 }
@@ -1212,7 +1212,7 @@ ad_proc -public imsld::parse::parse_and_create_environment {
         if { [llength $learning_object] > 1 } {
             set learning_object [lindex $learning_object 0]
             global warnings
-            append warnings "<li> <#_ Warning: More than one learning object in environment % $identifier %. Just one used (the first one) #> </li>"
+            append warnings "<li> [_ imsld.lt_Warning_More_than_one] </li>"
         }
         set learning_object_list [imsld::parse::parse_and_create_learning_object -learning_object_node $learning_object \
                                       -manifest_id $manifest_id \
@@ -1302,7 +1302,7 @@ ad_proc -public imsld::parse::parse_and_create_environment {
                     relation_add imsld_env_env_rel $environment_id $environment_ref_id
                 } else {
                     # error, return
-                    return [list 0 "<#_ Referenced environment % $referenced_identifier % does not exist #>"]
+                    return [list 0 "[_ imsld.lt_Referenced_environmen]"]
                 }
             }
         }
@@ -1480,7 +1480,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                 component_id = :component_id
             }] } {
                 # error, referenced environment does not exist
-                return [list 0 "<#_ Referenced environment (% $environment_ref %) in learning activity does not exist. #>"]
+                return [list 0 "[_ imsld.lt_Referenced_environmen_1]"]
             }
 
             # map environment with learning-activity
@@ -1619,7 +1619,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             and component_id = :component_id
         }] } {
             # there is no role with that identifier, return the error
-            return [list 0 "<#_ There is no role with the identifier % $ref % (referenced by: support activity) #>"]
+            return [list 0 "[_ imsld.lt_There_is_no_role_with_5]"]
         }
         # map support activity with the role
         relation_add imsld_sa_role_rel $support_activity_id $role_id
@@ -1641,7 +1641,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                 and component_id = :component_id
             }] } {
                 # error, referenced environment does not exist
-                return [list 0 "<#_ Referenced environment (% $environment_ref %) in support activity does not exist. #>"]
+                return [list 0 "[_ imsld.lt_Referenced_environmen_2]"]
             }
 
             # map environment with support-activity
@@ -1695,7 +1695,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
         # parse the item, create it and map it to the activity structure
         set information_item [$activity_node child all imsld:item]
         if { ![llength $information_item] } {
-            return [list 0 "<#_ Information given but no item associated to it for the activity structure % $identifier % #>"]
+            return [list 0 "[_ imsld.lt_Information_given_but_1]"]
         }
 
         set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
@@ -1729,7 +1729,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 and component_id = :component_id
             }] } {
                 # error, referenced environment does not exist
-                return [list 0 "<#_ Referenced environment (% $environment_ref %) in activity structure % $identifier % does not exist. #>"]
+                return [list 0 "[_ imsld.lt_Referenced_environmen_3]"]
             }
 
             # map environment with activity structure
@@ -1770,7 +1770,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     }] } {
                         # warning message
                         global warnings
-                        append warnings "<li> <#_ Referenced support activity % $learning_activity_ref % is actually an activity structure!. #> </li>"
+                        append warnings "<li> [_ imsld.lt_Referenced_support_ac] </li>"
                         # do the mappings
                         relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
                     } else {
@@ -1805,18 +1805,18 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                             }
                             # warning message
                             global warnings
-                            append warnings "<li> <#_ Referenced learning activity % $learning_activity_ref % is actually an activity structure!. #> </li>"
+                            append warnings "<li> [_ imsld.lt_Referenced_learning_a] </li>"
                             # finally, do the mappings
                             relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
                         } else {
                             # error, referenced learning activity does not exist
-                            return [list 0 "<#_ Referenced learning activity (% $learning_activity_ref %) in activity structure % $identifier % does not exist. comp $component_id  #>"]
+                            return [list 0 "[_ imsld.lt_Referenced_learning_a_1]"]
                         }
                     }
                 } else {
                     # warning message
                     global warnings
-                    append warnings "<li> <#_ Referenced learning activity % $learning_activity_ref % is actually a support activity. #> </li>"
+                    append warnings "<li> [_ imsld.lt_Referenced_learning_a_2] </li>"
                     # map support activity with activity structure
                     relation_add imsld_as_sa_rel $activity_structure_id $activity_id
                 }
@@ -1861,7 +1861,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     }] } {
                         # warning message
                         global warnings
-                        append warnings "<li> <#_ Referenced support activity % $support_activity_ref % is actually an activity structure!. #> </li>"
+                        append warnings "<li> [_ imsld.lt_Referenced_support_ac_1] </li>"
                         # do the mappings
                         relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
                     } else {
@@ -1896,18 +1896,18 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                             }
                             # warning message
                             global warnings
-                            append warnings "<li> <#_ Referenced support activity % $support_activity_ref % is actually an activity structure!. #> </li>"
+                            append warnings "<li> [_ imsld.lt_Referenced_support_ac_1] </li>"
                             # finally, do the mappings
                             relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
                         } else {
                             # error, referenced support activity does not exist
-                            return [list 0 "<#_ Referenced support activity (% $support_activity_ref %) in activity structure % $identifier % does not exist. #>"]
+                            return [list 0 "[_ imsld.lt_Referenced_support_ac_2]"]
                         }
                     }
                 } else {
                     # warning message
                     global warnings
-                    append warnings "<li> <#_ Referenced support activity % $support_activity_ref % is actually a learning activity. #> </li>"
+                    append warnings "<li> [_ imsld.lt_Referenced_support_ac_3] </li>"
                     # map the learning activity with activity structure
                     relation_add imsld_as_la_rel $activity_structure_id $activity_id
                 }
@@ -1972,7 +1972,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
                 } else {
                     # error, return
-                    return [list 0 "<#_ Referenced activity structure % $ref % does not exist #>"]
+                    return [list 0 "[_ imsld.lt_Referenced_activity_s]"]
                 }
             }
         }
@@ -2037,7 +2037,7 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
             and content_revision__is_live(ir.role_id) = 't' 
             and ir.component_id = :component_id}] } {
             # error, referenced role does not exist
-            return [list 0 "<#_ Referenced role (% $role_ref_ref %) in role part % $identifier % does not exist. #>"]
+            return [list 0 "[_ imsld.lt_Referenced_role_role_]"]
         }
     }
 
@@ -2076,16 +2076,16 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
                     and component_id = :component_id
                 }] } {
                     # error, referenced learning activity does not exist
-                    return [list 0 "<#_ Referenced learning activity (% $learning_activity_ref_ref %) in role part % $identifier % does not exist. #>"]
+                    return [list 0 "[_ imsld.lt_Referenced_learning_a_3]"]
                 } else {
                     # warning message
                     global warnings
-                    append warnings "<li> <#_ Referenced learning activity % $learning_activity_ref_ref % in role part % $identifier % is actually an activity structure. #> </li>"
+                    append warnings "<li> [_ imsld.lt_Referenced_learning_a_4] </li>"
                 }
             } else {
                 # warning message
                 global warnings
-                append warnings "<li> <#_ Referenced learning activity % $learning_activity_ref_ref % in role part % $identifier % is actually a support activity. #> </li>"
+                append warnings "<li> [_ imsld.lt_Referenced_learning_a_5] </li>"
             }
         }
     }
@@ -2121,16 +2121,16 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
                     and component_id = :component_id
                 }] } {
                     # error, referenced support activity does not exist
-                    return [list 0 "<#_ Referenced support activity (% $support_activity_ref_ref %) in role part % $identifier % does not exist. #>"]
+                    return [list 0 "[_ imsld.lt_Referenced_support_ac_4]"]
                 } else {
                     # warning message
                     global warnings
-                    append warnings "<li> <#_ Referenced support activity % $support_activity_ref_ref % in role part % $identifier % is actually an activity structure. #> </li>"
+                    append warnings "<li> [_ imsld.lt_Referenced_support_ac_5] </li>"
                 }
             } else {
                 # warning message
                 global warnings
-                append warnings "<li> <#_ Referenced support activity % $support_activity_ref % in role part % $identifier % is actually a learning activity. #> </li>"
+                append warnings "<li> [_ imsld.lt_Referenced_support_ac_6] </li>"
             }
         }
     }
@@ -2168,16 +2168,16 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
                     and component_id = :component_id
                 }] } {
                     # error, referenced activity structure does not exist
-                    return [list 0 "<#_ Referenced activity structure (% $activity_structure_ref_ref %) in role part % $identifier % does not exist. #>"]
+                    return [list 0 "[_ imsld.lt_Referenced_activity_s_1]"]
                 } else {
                     # warning message
                     global warnings
-                    append warnings "<li> <#_ Referenced activity structure % $activity_structure_ref_ref % in role part % $identifier % is actually an support activity. #> </li>"
+                    append warnings "<li> [_ imsld.lt_Referenced_activity_s_2] </li>"
                 }
             } else {
                 # warning message
                 global warnings
-                append warnings "<li> <#_ Referenced activity structure % $activity_structure_ref_ref % in role part % $identifier % is actually a learning activity. #> </li>"
+                append warnings "<li> [_ imsld.lt_Referenced_activity_s_3] </li>"
             }
         }
     }
@@ -2198,7 +2198,7 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
             and env.component_id = :component_id
         }] } {
             # error, referenced environment does not exist
-            return [list 0 "<#_ Referenced environment (% $environment_ref_ref %) in role part % $identifier % does not exist. #>"]
+            return [list 0 "[_ imsld.lt_Referenced_environmen_4]"]
         }
     }
     
@@ -2336,7 +2336,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
                 and content_revision__is_live(role_part_id) = 't' 
                 and act_id = :act_id
             }] } {
-                return [list 0 "<#_ The referenced role part in 'when role part completed' of the act % $identifier % does not exist #>"]
+                return [list 0 "[_ imsld.lt_The_referenced_role_p]"]
             }
             # found, map the role part (with the imsld_act_rp_completed_rel) with the act
             relation_add imsld_act_rp_completed_rel $act_id $role_part_id
@@ -2806,7 +2806,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                 and content_revision__is_live(play_id) = 't' 
                 and method_id = :method_id
             } ] } {
-                return [list 0 "<#_ The referenced play in 'when play completed' in the method does not exist #>"]
+                return [list 0 "[_ imsld.lt_The_referenced_play_i]"]
             }
             # found, map the play (with the imsld_mp_completed_rel) with the method
             relation_add imsld_mp_completed_rel $method_id $play_id
@@ -2815,7 +2815,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     
     global warnings
     if { ![empty_string_p $warnings] } {
-        set warnings "<#_ <br /> Warnings: <ul> $warnings </ul> #>"
+        set warnings "[_ imsld.lt_br__Warnings_ul_warni]"
     }
     return [list $manifest_id "$warnings"]
 }

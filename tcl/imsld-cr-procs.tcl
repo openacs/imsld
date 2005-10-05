@@ -45,7 +45,7 @@ ad_proc -public imsld::cr::folder_new {
         content::folder::register_content_type -folder_id $folder_id -content_type content_simlink -include_subtypes t
         permission::grant -party_id $user_id -object_id $folder_id -privilege admin
     } on_error {
-        ad_return_error "<#_ Error creating folder #>" "<#_ There was an error creating the folder. Aborting. #> <pre>$errmsg</pre>"
+        ad_return_error "[_ imsld.lt_Error_creating_folder]" "[_ imsld.lt_There_was_an_error_cr] <pre>$errmsg</pre>"
         ad_script_abort
     }
     return $folder_id

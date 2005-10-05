@@ -19,8 +19,8 @@ ad_page_contract {
 set package_id [ad_conn package_id]
 permission::require_permission -object_id $package_id -privilege create
 
-set page_title "<#_ Confirm: New IMS-LD #>"
-set context [list [list "<#_ New IMS-LD #>" "new-imsld"] [list "<#_ Confirm: New IMS-LD #>"]]
+set page_title "[_ imsld.Confirm_New_IMS-LD]"
+set context [list [list "[_ imsld.New_IMS-LD]" "new-imsld"] [list "[_ imsld.Confirm_New_IMS-LD]"]]
 
 set user_id [ad_conn user_id]
 
@@ -33,7 +33,7 @@ set manifest [imsld::parse::find_manifest -dir $tmp_dir -file_name "imsmanifest.
 # see if the file actually is where it suppose to be. Othewise abort
 if {$manifest == 0} {
     imsld::parse::remove_dir -dir $tmp_dir
-    ad_return_error "<#_ No imsmanifest.xml found #>" "<#_ No imsmanifest.xml was found in the compressed file. Aborting. #>"
+    ad_return_error "[_ imsld.lt_No_imsmanifestxml_fou]" "[_ imsld.lt_No_imsmanifestxml_was]"
     ad_script_abort
 }
 
@@ -51,7 +51,7 @@ if { [lindex $is_imsld_list 0] } {
     template::list::create \
         -name imsld_info \
         -multirow imsld_info \
-        -no_data "<#_ No information found in the manifest file #>" \
+        -no_data "[_ imsld.lt_No_information_found_]" \
         -elements {
             element_name {
                 label ""
@@ -69,17 +69,17 @@ if { [lindex $is_imsld_list 0] } {
     if { ![llength $organizations] } {
         set organizations [$manifest child all organizations]
     }
-    multirow append imsld_info "<#_ Number of Organizations: #>" [llength $organizations]
+    multirow append imsld_info "[_ imsld.lt_Number_of_Organizatio]" [llength $organizations]
     set imsld [$organizations child all imsld:learning-design]
     if { ![llength $imsld] } {
         set imsld [$organizations child all learning-design]
     }
-    multirow append imsld_info "<#_ Number of IMD LDs #>" [llength $imsld]
+    multirow append imsld_info "[_ imsld.Number_of_IMD_LDs]" [llength $imsld]
     set imsld_title [imsld::parse::get_title -node $imsld -prefix imsld]
     set imsld_level [imsld::parse::get_attribute -node $imsld -attr_name level]
-    set imsld_level [expr { [empty_string_p $imsld_level] ? "<#_ Not defined #>" : $imsld_level }]
-    multirow append imsld_info "<#_ IMD LD Title #>" "$imsld_title"
-    multirow append imsld_info "<#_ IMD LD Level #>" "$imsld_level"
+    set imsld_level [expr { [empty_string_p $imsld_level] ? "[_ imsld.Not_defined]" : $imsld_level }]
+    multirow append imsld_info "[_ imsld.IMD_LD_Title]" "$imsld_title"
+    multirow append imsld_info "[_ imsld.IMD_LD_Level]" "$imsld_level"
     
     # Components
     set components [$imsld child all imsld:components]
@@ -89,9 +89,9 @@ if { [lindex $is_imsld_list 0] } {
     if { [llength $roles] } {
         set learners [llength [$roles child all imsld:learner]]
         set staff [llength [$roles child all imsld:staff]]
-        multirow append imsld_info "<#_ Total Roles #>" [expr $learners + $staff]
-        multirow append imsld_info "<#_ Learners Roles #>" $learners
-        multirow append imsld_info "<#_ Staff Roels #>" $staff
+        multirow append imsld_info "[_ imsld.Total_Roles]" [expr $learners + $staff]
+        multirow append imsld_info "[_ imsld.Learners_Roles]" $learners
+        multirow append imsld_info "[_ imsld.Staff_Roels]" $staff
     }
 
     set activities [$components child all imsld:activities]
@@ -99,10 +99,10 @@ if { [lindex $is_imsld_list 0] } {
         set learning_activities [llength [$activities child all imsld:learning-activity]]
         set support_activities [llength [$activities child all imsld:support-activity]]
         set activity_structures [llength [$activities child all imsld:activity-structure]]
-        multirow append imsld_info "<#_ Total Activities #>" [expr $learning_activities + $support_activities + $activity_structures]
-        multirow append imsld_info "<#_ Learning Activities #>" $learning_activities
-        multirow append imsld_info "<#_ Support Activities #>" $support_activities
-        multirow append imsld_info "<#_ Activity Structures #>" $activity_structures
+        multirow append imsld_info "[_ imsld.Total_Activities]" [expr $learning_activities + $support_activities + $activity_structures]
+        multirow append imsld_info "[_ imsld.Learning_Activities]" $learning_activities
+        multirow append imsld_info "[_ imsld.Support_Activities]" $support_activities
+        multirow append imsld_info "[_ imsld.Activity_Structures]" $activity_structures
     } 
 
     # Methods
@@ -112,16 +112,19 @@ if { [lindex $is_imsld_list 0] } {
     set plays [$methods child all imsld:play]
     imsld::parse::validate_multiplicity -tree $plays -multiplicity 0 -element_name plays -greather_than
 
+    set count 1
     foreach play $plays {
         set play_identifier [imsld::parse::get_attribute -node $play -attr_name identifier]
         set acts [$play child all imsld:act]
         imsld::parse::validate_multiplicity -tree $acts -multiplicity 0 -element_name acts -greather_than
-        multirow append imsld_info "<#_ Acts in play $play_identifier % #>" [llength $acts]
+        multirow append imsld_info "[_ imsld.Acts_in_play_count]" [llength $acts]
+        incr count
     }
     
 } else {
     # Not valid (or supported?) IMS LD
-    ad_return_error "<#_ No IMS LD #>" "Couldn't determine if this is a well formed IMS-LD: [lindex $is_imsld_list 1]"
+    set message [lindex $is_imsld_list 1]
+    ad_return_error "[_ imsld.No_IMS_LD]" "[_ imsld.lt_Couldnt_determine_if_]"
     ad_script_abort
 }
 
@@ -134,8 +137,3 @@ ad_form -name imsld_upload -cancel_url $return_url -action imsld-new-3 -html { e
 set file_str [imsld::parse::get_files_structure -tmp_dir $tmp_dir]
 
 
-set msg "vamoaver ....  $file_str \n\n en $tmp_dir con largo [llength $file_str] !!"
-append msg "<br> la lista es:"
-foreach fix $file_str {
-    append msg "<br> $fix --FIN--"
-}
