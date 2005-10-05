@@ -7,7 +7,7 @@
     <initial-install-p>f</initial-install-p>
     <singleton-p>f</singleton-p>
     
-    <version name="0.1d" url="http://openacs.org/repository/download/apm/imsld-0.1.apm">
+    <version name="0.1d" url="http://openacs.org/repository/download/apm/imsld-0.1d.apm">
         <owner url="mailto:jopez@galileo.edu">Jose Pablo Escobedo Del Cid</owner>
         <summary>IMS LD integration with dotLRN.</summary>
         <release-date>2005-07-07</release-date>
