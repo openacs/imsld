@@ -160,7 +160,7 @@
   <msg key="lt_There_was_an_error_tr">There was an error trying to delete the dir $dir.</msg>
   <msg key="lt_Time_Limit_Identifier">Time Limit Identifier</msg>
   <msg key="lt_ul_Completed_Activiti">&lt;ul&gt; Completed Activities &lt;br /&gt;</msg>
-  <msg key="lt_ul_Next_Activity_acti">&lt;ul&gt; Next Activity: %activity_name% &lt;br /&gt;</msg>
+  <msg key="lt_ul_Next_Activity_acti">&lt;ul&gt; %first_or_next% Activity: %activity_name% &lt;br /&gt;</msg>
   <msg key="lt_Uploading_and_process">Uploading and processing your course, please wait...</msg>
   <msg key="lt_Valid_types_are_learn">Valid types are learning, support and structure</msg>
   <msg key="lt_Warning_More_than_one">Warning: More than one learning object in environment %identifie%. Just one used (the first one)</msg>

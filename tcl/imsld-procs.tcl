@@ -151,7 +151,7 @@ ad_proc -public imsld::finish_component_element {
                 )
     }
 
-    ad_returnredirect "[ad_url]${return_url}"
+    ad_returnredirect "${return_url}"
 } 
 
 ad_proc -public imsld::next_activity { 
@@ -180,6 +180,7 @@ ad_proc -public imsld::next_activity {
         and content_revision__is_live(imsld_id) = 't'
     }
     set completed_activities ""
+    set first_p 0
     set user_id [expr { [empty_string_p $user_id] ? [ad_conn user_id] : $user_id }]
     if { ![db_string get_last_entry {
         select count(*)
@@ -188,6 +189,7 @@ ad_proc -public imsld::next_activity {
         and imsld_id = :imsld_id
     }] } {
         # special case: the user has no entry, the ims-ld hasn't started yet for that user
+        set first_p 1
         db_1row get_first_role_part {
             select irp.role_part_id
             from cr_items cr0, cr_items cr1, cr_items cr2, imsld_methods im, imsld_plays ip, imsld_acts ia, imsld_role_parts irp
@@ -308,7 +310,7 @@ ad_proc -public imsld::next_activity {
                     and rp.sort_order = (select min(irp2.sort_order) from imsld_role_parts irp2 where irp2.act_id = ia.item_id)
                 }] } {
                     # there is no more to search, we reached the end of the unit of learning
-                    return [list { "[_ imsld.finished]" } {} "$completed_activities"]
+                    return [list "[_ imsld.finished]" {} "$completed_activities"]
                 }
             }
         }
@@ -337,6 +339,7 @@ ad_proc -public imsld::next_activity {
         # !!! HERE IS WHERE WE DECIDE IF WE CALL A DOTLRN SERVICE TO SERVE THE ACTIVITY, DEPENDING ON THE IDENTIFIER ???
         # BY DEFAULT GET THE RESOURCE AND DISPLAY IT FROM THE FILE STORAGE
         set activity_name [expr { [empty_string_p $title] ? $identifier : $title }]
+        set first_or_next [expr { $first_p ? "First" : "Next"}]
         set activity_urls "[_ imsld.lt_ul_Next_Activity_acti]"
         db_foreach la_associated_files {
             select cpf.imsld_file_id,
@@ -371,8 +374,8 @@ ad_proc -public imsld::next_activity {
                 from fs_objects fs
                 where fs.live_revision = :imsld_file_id
             }]
-            set file_url "[ad_url][apm_package_url_from_id $fs_package_id]view/${file_url}"
-            append activity_urls "<li> <a href=[export_vars -base $file_url]> $file_name </a> \[ <a href=[ad_url][ad_conn url]/finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld>finish</a> \] </li>"
+            set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
+            append activity_urls "<li> <a href=[export_vars -base $file_url]> $file_name </a> \[ <a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld>finish</a> \] </li>"
         } if_no_rows {
             # the activity doesn't have any resource associated, display the default page
             append activity_urls "[_ imsld.lt_li_desc_no_file_assoc]"
