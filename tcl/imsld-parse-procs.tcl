@@ -1713,14 +1713,17 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
         relation_add imsld_as_info_i_rel $activity_structure_id $information_id
     }
 
-    # Activity Structure: Environments
-    set environment_refs [$activity_node child all imsld:environment-ref]
-    if { [llength $environment_refs] } {
-        foreach environment_ref_node $environment_refs {
+    # store the order of the activities to display them later in the correct order
+    set sort_order 0
+    foreach node_ref [$activity_node childNodes] {
+
+        # Activity Structure: Environments
+        set environment_refs [$activity_node child all imsld:environment-ref]
+        if { [string eq [$node_ref nodeName] imsld:environment-ref] } {
             # the environments have been already parsed by now, 
             # so the referenced environment has to be in the database.
             # If not found, return the error
-            set environment_ref [string tolower [imsld::parse::get_attribute -node $environment_ref_node -attr_name ref]]
+            set environment_ref [string tolower [imsld::parse::get_attribute -node $node_ref -attr_name ref]]
             if { ![db_0or1row get_environment_id {
                 select item_id as environment_id 
                 from imsld_environmentsi
@@ -1731,22 +1734,19 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 # error, referenced environment does not exist
                 return [list 0 "[_ imsld.lt_Referenced_environmen_3]"]
             }
-
+            
             # map environment with activity structure
             relation_add imsld_as_env_rel $activity_structure_id $environment_id
         }
-    }
-
-    # Activity Structure: Learning Activities ref
-    set learning_activity_ref_nodes [$activity_node child all imsld:learning-activity-ref]
-    if { [llength $learning_activity_ref_nodes] } {
-        foreach learning_activity_ref_node $learning_activity_ref_nodes {
-            
+      
+        # Activity Structure: Learning Activities ref
+        if { [string eq [$node_ref nodeName] imsld:learning-activity-ref] } {
             # the learning activities have been already parsed by now, so the referenced learning activity has to be in the database.
             # If not, return the error
-            set learning_activity_ref [string tolower [imsld::parse::get_attribute -node $learning_activity_ref_node -attr_name ref]]
+            set learning_activity_ref [string tolower [imsld::parse::get_attribute -node $node_ref -attr_name ref]]
             if { ![db_0or1row get_learning_activity_id {
-                select item_id as activity_id 
+                select item_id as activity_id,
+                activity_id as learning_activity_id
                 from imsld_learning_activitiesi
                 where identifier = :learning_activity_ref 
                 and content_revision__is_live(activity_id) = 't' 
@@ -1754,7 +1754,8 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
             }] } {
                 # may be the reference is wrong, search in the support activityes before returning an error
                 if { ![db_0or1row get_learning_support_activity_id {
-                    select item_id as activity_id 
+                    select item_id as activity_id,
+                    activity_id as support_activity_id
                     from imsld_support_activitiesi
                     where identifier = :learning_activity_ref 
                     and content_revision__is_live(activity_id) = 't' 
@@ -1762,7 +1763,8 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 }] } {
                     # ok, last try: searching in the rest of activity structures...
                     if { [db_0or1row get_struct_id {
-                        select item_id as refrenced_struct_id 
+                        select item_id as refrenced_struct_id,
+                        structure_id
                         from imsld_activity_structuresi 
                         where identifier = :learning_activity_ref 
                         and content_revision__is_live(structure_id) = 't' 
@@ -1773,6 +1775,13 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                         append warnings "<li> [_ imsld.lt_Referenced_support_ac] </li>"
                         # do the mappings
                         relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
+                        # store the order
+                        db_dml update_activity_structure {
+                            update imsld_activity_structures
+                            set sort_order = :sort_order
+                            where structure_id = :structure_id
+                        }
+                        incr sort_order
                     } else {
                         # search in the manifest ...
                         set organizations [$manifest child all imscp:organizations]
@@ -1808,6 +1817,13 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                             append warnings "<li> [_ imsld.lt_Referenced_learning_a] </li>"
                             # finally, do the mappings
                             relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
+                            # store the order
+                            db_dml update_activity_structure {
+                                update imsld_activity_structures
+                                set sort_order = :sort_order
+                                where structure_id = (select live_revision from cr_items where item_id = :activity_structure_ref_id)
+                            }
+                            incr sort_order
                         } else {
                             # error, referenced learning activity does not exist
                             return [list 0 "[_ imsld.lt_Referenced_learning_a_1]"]
@@ -1819,23 +1835,33 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     append warnings "<li> [_ imsld.lt_Referenced_learning_a_2] </li>"
                     # map support activity with activity structure
                     relation_add imsld_as_sa_rel $activity_structure_id $activity_id
+                    # store the order
+                    db_dml update_support_activity {
+                        update imsld_support_activities
+                        set sort_order = :sort_order
+                        where activity_id = :support_activity_id
+                    }
+                    incr sort_order
                 }
             } else {
                 # map learning activity with activity structure
                 relation_add imsld_as_la_rel $activity_structure_id $activity_id
+                # store the order
+                db_dml update_learning_activity {
+                    update imsld_learning_activities
+                    set sort_order = :sort_order
+                    where activity_id = :learning_activity_id
+                }
+                incr sort_order
             }
         }
-    }
-
-    # Activity Structure: Support Activities ref
-    set support_activity_ref_nodes [$activity_node child all imsld:support-activity-ref]
-    if { [llength $support_activity_ref_nodes] } {
-        foreach support_activity_ref_node $support_activity_ref_nodes {
-            imsld::parse::validate_multiplicity -tree $support_activity_ref_node -multiplicity 1 -element_name support-activity-ref(activity-structure) -equal
-            
+        
+        # Activity Structure: Support Activities ref
+        if { [string eq [$node_ref nodeName] imsld:support-activity-ref] } {
+                
             # the support activities have been already parsed by now, so the referenced support activity has to be in the database.
             # If not, return the error
-            set support_activity_ref [string tolower [imsld::parse::get_attribute -node $support_activity_ref_node -attr_name ref]]
+            set support_activity_ref [string tolower [imsld::parse::get_attribute -node $node_ref -attr_name ref]]
             if { ![db_0or1row get_support_activity_id {
                 select item_id as activity_id 
                 from imsld_support_activitiesi 
@@ -1916,21 +1942,19 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 relation_add imsld_as_sa_rel $activity_structure_id $activity_id
             }
         }
-    }
+       
+        # TO-DO: Unit of Learning ref ?
 
-    # TO-DO: Unit of Learning ref ?
-
-    # Activity Structure: Activity Structures ref
-    set activity_structure_ref_list [$activity_node child all imsld:activity-structure-ref]
-    if { [llength $activity_structure_ref_list] } {
-        foreach activity_structure_ref $activity_structure_ref_list {
-            set ref [string tolower [imsld::parse::get_attribute -node $activity_structure_ref -attr_name ref]]
+        # Activity Structure: Activity Structures ref
+        if { [string eq [$node_ref nodeName] imsld:activity-structure-ref] } {
+            set ref [string tolower [imsld::parse::get_attribute -node $node_ref -attr_name ref]]
             # we have to search for the referenced activity structure and there are two cases:
             # 1. the referenced activity structure has already been created: get the id from the database and do the mappings
             # 2. the referenced activity structure hasn't been created: invoke the parse_and_create_activity_structure proc,
             #    but first verify that the activity structure exists in the manifest
             if { [db_0or1row get_struct_id {
-                select item_id as refrenced_struct_id 
+                select item_id as refrenced_struct_id,
+                structure_id
                 from imsld_activity_structuresi 
                 where identifier = :ref 
                 and content_revision__is_live(structure_id) = 't' 
@@ -1938,6 +1962,13 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
             }] } {
                 # case one, just do the mappings
                 relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
+                # store the order
+                db_dml update_activity_structure {
+                    update imsld_activity_structures
+                    set sort_order = :sort_order
+                    where structure_id = :structure_id
+                }
+                incr sort_order
             } else {
                  # case two, first verify that the referenced activity structure exists
                 set organizations [$manifest child all imscp:organizations]
@@ -1970,6 +2001,13 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     }
                     # finally, do the mappings
                     relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
+                    # store the order
+                    db_dml update_activity_structure {
+                        update imsld_activity_structures
+                        set sort_order = :sort_order
+                        where structure_id = (select live_revision from cr_items where item_id = :activity_structure_ref_id)
+                    }
+                    incr sort_order
                 } else {
                     # error, return
                     return [list 0 "[_ imsld.lt_Referenced_activity_s]"]
@@ -1977,7 +2015,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
             }
         }
     }
-
+    
     return $activity_structure_id
 }
 

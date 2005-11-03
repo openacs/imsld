@@ -93,18 +93,21 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name parameters -datatype string -pretty_name "#imsld.Parameters#" -column_spec "varchar(4000)"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name learning_objective_id -datatype number -pretty_name "#imsld.lt_Learning_Objective_ID#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name prerequisite_id -datatype number -pretty_name "#imsld.Prerequistes_ID#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_learning_activity -attribute_name sort_order -datatype number -pretty_name "<#_ Sort Order #>" -column_spec "integer"
 
     # support activities
     content::type::new -content_type imsld_support_activity -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Support_Activi#" -pretty_plural "#imsld.lt_IMS-LD_Support_Activi_1#" -table_name imsld_support_activities -id_column activity_id
     
     content::type::attribute::new -content_type imsld_support_activity -attribute_name identifier -datatype string -pretty_name "#imsld.Identifier#" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_support_activity -attribute_name component_id -datatype number -pretty_name "#imsld.Component_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_support_activity -attribute_name activity_description_id -datatype number -pretty_name "#imsld.lt_Activity_Description_#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_support_activity -attribute_name parameter_id -datatype number -pretty_name "#imsld.Parameter_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_support_activity -attribute_name is_visible_p -datatype string -pretty_name "#imsld.Is_Visible#" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_support_activity -attribute_name user_choice_p -datatype string -pretty_name "#imsld.User_Choice#" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_support_activity -attribute_name time_limit_id -datatype number -pretty_name "#imsld.lt_Time_Limit_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_support_activity -attribute_name on_completion_id -datatype number -pretty_name "#imsld.lt_On_Completion_Identif#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_support_activity -attribute_name parameters -datatype string -pretty_name "#imsld.Parameters#" -column_spec "varchar(4000)"
+    content::type::attribute::new -content_type imsld_support_activity -attribute_name sort_order -datatype number -pretty_name "<#_ Sort Order #>" -column_spec "integer"
 
     # activity structures
     content::type::new -content_type imsld_activity_structure -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Activity_Struc#" -pretty_plural "#imsld.lt_IMS-LD_Activity_Struc_1#" -table_name imsld_activity_structures -id_column structure_id 
@@ -114,6 +117,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_activity_structure -attribute_name number_to_select -datatype number -pretty_name "#imsld.Number_to_Select#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_activity_structure -attribute_name structure_type -datatype string -pretty_name "#imsld.Structure_Type#" -column_spec "char(9)"
     content::type::attribute::new -content_type imsld_activity_structure -attribute_name sort -datatype string -pretty_name "#imsld.Sort#" -column_spec "varchar(4)"
+    content::type::attribute::new -content_type imsld_activity_structure -attribute_name sort_order -datatype number -pretty_name "<#_ Sort Order #>" -column_spec "integer"
 
     # environments
     content::type::new -content_type imsld_environment -supertype content_revision -pretty_name "#imsld.IMD-LD_Environment#" -pretty_plural "#imsld.IMD-LD_Environments#" -table_name imsld_environments -id_column environment_id
@@ -458,16 +462,19 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_learning_activity -attribute_name parameters
     content::type::attribute::delete -content_type imsld_learning_activity -attribute_name learning_objective_id
     content::type::attribute::delete -content_type imsld_learning_activity -attribute_name prerequisite_id
+    content::type::attribute::delete -content_type imsld_learning_activity -attribute_name sort_order
 
     # support activities
     content::type::attribute::delete -content_type imsld_support_activity -attribute_name identifier
     content::type::attribute::delete -content_type imsld_support_activity -attribute_name component_id
+    content::type::attribute::delete -content_type imsld_support_activity -attribute_name activity_description_id
     content::type::attribute::delete -content_type imsld_support_activity -attribute_name parameter_id
     content::type::attribute::delete -content_type imsld_support_activity -attribute_name is_visible_p
     content::type::attribute::delete -content_type imsld_support_activity -attribute_name user_choice_p
     content::type::attribute::delete -content_type imsld_support_activity -attribute_name time_limit_id
     content::type::attribute::delete -content_type imsld_support_activity -attribute_name on_completion_id
     content::type::attribute::delete -content_type imsld_support_activity -attribute_name parameters
+    content::type::attribute::delete -content_type imsld_support_activity -attribute_name sort_order
 
     # activity structures
     content::type::attribute::delete -content_type imsld_activity_structure -attribute_name component_id
@@ -475,6 +482,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_activity_structure -attribute_name number_to_select
     content::type::attribute::delete -content_type imsld_activity_structure -attribute_name structure_type
     content::type::attribute::delete -content_type imsld_activity_structure -attribute_name sort
+    content::type::attribute::delete -content_type imsld_activity_structure -attribute_name sort_order
 
     # environments
     content::type::attribute::delete -content_type imsld_environment -attribute_name component_id
