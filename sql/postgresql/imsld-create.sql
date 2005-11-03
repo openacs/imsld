@@ -260,7 +260,9 @@ create table imsld_learning_activities (
                             references cr_items,    --imsld_learning_objectives
     prerequisite_id         integer
                             constraint imsld_la_prereqid_fk
-                            references cr_items     --imsld_prerequisites
+                            references cr_items,    --imsld_prerequisites
+    sort_order              integer
+                            default 0 
 );
 
 create index imsld_la_comp_id_idx on imsld_learning_activities(component_id);
@@ -298,6 +300,10 @@ create table imsld_support_activities (
                                 constraint imsld_sa_componenid_fk
                                 references cr_items     --imsld_components
                                 not null,
+    activity_description_id     integer
+                                constraint imsld_sa_desc_id_fk
+                                references cr_items     --imsld_activity_descs
+                                not null,
     identifier                  varchar(100),
     is_visible_p                char(1)
                                 check (is_visible_p in ('t','f'))
@@ -310,10 +316,13 @@ create table imsld_support_activities (
                                 references cr_items,    --imsld_time_limits
     on_completion_id            integer 
                                 constraint imdls_sa_oncompid_fk 
-                                references cr_items     --imsld_on_completion
+                                references cr_items,    --imsld_on_completion
+    sort_order                  integer
+                               default 0 
 );
 
 create index imsld_sa_comp_id_idx on imsld_support_activities(component_id);
+create index imsld_sa_ad_id_idx on imsld_support_activities(activity_description_id);
 create index imsld_sa_timel_id_idx on imsld_support_activities(time_limit_id);
 create index imsld_sa_oncomp_id_idx on imsld_support_activities(on_completion_id);
 
@@ -339,7 +348,9 @@ create table imsld_activity_structures (
     number_to_select            integer,
     structure_type              char(9)
                                 check (structure_type in ('selection','sequence')),
-    sort                        varchar(4)
+    sort                        varchar(4),
+    sort_order                  integer
+                                default 0 
 );
 
 create index imsld_as_comp_id_idx on imsld_activity_structures(component_id);
