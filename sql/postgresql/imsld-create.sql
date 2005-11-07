@@ -84,12 +84,12 @@ If the value is true, IMS Simple Sequencing is included at the appropriate place
 
 create table imsld_learning_objectives (
     learning_objective_id  integer
-                        constraint imsld_leo_fk
-                        references cr_revisions
-                        on delete cascade
-                        constraint imsld_leo_pk
-                        primary key,
-    pretty_title        varchar(200)
+                            constraint imsld_leo_fk
+                            references cr_revisions
+                            on delete cascade
+                            constraint imsld_leo_pk
+                            primary key,
+    pretty_title            varchar(200)
 );
 
 comment on table imsld_learning_objectives is '
