@@ -252,6 +252,7 @@ ad_proc -public imsld::parse::validate_multiplicity {
         }
     } elseif { $greather_than_p } {
         if { [llength $tree] < $multiplicity } {
+            set tree_length [llength $tree]
             ad_return_error "[_ imsld.Error_parsing_file]" "[_ imsld.lt_There_cant_be_less_th]"
             ad_script_abort
         } 
@@ -1863,7 +1864,8 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
             # If not, return the error
             set support_activity_ref [string tolower [imsld::parse::get_attribute -node $node_ref -attr_name ref]]
             if { ![db_0or1row get_support_activity_id {
-                select item_id as activity_id 
+                select item_id as activity_id,
+                activity_id as support_activity_id
                 from imsld_support_activitiesi 
                 where identifier = :support_activity_ref 
                 and content_revision__is_live(activity_id) ='t' 
@@ -1871,7 +1873,8 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
             }] } {
                 # may be the reference is wrong, search in the support activityes before returning an error
                 if { ![db_0or1row get_support_learning_activity_id {
-                    select item_id as activity_id 
+                    select item_id as activity_id,
+                    activity_id as learning_activity_id
                     from imsld_learning_activitiesi
                     where identifier = :support_activity_ref 
                     and content_revision__is_live(activity_id) = 't' 
@@ -1879,7 +1882,8 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 }] } {
                     # ok, last try: searching in the rest of activity structures...
                     if { [db_0or1row get_struct_id {
-                        select item_id as refrenced_struct_id 
+                        select item_id as refrenced_struct_id,
+                        structure_id
                         from imsld_activity_structuresi 
                         where identifier = :support_activity_ref 
                         and content_revision__is_live(structure_id) = 't' 
@@ -1890,6 +1894,13 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                         append warnings "<li> [_ imsld.lt_Referenced_support_ac_1] </li>"
                         # do the mappings
                         relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
+                        # store the order
+                        db_dml update_activity_structure {
+                            update imsld_activity_structures
+                            set sort_order = :sort_order
+                            where structure_id = :structure_id
+                        }
+                    incr sort_order
                     } else {
                         # search in the manifest ...
                         set organizations [$manifest child all imscp:organizations]
@@ -1925,6 +1936,12 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                             append warnings "<li> [_ imsld.lt_Referenced_support_ac_1] </li>"
                             # finally, do the mappings
                             relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
+                            # store the order
+                            db_dml update_activity_structure {
+                                update imsld_activity_structures
+                                set sort_order = :sort_order
+                                where structure_id = (select live_revision from cr_items where item_id = :activity_structure_ref_id)
+                            }
                         } else {
                             # error, referenced support activity does not exist
                             return [list 0 "[_ imsld.lt_Referenced_support_ac_2]"]
@@ -1936,10 +1953,22 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     append warnings "<li> [_ imsld.lt_Referenced_support_ac_3] </li>"
                     # map the learning activity with activity structure
                     relation_add imsld_as_la_rel $activity_structure_id $activity_id
+                    # store the order
+                    db_dml update_learning_activity {
+                        update imsld_learning_activities
+                        set sort_order = :sort_order
+                        where activity_id = :learning_activity_id
+                    }
                 }
             } else {
                 # map support activity with activity structure
                 relation_add imsld_as_sa_rel $activity_structure_id $activity_id
+                # store the order
+                db_dml update_support_activity {
+                    update imsld_support_activities
+                    set sort_order = :sort_order
+                    where activity_id = :support_activity_id
+                }
             }
         }
        
