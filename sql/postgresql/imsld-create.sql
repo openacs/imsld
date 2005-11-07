@@ -83,7 +83,7 @@ comment on column imsld_imslds.sequence_used_p is '
 If the value is true, IMS Simple Sequencing is included at the appropriate places in the document instance, default is false.';
 
 create table imsld_learning_objectives (
-    learning_object_id  integer
+    learning_objective_id  integer
                         constraint imsld_leo_fk
                         references cr_revisions
                         on delete cascade
