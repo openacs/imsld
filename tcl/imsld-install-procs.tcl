@@ -39,7 +39,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_imsld -attribute_name prerequisite_id -datatype number -pretty_name "#imsld.Prerequistes_ID#" -column_spec "integer"
 
     # learning objectives
-    content::type::new -content_type imsld_learning_objective -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Learning_Objec#" -pretty_plural "#imsld.lt_IMS-LD_Learning_Objec_1#" -table_name imsld_learning_objectives -id_column learning_object_id
+    content::type::new -content_type imsld_learning_objective -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Learning_Objec#" -pretty_plural "#imsld.lt_IMS-LD_Learning_Objec_1#" -table_name imsld_learning_objectives -id_column learning_objective_id
 
     content::type::attribute::new -content_type imsld_learning_objective -attribute_name pretty_title -datatype string -pretty_name "#imsld.Pretty_Title#" -column_spec "varchar(200)"
 
@@ -251,7 +251,7 @@ ad_proc -public imsld::install::init_rels {
     Create default rels between imsld items
 } { 
 
-    # Learing Objetcives - IMS-LD Items
+    # Learning Objetcives - IMS-LD Items
     rel_types::new imsld_lo_item_rel "Learing Objective - Imsld Item rel" "Learing Objective - Imsld Item rels"  \
         content_item 0 {} \
         content_item 0 {}
