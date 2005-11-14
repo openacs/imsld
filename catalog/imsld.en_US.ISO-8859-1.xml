@@ -71,8 +71,8 @@
   <msg key="li_impozzible_li">&lt;li&gt; impozzible &lt;/li&gt;</msg>
   <msg key="lt_Activity_Description_">Activity Description Identifier</msg>
   <msg key="lt_Activity_Structure_Id">Activity Structure Identifier</msg>
-  <msg key="lt_br__Warnings_ul_warni">&lt;br /&gt; Warnings: &lt;ul&gt; $warnings &lt;/ul&gt;</msg>
-  <msg key="lt_Could_not_determine_w">Could not determine whit what program uncompress the file $upload_file has. Aborting</msg>
+  <msg key="lt_br__Warnings_ul_warni">&lt;br /&gt; Warnings: &lt;ul&gt; %warnings% &lt;/ul&gt;</msg>
+  <msg key="lt_Could_not_determine_w">Could not determine whit what program uncompress the file %upload_file% has. Aborting</msg>
   <msg key="lt_Couldnt_determine_if_">Couldn't determine if this is a well formed IMS-LD: %message%</msg>
   <msg key="lt_Creaginting_new_IMS-L">Creaginting new IMS-LD</msg>
   <msg key="lt_Environment_Identifie">Environment Identifier</msg>
@@ -99,7 +99,7 @@
   <msg key="lt_Index_search_service_">Index search service not supported</msg>
   <msg key="lt_Information_given_but">Information given but no item associated to it for the role %role_title%</msg>
   <msg key="lt_Information_given_but_1">Information given but no item associated to it for the activity structure %identifier%</msg>
-  <msg key="lt_Invalid_type_type_in_">Invalid type $type in imsld::next_activity</msg>
+  <msg key="lt_Invalid_type_type_in_">Invalid type %type% in imsld::next_activity</msg>
   <msg key="lt_Learning_Activity_Ide">Learning Activity Identifier</msg>
   <msg key="lt_Learning_Object_Ident">Learning Object Identifier</msg>
   <msg key="lt_Learning_Objective_ID">Learning Objective ID</msg>
@@ -126,7 +126,7 @@
   <msg key="lt_Referenced_environmen_3">Referenced environment (%environment_ref%) in activity structure %identifier% does not exist.</msg>
   <msg key="lt_Referenced_environmen_4">Referenced environment (%environment_ref_ref%) in role part %identifier% does not exist.</msg>
   <msg key="lt_Referenced_learning_a">Referenced learning activity %learning_activity_ref% is actually an activity structure!.</msg>
-  <msg key="lt_Referenced_learning_a_1">Referenced learning activity (%learning_activity_ref%) in activity structure % $identifier % does not exist. comp $component_id</msg>
+  <msg key="lt_Referenced_learning_a_1">Referenced learning activity (%learning_activity_ref%) in activity structure %identifier% does not exist.</msg>
   <msg key="lt_Referenced_learning_a_2">Referenced learning activity %learning_activity_ref% is actually a support activity.</msg>
   <msg key="lt_Referenced_learning_a_3">Referenced learning activity (%learning_activity_ref_ref%) in role part %identifier% does not exist.</msg>
   <msg key="lt_Referenced_learning_a_4">Referenced learning activity %learning_activity_ref_ref% in role part %identifier% is actually an activity structure.</msg>
@@ -144,7 +144,7 @@
   <msg key="lt_The_referenced_play_i">The referenced play in 'when play completed' in the method does not exist</msg>
   <msg key="lt_The_referenced_role_p">The referenced role part in 'when role part completed' of the act %identifier% does not exist</msg>
   <msg key="lt_The_resource_resource">The resource %resource_identifier% has a reference to a non existing file (%resource_href%).</msg>
-  <msg key="lt_There_cant_be_less_th">There can't be less than $multiplicity $element_name and there are [llength $tree]. This is not supported, sorry.</msg>
+  <msg key="lt_There_cant_be_less_th">There can't be less than %multiplicity% %element_name% and there are %tree_length%. This is not supported, sorry.</msg>
   <msg key="lt_There_cant_greather_t">There can't greather than $multiplicity $element_name and there are [llength $tree]. This is not supported, sorry.</msg>
   <msg key="lt_There_is_no_role_with">There is no role with the identifier %role_ref% (referenced by an email data)</msg>
   <msg key="lt_There_is_no_role_with_1">There is no role with the identifier %role_ref% (referenced by: manager)</msg>
@@ -157,7 +157,7 @@
   <msg key="lt_There_was_an_error_cr_1">There was an error creating the tmp_dir to unzip the file.</msg>
   <msg key="lt_There_was_an_error_ge">There was an error generating the tmp_dir to unzip the file.</msg>
   <msg key="lt_There_was_an_error_pa">There was an error parsing the manifest. Please correct it and try again. &lt;br /&gt;&lt;code&gt;%errmsg%&lt;/code&gt;</msg>
-  <msg key="lt_There_was_an_error_tr">There was an error trying to delete the dir $dir.</msg>
+  <msg key="lt_There_was_an_error_tr">There was an error trying to delete the dir %dir%.</msg>
   <msg key="lt_Time_Limit_Identifier">Time Limit Identifier</msg>
   <msg key="lt_ul_Completed_Activiti">&lt;ul&gt; Completed Activities &lt;br /&gt;</msg>
   <msg key="lt_ul_Next_Activity_acti">&lt;ul&gt; %first_or_next% Activity: %activity_name% &lt;br /&gt;</msg>
