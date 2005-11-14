@@ -647,7 +647,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
                                       -tmp_dir $tmp_dir \
                                       -parent_item_id $item_id]
             
-            set item_id [lindex $nested_item_list 0]
+            set nested_item_id [lindex $nested_item_list 0]
             if { !$nested_item_id } {
                 # an error happened, abort and return the list whit the error
                 return $nested_item_list
