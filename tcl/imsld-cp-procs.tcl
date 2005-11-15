@@ -148,6 +148,7 @@ ad_proc -public imsld::cp::resource_new {
     {-user_id ""}
     {-creation_ip ""}
     {-creation_date ""}
+    {-acs_object_id ""}
     {-parent_id ""}
     -edit:boolean
 } {
@@ -162,6 +163,7 @@ ad_proc -public imsld::cp::resource_new {
     @option user_id user that adds the resource. [ad_conn user_id] used by default.
     @option creation_ip ip-address of the user that adds the resource. [ad_conn peeraddr] used by default.
     @option creation_date Creation date of the resource. [dt_sysdate] used by default.
+    @option acs_object_id object_id of the objec resource
     @param parent_id Identifier of the parent folder
     @option edit Are we editing the resource?
 } {
@@ -203,6 +205,7 @@ ad_proc -public imsld::cp::resource_new {
                          -attributes [list [list manifest_id $manifest_id] \
                                           [list identifier $identifier] \
                                           [list type $type] \
+                                          [list acs_object_id $acs_object_id] \
                                           [list href $href]]]
     
     return $item_id

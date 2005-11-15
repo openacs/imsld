@@ -1080,21 +1080,6 @@ ad_proc -public imsld::parse::parse_and_create_service {
             }
         }
 
-        # item
-        set conference_item [$conference child all imsld:item]
-        imsld::parse::validate_multiplicity -tree $conference_item -multiplicity 1 -element_name conference-item -equal
-        set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
-                           -manifest_id $manifest_id \
-                           -item_node $conference_item \
-                           -parent_id $parent_id \
-                           -tmp_dir $tmp_dir]
-        
-        set imsld_item_id [lindex $item_list 0]
-        if { !$imsld_item_id } {
-            # an error happened, abort and return the list whit the error
-            return $item_list
-        }
-
         # create the service
         set service_id [imsld::item_revision_new -attributes [list [list environment_id $environment_id] \
                                                                   [list class $service_class] \
@@ -1105,6 +1090,49 @@ ad_proc -public imsld::parse::parse_and_create_service {
                             -content_type imsld_service \
                             -parent_id $parent_id]
         
+	if { [string eq $conference_type "asynchronous"] } {
+	    set community_id [dotlrn_community::get_community_id]
+	    set forums_package_id [db_string get_assessment_package_id {select dotlrn_community_applets.package_id from dotlrn_community_applets join apm_packages on (dotlrn_community_applets.package_id=apm_packages.package_id) where community_id = :community_id and package_key='forums'}]
+	    set acs_object_id [forum::new -name $title -package_id $forums_package_id]
+
+    set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
+                         -identifier "forumresource-$service_id" \
+                         -type "forum" \
+                         -href "" \
+                         -acs_object_id $acs_object_id \
+                         -parent_id $parent_id]
+
+    set imsld_item_id [imsld::item_revision_new -title $title \
+                     -content_type imsld_item \
+                     -attributes [list [list identifier "forumitem-$service_id"] \
+                                      [list is_visible_p "t"] \
+                                      [list parameters ""] \
+                                      [list identifierref "forumresource-$service_id"] \
+                                      [list parent_item_id {}]] \
+                     -parent_id $parent_id]
+
+	# map item with resource
+	relation_add imsld_item_res_rel $imsld_item_id $resource_id
+
+
+	} else {
+            # item
+            set conference_item [$conference child all imsld:item]
+            imsld::parse::validate_multiplicity -tree $conference_item -multiplicity 1 -element_name conference-item -equal
+            set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
+                           -manifest_id $manifest_id \
+                            -item_node $conference_item \
+                           -parent_id $parent_id \
+                           -tmp_dir $tmp_dir]
+        
+            set imsld_item_id [lindex $item_list 0]
+            if { !$imsld_item_id } {
+                # an error happened, abort and return the list whit the error
+                return $item_list
+            }
+	
+	}
+
         # create the conference service
         set conference_id [imsld::item_revision_new -attributes [list [list service_id $service_id] \
                                                                           [list manager_id $manager_id] \
@@ -1113,7 +1141,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
                                -content_type imsld_conference_service \
                                -parent_id $parent_id \
                                -title $title]
-        
+
         # participants
         set participant_list [$conference child all imsld:participant]
         imsld::parse::validate_multiplicity -tree $participant_list -multiplicity 1 -element_name conference-participant -greather_than
