@@ -230,6 +230,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_cp_resource -attribute_name identifier -datatype string -pretty_name "#imsld.Identifier#" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_cp_resource -attribute_name type -datatype string -pretty_name "#imsld.Type#" -column_spec "varchar(1000)"
     content::type::attribute::new -content_type imsld_cp_resource -attribute_name href -datatype string -pretty_name "#imsld.Href#" -column_spec "varchar(2000)"
+    content::type::attribute::new -content_type imsld_cp_resource -attribute_name acs_object_id -datatype number -pretty_name "acs_object_id" -column_spec "integer"
 
     # dependencies
     content::type::new -content_type imsld_cp_dependency -supertype content_revision -pretty_name "#imsld.IMS-LD_CP_Dependency#" -pretty_plural "#imsld.lt_IMS-LD_CP_Dependencie#" -table_name imsld_cp_dependencies -id_column dependency_id
@@ -567,6 +568,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_cp_resource -attribute_name identifier
     content::type::attribute::delete -content_type imsld_cp_resource -attribute_name type
     content::type::attribute::delete -content_type imsld_cp_resource -attribute_name href
+    content::type::attribute::delete -content_type imsld_cp_resource -attribute_name acs_object_id
 
     # dependencies
     content::type::attribute::delete -content_type imsld_cp_dependency -attribute_name resource_id
