@@ -145,14 +145,14 @@
   <msg key="lt_The_referenced_role_p">The referenced role part in 'when role part completed' of the act %identifier% does not exist</msg>
   <msg key="lt_The_resource_resource">The resource %resource_identifier% has a reference to a non existing file (%resource_href%).</msg>
   <msg key="lt_There_cant_be_less_th">There can't be less than %multiplicity% %element_name% and there are %tree_length%. This is not supported, sorry.</msg>
-  <msg key="lt_There_cant_greather_t">There can't greather than $multiplicity $element_name and there are [llength $tree]. This is not supported, sorry.</msg>
+  <msg key="lt_There_cant_greather_t">There can't greather than %multiplicity% %element_name% and there are %tree_length%. This is not supported, sorry.</msg>
   <msg key="lt_There_is_no_role_with">There is no role with the identifier %role_ref% (referenced by an email data)</msg>
   <msg key="lt_There_is_no_role_with_1">There is no role with the identifier %role_ref% (referenced by: manager)</msg>
   <msg key="lt_There_is_no_role_with_2">There is no role with the identifier %role_ref% (referenced by: participant)</msg>
   <msg key="lt_There_is_no_role_with_3">There is no role with the identifier %role_ref% (referenced by: observer)</msg>
   <msg key="lt_There_is_no_role_with_4">There is no role with the identifier %role_ref% (referenced by: moderator)</msg>
   <msg key="lt_There_is_no_role_with_5">There is no role with the identifier %ref% (referenced by: support activity)</msg>
-  <msg key="lt_There_must_be_exactly">There must be exactly $multiplicity $element_name and there are [llength $tree]. This is not supported, sorry.</msg>
+  <msg key="lt_There_must_be_exactly">There must be exactly %multiplicity% %element_name% and there are %tree_length%. This is not supported, sorry.</msg>
   <msg key="lt_There_was_an_error_cr">There was an error creating the folder. Aborting.</msg>
   <msg key="lt_There_was_an_error_cr_1">There was an error creating the tmp_dir to unzip the file.</msg>
   <msg key="lt_There_was_an_error_ge">There was an error generating the tmp_dir to unzip the file.</msg>

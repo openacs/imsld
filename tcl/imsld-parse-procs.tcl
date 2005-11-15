@@ -245,19 +245,19 @@ ad_proc -public imsld::parse::validate_multiplicity {
         set equal_p 1
     }
 
+    set tree_length [llength $tree]
     if { $equal_p } {
-        if { [llength $tree] != $multiplicity } {
+        if { $tree_length != $multiplicity } {
             ad_return_error "[_ imsld.Error_parsing_file]" "[_ imsld.lt_There_must_be_exactly]"
             ad_script_abort
         }
     } elseif { $greather_than_p } {
-        if { [llength $tree] < $multiplicity } {
-            set tree_length [llength $tree]
+        if { $tree_length < $multiplicity } {
             ad_return_error "[_ imsld.Error_parsing_file]" "[_ imsld.lt_There_cant_be_less_th]"
             ad_script_abort
         } 
     } else {
-        if { [llength $tree] > $multiplicity } {
+        if { $tree_length > $multiplicity } {
             ad_return_error "[_ imsld.Error_parsing_file]" "[_ imsld.lt_There_cant_greather_t]"
             ad_script_abort
         } 
