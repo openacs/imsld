@@ -70,11 +70,20 @@ create table imsld_cp_resources (
                     on delete cascade,
     identifier      varchar(100),
     type            varchar(1000),
-    href            varchar(2000)
+    href            varchar(2000),
+    -- pointer to the dotLRN services
+    object_id       constarint imsld_cp_resources_ob_id_fk
+                    references acs_objects
+                    on delete cascade
 );
 
 -- create index for imsld_cp_resources
 create index imsld_cp_resources_man_id_idx on imsld_cp_resources(manifest_id);
+create index imsld_cp_resources_obj_id_idx on imsld_cp_resources(object_id);
+
+comment on column imsld_cp_resources.object_id is '
+This field is used to map the resource with a dotLRN service. 
+The dotLRN service which the object_id points to depends on the resource_type.';
 
 -- Resource dependencies
 create table imsld_cp_dependencies (
