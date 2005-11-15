@@ -1111,7 +1111,8 @@ ad_proc -public imsld::parse::parse_and_create_service {
                                                                           [list conference_type $conference_type] \
                                                                           [list imsld_item_id $imsld_item_id]] \
                                -content_type imsld_conference_service \
-                               -parent_id $parent_id]
+                               -parent_id $parent_id \
+                               -title $title]
         
         # participants
         set participant_list [$conference child all imsld:participant]
@@ -2625,7 +2626,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
 
     # IMS-LD: Prerequisites (which are really an imsld_item that can have resource associated.)
     set prerequisites [$imsld child all imsld:prerequisites] 
-    if { [llength $learning_objectives] } {
+    if { [llength $prerequisites] } {
         imsld::parse::validate_multiplicity -tree $prerequisites -multiplicity 1 -element_name prerequisites(ims-ld) -equal
         set prerequisite_list [imsld::parse::parse_and_create_prerequisite -prerequisite_node $prerequisites \
                                    -manifest_id $manifest_id \
@@ -2647,7 +2648,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                                             [list level $imsld_level] \
                                                             [list version $imsld_version] \
                                                             [list sequence_p $imsld_sequence_p] \
-                                                            [list learning_objectives $learning_objective_id] \
+                                                            [list learning_objective_id $learning_objective_id] \
                                                             [list prerequisite_id $prerequisite_id] \
                                                             [list organization_id $organization_id]] \
                       -content_type imsld_imsld \

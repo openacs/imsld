@@ -125,10 +125,14 @@ create table imsld_items (
     is_visible_p    char(1)
                     check (is_visible_p in ('t','f'))
                     default 't',
-    parameters      varchar(4000)
+    parameters      varchar(4000),
+    -- recursive queries support
+    imsld_tree_sortkey      varbit,
+    imsld_max_child_sortkey varbit
 );
 
 create index imsld_items_pid_idx on imsld_items(parent_item_id);
+create unique index imsld_items_tree_sortkey_un on imsld_items(imsld_tree_sortkey);
 
 comment on table imsld_items is '
 This table holds the imsld items of the unit of learning';
@@ -669,5 +673,5 @@ The underlying item elements point to a resource (of type webcontent or imsldcon
 Feedback are items that are mapped to this table with the imsld_feedback_rel.';
 
 \i imsld-cp-create.sql
-
 \i imsld-status-create.sql
+\i imsld-tree-create.sql
