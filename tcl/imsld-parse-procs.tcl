@@ -506,10 +506,17 @@ ad_proc -public imsld::parse::parse_and_create_resource {
     set resource_type [imsld::parse::get_attribute -node $resource_node -attr_name type]
     set resource_href [imsld::parse::get_attribute -node $resource_node -attr_name href]
     set resource_identifier [string tolower [imsld::parse::get_attribute -node $resource_node -attr_name identifier]]
+    set community_id [dotlrn_community::get_community_id]
+
+    set acs_object_id [callback -catch imsld::import -res_type $resource_type -res_href $resource_href -tmp_dir $tmp_dir -community_id $community_id]
+    # Integration with other packages
+    # This callback gets the href of the imported content (if some package imported it)
+
     set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
                          -identifier $resource_identifier \
                          -type $resource_type \
                          -href $resource_href \
+                         -acs_object_id $acs_object_id \
                          -parent_id $parent_id]
     
     set found_p 0
