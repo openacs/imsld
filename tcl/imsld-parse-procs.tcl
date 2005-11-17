@@ -795,8 +795,9 @@ ad_proc -public imsld::parse::parse_and_create_learning_objective {
     set learning_objective_title [imsld::parse::get_title -node $learning_objective_node -prefix imsld]
     set learning_objective_id [imsld::item_revision_new -title $learning_objective_title \
                                    -content_type imsld_learning_objective \
-                                   -parent_id $parent_id]
-    
+                                   -parent_id $parent_id \
+                                   -attributes [list [list pretty_title $learning_objective_title]]]
+                                                
     # learning objective: imsld_items
     set learning_objective_items [$learning_objective_node child all imsld:item]
     if { [llength $learning_objective_items] } {
@@ -843,7 +844,8 @@ ad_proc -public imsld::parse::parse_and_create_prerequisite {
     set prerequisite_title [imsld::parse::get_title -node $prerequisite_node -prefix imsld]
     set prerequisite_id [imsld::item_revision_new -title $prerequisite_title \
                              -content_type imsld_prerequisite \
-                             -parent_id $parent_id]
+                             -parent_id $parent_id \
+                             -attributes [list [list pretty_title $prerequisite_title]]]
     
     # prerequisite: imsld_items
     set prerequisite_items [$prerequisite_node child all imsld:item]
@@ -1090,32 +1092,33 @@ ad_proc -public imsld::parse::parse_and_create_service {
                             -content_type imsld_service \
                             -parent_id $parent_id]
         
-	if { [string eq $conference_type "asynchronous"] } {
-	    set community_id [dotlrn_community::get_community_id]
-	    set forums_package_id [db_string get_assessment_package_id {select dotlrn_community_applets.package_id from dotlrn_community_applets join apm_packages on (dotlrn_community_applets.package_id=apm_packages.package_id) where community_id = :community_id and package_key='forums'}]
-	    set acs_object_id [forum::new -name $title -package_id $forums_package_id]
+        if { [string eq $conference_type "asynchronous"] } {
+            set community_id [dotlrn_community::get_community_id]
+            set forums_package_id [site_node_apm_integration::get_child_package_id \
+                                       -package_id [dotlrn_community::get_package_id $community_id] \
+                                       -package_key "forums"]
+            set acs_object_id [forum::new -name $title -package_id $forums_package_id]
+            
+            set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
+                                 -identifier "forumresource-$service_id" \
+                                 -type "forum" \
+                                 -href "" \
+                                 -acs_object_id $acs_object_id \
+                                 -parent_id $parent_id]
+            
+            set imsld_item_id [imsld::item_revision_new -title $title \
+                                   -content_type imsld_item \
+                                   -attributes [list [list identifier "forumitem-$service_id"] \
+                                                    [list is_visible_p "t"] \
+                                                    [list parameters ""] \
+                                                    [list identifierref "forumresource-$service_id"] \
+                                                    [list parent_item_id {}]] \
+                                   -parent_id $parent_id]
+            
+            # map item with resource
+            relation_add imsld_item_res_rel $imsld_item_id $resource_id
 
-    set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
-                         -identifier "forumresource-$service_id" \
-                         -type "forum" \
-                         -href "" \
-                         -acs_object_id $acs_object_id \
-                         -parent_id $parent_id]
-
-    set imsld_item_id [imsld::item_revision_new -title $title \
-                     -content_type imsld_item \
-                     -attributes [list [list identifier "forumitem-$service_id"] \
-                                      [list is_visible_p "t"] \
-                                      [list parameters ""] \
-                                      [list identifierref "forumresource-$service_id"] \
-                                      [list parent_item_id {}]] \
-                     -parent_id $parent_id]
-
-	# map item with resource
-	relation_add imsld_item_res_rel $imsld_item_id $resource_id
-
-
-	} else {
+        } else {
             # item
             set conference_item [$conference child all imsld:item]
             imsld::parse::validate_multiplicity -tree $conference_item -multiplicity 1 -element_name conference-item -equal
