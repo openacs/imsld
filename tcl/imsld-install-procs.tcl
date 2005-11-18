@@ -21,6 +21,7 @@ ad_proc -public imsld::install::init_content_repository {
     # learning objects
     content::type::new -content_type imsld_learning_object -supertype content_revision -pretty_name "#imsld.Learning_Object#" -pretty_plural "#imsld.Learning_Objects#" -table_name imsld_learning_objects -id_column learning_object_id
     
+    content::type::attribute::new -content_type imsld_learning_object -attribute_name environment_id -datatype number -pretty_name "#imsld.lt_Environment_Identifie#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_learning_object -attribute_name identifier -datatype string -pretty_name "#imsld.Identifier#" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_learning_object -attribute_name class -datatype string -pretty_name "#imsld.Class#" -column_spec "varchar(4000)"
     content::type::attribute::new -content_type imsld_learning_object -attribute_name is_visible_p -datatype string -pretty_name "#imsld.Is_Visible#" -column_spec "char(1)"
@@ -124,7 +125,6 @@ ad_proc -public imsld::install::init_content_repository {
     
     content::type::attribute::new -content_type imsld_environment -attribute_name component_id -datatype number -pretty_name "#imsld.Component_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_environment -attribute_name identifier -datatype string -pretty_name "#imsld.Identifier#" -column_spec "varchar(100)"
-    content::type::attribute::new -content_type imsld_environment -attribute_name learning_object_id -datatype number -pretty_name "#imsld.lt_Learning_Object_Ident#" -column_spec "integer"
 
     # services
     content::type::new -content_type imsld_service -supertype content_revision -pretty_name "#imsld.IMS-LD_Service#" -pretty_plural "#imsld.IMS-LD_Services#" -table_name imsld_services -id_column service_id
@@ -407,6 +407,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     ### IMS-LD
 
     # learning objects
+    content::type::attribute::delete -content_type imsld_learning_object -attribute_name environment_id
     content::type::attribute::delete -content_type imsld_learning_object -attribute_name identifier
     content::type::attribute::delete -content_type imsld_learning_object -attribute_name class
     content::type::attribute::delete -content_type imsld_learning_object -attribute_name is_visible_p
@@ -488,9 +489,8 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     # environments
     content::type::attribute::delete -content_type imsld_environment -attribute_name component_id
     content::type::attribute::delete -content_type imsld_environment -attribute_name identifier
-    content::type::attribute::delete -content_type imsld_environment -attribute_name learning_object_id
 
-    # send mail service
+    # services
     content::type::attribute::delete -content_type imsld_service -attribute_name environment_id
     content::type::attribute::delete -content_type imsld_service -attribute_name identifier
     content::type::attribute::delete -content_type imsld_service -attribute_name class

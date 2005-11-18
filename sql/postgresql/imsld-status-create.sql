@@ -40,5 +40,3 @@ comment on table imsld_status_user is '
 This table holds the status of each user in the unit of learning.
 Each entry in this table says that the user referenced by user_id has already COMPLETED the role part referenced by role_part_id, so if we want to know what role part is the next one for any user, we have to see the las completed role part and find out which one is next.';
 
-
-

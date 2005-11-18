@@ -12,6 +12,10 @@ create table imsld_learning_objects (
                             on delete cascade
                             constraint imsld_lo_id_pk   
                             primary key, 
+    environment_id          integer
+                            constraint imsld_serv_env_fk
+                            references cr_items     --imsld_environments
+                            not null,
     identifier              varchar(100)
                             not null,
     class                   varchar(4000),                  
@@ -21,6 +25,8 @@ create table imsld_learning_objects (
     type                    varchar(100),
     parameters              varchar(4000)
 );
+
+create index imsld_lo_env_idx on imsld_learning_objects(environment_id);
 
 comment on table imsld_learning_objects is '
 Learning objects are incorporated (in dotLRN) by referencing resources through the item elements.';
@@ -381,14 +387,10 @@ create table imsld_environments (
                         constraint imsld_env_compid_fk
                         references cr_items     --imsld_components
                         not null,
-    identifier          varchar(100),
-    learning_object_id  integer
-                        constraint imsld_env_loid_fk
-                        references cr_items     --imsld_learning_objects
+    identifier          varchar(100)
 );
 
 create index imsld_envs_comp_id_idx on imsld_environments(component_id);
-create index imsld_learno_id_idx on imsld_environments(learning_object_id);
 
 comment on table imsld_environments is '
 The environments are learning objects, services or more environments that complement a given activity.
@@ -663,7 +665,7 @@ create table imsld_on_completion (
                             references cr_revisions 
                             on delete cascade
                             constraint imsld_oncomp_id_pk  
-                            primary key, 
+                            primary key,
     feedback_title          varchar(200)
 );
 

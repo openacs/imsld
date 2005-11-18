@@ -5,6 +5,8 @@
 -- @creation-date jul-2005
 --
 
+\i imsld-tree-drop.sql
+
 drop table imsld_learning_objects cascade;
 
 drop table imsld_imslds cascade;

@@ -927,6 +927,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_description {
 
 ad_proc -public imsld::parse::parse_and_create_learning_object { 
     -learning_object_node
+    -environment_id:required
     -manifest
     -manifest_id
     -parent_id
@@ -937,6 +938,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_object {
     Returns a list with the new learning_object_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
     
     @param learning_object_node learning object node to parse
+    @param environment_id environment ID of the one tha owns the learning objective
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
@@ -956,7 +958,8 @@ ad_proc -public imsld::parse::parse_and_create_learning_object {
                                                                       [list identifier $identifier] \
                                                                       [list is_visible_p $is_visible_p] \
                                                                       [list parameters $parameters] \
-                                                                      [list type $type]] \
+                                                                      [list type $type] \
+                                                                      [list environment_id $environment_id]] \
                                 -content_type imsld_learning_object \
                                 -title $title \
                                 -parent_id $parent_id]
@@ -1244,10 +1247,15 @@ ad_proc -public imsld::parse::parse_and_create_environment {
     # get environment info
     set identifier [string tolower [imsld::parse::get_attribute -node $environment_node -attr_name identifier]]
     set title [imsld::parse::get_title -node $environment_node -prefix imsld]
-    
+        
+    # create the environment
+    set environment_id [imsld::item_revision_new -attributes [list [list component_id $component_id] \
+                                                                [list identifier $identifier]] \
+                            -content_type imsld_environment \
+                            -parent_id $parent_id]
+
     # environment: learning object
     set learning_object [$environment_node child all imsld:learning-object]
-    set learning_object_id ""
     if { [llength $learning_object] } {
         if { [llength $learning_object] > 1 } {
             set learning_object [lindex $learning_object 0]
@@ -1255,6 +1263,7 @@ ad_proc -public imsld::parse::parse_and_create_environment {
             append warnings "<li> [_ imsld.lt_Warning_More_than_one] </li>"
         }
         set learning_object_list [imsld::parse::parse_and_create_learning_object -learning_object_node $learning_object \
+                                      -environment_id $environment_id \
                                       -manifest_id $manifest_id \
                                       -manifest $manifest \
                                       -parent_id $parent_id \
@@ -1266,13 +1275,6 @@ ad_proc -public imsld::parse::parse_and_create_environment {
             return $learning_object_list
         }
     }
-    
-    # create the environment
-    set environment_id [imsld::item_revision_new -attributes [list [list component_id $component_id] \
-                                                                [list identifier $identifier] \
-                                                                [list learning_object_id $learning_object_id]] \
-                            -content_type imsld_environment \
-                            -parent_id $parent_id]
 
     # environment: service
     set service [$environment_node child all imsld:service]
