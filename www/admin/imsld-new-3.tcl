@@ -23,18 +23,20 @@ set context [list [list "[_ imsld.New_IMS-LD]" "new-imsld"] [list "[_ imsld.lt_C
 set user_id [ad_conn user_id]
 
 # Display progress bar
-# ad_progress_bar_begin \
-#     -title "[_ imsld.Uploading_IMS_LD]" \
-#     -message_1 "[_ imsld.lt_Uploading_and_process]" \
-#     -message_2 "[_ imsld.lt_We_will_continue_auto]"
+ad_progress_bar_begin \
+    -title "[_ imsld.Uploading_IMS_LD]" \
+    -message_1 "[_ imsld.lt_Uploading_and_process]" \
+    -message_2 "[_ imsld.lt_We_will_continue_auto]"
 
+ns_write "<h2>Uploading new IMS Learning Design</h2><blockquote>"
 
+set community_id [dotlrn_community::get_community_id]
 # Atempting to create the new IMS LD.
 # The proc imsld::parse::parse_and_create_imsld_manifest return a pair of values (manifest_id and a message)
 set manifest_list [imsld::parse::parse_and_create_imsld_manifest -xmlfile $tmp_dir/imsmanifest.xml \
                        -manifest_id $manifest_id \
                        -tmp_dir $tmp_dir \
-                       -community_id [dotlrn_community::get_community_id]]
+                       -community_id $community_id]
 
 set manifest_id [lindex $manifest_list 0]
 
@@ -44,7 +46,17 @@ if { !$manifest_id } {
     ad_script_abort
 }
 
-set warnings [lindex $manifest_list 1]
 # delete the tmpdir
 imsld::parse::remove_dir -dir $tmp_dir    
+
+set warnings "[lindex $manifest_list 1]"
+
+if { ![string eq "" $warnings] } {
+    ns_write "[_ imsld.lt_br__Warnings_ul_warni]"
+    ns_sleep 5
+}
+
+# jump to the front page
+ad_progress_bar_end -url [dotlrn_community::get_community_url $community_id]
+
 

@@ -163,7 +163,7 @@
   <msg key="lt_ul_Next_Activity_acti">&lt;ul&gt; %first_or_next% Activity: %activity_name%</msg>
   <msg key="lt_Uploading_and_process">Uploading and processing your course, please wait...</msg>
   <msg key="lt_Valid_types_are_learn">Valid types are learning, support and structure</msg>
-  <msg key="lt_Warning_More_than_one">Warning: More than one learning object in environment %identifie%. Just one used (the first one)</msg>
+  <msg key="lt_Warning_More_than_one">Warning: More than one learning object in environment %identifier%. Just one used (the first one)</msg>
   <msg key="lt_We_will_continue_auto">We will continue automatically when processing is complete.</msg>
   <msg key="lt_When_Last_Act_Complet">When Last Act Completed?</msg>
   <msg key="Mail_Data">Mail Data</msg>

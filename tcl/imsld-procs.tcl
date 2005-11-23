@@ -255,7 +255,7 @@ ad_proc -public imsld::finish_component_element {
 
 ad_proc -public imsld::structure_next_activity {
     -activity_structure_id:required
-    {-environment_ul ""}
+    {-environment_list ""}
 } { 
     @return The next learning or support activity (and the type) in the activity structure. 0 if there are none (which should never happen)
 } {
@@ -263,15 +263,16 @@ ad_proc -public imsld::structure_next_activity {
     set next_activity_id ""
     set next_activity_type ""
     # get referenced activities
-    db_foreach struct_referenced_activities {
+    foreach referenced_activity [db_list_of_lists struct_referenced_activities {
         select ar.object_id_two,
         ar.rel_type
         from acs_rels ar, imsld_activity_structuresi ias
         where ar.object_id_one = ias.item_id
         and ias.structure_id = :activity_structure_id
         order by ar.object_id_two
-    } {
-        ns_log notice "ahorita mismo mesmamente el type es $rel_type \n"
+    }] {
+        set object_id_two [lindex $referenced_activity 0]
+        set rel_type [lindex $referenced_activity 1]
         switch $rel_type {
             imsld_as_la_rel {
                 # find out if is the next one
@@ -332,22 +333,26 @@ ad_proc -public imsld::structure_next_activity {
                 }
             }
             imsld_as_env_rel {
-                append environment_ul [imsld::process_environment -environment_item_id $object_id_two]
+                if { [llength $environment_list] } {
+                    set environment_list [concat [list $environment_list] [list [imsld::process_environment -environment_item_id $object_id_two]]]
+                } else {
+                    set environment_list [imsld::process_environment -environment_item_id $object_id_two]
+                }
             }
         }
-    } if_no_rows {
-        ad_return_error "<#_ No referenced activities #>" "<#_ No referenced activities for activity_structure $activity_structure_id. This should never happen."
-        ad_script_abort
-    }
+    } 
+#     if { [string eq "" $next_activity_id] } {
+#         ad_return_error "<#_ No referenced activities #>" "<#_ No referenced activities for activity_structure $activity_structure_id. This should never happen."
+#         ad_script_abort
+#     }
 
     if { [string eq $next_activity_type structure] } {
-        ns_log notice "llamada recursiva a punto con env $environment_ul"
-        set next_activity_list [imsld::structure_next_activity -activity_structure_id $activity_id -environment_ul $environment_ul]
+        set next_activity_list [imsld::structure_next_activity -activity_structure_id $activity_id -environment_list $environment_list]
         set next_activity_id [lindex $next_activity_list 0]
         set next_activity_type [lindex $next_activity_list 1]
-        append environment_ul [lindex $next_activity_list 2]
+        set environment_list [concat $environment_list [lindex $next_activity_list 2]]
     }
-    return [list $next_activity_id $next_activity_type $environment_ul]
+    return [list $next_activity_id $next_activity_type $environment_list]
 } 
 
 ad_proc -public imsld::role_part_finished_p { 
@@ -410,7 +415,7 @@ ad_proc -public imsld::process_service {
 } { 
     returns a list of the associated resources referenced from the given service.
 } {
-    set services_urls ""
+    set services_list [list]
 
     # get service info
     db_1row service_info {
@@ -451,9 +456,9 @@ ad_proc -public imsld::process_service {
             } {
                 append one_service_url "[imsld::process_resource -resource_item_id $resource_item_id]"
                 if { [string eq "" $one_service_url] } {
-                    append services_urls "[_ imsld.lt_li_desc_no_file_assoc]"
+                    lappend services_list "[_ imsld.lt_li_desc_no_file_assoc]"
                 } else {
-                    append services_urls $one_service_url
+                    set services_list [concat [list $services_list] [list $one_service_url]]
                 }
             } if_no_rows {
                 ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
@@ -463,7 +468,7 @@ ad_proc -public imsld::process_service {
             return "not_implemented_yet"
         }
     }
-    return "$services_urls"
+    return "$services_list"
 }
 
 ad_proc -public imsld::process_environment {
@@ -479,7 +484,6 @@ ad_proc -public imsld::process_environment {
     
     set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
 
-    ns_log notice "es $environment_item_id \n"
     # get environment info
     db_1row environment_info {
         select env.identifier as environment_title,
@@ -489,8 +493,7 @@ ad_proc -public imsld::process_environment {
         and content_revision__is_live(env.environment_id) = 't'
     }
 
-    set environment_ul " \[ $environment_title"
-
+    set environment_learning_objects_list [list]
     if { [db_0or1row get_learning_object_info {
         select item_id as learning_object_item_id,
         learning_object_id,
@@ -502,14 +505,13 @@ ad_proc -public imsld::process_environment {
         # learning object item. get the files associated
         set linear_item_list [db_list item_linear_list {
             select ii.imsld_item_id
-            from imsld_items ii, imsld_learning_objects lo
+            from imsld_items ii,
             cr_items cr,
             acs_rels ar
-            where and ar.object_id_one = :learning_object_item_id
+            where ar.object_id_one = :learning_object_item_id
             and ar.object_id_two = cr.item_id
             and cr.live_revision = ii.imsld_item_id
         }]
-        
         foreach imsld_item_id $linear_item_list {
             db_foreach env_nested_associated_items {
                 select cpr.resource_id,
@@ -524,19 +526,20 @@ ad_proc -public imsld::process_environment {
                      and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      or ii.imsld_item_id = :imsld_item_id)
             } {
-                set one_environment_ul "[imsld::process_resource -resource_item_id $resource_item_id] "
-                if { [string eq "" $one_environment_ul] } {
-                    append environment_ul "[_ imsld.lt_li_desc_no_file_assoc]"
+                set one_learning_object_list [imsld::process_resource -resource_item_id $resource_item_id]
+                if { [string eq "" $one_learning_object_list] } {
+                    lappend environment_learning_objects_list "[_ imsld.lt_li_desc_no_file_assoc]"
                 } else {
-                    append environment_ul $one_environment_ul
+                    set environment_learning_objects_list [concat [list $environment_learning_objects_list] \
+                                                               [list $one_learning_object_list]]
                 }
             } if_no_rows {
                 ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
             }
         }
     }
-    
     # services
+    set environment_services_list [list]
     if { [db_0or1row get_service_info {
         select service_id,
         item_id as service_item_id,
@@ -546,9 +549,10 @@ ad_proc -public imsld::process_environment {
         where environment_id = :environment_item_id
         and content_revision__is_live(service_id) = 't'
     }] } {
-        append environment_ul "[imsld::process_service -service_item_id $service_item_id] "
+        set environment_services_list [imsld::process_service -service_item_id $service_item_id]
     }
 
+    set nested_environment_list [list]
     # environments
     db_foreach nested_environment {
         select ar.object_id_two as nested_environment_item_id
@@ -556,11 +560,14 @@ ad_proc -public imsld::process_environment {
         where ar.object_id_one = :environment_item_id
         and ar.rel_type = 'imsld_env_env_rel'
     } {
-        append environment_ul [imsld::process_environment -environment_item_id $nested_environment_item_id]
+        set one_nested_environment_list [imsld::process_environment -environment_item_id $nested_environment_item_id]
+        set nested_environment_list [concat [list $nested_environment_list] \
+                                         [list "Nested Environment: [lindex $one_nested_environment_list 0]" \
+                                              [lindex $one_nested_environment_list 1] \
+                                              [lindex $one_nested_environment_list 2] \
+                                              [lindex $one_nested_environment_list 3]]]
     }
-     
-    append environment_ul "\]"
-    return "$environment_ul"
+    return [list $environment_title $environment_learning_objects_list $environment_services_list $nested_environment_list]
 }
 
 ad_proc -public imsld::process_learning_objective {
@@ -568,7 +575,7 @@ ad_proc -public imsld::process_learning_objective {
     {-activity_item_id ""}
     {-community_id ""}
 } {
-    returns a list of the associated resources, files and environments referenced from the learning objective of the given activity or ims-ld
+    returns a list with the objective title and the associated resources, files and environments referenced from the learning objective of the given activity or ims-ld
 } {  
     set community_id [expr { [string eq "" $community_id] ? "[dotlrn_community::get_community_id]" : $community_id }]
     # Gets file-storage root folder_id
@@ -608,9 +615,7 @@ ad_proc -public imsld::process_learning_objective {
         where lo.item_id = :learning_objective_item_id
         and content_revision__is_live(lo.learning_objective_id) = 't'
     }
-
-    # learning object item. get the files associated
-    set objective_ul "$objective_title"
+    set objective_items_list [list]
 
     # get the items associated with the learning objective
     set linear_item_list [db_list item_linear_list {
@@ -622,7 +627,7 @@ ad_proc -public imsld::process_learning_objective {
         and cr.live_revision = ii.imsld_item_id
     }]
     foreach imsld_item_id $linear_item_list {
-        db_foreach env_nested_associated_items {
+        db_foreach lo_nested_associated_items {
             select cpr.resource_id,
             cpr.item_id as resource_item_id,
             cpr.type as resource_type
@@ -637,15 +642,15 @@ ad_proc -public imsld::process_learning_objective {
         } {
             set one_objective_urls "[imsld::process_resource -resource_item_id $resource_item_id]"
             if { [string eq "" $one_objective_urls] } {
-                append objective_ul "[_ imsld.lt_li_desc_no_file_assoc]"
+                lappend objective_items_list "[_ imsld.lt_li_desc_no_file_assoc]"
             } else {
-                append objective_ul "$one_objective_urls "
+                set objective_items_list [concat [list $objective_items_list] [list $one_objective_urls]]
             }
         } if_no_rows {
             ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
         }
     }
-    return "$objective_ul"
+    return [list $objective_title $objective_items_list]
 }
 
 ad_proc -public imsld::process_prerequisite {
@@ -694,8 +699,7 @@ ad_proc -public imsld::process_prerequisite {
         and content_revision__is_live(pre.prerequisite_id) = 't'
     }
 
-    # prerequisite item. get the files associated
-    set prerequisite_ul "$prerequisite_title"
+    set prerequisite_items_list [list]
 
     # get the items associated with the learning objective
     set linear_item_list [db_list item_linear_list {
@@ -707,7 +711,7 @@ ad_proc -public imsld::process_prerequisite {
         and cr.live_revision = ii.imsld_item_id
     }]
     foreach imsld_item_id $linear_item_list {
-        db_foreach env_nested_associated_items {
+        db_foreach prereq_nested_associated_items {
             select cpr.resource_id,
             cpr.item_id as resource_item_id,
             cpr.type as resource_type
@@ -722,15 +726,73 @@ ad_proc -public imsld::process_prerequisite {
         } {
             set one_prerequisite_urls "[imsld::process_resource -resource_item_id $resource_item_id]"
             if { [string eq "" $one_prerequisite_urls] } {
-                append prerequisite_ul "[_ imsld.lt_li_desc_no_file_assoc]"
+                lappend prerequisite_items_list "[_ imsld.lt_li_desc_no_file_assoc]"
             } else {
-                append prerequisite_ul "$one_prerequisite_urls "
+                set prerequisite_items_list [concat [list $prerequisite_items_list] [list $one_prerequisite_urls]]
             }
         } if_no_rows {
             ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
         }
     }
-    return "$prerequisite_ul"
+    return [list $prerequisite_title $prerequisite_items_list]
+}
+
+ad_proc -public imsld::process_feedback {
+    {-on_completion_item_id ""}
+    {-community_id ""}
+} {
+    returns a list with the feedback title and the associated resources, files and environments referenced from the on_completion element.
+} {  
+    set community_id [expr { [string eq "" $community_id] ? "[dotlrn_community::get_community_id]" : $community_id }]
+    # Gets file-storage root folder_id
+    set fs_package_id [site_node_apm_integration::get_child_package_id \
+                           -package_id [dotlrn_community::get_package_id $community_id] \
+                           -package_key "file-storage"]
+    set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
+    
+    set feedback_item_id ""
+
+    # get on completion info
+    db_1row feedback_info {
+        select coalesce(oc.feedback_title, oc.title) as feedback_title
+        from imsld_on_completioni oc
+        where oc.item_id = :on_completion_item_id
+        and content_revision__is_live(oc.on_completion_id) = 't'
+    }
+
+    set feedback_items_list [list]
+    # get the items associated with the feedback
+    set linear_item_list [db_list item_linear_list {
+        select ii.imsld_item_id
+        from imsld_items ii,
+        cr_items cr, acs_rels ar
+        where ar.object_id_one = :on_completion_item_id
+        and ar.object_id_two = cr.item_id
+        and cr.live_revision = ii.imsld_item_id
+    }]
+    foreach imsld_item_id $linear_item_list {
+        db_foreach feedback_nested_associated_items {
+            select cpr.resource_id,
+            cpr.item_id as resource_item_id,
+            cpr.type as resource_type
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
+            acs_rels ar
+            where ar.object_id_one = ii.item_id
+            and ar.object_id_two = cpr.item_id
+            and content_revision__is_live(cpr.resource_id) = 't'
+            and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                 and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                 or ii.imsld_item_id = :imsld_item_id)
+        } {
+            set one_feedback_urls [imsld::process_resource -resource_item_id $resource_item_id]
+            if { [string eq "" $one_feedback_urls] } {
+                lappend feedback_items_list "[_ imsld.lt_li_desc_no_file_assoc]"
+            } else {
+                set feedback_items_list [concat [list $feedback_items_list] [list $one_feedback_urls]]
+            }
+        }
+    }
+    return [list $feedback_title $feedback_items_list]
 }
 
 ad_proc -public imsld::process_resource { 
@@ -754,11 +816,28 @@ ad_proc -public imsld::process_resource {
     set files_lis ""
     switch $resource_type {
         forum {
+            # forums package call
             set forums_package_id [site_node_apm_integration::get_child_package_id \
                                    -package_id [dotlrn_community::get_package_id $community_id] \
                                    -package_key "forums"]
             set file_url "[apm_package_url_from_id $forums_package_id]forum-view?[ad_export_vars { { forum_id $acs_object_id } }]"
-            append files_lis "<a href=${file_url}> $identifier </a> "
+            set forum_title [db_exec_plsql get_froum_title {
+                select acs_object__name(:acs_object_id)
+            }]
+            append files_lis "<a href=${file_url} target=\"_blank\"> $forum_title </a> "
+        }
+        imsqti_xmlv1p0 {
+            # assessment package call
+            set assessment_package_id [site_node_apm_integration::get_child_package_id \
+                                           -package_id [dotlrn_community::get_package_id $community_id] \
+                                           -package_key "assessment"]
+            set file_url "[apm_package_url_from_id $assessment_package_id]assessment?[ad_export_vars { { assessment_id $acs_object_id } }]"
+            set assessment_title [db_string get_assessment_title {
+                select title from as_assessmentsi 
+                where item_id = :acs_object_id
+                and content_revision__is_live(assessment_id) = 't'
+            }]
+            append files_lis "<a href=${file_url} target=\"_blank\"> $assessment_title </a> "
         }
         webcontent -
         default {
@@ -790,11 +869,221 @@ ad_proc -public imsld::process_resource {
                     where fs.live_revision = :imsld_file_id
                 }]
                 set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
-                append files_lis "<a href=[export_vars -base $file_url]> $file_name </a> "
+                append files_lis "<a href=[export_vars -base $file_url] target=\"_blank\"> $file_name </a> "
             } 
         }
     }
     return $files_lis
+}
+
+ad_proc -public imsld::process_learning_activity { 
+    -activity_item_id:required
+    {-community_id ""}
+} {
+    @param 
+    @option user_id default [ad_conn user_id]
+    
+    @return The list (activity_name, list of associated urls) of the next activity for the user in the IMS-LD.
+} {
+    db_1row activity_info {
+        select on_completion_id as on_completion_item_id,
+        prerequisite_id as prerequisite_item_id,
+        learning_objective_id as learning_objective_item_id,
+        activity_id
+        from imsld_learning_activitiesi
+        where item_id = :activity_item_id
+        and content_revision__is_live(activity_id) = 't'
+    }
+
+    # get environments
+    set environments_list [list]
+    set associated_environments_list [db_list la_associated_environments {
+        select ar.object_id_two as environment_item_id
+        from acs_rels ar
+        where ar.object_id_one = :activity_item_id
+        and ar.rel_type = 'imsld_la_env_rel'
+        order by ar.object_id_two
+    }]
+    foreach environment_item_id $associated_environments_list {
+        if { [llength $environments_list] } {
+            set environments_list [concat [list $environments_list] \
+                                       [list [imsld::process_environment -environment_item_id $environment_item_id]]]
+        } else {
+            set environments_list [imsld::process_environment -environment_item_id $environment_item_id]
+        }
+    }
+
+    # prerequisites
+    set prerequisites_list [list]
+    if { ![string eq "" $prerequisite_item_id] } {
+        set prerequisites_list [imsld::process_prerequisite -activity_item_id $activity_item_id]
+    }
+    
+    # learning objectives
+    set objectives_list [list]
+    if { ![string eq "" $learning_objective_item_id] } {
+        set objectives_list [imsld::process_learning_objective -activity_item_id $activity_item_id]
+    }
+
+    set activity_items_list [list]
+    # get the items associated with the activity
+    set linear_item_list [db_list item_linear_list {
+        select ii.imsld_item_id
+        from imsld_items ii, imsld_activity_descs lad, imsld_learning_activitiesi la,
+        cr_items cr1, cr_items cr2,
+        acs_rels ar
+        where la.item_id = :activity_item_id
+        and la.activity_description_id = cr1.item_id
+        and cr1.live_revision = lad.description_id
+        and ar.object_id_one = la.activity_description_id
+        and ar.object_id_two = cr2.item_id
+        and cr2.live_revision = ii.imsld_item_id
+    }]
+    foreach imsld_item_id $linear_item_list {
+        db_foreach la_nested_associated_items {
+            select cpr.resource_id,
+            cpr.item_id as resource_item_id,
+            cpr.type as resource_type
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
+            acs_rels ar
+            where ar.object_id_one = ii.item_id
+            and ar.object_id_two = cpr.item_id
+            and content_revision__is_live(cpr.resource_id) = 't'
+            and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                 and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                 or ii.imsld_item_id = :imsld_item_id)
+        } {
+            set one_activity_urls "[imsld::process_resource -resource_item_id $resource_item_id]"
+            if { [string eq "" $one_activity_urls] } {
+                lappend activity_items_list "[_ imsld.lt_li_desc_no_file_assoc]"
+            } else {
+                set activity_items_list [concat [list $activity_items_list] [list $one_activity_urls]]
+            }
+        } if_no_rows {
+            ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
+        }
+    }
+
+    # feedback
+    set feedbacks_list [list]
+    if { ![string eq "" $on_completion_item_id] } {
+        set feedbacks_list [imsld::process_feedback -on_completion_item_id $on_completion_item_id]
+    }
+    return [list $prerequisites_list \
+                $objectives_list \
+                $environments_list \
+                $activity_items_list \
+                $feedbacks_list]
+}
+
+ad_proc -public imsld::process_support_activity { 
+    -activity_item_id:required
+    {-community_id ""}
+} {
+    @param activity_item_id
+    
+    @return The list of items (resources, feedback, environments) associated with the support activity
+} {
+    db_1row activity_info {
+        select on_completion_id as on_completion_item_id,
+        activity_id
+        from imsld_support_activitiesi
+        where item_id = :activity_item_id
+        and content_revision__is_live(activity_id) = 't'
+    }
+
+    # get environments
+    set environments_list [list]
+    set associated_environments_list [db_list sa_associated_environments {
+        select ar.object_id_two as environment_item_id
+        from acs_rels ar
+        where ar.object_id_one = :activity_item_id
+        and ar.rel_type = 'imsld_sa_env_rel'
+        order by ar.object_id_two
+    }]
+    foreach environment_item_id $associated_environments_list {
+        if { [llength $environments_list] } {
+            set environments_list [concat [list $environments_list] \
+                                       [list [imsld::process_environment -environment_item_id $environment_item_id]]]
+        } else {
+            set environments_list [imsld::process_environment -environment_item_id $environment_item_id]
+        }
+    }
+
+    set activity_items_list [list]
+    # get the items associated with the activity
+    set linear_item_list [db_list item_linear_list {
+        select ii.imsld_item_id
+        from imsld_items ii, imsld_activity_descs sad, imsld_support_activitiesi sa,
+        cr_items cr1, cr_items cr2,
+        acs_rels ar
+        where sa.item_id = :activity_item_id
+        and sa.activity_description_id = cr1.item_id
+        and cr1.live_revision = sad.description_id
+        and ar.object_id_one = sa.activity_description_id
+        and ar.object_id_two = cr2.item_id
+        and cr2.live_revision = ii.imsld_item_id
+    }]
+    foreach imsld_item_id $linear_item_list {
+        db_foreach sa_nested_associated_items {
+            select cpr.resource_id,
+            cpr.item_id as resource_item_id,
+            cpr.type as resource_type
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
+            acs_rels ar
+            where ar.object_id_one = ii.item_id
+            and ar.object_id_two = cpr.item_id
+            and content_revision__is_live(cpr.resource_id) = 't'
+            and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                 and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                 or ii.imsld_item_id = :imsld_item_id)
+        } {
+            set one_activity_urls "[imsld::process_resource -resource_item_id $resource_item_id]"
+            if { [string eq "" $one_activity_urls] } {
+                lappend activity_items_list "[_ imsld.lt_li_desc_no_file_assoc]"
+            } else {
+                set activity_items_list [concat [list $activity_items_list] [list $one_activity_urls]]
+            }
+        } if_no_rows {
+            ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
+        }
+    }
+
+    # feedback
+    set feedbacks_list [list]
+    if { ![string eq "" $on_completion_item_id] } {
+        set feedbacks_list [imsld::process_feedback -on_completion_item_id $on_completion_item_id]
+    }
+    return [list $environments_list \
+                $activity_items_list \
+                $feedbacks_list]
+}
+
+ad_proc -public imsld::process_activity_structure {
+    -structure_item_id:required
+} {
+    @param structure_item_id
+    
+    @return The list of items (environments) associated with the activity structure
+} {
+    # get environments
+    set environments_list [list]
+    set associated_environments_list [db_list sa_associated_environments {
+        select ar.object_id_two as environment_item_id
+        from acs_rels ar
+        where ar.object_id_one = :structure_item_id
+        and ar.rel_type = 'imsld_as_env_rel'
+        order by ar.object_id_two
+    }]
+    foreach environment_item_id $associated_environments_list {
+        if { [llength $environments_list] } {
+            set environments_list [concat [list $environments_list] \
+                                       [list [imsld::process_environment -environment_item_id $environment_item_id]]]
+        } else {
+            set environments_list [imsld::process_environment -environment_item_id $environment_item_id]
+        }
+    }
+    return [list $environments_list]
 }
 
 ad_proc -public imsld::next_activity { 
@@ -802,6 +1091,7 @@ ad_proc -public imsld::next_activity {
     {-user_id ""}
     {-community_id ""}
     -return_url
+    imsld_multirow
 } {
     @param imsld_item_id
     @option user_id default [ad_conn user_id]
@@ -810,17 +1100,40 @@ ad_proc -public imsld::next_activity {
     
     @return The list (activity_name, list of associated urls) of the next activity for the user in the IMS-LD.
 } {
+    template::multirow create imsld_multirow prerequisites objectives environments activities_titles activities_files feedbacks status
+    # environments
+    set environments_titles ""
+    set environments_files ""
+
     db_1row get_ismld_info {
         select imsld_id
         from imsld_imsldsi
         where item_id = :imsld_item_id
         and content_revision__is_live(imsld_id) = 't'
     }
-    set completed_activities ""
-    set first_p 0
-    set objectives_ul ""
-    set prerequisites_ul ""
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+   
+    # global prerequisites and learning objectives
+    set prerequisites_list [imsld::process_prerequisite -imsld_item_id $imsld_item_id]
+    set prerequisites ""
+    if { [llength $prerequisites_list] } {
+        set prerequisites "<ul>[lindex $prerequisites_list 0]"
+        append prerequisites "<li>[join [lindex $prerequisites_list 1] "</li><li>"]"
+        append prerequisites "</li></ul>"
+        regsub -all {<li>[ ]*</li>} $prerequisites "" prerequisites
+    }
+    set objectives_list [imsld::process_learning_objective -imsld_item_id $imsld_item_id]
+    set objectives ""
+    if { [llength $objectives_list] } {
+        set objectives "<ul>[lindex $objectives_list 0]"
+        append objectives "<li>[join [lindex $objectives_list 1] "</li><li>"]"
+        append objectives "</li></ul>"
+        regsub -all {<li>[ ]*</li>} $objectives "" objectives
+    }
+    if { [string length "${prerequisites}${objectives}"] } {
+        template::multirow append imsld_multirow $prerequisites $objectives {} {} {} {} {}
+    }
+    
     if { ![db_string get_last_entry {
         select count(*)
         from imsld_status_user
@@ -844,14 +1157,12 @@ ad_proc -public imsld::next_activity {
             and ia.sort_order = (select min(ia2.sort_order) from imsld_acts ia2 where ia2.play_id = cr1.item_id)
             and irp.sort_order = (select min(irp2.sort_order) from imsld_role_parts irp2 where irp2.act_id = cr2.item_id)
         }
-
-        set objectives_ul [imsld::process_learning_objective -imsld_item_id $imsld_item_id]
-        set prerequisites_ul [imsld::process_prerequisite -imsld_item_id $imsld_item_id]
     } else {
         # get the completed activities in order to display them
         # save the last one (the last role_part_id of the last completed activity) because we will use it latter
-        set completed_activities "[_ imsld.lt_ul_Completed_Activiti]"
-        db_foreach completed_activity {
+
+        # JOPEZ: need to split the db_foreach from the body because of db pools
+        foreach completed_activity [db_list_of_lists completed_activity {
             select stat.completed_id,
             stat.role_part_id,
             stat.type,
@@ -862,40 +1173,120 @@ ad_proc -public imsld::next_activity {
             and stat.user_id = :user_id
             and stat.role_part_id = rp.role_part_id
             order by stat.finished_date
-        } {
+        }] {
+            set completed_id [lindex $completed_activity 0]
+            set role_part_id [lindex $completed_activity 1]
+            set type [lindex $completed_activity 2]
+            set sort_order [lindex $completed_activity 3]
+            set act_id [lindex $completed_activity 4]
+            # environments
+            set environment_list [list]
+            set environments ""
             switch $type {
                 learning {
                     db_1row get_learning_activity_info {
-                        select coalesce(title,identifier) as activity_title
+                        select coalesce(title,identifier) as activity_title,
+                        item_id as activity_item_id
                         from imsld_learning_activitiesi
                         where activity_id = :completed_id
                     }
-                    append completed_activities "[_ imsld.li_activity_title_li]"
+                    set activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id]
+                    set prerequisites ""
+                    if { [llength [lindex $activities_list 0]] } {
+                        set prerequisites "<ul>[lindex [lindex $activities_list 0] 0]"
+                        append prerequisites "<li>[join [lindex [lindex $activities_list 0] 1] "</li><li>"]"
+                        append prerequisites "</li></ul>"
+                        regsub -all {<li>[ ]*</li>} $prerequisites "" prerequisites
+                    }
+                    set objectives ""
+                    if { [llength [lindex $activities_list 1]] } {
+                        set objectives "<ul>[lindex [lindex $activities_list 1] 0]"
+                        append objectives "<li>[join [lindex [lindex $activities_list 1] 1] "</li><li>"]"
+                        append objectives "</li></ul>"
+                        regsub -all {<li>[ ]*</li>} $objectives "" objectives
+                    }
+
+                    if { [llength [lindex $activities_list 2]] } {
+                        set environments "<ul>[lindex [lindex $activities_list 2] 0]"
+                        append environments "<li>[join [lindex [lindex $activities_list 2] 1] "</li><li>"]"
+                        append environments "</li><li>[join [lindex [lindex $activities_list 2] 2] "</li><li>"]"
+                        append environments "</li><li>[join [lindex [lindex $activities_list 2] 3] "</li><li>"]"
+                        append environments "</li></ul>"
+                        regsub -all {<li>[ ]*</li>} $environments "" environments
+                        #             foreach nested_environment {
+                        #                 append environments_files [expr { [llength [lindex [lindex $activities_list 2] 3]] ? [join [lindex [lindex $activities_list 2] 2] "<br />"] : "" }]
+                        #             }
+                    }
+
+                    set feedbacks ""
+                    if { [llength [lindex $activities_list 4]] } {
+                        set feedbacks "<ul>[lindex [lindex $activities_list 4] 0]"
+                        append feedbacks "<li>[join [lindex [lindex $activities_list 4] 1] "</li><li>"]"
+                        append feedbacks "</li></ul>"
+                        regsub -all {<li>[ ]*</li>} $feedbacks "" feedbacks
+                    }
+                    template::multirow append imsld_multirow $prerequisites \
+                        $objectives \
+                        $environments \
+                        $activity_title \
+                        [join [lindex $activities_list 3] "<br />"] \
+                        $feedbacks \
+                        finished
                 }
                 support {
                     db_1row get_support_activity_info {
-                        select coalesce(title,identifier) as activity_title
+                        select coalesce(title,identifier) as activity_title,
+                        item_id as activity_item_id
                         from imsld_support_activitiesi
                         where activity_id = :completed_id
                     }
-                    append completed_activities "[_ imsld.li_activity_title_li]"
+                    set activities_list [imsld::process_support_activity -activity_item_id $activity_item_id]
+
+                    if { [llength [lindex $activities_list 0]] } {
+                        set environments "<ul>[lindex [lindex $activities_list 0] 0]"
+                        append environments "<li>[join [lindex [lindex $activities_list 0] 1] "</li><li>"]"
+                        append environments "</li><li>[join [lindex [lindex $activities_list 0] 2] "</li><li>"]"
+                        append environments "</li><li>[join [lindex [lindex $activities_list 0] 3] "</li><li>"]"
+                        append environments "</li></ul>"
+                        regsub -all {<li>[ ]*</li>} $environments "" environments
+                    }
+
+                    set feedbacks ""
+                    if { [llength [lindex $activities_list 2]] } {
+                        set feedbacks "<ul>[lindex [lindex $activities_list 2] 0]"
+                        append feedbacks "<li>[join [lindex [lindex $activities_list 2] 1] "</li><li>"]"
+                        append feedbacks "</li></ul>"
+                        regsub -all {<li>[ ]*</li>} $feedbacks "" feedbacks
+                    }
+                    template::multirow append imsld_multirow {} \
+                        {} \
+                        $environments \
+                        $activity_title \
+                        [join [lindex $activities_list 1] "<br />"] \
+                        $feedbacks \
+                        finished
                 }
                 structure {
                     db_1row get_support_activity_info {
-                        select coalesce(title,identifier) as activity_title
+                        select coalesce(title,identifier) as activity_title,
+                        item_id as structure_item_id
                         from imsld_activity_structuresi
                         where structure_id = :completed_id
                     }
-                    append completed_activities "[_ imsld.li_activity_title_li]"
-                }
-                default {
-                    ad_return_error "[_ imsld.lt_Invalid_type_type_in_]" "[_ imsld.lt_Valid_types_are_learn]"
-                    ad_script_abort
+                    set structure_list [imsld::process_activity_structure -structure_item_id $structure_item_id]
+                    if { [llength [lindex $structure_list 0]] } {
+                        set environments "<ul>[lindex [lindex $structure_list 0] 0]"
+                        append environments "<li>[join [lindex [lindex $structure_list 0] 1] "</li><li>"]"
+                        append environments "</li><li>[join [lindex [lindex $structure_list 0] 2] "</li><li>"]"
+                        append environments "</li><li>[join [lindex [lindex $structure_list 0] 3] "</li><li>"]"
+                        append environments "</li></ul>"
+                        regsub -all {<li>[ ]*</li>} $environments "" environments
+                    }
+                    template::multirow append imsld_multirow {} {} $environments $activity_title {} {} finished
                 }
             }
         }
-        append completed_activities "</ul>"
-
+        
         # the last completed is now stored in completed_id, let's find out the next role_part_id that the user has to work on.
         # Procedure (knowing that the info of the last role_part are stored in the last iteration vars):
         # 0. check if all the activities referenced by the current role_part_id are finished
@@ -955,20 +1346,18 @@ ad_proc -public imsld::next_activity {
                         and rp.sort_order = (select min(irp2.sort_order) from imsld_role_parts irp2 where irp2.act_id = ia.item_id)
                     }] } {
                         # there is no more to search, we reached the end of the unit of learning
-                        return [list {} {} "[_ imsld.finished]" {} "$completed_activities" {}]
+                        template::multirow append imsld_multirow {} {} {} {} {} {} {IMS LD finished}
+                        return [template::multirow size imsld_multirow]
                     }
                 }
             }
         }
     }
-
     # find the next activity referenced by the role_part
     # (learning_activity, support_activity, activity_structure)  
     # 1. if it is a learning or support activity, no problem, find the associated files and return the lists
     # 2. if it is an activity structure we have verify which activities are already completed and return the next
     #    activity in the activity structure, handling the case when the next activity is also an activity structure
-
-    set environment_ul ""
 
     db_1row get_role_part_activity {
         select case
@@ -994,83 +1383,77 @@ ad_proc -public imsld::next_activity {
         where role_part_id = :role_part_id
     }
 
+    # environments
+    set environment_list [list]
+    set environments ""
+    # get the environments associated to the role_part
+    if { ![string eq "" $rp_environment_item_id] } {
+        set environment_list [concat [list $environment_list] [imsld::process_environment -environment_item_id $rp_environment_item_id]]
+    }
+    
     # activity structure
     if { [string eq $activity_type structure] } {
         # activity structure. we have to look for the next learning or support activity
-        set activity_list [imsld::structure_next_activity -activity_structure_id $activity_id -environment_ul $environment_ul]
+        set activity_list [imsld::structure_next_activity -activity_structure_id $activity_id -environment_list $environment_list]
         set activity_id [lindex $activity_list 0]
         set activity_type [lindex $activity_list 1]
-        append environment_ul [lindex $activity_list 2]
+        if { [llength $environment_list] } {
+            set environment_list [concat [list $environment_list] [lindex $activity_list 2]]
+        } else {
+            set environment_list [lindex $activity_list 2]
+        }
     }
-
+    if { [llength $environment_list] } {
+        set environments "<ul>[lindex $environment_list 0]"
+        append environments "<li>[join [lindex $environment_list 1] "</li><li>"]"
+        append environments "</li><li>[join [lindex $environment_list 2] "</li><li>"]"
+        append environments "</li><li>[join [lindex $environment_list 3] "</li><li>>"]"
+        append environments "</li></ul>"
+        regsub -all {<li>[ ]*</li>} $environments "" environments
+    }
+    
     # learning activity
     if { [string eq $activity_type learning] } {
         db_1row learning_activity {
             select la.activity_id,
             la.item_id as activity_item_id,
-            la.title,
+            la.title as activity_title,
             la.identifier,
             la.user_choice_p
             from imsld_learning_activitiesi la
             where la.activity_id = :activity_id
         }
-
-        # get environments
-        db_foreach la_associated_environments {
-            select ar.object_id_two as environment_item_id
-            from acs_rels ar
-            where ar.object_id_one = :activity_item_id
-            and ar.rel_type = 'imsld_la_env_rel'
-            order by ar.object_id_two
-        } {
-            append environment_ul [imsld::process_environment -environment_item_id $environment_item_id]
+        set activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id]
+        set prerequisites ""
+        if { [llength [lindex $activities_list 0]] } {
+            set prerequisites "<ul>[lindex [lindex $activities_list 0] 0]"
+            append prerequisites "<li>[join [lindex [lindex $activities_list 0] 1] "</li><li>"]"
+            append prerequisites "</li></ul>"
+            regsub -all {<li>[ ]*</li>} $prerequisites "" prerequisites
         }
-        append objectives_ul [imsld::process_learning_objective -activity_item_id $activity_item_id]
-        append prerequisites_ul [imsld::process_prerequisite -activity_item_id $activity_item_id]
-
-        # associated files of the activity description of the learning activity
-        set activity_name [expr { [string eq "" $title] ? $identifier : $title }]
-        set first_or_next [expr { $first_p ? "First" : "Next"}]
-        set activity_urls "[_ imsld.lt_ul_Next_Activity_acti] \[ <a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld>finish</a> \]"
-
-        # get the items associated with the activity
-        set linear_item_list [db_list item_linear_list {
-            select ii.imsld_item_id
-            from imsld_items ii, imsld_activity_descs lad, imsld_learning_activities la,
-            cr_items cr1, cr_items cr2,
-            acs_rels ar
-            where la.activity_id = :activity_id
-            and la.activity_description_id = cr1.item_id
-            and cr1.live_revision = lad.description_id
-            and ar.object_id_one = la.activity_description_id
-            and ar.object_id_two = cr2.item_id
-            and cr2.live_revision = ii.imsld_item_id
-        }]
-        foreach imsld_item_id $linear_item_list {
-            db_foreach la_nested_associated_items {
-                select cpr.resource_id,
-                cpr.item_id as resource_item_id,
-                cpr.type as resource_type
-                from imsld_cp_resourcesi cpr, imsld_itemsi ii,
-                acs_rels ar
-                where ar.object_id_one = ii.item_id
-                and ar.object_id_two = cpr.item_id
-                and content_revision__is_live(cpr.resource_id) = 't'
-                and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
-                     and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
-                     or ii.imsld_item_id = :imsld_item_id)
-            } {
-                set one_activity_urls "[imsld::process_resource -resource_item_id $resource_item_id]"
-                if { [string eq "" $one_activity_urls] } {
-                    append activity_urls "[_ imsld.lt_li_desc_no_file_assoc]"
-                } else {
-                    append activity_urls "<li>$one_activity_urls</li>"
-                }
-            } if_no_rows {
-                ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
-            }
+        set objectives ""
+        if { [llength [lindex $activities_list 1]] } {
+            set objectives "<ul>[lindex [lindex $activities_list 1] 0]"
+            append objectives "<li>[join [lindex [lindex $activities_list 1] 1] "</li><li>"]"
+            append objectives "</li></ul>"
+            regsub -all {<li>[ ]*</li>} $objectives "" objectives
         }
-        append activity_urls "</ul>" 
+        if { [llength [lindex $activities_list 2]] } {
+            set environments "<ul>[lindex [lindex $activities_list 2] 0]"
+            append environments "<li>[join [lindex [lindex $activities_list 2] 1] "</li><li>"]"
+            append environments "</li><li>[join [lindex [lindex $activities_list 2] 2] "</li><li>"]"
+            append environments "</li><li>[join [lindex [lindex $activities_list 2] 3] "</li><li>>"]"
+            append environments "</li></ul>"
+            regsub -all {<li>[ ]*</li>} $environments "" environments
+        }
+
+        template::multirow append imsld_multirow $prerequisites \
+            $objectives \
+            $environments \
+            $activity_title \
+            [join [lindex $activities_list 3] "<br />"] \
+            {} \
+            "<a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld>finish</a>"
     }
 
     # support activity
@@ -1078,74 +1461,32 @@ ad_proc -public imsld::next_activity {
         db_1row support_activity {
             select sa.activity_id,
             sa.item_id as activity_item_id,
-            sa.title,
+            sa.title as activity_title,
             sa.identifier,
             sa.user_choice_p
             from imsld_support_activitiesi sa
             where sa.activity_id = :activity_id
         }
-
-        # get the environments
-        db_foreach sa_associated_environments {
-            select ar.object_id_two as environment_item_id
-            from acs_rels ar
-            where ar.object_id_one = :activity_item_id
-            and ar.rel_type = 'imsld_sa_env_rel'
-            order by ar.object_id_two
-        } {
-            append environment_ul [imsld::process_environment -environment_item_id $environment_item_id]
+        set activities_list [imsld::process_support_activity -activity_item_id $activity_item_id]
+        
+        if { [llength [lindex $activities_list 0]] } {
+            set environments "<ul>[lindex [lindex $activities_list 0] 0]"
+            append environments "<li>[join [lindex [lindex $activities_list 0] 1] "</li><li>"]"
+            append environments "</li><li>[join [lindex [lindex $activities_list 0] 2] "</li><li>"]"
+            append environments "</li><li>[join [lindex [lindex $activities_list 0] 3] "</li><li>"]"
+            append environments "</li></ul>"
+            regsub -all {<li>[ ]*</li>} $environments "" environments
         }
         
-        # get the associated resources(files)
-        set activity_name [expr { [string eq "" $title] ? $identifier : $title }]
-        set first_or_next [expr { $first_p ? "First" : "Next"}]
-        set activity_urls "[_ imsld.lt_ul_Next_Activity_acti] \[ <a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-support.imsld>finish</a> \]"
-
-        # get the items associated with the activity
-        set linear_item_list [db_list_of_lists item_linear_list {
-            select ii.imsld_item_id
-            from imsld_items ii, imsld_activity_descs sad, imsld_support_activities sa,
-            cr_items cr1, cr_items cr2,
-            acs_rels ar
-            where sa.activity_id = :activity_id
-            and sa.activity_description_id = cr1.item_id
-            and cr1.live_revision = sad.description_id
-            and ar.object_id_one = sa.activity_description_id
-            and ar.object_id_two = cr2.item_id
-            and cr2.live_revision = ii.imsld_item_id
-        }]
-        foreach imsld_item_id $linear_item_list {
-            db_foreach la_nested_associated_items {
-                select cpr.resource_id,
-                cpr.item_id as resource_item_id,
-                cpr.type as resource_type
-                from imsld_cp_resourcesi cpr, imsld_itemsi ii,
-                acs_rels ar
-                where ar.object_id_one = ii.item_id
-                and ar.object_id_two = cpr.item_id
-                and content_revision__is_live(cpr.resource_id) = 't'
-                and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
-                     and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
-                     or ii.imsld_item_id = :imsld_item_id)
-            } {
-                set one_activity_urls "[imsld::process_resource -resource_item_id $resource_item_id]"
-                if { [string eq "" $one_activity_urls] } {
-                    append activity_urls "[_ imsld.lt_li_desc_no_file_assoc]"
-                } else {
-                    append activity_urls "<li>$one_activity_urls</li>"
-                }
-            } if_no_rows {
-                ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
-            }
-        }
-        append activity_urls "</ul>" 
-    } 
-
-    # get the environments associated to the role_part
-    if { ![string eq "" $rp_environment_item_id] } {
-        append environment_ul [imsld::process_environment -environment_item_id $rp_environment_item_id]
+        template::multirow append imsld_multirow {} \
+            {} \
+            $environments \
+            $activity_title \
+            [join [lindex $activities_list 1] "<br />"] \
+            {} \
+            "<a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-support.imsld>finish</a>"
     }
-    
+        
     # this should never happen, but in case the next activiy is already finished, let's throw an error
     # instead of not doing anything.
     if { [db_string verify_not_completed {
@@ -1157,7 +1498,7 @@ ad_proc -public imsld::next_activity {
     }
     
     # first parameter: activity name
-    return [list "$prerequisites_ul" "$objectives_ul" {} "$activity_urls" "$completed_activities" "$environment_ul"]
+    return [template::multirow size imsld_multirow]
 }
 
 ad_register_proc GET /finish-component-element* imsld::finish_component_element

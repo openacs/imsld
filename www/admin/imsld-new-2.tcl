@@ -69,12 +69,10 @@ if { [lindex $is_imsld_list 0] } {
     if { ![llength $organizations] } {
         set organizations [$manifest child all organizations]
     }
-    multirow append imsld_info "[_ imsld.lt_Number_of_Organizatio]" [llength $organizations]
     set imsld [$organizations child all imsld:learning-design]
     if { ![llength $imsld] } {
         set imsld [$organizations child all learning-design]
     }
-    multirow append imsld_info "[_ imsld.Number_of_IMD_LDs]" [llength $imsld]
     set imsld_title [imsld::parse::get_title -node $imsld -prefix imsld]
     set imsld_level [imsld::parse::get_attribute -node $imsld -attr_name level]
     set imsld_level [expr { [empty_string_p $imsld_level] ? "[_ imsld.Not_defined]" : $imsld_level }]
@@ -117,7 +115,7 @@ if { [lindex $is_imsld_list 0] } {
         set play_identifier [imsld::parse::get_attribute -node $play -attr_name identifier]
         set acts [$play child all imsld:act]
         imsld::parse::validate_multiplicity -tree $acts -multiplicity 0 -element_name acts -greather_than
-        multirow append imsld_info "[_ imsld.Acts_in_play_count]" [llength $acts]
+#        multirow append imsld_info "[_ imsld.Acts_in_play_count]" [llength $acts]
         incr count
     }
     

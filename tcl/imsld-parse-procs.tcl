@@ -980,7 +980,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_object {
             return $item_list
         }
         # map item with the learning_object
-            relation_add imsld_l_object_item_rel $learning_object_id $item_id
+        relation_add imsld_l_object_item_rel $learning_object_id $item_id
     } 
     return $learning_object_id
 }
@@ -1475,7 +1475,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                                       -attributes [list [list feedback_title $feedback_title]]]
             set feedback_items [$feedback_desc child all imsld:item]
             foreach feedback_item $feedback_items {
-                set item_list [imsld::parse_and_create_item -manifest $manifest \
+                set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                    -manifest_id $manifest_id \
                                    -item_node $feedback_item \
                                    -parent_id $parent_id \
@@ -1620,7 +1620,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                                       -attributes [list [list feedback_title $feedback_title]]]
             set feedback_items [$feedback_desc child all imsld:item]
             foreach feedback_item $feedback_items {
-                set item_list [imsld::parse_and_create_item -manifest $manifest \
+                set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                    -manifest_id $manifest_id \
                                    -item_node $feedback_item \
                                    -parent_id $parent_id \
@@ -2382,7 +2382,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
                                       -attributes [list [list feedback_title $feedback_title]]]
             set feedback_items [$feedback_desc child all imsld:item]
             foreach feedback_item $feedback_items {
-                set item_list [imsld::parse_and_create_item -manifest $manifest \
+                set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                    -manifest_id $manifest_id \
                                    -item_node $feedback_item \
                                    -parent_id $parent_id \
@@ -2518,7 +2518,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
                                       -attributes [list [list feedback_title $feedback_title]]]
             set feedback_items [$feedback_desc child all imsld:item]
             foreach feedback_item $feedback_items {
-                set item_list [imsld::parse_and_create_item -manifest $manifest \
+                set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                    -manifest_id $manifest_id \
                                    -item_node $feedback_item \
                                    -parent_id $parent_id \
@@ -2856,7 +2856,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                       -attributes [list [list feedback_title $feedback_title]]]
             set feedback_items [$feedback_desc child all imsld:item]
             foreach feedback_item $feedback_items {
-                set item_list [imsld::parse_and_create_item -manifest $manifest \
+                set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                    -manifest_id $manifest_id \
                                    -item_node $feedback_item \
                                    -parent_id $cr_folder_id \
