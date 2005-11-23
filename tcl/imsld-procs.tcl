@@ -168,14 +168,14 @@ ad_proc -public imsld::finish_component_element {
                 )
     }
 
-    if { [db_0or1row referenced_p {
+    db_foreach referencer_structure {
         select ias.structure_id,
         ias.item_id as structure_item_id
         from acs_rels ar, imsld_activity_structuresi ias, cr_items cri
         where ar.object_id_one = ias.item_id
         and ar.object_id_two = cri.item_id
         and cri.live_revision = :element_id
-    }] } {
+    } {
         # if this activity is part of an activity structure, let's check if the rest of referenced 
         # activities are finished too, so we can mark finished the activity structure as well
         set scturcture_finished_p 1
@@ -283,8 +283,8 @@ ad_proc -public imsld::structure_next_activity {
                     where item_id = :object_id_two
                     and content_revision__is_live(activity_id) = 't'
                 }
-                if { ![db_0or1row completed_p {
-                    select 1
+                if { ![db_string completed_p {
+                    select count(*)
                     from imsld_status_user
                     where completed_id = :learning_activity_id
                 }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
@@ -302,8 +302,8 @@ ad_proc -public imsld::structure_next_activity {
                     where item_id = :object_id_two
                     and content_revision__is_live(activity_id) = 't'
                 }
-                if { ![db_0or1row completed_p {
-                    select 1
+                if { ![db_string completed_p {
+                    select count(*)
                     from imsld_status_user
                     where completed_id = :support_activity_id
                 }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
@@ -322,8 +322,8 @@ ad_proc -public imsld::structure_next_activity {
                     and content_revision__is_live(structure_id) = 't'
                 }
 
-                if { ![db_0or1row completed_p { 
-                    select 1 
+                if { ![db_string completed_p { 
+                    select count(*)
                     from imsld_status_user 
                     where completed_id = :structure_id
                 }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
@@ -869,7 +869,7 @@ ad_proc -public imsld::process_resource {
                     where fs.live_revision = :imsld_file_id
                 }]
                 set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
-                append files_lis "<a href=[export_vars -base $file_url] target=\"_blank\"> $file_name </a> "
+                append files_lis "<a href=[export_vars -base $file_url] target=\"_blank\"> $file_name </a>"
             } 
         }
     }
@@ -957,7 +957,11 @@ ad_proc -public imsld::process_learning_activity {
             if { [string eq "" $one_activity_urls] } {
                 lappend activity_items_list "[_ imsld.lt_li_desc_no_file_assoc]"
             } else {
-                set activity_items_list [concat [list $activity_items_list] [list $one_activity_urls]]
+                if { [llength $activity_items_list] } {
+                    set activity_items_list [concat $activity_items_list [list $one_activity_urls]]
+                } else {
+                    set activity_items_list [list $one_activity_urls]
+                }
             }
         } if_no_rows {
             ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
@@ -1042,7 +1046,11 @@ ad_proc -public imsld::process_support_activity {
             if { [string eq "" $one_activity_urls] } {
                 lappend activity_items_list "[_ imsld.lt_li_desc_no_file_assoc]"
             } else {
-                set activity_items_list [concat [list $activity_items_list] [list $one_activity_urls]]
+                if { [llength $activity_items_list] } {
+                    set activity_items_list [concat $activity_items_list [list $one_activity_urls]]
+                } else {
+                    set activity_items_list [list $one_activity_urls]
+                }
             }
         } if_no_rows {
             ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
@@ -1446,12 +1454,17 @@ ad_proc -public imsld::next_activity {
             append environments "</li></ul>"
             regsub -all {<li>[ ]*</li>} $environments "" environments
         }
+        set files ""
+        if { [llength [lindex $activities_list 3]] } {
+            set files "[join [lindex $activities_list 3] "<br />"]"
+            regsub -all {<li>[ ]*</li>} $files "" files
+        }
 
         template::multirow append imsld_multirow $prerequisites \
             $objectives \
             $environments \
             $activity_title \
-            [join [lindex $activities_list 3] "<br />"] \
+            $files \
             {} \
             "<a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld>finish</a>"
     }

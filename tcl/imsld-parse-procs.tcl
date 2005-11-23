@@ -502,80 +502,88 @@ ad_proc -public imsld::parse::parse_and_create_resource {
     @tmp_dir Temporary directory where the files were exctracted
 } {
     upvar files_struct_list files_struct_list
-    # now we proceed to get all the info of the resource
-    set resource_type [imsld::parse::get_attribute -node $resource_node -attr_name type]
-    set resource_href [imsld::parse::get_attribute -node $resource_node -attr_name href]
+    # verify that the resource hasn't been already created
     set resource_identifier [string tolower [imsld::parse::get_attribute -node $resource_node -attr_name identifier]]
-    set community_id [dotlrn_community::get_community_id]
-
-    set acs_object_id [callback -catch imsld::import -res_type $resource_type -res_href $resource_href -tmp_dir $tmp_dir -community_id $community_id]
-    # Integration with other packages
-    # This callback gets the href of the imported content (if some package imported it)
-
-    set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
-                         -identifier $resource_identifier \
-                         -type $resource_type \
-                         -href $resource_href \
-                         -acs_object_id $acs_object_id \
-                         -parent_id $parent_id]
-    
-    set found_p 0
-    set filex_list [$resource_node child all imscp:file]
-    if { ![llength $filex_list] } {
-        set filex_list [$resource_node child all file]
-    }
-    foreach filex $filex_list {
-        set filex_href [imsld::parse::get_attribute -node $filex -attr_name href]
-        if { ![empty_string_p $resource_href] && [string eq $resource_href $filex_href] } {
-            # check if the referenced file in the resource exists
-            # if we finish with the files and the referenced one doesn't exist we raise an error
-            set found_p 1
+    if { ![db_0or1row redundancy_protection {
+        select resource_id 
+        from imsld_cp_resources
+        where identifier = :resource_identifier
+        and manifest_id = :manifest_id
+    }] } {
+        # now we proceed to get all the info of the resource
+        set resource_type [imsld::parse::get_attribute -node $resource_node -attr_name type]
+        set resource_href [imsld::parse::get_attribute -node $resource_node -attr_name href]
+        set community_id [dotlrn_community::get_community_id]
+        
+        set acs_object_id [callback -catch imsld::import -res_type $resource_type -res_href $resource_href -tmp_dir $tmp_dir -community_id $community_id]
+        # Integration with other packages
+        # This callback gets the href of the imported content (if some package imported it)
+        
+        set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
+                             -identifier $resource_identifier \
+                             -type $resource_type \
+                             -href $resource_href \
+                             -acs_object_id $acs_object_id \
+                             -parent_id $parent_id]
+        
+        set found_p 0
+        set filex_list [$resource_node child all imscp:file]
+        if { ![llength $filex_list] } {
+            set filex_list [$resource_node child all file]
         }
-        set filex_id [imsld::fs::file_new -href $filex_href \
-                          -path_to_file $filex_href \
-                          -type file \
-                          -complete_path "${tmp_dir}/${filex_href}"]
-        if { !$filex_id } {
-            # an error ocurred when creating the file
-            return [list 0 "[_ imsld.lt_The_file_filex_href_w]"]
-        }
-        # map resource with file
-        relation_add imsld_res_files_rel $resource_id $filex_id
-    }
-    
-    if { ![empty_string_p $resource_href] && !$found_p } {
-        # we should have fond the referenced file, aborting
-        return [list 0 "[_ imsld.lt_The_resource_resource]"]
-    }
-
-    set resource_dependencies [$resource_node child all imscp:dependency]
-    if { ![llength $resource_dependencies] } {
-        set resource_dependencies [$resource_node child all dependency]
-    }
-    foreach dependency $resource_dependencies {
-        set dependency_identifierref [imsld::parse::get_attribute -node $dependency -attr_name identifierref]
-        set dependency_id [imsld::cp::dependency_new -resource_id $resource_id \
-                               -identifierref $dependency]
-        # look for the resource in the manifest and add it to the CR
-        set resources [$manifest child all imscp:resources]
-        if { ![llength $resources] } {
-            set imsld [$manifest child all resources]
+        foreach filex $filex_list {
+            set filex_href [imsld::parse::get_attribute -node $filex -attr_name href]
+            if { ![empty_string_p $resource_href] && [string eq $resource_href $filex_href] } {
+                # check if the referenced file in the resource exists
+                # if we finish with the files and the referenced one doesn't exist we raise an error
+                set found_p 1
+            }
+            set filex_id [imsld::fs::file_new -href $filex_href \
+                              -path_to_file $filex_href \
+                              -type file \
+                              -complete_path "${tmp_dir}/${filex_href}"]
+            if { !$filex_id } {
+                # an error ocurred when creating the file
+                return [list 0 "[_ imsld.lt_The_file_filex_href_w]"]
+            }
+            # map resource with file
+            relation_add imsld_res_files_rel $resource_id $filex_id
         }
         
-        # there must be at least one reource for the learning objective
-        imsld::parse::validate_multiplicity -tree $resources -multiplicity 0 -element_name "resources (dependency)" -greather_than
-
-        set resourcex [$resources find identifier $dependency_identifierref]
-        # this resourcex must match with exactly one resource
-        imsld::parse::validate_multiplicity -tree $resourcex -multiplicity 1 -element_name "resource ($dependency_identifierref) en $resourcex" -equal
-        set dependency_resource_list [imsld::parse::parse_and_create_resource -resource_node $resourcex \
-                                          -manifest $manifest \
-                                          -manifest_id $manifest_id \
-                                          -parent_id $parent_id \
-                                          -tmp_dir $tmp_dir]
-        if { ![lindex $dependency_resource_list 0] } {
-            # return this value and let the user know there was an error (becuase if succeded, it does nothing here)
-            return $dependency_resource_list
+        if { ![empty_string_p $resource_href] && !$found_p } {
+            # we should have fond the referenced file, aborting
+            return [list 0 "[_ imsld.lt_The_resource_resource]"]
+        }
+        
+        set resource_dependencies [$resource_node child all imscp:dependency]
+        if { ![llength $resource_dependencies] } {
+            set resource_dependencies [$resource_node child all dependency]
+        }
+        foreach dependency $resource_dependencies {
+            set dependency_identifierref [imsld::parse::get_attribute -node $dependency -attr_name identifierref]
+            set dependency_id [imsld::cp::dependency_new -resource_id $resource_id \
+                                   -identifierref $dependency]
+            # look for the resource in the manifest and add it to the CR
+            set resources [$manifest child all imscp:resources]
+            if { ![llength $resources] } {
+                set imsld [$manifest child all resources]
+            }
+            
+            # there must be at least one reource for the learning objective
+            imsld::parse::validate_multiplicity -tree $resources -multiplicity 0 -element_name "resources (dependency)" -greather_than
+            
+            set resourcex [$resources find identifier $dependency_identifierref]
+            # this resourcex must match with exactly one resource
+            imsld::parse::validate_multiplicity -tree $resourcex -multiplicity 1 -element_name "resource ($dependency_identifierref) en $resourcex" -equal
+            set dependency_resource_list [imsld::parse::parse_and_create_resource -resource_node $resourcex \
+                                              -manifest $manifest \
+                                              -manifest_id $manifest_id \
+                                              -parent_id $parent_id \
+                                              -tmp_dir $tmp_dir]
+            if { ![lindex $dependency_resource_list 0] } {
+                # return this value and let the user know there was an error (becuase if succeded, it does nothing here)
+                return $dependency_resource_list
+            }
         }
     }
     return [list $resource_id {}]
@@ -2918,6 +2926,36 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
             }
             # found, map the play (with the imsld_mp_completed_rel) with the method
             relation_add imsld_mp_completed_rel $method_id $play_id
+        }
+    }
+
+    # look for the resource in the manifest and add it to the CR
+    set manifest_resources_list [$manifest child all imscp:resources]
+    if { ![llength $manifest_resources_list] } {
+        set manifest_resources_list [$manifest child all resources]
+    }
+    set resources_list [$manifest_resources_list child all imscp:resource]
+    if { ![llength $resources_list] } {
+        set resources_list [$manifest_resources_list child all resource]
+    }
+
+    foreach resource_left $resources_list {
+        set resource_identifier [string tolower [imsld::parse::get_attribute -node $resource_left -attr_name identifier]]
+        # the resource can't be duplicated
+        if { ![db_0or1row already_created_p {
+            select 1 from imsld_cp_resources where identifier = :resource_identifier and manifest_id = :manifest_id
+        }] } {
+            imsld::parse::validate_multiplicity -tree $resource_left -multiplicity 1 -element_name "resources (cp resources)" -equal
+            set resource_list [imsld::parse::parse_and_create_resource -resource_node $resource_left \
+                                   -manifest $manifest \
+                                   -manifest_id $manifest_id \
+                                   -parent_id $cr_folder_id \
+                                   -tmp_dir $tmp_dir]
+            set resource_id [lindex $resource_list 0]
+            if { !$resource_id } {
+                # return the error
+                return $resource_list
+            }
         }
     }
     
