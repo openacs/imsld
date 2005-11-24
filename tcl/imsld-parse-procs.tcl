@@ -1260,6 +1260,7 @@ ad_proc -public imsld::parse::parse_and_create_environment {
     set environment_id [imsld::item_revision_new -attributes [list [list component_id $component_id] \
                                                                 [list identifier $identifier]] \
                             -content_type imsld_environment \
+                            -title $title \
                             -parent_id $parent_id]
 
     # environment: learning object
