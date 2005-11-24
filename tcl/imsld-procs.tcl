@@ -486,7 +486,7 @@ ad_proc -public imsld::process_environment {
 
     # get environment info
     db_1row environment_info {
-        select env.identifier as environment_title,
+        select coalesce(env.title,env.identifier) as environment_title,
         env.environment_id
         from imsld_environmentsi env
         where env.item_id = :environment_item_id
