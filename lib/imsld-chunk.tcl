@@ -18,11 +18,8 @@ lappend elements environments \
     [list label "Environments" \
          display_template "@imsld_multirow.environments;noquote@"]
 lappend elements activity_title \
-    [list label "Activity" \
-         display_template "@imsld_multirow.activities_titles;noquote@"]
-lappend elements activity_files \
-    [list label "" \
-         display_template "@imsld_multirow.activities_files;noquote@"]
+    [list label "Activities" \
+         display_template "@imsld_multirow.activities;noquote@"]
 lappend elements feedbacks \
     [list label "Feedback" \
          display_template "@imsld_multirow.feedbacks;noquote@"]

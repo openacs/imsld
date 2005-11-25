@@ -147,7 +147,6 @@ ad_proc -public imsld::finish_component_element {
 
     This function is called from a url, but it can also be called recursively
 } {
-
     if { !$recursive_call_p } {
         # get the url for parse it and get the info
         set url [ns_conn url]
@@ -1108,7 +1107,7 @@ ad_proc -public imsld::next_activity {
     
     @return The list (activity_name, list of associated urls) of the next activity for the user in the IMS-LD.
 } {
-    template::multirow create imsld_multirow prerequisites objectives environments activities_titles activities_files feedbacks status
+    template::multirow create imsld_multirow prerequisites objectives environments activities feedbacks status
     # environments
     set environments_titles ""
     set environments_files ""
@@ -1139,7 +1138,7 @@ ad_proc -public imsld::next_activity {
         regsub -all {<li>[ ]*</li>} $objectives "" objectives
     }
     if { [string length "${prerequisites}${objectives}"] } {
-        template::multirow append imsld_multirow $prerequisites $objectives {} {} {} {} {}
+        template::multirow append imsld_multirow $prerequisites $objectives {} {} {} {}
     }
     
     if { ![db_string get_last_entry {
@@ -1225,6 +1224,8 @@ ad_proc -public imsld::next_activity {
                         #                 append environments_files [expr { [llength [lindex [lindex $activities_list 2] 3]] ? [join [lindex [lindex $activities_list 2] 2] "<br />"] : "" }]
                         #             }
                     }
+                    
+                    set activities "$activity_title <br /> [join [lindex $activities_list 3] "<br />"]"
 
                     set feedbacks ""
                     if { [llength [lindex $activities_list 4]] } {
@@ -1236,8 +1237,7 @@ ad_proc -public imsld::next_activity {
                     template::multirow append imsld_multirow $prerequisites \
                         $objectives \
                         $environments \
-                        $activity_title \
-                        [join [lindex $activities_list 3] "<br />"] \
+                        $activities \
                         $feedbacks \
                         finished
                 }
@@ -1259,6 +1259,8 @@ ad_proc -public imsld::next_activity {
                         regsub -all {<li>[ ]*</li>} $environments "" environments
                     }
 
+                    set activities "$activity_title <br /> [join [lindex $activities_list 1] "<br />"]"
+
                     set feedbacks ""
                     if { [llength [lindex $activities_list 2]] } {
                         set feedbacks "<ul>[lindex [lindex $activities_list 2] 0]"
@@ -1269,8 +1271,7 @@ ad_proc -public imsld::next_activity {
                     template::multirow append imsld_multirow {} \
                         {} \
                         $environments \
-                        $activity_title \
-                        [join [lindex $activities_list 1] "<br />"] \
+                        $activities \
                         $feedbacks \
                         finished
                 }
@@ -1290,7 +1291,7 @@ ad_proc -public imsld::next_activity {
                         append environments "</li></ul>"
                         regsub -all {<li>[ ]*</li>} $environments "" environments
                     }
-                    template::multirow append imsld_multirow {} {} $environments $activity_title {} {} finished
+                    template::multirow append imsld_multirow {} {} $environments $activity_title {} finished
                 }
             }
         }
@@ -1354,7 +1355,7 @@ ad_proc -public imsld::next_activity {
                         and rp.sort_order = (select min(irp2.sort_order) from imsld_role_parts irp2 where irp2.act_id = ia.item_id)
                     }] } {
                         # there is no more to search, we reached the end of the unit of learning
-                        template::multirow append imsld_multirow {} {} {} {} {} {} {IMS LD finished}
+                        template::multirow append imsld_multirow {} {} {} {} {} {IMS LD finished}
                         return [template::multirow size imsld_multirow]
                     }
                 }
@@ -1455,16 +1456,16 @@ ad_proc -public imsld::next_activity {
             regsub -all {<li>[ ]*</li>} $environments "" environments
         }
         set files ""
-        if { [llength [lindex $activities_list 3]] } {
-            set files "[join [lindex $activities_list 3] "<br />"]"
-            regsub -all {<li>[ ]*</li>} $files "" files
-        }
+        set activities "$activity_title <br /> [join [lindex $activities_list 3] "<br />"]"
+#         if { [llength [lindex $activities_list 3]] } {
+#             set files "[join [lindex $activities_list 3] "<br />"]"
+#             regsub -all {<li>[ ]*</li>} $files "" files
+#         }
 
         template::multirow append imsld_multirow $prerequisites \
             $objectives \
             $environments \
-            $activity_title \
-            $files \
+            $activities \
             {} \
             "<a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld>finish</a>"
     }
@@ -1490,12 +1491,13 @@ ad_proc -public imsld::next_activity {
             append environments "</li></ul>"
             regsub -all {<li>[ ]*</li>} $environments "" environments
         }
+
+        set activities "$activity_title <br /> [join [lindex $activities_list 1] "<br />"]"
         
         template::multirow append imsld_multirow {} \
             {} \
             $environments \
-            $activity_title \
-            [join [lindex $activities_list 1] "<br />"] \
+            $activities \
             {} \
             "<a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-support.imsld>finish</a>"
     }
