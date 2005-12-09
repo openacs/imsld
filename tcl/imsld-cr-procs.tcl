@@ -127,3 +127,18 @@ ad_proc -public imsld::cr::file_new {
     
     return $item_id
 }
+
+ad_proc -public imsld::cr::get_root_folder {
+    {-community_id ""}
+} {
+    @option community_id community_id. Default value is [dotlrn_community::get_community_id]
+} {
+    set community_id [expr { [string eq "" $community_id] ? [dotlrn_community::get_community_id] : $community_id }]
+
+    set folder_id [content::item::get_id -item_path "imsld_root_cr_folder_${community_id}" -resolve_index f]
+    if { [string eq "" $folder_id] } {
+        ad_return_error "<#_ No parent folder found #>" "<#_ No parent folder found for the ims-ld in the community %community_id%. Please report this error to the administrator. #>"
+        ad_script_abort
+    }
+    return $folder_id
+}

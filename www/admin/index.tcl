@@ -59,21 +59,20 @@ if {[string equal $orderby ""]} {
 }
 
 set community_id [dotlrn_community::get_community_id]
+set cr_root_folder_id [imsld::cr::ger_root_folder -community_id $community_id]
 
 db_multirow  -extend { delete_template } imslds  get_imslds {
-    select imsld.imsld_id,
-    coalesce(imsld.title, imsld.identifier) as imsld_title,
-    cr3.item_id,
-    cr3.live_revision
-    from acs_rels ar, cr_items cr1, cr_items cr2, cr_items cr3, imsld_cp_manifests icm, imsld_cp_organizations ico, imsld_imsldsi imsld 
-    where ar.object_id_one = :community_id
-    and ar.rel_type = 'imsld_community_manifest_rel'
-    and ar.object_id_two = cr1.item_id
-    and cr1.live_revision = icm.manifest_id
+    select cr3.item_id as imsld_id,
+    coalesce(imsld.title, imsld.identifier) as imsld_title
+    from cr_items cr1, cr_items cr2, cr_items cr3, cr_items cr4,
+    imsld_cp_manifests icm, imsld_cp_organizations ico, imsld_imsldsi imsld 
+    where cr1.live_revision = icm.manifest_id
+    and cr1.parent_id = cr4.item_id
+    and cr4.parent_id = :cr_root_folder_id
     and ico.manifest_id = cr1.item_id
     and imsld.organization_id = cr2.item_id
     and cr2.live_revision = ico.organization_id
-    and cr3.item_id = imsld.item_id
+    and cr3.live_revision = imsld.imsld_id
 } {
     if { [empty_string_p $live_revision] } {
         set delete_template "<span style=\"font-style: italic; color: red; font-size: 9pt;\">Deleted</span> <a href=[export_vars -base "index" { {set_imsld_id_live $item_id} }]>Make it live</a>"

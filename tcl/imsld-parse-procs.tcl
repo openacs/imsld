@@ -375,7 +375,7 @@ ad_proc -public imsld::parse::initialize_folders {
     Initializes the cr folders where all the cr items of the manifest will be stored in, and sets the respective permissions. There are two folders for each imsld. One to store the files and show them in the fs, and the other to store the items..
     It won't create the files in the cr since not every file will be handled by the cr (some files may be handled by other packages).
 
-    Returns a list of two elements, the firs one is the folder_id in the fs of the root folder for that manifest, and the ohter one is the folder_id where the cr items and revisions are stored.
+    Returns a list of two elements, the first one is the folder_id in the fs of the root folder for that manifest, and the ohter one is the folder_id where the cr items and revisions are stored.
     
     @param community_id The community_id that owns the folder.
     @option manifest_identifier The identifier of the manifest that is being parsed uset to create the label of the fs folder.
@@ -396,24 +396,24 @@ ad_proc -public imsld::parse::initialize_folders {
                            -package_id [dotlrn_community::get_package_id $community_id] \
                            -package_key "file-storage"]
     
-    set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
-    
+    set fs_root_folder_id [fs::get_root_folder -package_id $fs_package_id]
+    set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
 
-    set fs_folder_id [content::item::get_id -item_path "manifest_${manifest_id}" -root_folder_id $root_folder_id -resolve_index f] 
-    set cr_folder_id [content::item::get_id -item_path "cr_manifest_${manifest_id}" -resolve_index f] 
+    set fs_folder_id [content::item::get_id -item_path "manifest_${manifest_id}" -root_folder_id $fs_root_folder_id -resolve_index f] 
+    set cr_folder_id [content::item::get_id -item_path "cr_manifest_${manifest_id}" -root_folder_id $cr_root_folder_id -resolve_index f] 
 
     if { [empty_string_p $fs_folder_id] } {
         db_transaction {
             set folder_name "manifest_${manifest_id}"
 
             # checks for write permission on the parent folder
-            if { ![empty_string_p $root_folder_id] } {
-                ad_require_permission $root_folder_id write
+            if { ![empty_string_p $fs_root_folder_id] } {
+                ad_require_permission $fs_root_folder_id write
             }
 
             # create the root cr dir
 
-            set fs_folder_id [imsld::cr::folder_new -parent_id $root_folder_id -folder_name $folder_name -folder_label $folder_label]
+            set fs_folder_id [imsld::cr::folder_new -parent_id $fs_root_folder_id -folder_name $folder_name -folder_label $folder_label]
 
             # PERMISSIONS FOR FILE-STORAGE
 
@@ -452,7 +452,7 @@ ad_proc -public imsld::parse::initialize_folders {
         set folder_label "cr_${folder_label}"
         set folder_name "cr_manifest_${manifest_id}"
         # create the cr dir
-        set cr_folder_id [imsld::cr::folder_new -folder_name $folder_name -folder_label $folder_label]
+        set cr_folder_id [imsld::cr::folder_new -folder_name $folder_name -folder_label $folder_label -parent_id $cr_root_folder_id]
         
         # register content types
         content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_learning_object
@@ -562,7 +562,8 @@ ad_proc -public imsld::parse::parse_and_create_resource {
         foreach dependency $resource_dependencies {
             set dependency_identifierref [imsld::parse::get_attribute -node $dependency -attr_name identifierref]
             set dependency_id [imsld::cp::dependency_new -resource_id $resource_id \
-                                   -identifierref $dependency]
+                                   -identifierref $dependency \
+                                   -parent_id $parent_id]
             # look for the resource in the manifest and add it to the CR
             set resources [$manifest child all imscp:resources]
             if { ![llength $resources] } {
@@ -2630,16 +2631,13 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                          -version $manifest_version \
                          -parent_id $cr_folder_id]
 
-    # map manifest with the community
-    relation_add imsld_community_manifest_rel $community_id $manifest_id
-
     # organizaiton
     set organizations [$manifest child all imscp:organizations]
     if { ![llength $organizations] } {
         set organizations [$manifest child all organizations]
     }
     imsld::parse::validate_multiplicity -tree $organizations -multiplicity 1 -element_name organizations -equal
-    set organization_id [imsld::cp::organization_new -manifest_id $manifest_id]
+    set organization_id [imsld::cp::organization_new -manifest_id $manifest_id -parent_id $cr_folder_id]
 
     # IMS-LD
     set imsld [$organizations child all imsld:learning-design]

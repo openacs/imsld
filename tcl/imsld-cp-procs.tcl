@@ -105,9 +105,9 @@ ad_proc -public imsld::cp::organization_new {
     set package_id [expr { [empty_string_p $package_id] ? [ad_conn package_id] : $package_id }]
     set item_id [expr { [empty_string_p $item_id] ? [db_nextval "acs_object_id_seq"] : $item_id }]
 
-    if { [empty_string_p $parent_id] } {
+    if { [string eq "" $parent_id] } {
         set parent_id [content::item::get_id -item_path "cr_manifest_${manifest_id}" -resolve_index f] 
-        if { [empty_string_p $parent_id] } {
+        if { [string eq "" $parent_id] } {
             return -code error "IMSLD::imsld::cp::organization_new: No parent folder for organization $item_id"
         }
     }
