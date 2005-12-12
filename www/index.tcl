@@ -5,7 +5,7 @@ set page_title index
 set context {}
 set community_id [dotlrn_community::get_community_id]
 
-set cr_root_folder_id [imsld::cr::ger_root_folder -community_id $community_id]
+set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
 
 db_multirow imslds_in_class get_manifests {
     select cr3.item_id as imsld_id,
