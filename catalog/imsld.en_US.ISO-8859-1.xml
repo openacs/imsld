@@ -120,7 +120,7 @@
   <msg key="lt_Referenced_activity_s_1">Referenced activity structure (%activity_structure_ref_ref%) in role part %identifier% does not exist.</msg>
   <msg key="lt_Referenced_activity_s_2">Referenced activity structure %activity_structure_ref_ref% in role part %identifier% is actually an support activity.</msg>
   <msg key="lt_Referenced_activity_s_3">Referenced activity structure %activity_structure_ref_ref% in role part %identifier% is actually a learning activity.</msg>
-  <msg key="lt_Referenced_environmen">Referenced environment %referenced_identifier% does not exist</msg>
+  <msg key="lt_Referenced_environmen">Referenced environment %referenced_identifier% (referenced from environment %identifier%) does not exist</msg>
   <msg key="lt_Referenced_environmen_1">Referenced environment (%environment_ref%) in learning activity does not exist.</msg>
   <msg key="lt_Referenced_environmen_2">Referenced environment (%environment_ref%) in support activity does not exist.</msg>
   <msg key="lt_Referenced_environmen_3">Referenced environment (%environment_ref%) in activity structure %identifier% does not exist.</msg>

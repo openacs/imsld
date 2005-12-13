@@ -457,7 +457,7 @@ ad_proc -public imsld::process_service {
                 if { [string eq "" $one_service_url] } {
                     lappend services_list "[_ imsld.lt_li_desc_no_file_assoc]"
                 } else {
-                    set services_list [concat [list $services_list] [list $one_service_url]]
+                    set services_list [expr { [llength $services_list] ? [concat [list $services_list] [list $one_service_url]] : $one_service_url }]
                 }
             } if_no_rows {
                 ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
@@ -560,9 +560,9 @@ ad_proc -public imsld::process_environment {
         and ar.rel_type = 'imsld_env_env_rel'
     } {
         set one_nested_environment_list [imsld::process_environment -environment_item_id $nested_environment_item_id]
+        # the title is stored in [lindex $one_nested_environment_list 0], but is not returned for displaying porpouses
         set nested_environment_list [concat [list $nested_environment_list] \
-                                         [list "Nested Environment: [lindex $one_nested_environment_list 0]" \
-                                              [lindex $one_nested_environment_list 1] \
+                                         [list [lindex $one_nested_environment_list 1] \
                                               [lindex $one_nested_environment_list 2] \
                                               [lindex $one_nested_environment_list 3]]]
     }
@@ -608,7 +608,7 @@ ad_proc -public imsld::process_learning_objective {
 
     # get learning object info
     db_1row objective_info {
-        select coalesce(lo.pretty_title, lo.title) as objective_title,
+        select coalesce(lo.pretty_title, '') as objective_title,
         lo.learning_objective_id
         from imsld_learning_objectivesi lo
         where lo.item_id = :learning_objective_item_id
@@ -691,7 +691,7 @@ ad_proc -public imsld::process_prerequisite {
 
     # get prerequisite info
     db_1row prerequisite_info {
-        select coalesce(pre.pretty_title, pre.title) as prerequisite_title,
+        select coalesce(pre.pretty_title, '') as prerequisite_title,
         pre.prerequisite_id
         from imsld_prerequisitesi pre
         where pre.item_id = :prerequisite_item_id
@@ -845,6 +845,7 @@ ad_proc -public imsld::process_resource {
                                    -package_id [dotlrn_community::get_package_id $community_id] \
                                    -package_key "file-storage"]
             set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
+            # get associated files
             db_foreach associated_files {
                 select cpf.imsld_file_id,
                 cpf.file_name,
@@ -869,7 +870,17 @@ ad_proc -public imsld::process_resource {
                 }]
                 set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
                 append files_lis "<a href=[export_vars -base $file_url] target=\"_blank\"> $file_name </a>"
-            } 
+            }
+            # get associated urls
+            db_foreach associated_urls {
+                select url
+                from acs_rels ar,
+                cr_extlinks links
+                where ar.object_id_one = :resource_item_id
+                and ar.object_id_two = links.extlink_id
+            } {
+                append files_lis "<a href=\"$url\" target=\"_blank\"> $url </a>"
+            }
         }
     }
     return $files_lis
@@ -1451,7 +1462,7 @@ ad_proc -public imsld::next_activity {
             set environments "<ul>[lindex [lindex $activities_list 2] 0]"
             append environments "<li>[join [lindex [lindex $activities_list 2] 1] "</li><li>"]"
             append environments "</li><li>[join [lindex [lindex $activities_list 2] 2] "</li><li>"]"
-            append environments "</li><li>[join [lindex [lindex $activities_list 2] 3] "</li><li>>"]"
+            append environments "</li><li>[join [lindex [lindex $activities_list 2] 3] "</li><li>"]"
             append environments "</li></ul>"
             regsub -all {<li>[ ]*</li>} $environments "" environments
         }

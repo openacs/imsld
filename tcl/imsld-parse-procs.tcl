@@ -164,7 +164,7 @@ ad_proc -public imsld::parse::get_title {
     @option prefix Prefix for the "title"
     
 } {
-    set prefix [expr { [empty_string_p $prefix] ? "" : "${prefix}:" }]
+    set prefix [expr { [string eq "" $prefix] ? "" : "${prefix}:" }]
     set titles_list [$node child all ${prefix}title]
     if { [llength $titles_list] } {
         imsld::parse::validate_multiplicity -tree $titles_list -multiplicity 1 -element_name title -equal
@@ -505,8 +505,8 @@ ad_proc -public imsld::parse::parse_and_create_resource {
     # verify that the resource hasn't been already created
     set resource_identifier [string tolower [imsld::parse::get_attribute -node $resource_node -attr_name identifier]]
     if { ![db_0or1row redundancy_protection {
-        select resource_id 
-        from imsld_cp_resources
+        select item_id as resource_id 
+        from imsld_cp_resourcesi
         where identifier = :resource_identifier
         and manifest_id = :manifest_id
     }] } {
@@ -551,8 +551,11 @@ ad_proc -public imsld::parse::parse_and_create_resource {
         }
         
         if { ![empty_string_p $resource_href] && !$found_p } {
-            # we should have fond the referenced file, aborting
-            return [list 0 "[_ imsld.lt_The_resource_resource]"]
+            # the file is not in the manifest, assming it's an external (and existing) url
+            set link_id [content::extlink::new -url $resource_href \
+                             -parent_id $parent_id]
+            # map resource with file
+            relation_add imsld_res_files_rel $resource_id $link_id
         }
         
         set resource_dependencies [$resource_node child all imscp:dependency]
@@ -1142,10 +1145,10 @@ ad_proc -public imsld::parse::parse_and_create_service {
             set conference_item [$conference child all imsld:item]
             imsld::parse::validate_multiplicity -tree $conference_item -multiplicity 1 -element_name conference-item -equal
             set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
-                           -manifest_id $manifest_id \
-                            -item_node $conference_item \
-                           -parent_id $parent_id \
-                           -tmp_dir $tmp_dir]
+                               -manifest_id $manifest_id \
+                               -item_node $conference_item \
+                               -parent_id $parent_id \
+                               -tmp_dir $tmp_dir]
         
             set imsld_item_id [lindex $item_list 0]
             if { !$imsld_item_id } {
@@ -1252,6 +1255,7 @@ ad_proc -public imsld::parse::parse_and_create_environment {
     @param tmp_dir Temporary directory where the files were exctracted
 } {
     upvar files_struct_list files_struct_list
+    upvar warnings warnings
 
     # get environment info
     set identifier [string tolower [imsld::parse::get_attribute -node $environment_node -attr_name identifier]]
@@ -1269,7 +1273,6 @@ ad_proc -public imsld::parse::parse_and_create_environment {
     if { [llength $learning_object] } {
         if { [llength $learning_object] > 1 } {
             set learning_object [lindex $learning_object 0]
-            global warnings
             append warnings "<li> [_ imsld.lt_Warning_More_than_one] </li>"
         }
         set learning_object_list [imsld::parse::parse_and_create_learning_object -learning_object_node $learning_object \
@@ -1330,7 +1333,7 @@ ad_proc -public imsld::parse::parse_and_create_environment {
                 }                    
                 set environments [[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:environments]
                 set found_p 0
-                foreach referenced_environment $environments {
+                foreach referenced_environment [$environments child all imsld:environment] {
                     set referenced_identifier [string tolower [imsld::parse::get_attribute -node $referenced_environment -attr_name identifier]]
                     if { [string eq $ref $referenced_identifier] } {
                         set found_p 1
@@ -1723,6 +1726,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
     @param tmp_dir Temporary directory where the files were exctracted
 } {
     upvar files_struct_list files_struct_list
+    upvar warnings warnings
 
     # get the info of the activity structure and create it
     set identifier [string tolower [imsld::parse::get_attribute -node $activity_node -attr_name identifier]]
@@ -1823,7 +1827,6 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                         and component_id = :component_id
                     }] } {
                         # warning message
-                        global warnings
                         append warnings "<li> [_ imsld.lt_Referenced_support_ac] </li>"
                         # do the mappings
                         relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
@@ -1865,7 +1868,6 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                                 return $activity_structure_ref_list
                             }
                             # warning message
-                            global warnings
                             append warnings "<li> [_ imsld.lt_Referenced_learning_a] </li>"
                             # finally, do the mappings
                             relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
@@ -1883,7 +1885,6 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     }
                 } else {
                     # warning message
-                    global warnings
                     append warnings "<li> [_ imsld.lt_Referenced_learning_a_2] </li>"
                     # map support activity with activity structure
                     relation_add imsld_as_sa_rel $activity_structure_id $activity_id
@@ -1941,7 +1942,6 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                         and component_id = :component_id
                     }] } {
                         # warning message
-                        global warnings
                         append warnings "<li> [_ imsld.lt_Referenced_support_ac_1] </li>"
                         # do the mappings
                         relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
@@ -1983,7 +1983,6 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                                 return $activity_structure_ref_list
                             }
                             # warning message
-                            global warnings
                             append warnings "<li> [_ imsld.lt_Referenced_support_ac_1] </li>"
                             # finally, do the mappings
                             relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
@@ -2000,7 +1999,6 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     }
                 } else {
                     # warning message
-                    global warnings
                     append warnings "<li> [_ imsld.lt_Referenced_support_ac_3] </li>"
                     # map the learning activity with activity structure
                     relation_add imsld_as_la_rel $activity_structure_id $activity_id
@@ -2120,6 +2118,7 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
     @param tmp_dir Temporary directory where the files were exctracted
     @param sort_order
 } {
+    upvar warnings warnings
     # get the info of the role part and create it
     set identifier [string tolower [imsld::parse::get_attribute -node $role_part_node -attr_name identifier]]
     set title [imsld::parse::get_title -node $role_part_node -prefix imsld]
@@ -2197,12 +2196,10 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
                     return [list 0 "[_ imsld.lt_Referenced_learning_a_3]"]
                 } else {
                     # warning message
-                    global warnings
                     append warnings "<li> [_ imsld.lt_Referenced_learning_a_4] </li>"
                 }
             } else {
                 # warning message
-                global warnings
                 append warnings "<li> [_ imsld.lt_Referenced_learning_a_5] </li>"
             }
         }
@@ -2242,12 +2239,10 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
                     return [list 0 "[_ imsld.lt_Referenced_support_ac_4]"]
                 } else {
                     # warning message
-                    global warnings
                     append warnings "<li> [_ imsld.lt_Referenced_support_ac_5] </li>"
                 }
             } else {
                 # warning message
-                global warnings
                 append warnings "<li> [_ imsld.lt_Referenced_support_ac_6] </li>"
             }
         }
@@ -2289,12 +2284,10 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
                     return [list 0 "[_ imsld.lt_Referenced_activity_s_1]"]
                 } else {
                     # warning message
-                    global warnings
                     append warnings "<li> [_ imsld.lt_Referenced_activity_s_2] </li>"
                 }
             } else {
                 # warning message
-                global warnings
                 append warnings "<li> [_ imsld.lt_Referenced_activity_s_3] </li>"
             }
         }
@@ -2357,6 +2350,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
     @param sort_order
 } {
     upvar files_struct_list files_struct_list
+    upvar warnings warnings
 
     # get the info of the act and create it
     set identifier [string tolower [imsld::parse::get_attribute -node $act_node -attr_name identifier]]
@@ -2486,6 +2480,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
     @param sort_order 
 } {
     upvar files_struct_list files_struct_list
+    upvar warnings warnings
 
     # get the info of the play and create it
     set identifier [string tolower [imsld::parse::get_attribute -node $play_node -attr_name identifier]]
@@ -2596,7 +2591,6 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     @param tmp_dir tmp dir where the files were extracted to
 } {
     set community_id [expr { [empty_string_p $community_id] ? [dotlrn_community::get_community_id] : $community_id }]
-    global warnings
     set warnings ""
 
     # get the files structure
@@ -2958,7 +2952,6 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         }
     }
     
-    global warnings
     if { ![empty_string_p $warnings] } {
         set warnings "[_ imsld.lt_br__Warnings_ul_warni]"
     }
