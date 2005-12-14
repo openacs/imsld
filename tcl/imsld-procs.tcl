@@ -19,6 +19,13 @@ ad_proc -public imsld::safe_url_name {
     return $name
 } 
 
+ad_proc -public imsld::package_key { 
+} { 
+    returns the package_key of the IMS-LD package
+} {  
+    return imsld
+} 
+
 ad_proc -public imsld::rel_type_delete { 
     -rel_type:required
 } { 
@@ -156,15 +163,15 @@ ad_proc -public imsld::finish_component_element {
     set user_id [ad_conn user_id]
     # now that we have the necessary info, mark the finished element completed and return
     db_dml insert_entry {
-        insert into imsld_status_user
-        values (
-                :imsld_id,
-                :role_part_id,
-                :element_id,
-                :user_id,
-                :type,
-                now()
-                )
+        insert into imsld_status_user (
+                                       select :imsld_id,
+                                       :role_part_id,
+                                       :element_id,
+                                       :user_id,
+                                       :type,
+                                       now()
+                                       where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :element_id and role_part_id = :role_part_id)
+                                       )
     }
 
     db_foreach referencer_structure {
@@ -823,7 +830,7 @@ ad_proc -public imsld::process_resource {
             set forum_title [db_exec_plsql get_froum_title {
                 select acs_object__name(:acs_object_id)
             }]
-            append files_lis "<a href=${file_url} target=\"_blank\"> $forum_title </a> "
+            append files_lis "<a href=[export_vars -base $file_url] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/forums.png\" border=0 alt=\"$forum_title\"></a> "
         }
         imsqti_xmlv1p0 {
             # assessment package call
@@ -836,7 +843,7 @@ ad_proc -public imsld::process_resource {
                 where item_id = :acs_object_id
                 and content_revision__is_live(assessment_id) = 't'
             }]
-            append files_lis "<a href=${file_url} target=\"_blank\"> $assessment_title </a> "
+                append files_lis "<a href=[export_vars -base $file_url] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/assessment.png\" border=0  alt=\" $assessment_title\"></a> "
         }
         webcontent -
         default {
@@ -869,7 +876,7 @@ ad_proc -public imsld::process_resource {
                     where fs.live_revision = :imsld_file_id
                 }]
                 set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
-                append files_lis "<a href=[export_vars -base $file_url] target=\"_blank\"> $file_name </a>"
+                append files_lis "<a href=[export_vars -base $file_url] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/file-storage.png\" alt=\"$file_name\" border=0></a> "
             }
             # get associated urls
             db_foreach associated_urls {
@@ -879,7 +886,7 @@ ad_proc -public imsld::process_resource {
                 where ar.object_id_one = :resource_item_id
                 and ar.object_id_two = links.extlink_id
             } {
-                append files_lis "<a href=\"$url\" target=\"_blank\"> $url </a>"
+                append files_lis "<a href=[export_vars -base $url] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/url.png\" border=0  alt=\"$url\"></a> "
             }
         }
     }
@@ -1135,18 +1142,14 @@ ad_proc -public imsld::next_activity {
     set prerequisites_list [imsld::process_prerequisite -imsld_item_id $imsld_item_id]
     set prerequisites ""
     if { [llength $prerequisites_list] } {
-        set prerequisites "<ul>[lindex $prerequisites_list 0]"
-        append prerequisites "<li>[join [lindex $prerequisites_list 1] "</li><li>"]"
-        append prerequisites "</li></ul>"
-        regsub -all {<li>[ ]*</li>} $prerequisites "" prerequisites
+        set prerequisites "[lindex $prerequisites_list 0] <br/>"
+        append prerequisites "[join [lindex $prerequisites_list 1] " "]"
     }
     set objectives_list [imsld::process_learning_objective -imsld_item_id $imsld_item_id]
     set objectives ""
     if { [llength $objectives_list] } {
-        set objectives "<ul>[lindex $objectives_list 0]"
-        append objectives "<li>[join [lindex $objectives_list 1] "</li><li>"]"
-        append objectives "</li></ul>"
-        regsub -all {<li>[ ]*</li>} $objectives "" objectives
+        set objectives "[lindex $objectives_list 0] <br/>"
+        append objectives "[join [lindex $objectives_list 1] " "]"
     }
     if { [string length "${prerequisites}${objectives}"] } {
         template::multirow append imsld_multirow $prerequisites $objectives {} {} {} {}
@@ -1211,39 +1214,31 @@ ad_proc -public imsld::next_activity {
                     set activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id]
                     set prerequisites ""
                     if { [llength [lindex $activities_list 0]] } {
-                        set prerequisites "<ul>[lindex [lindex $activities_list 0] 0]"
-                        append prerequisites "<li>[join [lindex [lindex $activities_list 0] 1] "</li><li>"]"
-                        append prerequisites "</li></ul>"
-                        regsub -all {<li>[ ]*</li>} $prerequisites "" prerequisites
+                        set prerequisites "[lindex [lindex $activities_list 0] 0] <br/>"
+                        append prerequisites "[join [lindex [lindex $activities_list 0] 1] " "]"
                     }
                     set objectives ""
                     if { [llength [lindex $activities_list 1]] } {
-                        set objectives "<ul>[lindex [lindex $activities_list 1] 0]"
-                        append objectives "<li>[join [lindex [lindex $activities_list 1] 1] "</li><li>"]"
-                        append objectives "</li></ul>"
-                        regsub -all {<li>[ ]*</li>} $objectives "" objectives
+                        set objectives "[lindex [lindex $activities_list 1] 0] <br/>"
+                        append objectives "[join [lindex [lindex $activities_list 1] 1] " "]"
                     }
 
                     if { [llength [lindex $activities_list 2]] } {
-                        set environments "<ul>[lindex [lindex $activities_list 2] 0]"
-                        append environments "<li>[join [lindex [lindex $activities_list 2] 1] "</li><li>"]"
-                        append environments "</li><li>[join [lindex [lindex $activities_list 2] 2] "</li><li>"]"
-                        append environments "</li><li>[join [lindex [lindex $activities_list 2] 3] "</li><li>"]"
-                        append environments "</li></ul>"
-                        regsub -all {<li>[ ]*</li>} $environments "" environments
+                        set environments "[lindex [lindex $activities_list 2] 0] <br/>"
+                        append environments "[join [lindex [lindex $activities_list 2] 1] " "] "
+                        append environments "[join [lindex [lindex $activities_list 2] 2] " "] "
+                        append environments "[join [lindex [lindex $activities_list 2] 3] " "]"
                         #             foreach nested_environment {
                         #                 append environments_files [expr { [llength [lindex [lindex $activities_list 2] 3]] ? [join [lindex [lindex $activities_list 2] 2] "<br />"] : "" }]
                         #             }
                     }
                     
-                    set activities "$activity_title <br /> [join [lindex $activities_list 3] "<br />"]"
+                    set activities "$activity_title <br /> [join [lindex $activities_list 3] " "]"
 
                     set feedbacks ""
                     if { [llength [lindex $activities_list 4]] } {
-                        set feedbacks "<ul>[lindex [lindex $activities_list 4] 0]"
-                        append feedbacks "<li>[join [lindex [lindex $activities_list 4] 1] "</li><li>"]"
-                        append feedbacks "</li></ul>"
-                        regsub -all {<li>[ ]*</li>} $feedbacks "" feedbacks
+                        set feedbacks "[lindex [lindex $activities_list 4] 0] <br/>"
+                        append feedbacks "[join [lindex [lindex $activities_list 4] 1] " "]"
                     }
                     template::multirow append imsld_multirow $prerequisites \
                         $objectives \
@@ -1262,22 +1257,18 @@ ad_proc -public imsld::next_activity {
                     set activities_list [imsld::process_support_activity -activity_item_id $activity_item_id]
 
                     if { [llength [lindex $activities_list 0]] } {
-                        set environments "<ul>[lindex [lindex $activities_list 0] 0]"
-                        append environments "<li>[join [lindex [lindex $activities_list 0] 1] "</li><li>"]"
-                        append environments "</li><li>[join [lindex [lindex $activities_list 0] 2] "</li><li>"]"
-                        append environments "</li><li>[join [lindex [lindex $activities_list 0] 3] "</li><li>"]"
-                        append environments "</li></ul>"
-                        regsub -all {<li>[ ]*</li>} $environments "" environments
+                        set environments "[lindex [lindex $activities_list 0] 0] <br/>"
+                        append environments "[join [lindex [lindex $activities_list 0] 1] " "] "
+                        append environments "[join [lindex [lindex $activities_list 0] 2] " "] "
+                        append environments "[join [lindex [lindex $activities_list 0] 3] " "] "
                     }
 
-                    set activities "$activity_title <br /> [join [lindex $activities_list 1] "<br />"]"
+                    set activities "$activity_title <br /> [join [lindex $activities_list 1] " "]"
 
                     set feedbacks ""
                     if { [llength [lindex $activities_list 2]] } {
-                        set feedbacks "<ul>[lindex [lindex $activities_list 2] 0]"
-                        append feedbacks "<li>[join [lindex [lindex $activities_list 2] 1] "</li><li>"]"
-                        append feedbacks "</li></ul>"
-                        regsub -all {<li>[ ]*</li>} $feedbacks "" feedbacks
+                        set feedbacks "[lindex [lindex $activities_list 2] 0] <br/>"
+                        append feedbacks "[join [lindex [lindex $activities_list 2] 1] " "]"
                     }
                     template::multirow append imsld_multirow {} \
                         {} \
@@ -1295,12 +1286,10 @@ ad_proc -public imsld::next_activity {
                     }
                     set structure_list [imsld::process_activity_structure -structure_item_id $structure_item_id]
                     if { [llength [lindex $structure_list 0]] } {
-                        set environments "<ul>[lindex [lindex $structure_list 0] 0]"
-                        append environments "<li>[join [lindex [lindex $structure_list 0] 1] "</li><li>"]"
-                        append environments "</li><li>[join [lindex [lindex $structure_list 0] 2] "</li><li>"]"
-                        append environments "</li><li>[join [lindex [lindex $structure_list 0] 3] "</li><li>"]"
-                        append environments "</li></ul>"
-                        regsub -all {<li>[ ]*</li>} $environments "" environments
+                        set environments "[lindex [lindex $structure_list 0] 0] <br/>"
+                        append environments "[join [lindex [lindex $structure_list 0] 1] " "] "
+                        append environments "[join [lindex [lindex $structure_list 0] 2] " "] "
+                        append environments "[join [lindex [lindex $structure_list 0] 3] " "]"
                     }
                     template::multirow append imsld_multirow {} {} $environments $activity_title {} finished
                 }
@@ -1424,12 +1413,10 @@ ad_proc -public imsld::next_activity {
         }
     }
     if { [llength $environment_list] } {
-        set environments "<ul>[lindex $environment_list 0]"
-        append environments "<li>[join [lindex $environment_list 1] "</li><li>"]"
-        append environments "</li><li>[join [lindex $environment_list 2] "</li><li>"]"
-        append environments "</li><li>[join [lindex $environment_list 3] "</li><li>>"]"
-        append environments "</li></ul>"
-        regsub -all {<li>[ ]*</li>} $environments "" environments
+        set environments "[lindex $environment_list 0] <br/>"
+        append environments "[join [lindex $environment_list 1] " "] "
+        append environments "[join [lindex $environment_list 2] " "] "
+        append environments "[join [lindex $environment_list 3] " "]"
     }
     
     # learning activity
@@ -1446,28 +1433,22 @@ ad_proc -public imsld::next_activity {
         set activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id]
         set prerequisites ""
         if { [llength [lindex $activities_list 0]] } {
-            set prerequisites "<ul>[lindex [lindex $activities_list 0] 0]"
-            append prerequisites "<li>[join [lindex [lindex $activities_list 0] 1] "</li><li>"]"
-            append prerequisites "</li></ul>"
-            regsub -all {<li>[ ]*</li>} $prerequisites "" prerequisites
+            set prerequisites "[lindex [lindex $activities_list 0] 0] <br/>"
+            append prerequisites "[join [lindex [lindex $activities_list 0] 1] " "]"
         }
         set objectives ""
         if { [llength [lindex $activities_list 1]] } {
-            set objectives "<ul>[lindex [lindex $activities_list 1] 0]"
-            append objectives "<li>[join [lindex [lindex $activities_list 1] 1] "</li><li>"]"
-            append objectives "</li></ul>"
-            regsub -all {<li>[ ]*</li>} $objectives "" objectives
+            set objectives "[lindex [lindex $activities_list 1] 0] <br/>"
+            append objectives "[join [lindex [lindex $activities_list 1] 1] " "]"
         }
         if { [llength [lindex $activities_list 2]] } {
-            set environments "<ul>[lindex [lindex $activities_list 2] 0]"
-            append environments "<li>[join [lindex [lindex $activities_list 2] 1] "</li><li>"]"
-            append environments "</li><li>[join [lindex [lindex $activities_list 2] 2] "</li><li>"]"
-            append environments "</li><li>[join [lindex [lindex $activities_list 2] 3] "</li><li>"]"
-            append environments "</li></ul>"
-            regsub -all {<li>[ ]*</li>} $environments "" environments
+            set environments "[lindex [lindex $activities_list 2] 0] <br/>"
+            append environments "[join [lindex [lindex $activities_list 2] 1] " "] "
+            append environments "[join [lindex [lindex $activities_list 2] 2] " "] "
+            append environments "[join [lindex [lindex $activities_list 2] 3] " "]"
         }
         set files ""
-        set activities "$activity_title <br /> [join [lindex $activities_list 3] "<br />"]"
+        set activities "$activity_title <br /> [join [lindex $activities_list 3] " "]"
 #         if { [llength [lindex $activities_list 3]] } {
 #             set files "[join [lindex $activities_list 3] "<br />"]"
 #             regsub -all {<li>[ ]*</li>} $files "" files
@@ -1495,15 +1476,14 @@ ad_proc -public imsld::next_activity {
         set activities_list [imsld::process_support_activity -activity_item_id $activity_item_id]
         
         if { [llength [lindex $activities_list 0]] } {
-            set environments "<ul>[lindex [lindex $activities_list 0] 0]"
-            append environments "<li>[join [lindex [lindex $activities_list 0] 1] "</li><li>"]"
-            append environments "</li><li>[join [lindex [lindex $activities_list 0] 2] "</li><li>"]"
-            append environments "</li><li>[join [lindex [lindex $activities_list 0] 3] "</li><li>"]"
-            append environments "</li></ul>"
+            set environments "[lindex [lindex $activities_list 0] 0]<br/>"
+            append environments "[join [lindex [lindex $activities_list 0] 1] " "] "
+            append environments "[join [lindex [lindex $activities_list 0] 2] " "] "
+            append environments "[join [lindex [lindex $activities_list 0] 3] " "]"
             regsub -all {<li>[ ]*</li>} $environments "" environments
         }
 
-        set activities "$activity_title <br /> [join [lindex $activities_list 1] "<br />"]"
+        set activities "$activity_title <br /> [join [lindex $activities_list 1] " "]"
         
         template::multirow append imsld_multirow {} \
             {} \
