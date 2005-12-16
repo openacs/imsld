@@ -883,7 +883,7 @@ ad_proc -public imsld::parse::parse_and_create_prerequisite {
                 return $item_list
             }
             # map item with the prerequisite
-            relation_add imsld_lo_item_rel $prerequisite_id $item_id
+            relation_add imsld_preq_item_rel $prerequisite_id $item_id
         } 
     }
     return $prerequisite_id
