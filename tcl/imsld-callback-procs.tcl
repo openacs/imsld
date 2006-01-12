@@ -18,3 +18,15 @@ ad_proc -public -callback imsld::import {
 
     @author Eduardo Pérez Ureta (eduardo.perez@uc3m.es)
 } -
+
+ad_proc -public -callback imsld::finish_object -impl ld_resource {
+    -object_id
+} {
+    <p>Tag a resource as finished into an activity.</p>
+
+    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+} {
+
+    set resource_id [imsld::get_resource_from_object -object_id $object_id]
+    imsld::finish_resource -resource_id $resource_id
+} 

@@ -418,6 +418,7 @@ ad_proc -public imsld::role_part_finished_p {
 
 ad_proc -public imsld::process_service {
     -service_item_id:required
+    {-resource_mode "f"}
 } { 
     returns a list of the associated resources referenced from the given service.
 } {
@@ -460,6 +461,9 @@ ad_proc -public imsld::process_service {
                      and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      or ii.imsld_item_id = :imsld_item_id)
             } {
+                if {[string eq "t" $resource_mode]} {
+                    lappend resource_item_list $resource_item_id
+                }
                 append one_service_url "[imsld::process_resource -resource_item_id $resource_item_id]"
                 if { [string eq "" $one_service_url] } {
                     lappend services_list "[_ imsld.lt_li_desc_no_file_assoc]"
@@ -474,12 +478,18 @@ ad_proc -public imsld::process_service {
             return "not_implemented_yet"
         }
     }
-    return "$services_list"
+    if {[string eq "t" $resource_mode]} {
+        return [list $services_list $resource_item_list]
+    } else {
+        return "$services_list"       
+    }
+
 }
 
 ad_proc -public imsld::process_environment {
     -environment_item_id:required
     {-community_id ""}
+    {-resource_mode "f"}
 } { 
     returns a list of the associated resources, files and environments referenced from the given environment.
 } {  
@@ -531,7 +541,10 @@ ad_proc -public imsld::process_environment {
                 and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      or ii.imsld_item_id = :imsld_item_id)
-            } {
+            } { 
+                if { [string eq "t" $resource_mode] } {
+                    lappend resource_item_list $resource_item_id
+                }
                 set one_learning_object_list [imsld::process_resource -resource_item_id $resource_item_id]
                 if { [string eq "" $one_learning_object_list] } {
                     lappend environment_learning_objects_list "[_ imsld.lt_li_desc_no_file_assoc]"
@@ -555,7 +568,7 @@ ad_proc -public imsld::process_environment {
         where environment_id = :environment_item_id
         and content_revision__is_live(service_id) = 't'
     }] } {
-        set environment_services_list [imsld::process_service -service_item_id $service_item_id]
+        set environment_services_list [imsld::process_service -service_item_id $service_item_id -resource_mode $resource_mode]
     }
 
     set nested_environment_list [list]
@@ -580,6 +593,7 @@ ad_proc -public imsld::process_learning_objective {
     {-imsld_item_id ""}
     {-activity_item_id ""}
     {-community_id ""}
+    {-resource_mode "f"}
 } {
     returns a list with the objective title and the associated resources, files and environments referenced from the learning objective of the given activity or ims-ld
 } {  
@@ -646,6 +660,9 @@ ad_proc -public imsld::process_learning_objective {
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
         } {
+            if { [string eq "t" $resource_mode] } {
+                lappend resouce_item_list $resource_item_id
+            }
             set one_objective_urls "[imsld::process_resource -resource_item_id $resource_item_id]"
             if { [string eq "" $one_objective_urls] } {
                 lappend objective_items_list "[_ imsld.lt_li_desc_no_file_assoc]"
@@ -656,13 +673,20 @@ ad_proc -public imsld::process_learning_objective {
             ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
         }
     }
-    return [list $objective_title $objective_items_list]
+    if { [string eq "t" $resource_mode] } {
+        return [list $objective_title $objective_items_list $resource_item_list]
+    } else {
+        return [list $objective_title $objective_items_list]
+    }
+
+
 }
 
 ad_proc -public imsld::process_prerequisite {
     {-imsld_item_id ""}
     {-activity_item_id ""}
     {-community_id ""}
+    {-resource_mode "f"}
 } {
     returns a list of the associated resources, files and environments referenced from the prerequisite of the given ims-ld or activity
 } {  
@@ -729,18 +753,26 @@ ad_proc -public imsld::process_prerequisite {
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
-        } {
+        } { 
+            if { [string eq "t" $resource_mode] } { 
+                lappend resource_item_list $resource_item_id
+            }
             set one_prerequisite_urls "[imsld::process_resource -resource_item_id $resource_item_id]"
             if { [string eq "" $one_prerequisite_urls] } {
                 lappend prerequisite_items_list "[_ imsld.lt_li_desc_no_file_assoc]"
             } else {
-                set prerequisite_items_list [concat [list $prerequisite_items_list] [list $one_prerequisite_urls]]
+                set prerequisite_items_list [concat [list $prerequisite_items_list] [list $one_prerequisite_urls] ]
             }
         } if_no_rows {
             ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
         }
     }
-    return [list $prerequisite_title $prerequisite_items_list]
+    if { [string eq "t" $resource_mode] } {
+        return [list $prerequisite_title $prerequisite_items_list $resource_item_list]
+    } else {
+        return [list $prerequisite_title $prerequisite_items_list]
+    }
+
 }
 
 ad_proc -public imsld::process_feedback {
@@ -896,6 +928,7 @@ ad_proc -public imsld::process_resource {
 ad_proc -public imsld::process_learning_activity { 
     -activity_item_id:required
     {-community_id ""}
+    {-resource_mode "f"}
 } {
     @param 
     @option user_id default [ad_conn user_id]
@@ -924,22 +957,21 @@ ad_proc -public imsld::process_learning_activity {
     foreach environment_item_id $associated_environments_list {
         if { [llength $environments_list] } {
             set environments_list [concat [list $environments_list] \
-                                       [list [imsld::process_environment -environment_item_id $environment_item_id]]]
+                                       [list [imsld::process_environment -environment_item_id $environment_item_id -resource_mode $resource_mode]]]
         } else {
-            set environments_list [imsld::process_environment -environment_item_id $environment_item_id]
+            set environments_list [imsld::process_environment -environment_item_id $environment_item_id -resource_mode $resource_mode]
         }
     }
 
     # prerequisites
     set prerequisites_list [list]
     if { ![string eq "" $prerequisite_item_id] } {
-        set prerequisites_list [imsld::process_prerequisite -activity_item_id $activity_item_id]
+        set prerequisites_list [imsld::process_prerequisite -activity_item_id $activity_item_id -resource_mode $resource_mode]
     }
-    
     # learning objectives
     set objectives_list [list]
     if { ![string eq "" $learning_objective_item_id] } {
-        set objectives_list [imsld::process_learning_objective -activity_item_id $activity_item_id]
+        set objectives_list [imsld::process_learning_objective -activity_item_id $activity_item_id -resource_mode $resource_mode]
     }
 
     set activity_items_list [list]
@@ -970,6 +1002,10 @@ ad_proc -public imsld::process_learning_activity {
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
         } {
+            if {[string eq "t" $resource_mode] } { 
+                lappend la_resource_item_list $resource_item_id
+            }
+            
             set one_activity_urls "[imsld::process_resource -resource_item_id $resource_item_id]"
             if { [string eq "" $one_activity_urls] } {
                 lappend activity_items_list "[_ imsld.lt_li_desc_no_file_assoc]"
@@ -980,6 +1016,10 @@ ad_proc -public imsld::process_learning_activity {
                     set activity_items_list [list $one_activity_urls]
                 }
             }
+            if {[string eq "t" $resource_mode] } { 
+                lappend activity_items_list $resource_item_id
+            }
+           
         } if_no_rows {
             ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
         }
@@ -990,11 +1030,19 @@ ad_proc -public imsld::process_learning_activity {
     if { ![string eq "" $on_completion_item_id] } {
         set feedbacks_list [imsld::process_feedback -on_completion_item_id $on_completion_item_id]
     }
-    return [list $prerequisites_list \
-                $objectives_list \
-                $environments_list \
-                $activity_items_list \
-                $feedbacks_list]
+    if {[string eq "t" $resource_mode]} {
+         return [list [lindex $prerequisites_list [expr [llength $prerequisites_list] - 1]] \
+                      [lindex $objectives_list [expr [llength $objectives_list ] - 1]]\
+                      [lindex $environments_list [expr [llength $environments_list ] - 1]]\
+                      [lindex $activity_items_list [expr [llength $activity_items_list ] - 1]]\
+                      [lindex $feedbacks_list [expr [llength $feedbacks_list ] - 1]]]
+    } else {
+        return [list $prerequisites_list \
+                    $objectives_list \
+                    $environments_list \
+                    $activity_items_list \
+                    $feedbacks_list]
+    }
 }
 
 ad_proc -public imsld::process_support_activity { 
@@ -1145,6 +1193,7 @@ ad_proc -public imsld::next_activity {
         set prerequisites "[lindex $prerequisites_list 0] <br/>"
         append prerequisites "[join [lindex $prerequisites_list 1] " "]"
     }
+
     set objectives_list [imsld::process_learning_objective -imsld_item_id $imsld_item_id]
     set objectives ""
     if { [llength $objectives_list] } {
@@ -1222,7 +1271,6 @@ ad_proc -public imsld::next_activity {
                         set objectives "[lindex [lindex $activities_list 1] 0] <br/>"
                         append objectives "[join [lindex [lindex $activities_list 1] 1] " "]"
                     }
-
                     if { [llength [lindex $activities_list 2]] } {
                         set environments "[lindex [lindex $activities_list 2] 0] <br/>"
                         append environments "[join [lindex [lindex $activities_list 2] 1] " "] "
@@ -1234,6 +1282,7 @@ ad_proc -public imsld::next_activity {
                     }
                     
                     set activities "$activity_title <br /> [join [lindex $activities_list 3] " "]"
+
 
                     set feedbacks ""
                     if { [llength [lindex $activities_list 4]] } {
@@ -1506,6 +1555,253 @@ ad_proc -public imsld::next_activity {
     # first parameter: activity name
     return [template::multirow size imsld_multirow]
 }
+
+
+ad_proc -public imsld::get_activity_from_resource { 
+   -resource_id
+} { 
+    @return The activity_id from which the resource is being used.
+} {
+#set a flag. while 1, keep trying
+    set element_flag 1
+   
+
+#if the resource is into an environment
+    if { $element_flag =="0" } { 
+        #if is a service
+#get the imsld_item_id
+        db_1row get_imsld_item_id { 
+                select ar1.object_id_one as imsld_item_item_id 
+                from imsld_cp_resourcesi icri,
+                     acs_rels ar1 
+                where icri.item_id=ar1.object_id_two 
+                     and icri.resource_id= :resource_id
+        }
+#here, there are three options: a service, a conference service or a learning object
+
+#conference service
+#get the environment_id
+#FIX ME: VALID ONLY FOR CONFERENCE_SERVICES!!!
+        if { [db_0or1row is_conference_service {select 1 from imsld_conference_services where imsld_item_id=:imsld_item_item_id} ] } {
+            db_1row get_environment_id_from_cs {
+                select isi.environment_id as environment_item_id 
+                from imsld_conference_services ics,
+                     imsld_servicesi isi 
+                where isi.item_id=ics.service_id 
+                      and ics.imsld_item_id=:imsld_item_item_id
+            }
+        }
+
+#learning objects
+        if { [db_0or1row is_learning_object {select 1 from acs_rels where rel_type='imsld_l_object_item_rel' and object_id_two=:imsld_item_item_id } ] } {
+            db_1row get_environment_id_from_lo {
+                select iloi.environment_id as environment_item_id 
+                from imsld_learning_objectsi iloi,
+                     acs_rels ar 
+                where iloi.item_id=ar.object_id_one
+                     and ar.object_id_two=:imsld_item_item_id
+            }
+        }
+        
+#default service
+
+
+#get the learning_activity_id
+        db_1row get_learning_activity_from_environment {
+            select ila.activity_id as activity_item_id 
+            from acs_rels ar,
+                 imsld_learning_activitiesi ila 
+            where ila.item_id=ar.object_id_one 
+                 and ar.object_id_two=:environment_item_id;
+        }
+        set element_flag 0
+    }
+#if the resource is an activities_list
+    if { $element_flag =="1" } {
+        db_1row is_learning_activity {
+             select ila.activity_id as activity_item_id 
+             from imsld_cp_resourcesi icri,
+                  acs_rels ar1,
+                  acs_rels ar2,
+                  imsld_learning_activities ila 
+             where ar2.object_id_two=icri.item_id 
+                   and ar1.object_id_two=ar2.object_id_one 
+                   and ila.activity_description_id=ar1.object_id_one 
+                   and icri.resource_id= :resource_id
+        } 
+        set element_flag 0
+    }
+
+    if {$element_flag =="1"} {
+#get the element with which the resource is asociated (prerequisite,learning objective,environment or learning activity)
+        db_1row get_activity_from_resource { 
+            select ar1.object_id_one as resource_element_id
+            from acs_rels ar1,
+                 acs_rels ar2,
+                 imsld_cp_resourcesi icr 
+            where ar1.object_id_two=ar2.object_id_one 
+                 and ar2.object_id_two=icr.item_id 
+                 and icr.resource_id = : resource_id;
+        }
+            
+#choose if the resource is a prerequisite or a learning objective
+        if { [db_0or1row is_prerequisite { select 1 from imsld_prerequisites where prerequisite_id=:resource_id }] } {
+            db_1row {
+                select activity_id as activity_item_id 
+                from imsld_learning_activitiesi 
+                where prerequisite_id=:resource_element_id 
+            }
+        } elseif {[db_0or1row is_learning_objective { select 1 from imsld_learning_objectives where objective_id=:resource_element_id } ] } {
+             db_1row {
+                select activity_id as activity_item_id
+                from imsld_learning_activitiesi
+                where learning_objective_id=:resource_element_id
+            }
+        }
+            set element_flag 0
+    }
+    return $activity_item_id
+}
+
+ad_proc -public imsld::get_rolepart_from_activity { 
+   -activity_id
+} { 
+    @return The role_part_id from which the activity is being used.
+} {
+    db_1row get_role_part_from_activity {
+        select irp.role_part_id as role_part_id
+        from imsld_role_parts irp,
+             imsld_learning_activitiesi ilai,
+             acs_rels ar 
+        where ilai.activity_id=:activity_id 
+             and ar.object_id_two=ilai.item_id 
+             and irp.activity_structure_id=ar.object_id_one
+    }
+    return $role_part_id
+}
+
+ad_proc -public imsld::get_imsld_from_activity { 
+   -activity_id
+} { 
+    @return The imsld_id from which the activity is being used.
+} {
+    db_1row get_imsld_from_activity {
+            select iii.imsld_id as imsld_id
+            from imsld_imsldsi iii,
+                 cr_items cr,
+                 cr_items cr2,
+                 imsld_learning_activitiesi ilai 
+            where ilai.activity_id=:activity_id
+                 and ilai.item_id=cr.item_id 
+                 and cr2.parent_id=cr.parent_id 
+                 and cr2.content_type='imsld_imsld' 
+                 and iii.item_id=cr2.item_id
+
+    }
+    return $imsld_id
+}
+
+ad_proc -public imsld::get_resource_from_object {
+    -object_id
+} {
+    <p>Get the object which is asociated with an acs_object_id</p>
+    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+} {
+    db_1row get_resource {
+        select resource_id
+        from imsld_cp_resources
+        where acs_object_id = :object_id
+    }
+    return $resource_id
+}
+
+ad_proc -public imsld::finish_resource {
+    -resource_id
+} {
+    <p>Tag a resource as finished into an activity. Return true if success, false otherwise</p>
+
+    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+} {
+#look for the asociated activity
+    set activity_id [imsld::get_activity_from_resource -resource_id $resource_id]
+    db_1row get_activity_item_id { 
+        select item_id as activity_item_id
+        from imsld_learning_activitiesi 
+        where activity_id=:activity_id 
+    }
+#get info
+    set role_part_id [imsld::get_rolepart_from_activity -activity_id $activity_id]
+    set imsld_id [imsld::get_imsld_from_activity -activity_id $activity_id]
+    set user_id [ad_conn user_id]
+    
+#if not done yet, tag the resource as finished
+    if {![db_0or1row check_completed_resource {
+            select 1
+            from imsld_status_user 
+            where completed_id=:resource_id
+        }] } {
+         db_transaction {
+            db_dml insert_completed_resource {
+                insert into imsld_status_user
+                values (
+                        :imsld_id,
+                        :role_part_id,
+                        :resource_id,
+                        :user_id,
+                        'resource',
+                        now()
+                       )
+            }
+        }
+    
+        
+#find all the resouces in the same activity 
+        set resources_item_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
+
+        set resource_list [list]
+        foreach resource_item_id $resources_item_list { 
+            if {$resource_item_id  ne ""} {
+                db_1row get_activity_item {
+                    select resource_id as rid 
+                    from imsld_cp_resourcesi
+                    where item_id = :resource_item_id
+                }
+                lappend resource_list $rid
+            }
+        }
+
+#check if all the resources are finished
+        set all_finished_p "t"
+        foreach resource_id $resource_list {
+           if { ![db_string check_completed_resource {
+                select count(*)
+                from imsld_status_user
+                where completed_id = :resource_id
+           } ] } {
+               set all_finished_p "f"
+           }
+        }
+        
+#if all are finished, tag the activity as finished
+        if { [string eq "t" $all_finished_p]} {
+        
+        db_1row get_activity_type {
+            select case 
+                when (select 1 from imsld_learning_activities where activity_id=2909)=1 
+                    then 'learning' 
+                when  (select 1 from imsld_support_activities where activity_id=2909)=1 
+                    then 'support' 
+                else 'none' 
+                end as type
+        }
+
+            imsld::finish_component_element -imsld_id $imsld_id  \
+                                            -role_part_id $role_part_id \
+                                            -element_id $activity_id \
+                                            -type $type
+        }
+    }
+}  
 
 ad_register_proc GET /finish-component-element* imsld::finish_component_element
 ad_register_proc POST /finish-component-element* imsld::finish_component_element

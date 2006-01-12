@@ -25,7 +25,7 @@ create table imsld_status_user (
                             references users
                             not null,
     type                    varchar(20)
-                            check (type in ('learning','support','structure')),
+                            check (type in ('learning','support','structure','resource')),
     finished_date           timestamptz
                             default current_timestamp
                             not null
