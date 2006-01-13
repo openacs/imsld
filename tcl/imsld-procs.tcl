@@ -26,6 +26,212 @@ ad_proc -public imsld::package_key {
     return imsld
 } 
 
+ad_proc -public imsld::object_type_image_path {
+    -object_type
+} { 
+    returns the path to the image representing the given object_type in the imsld package
+} { 
+    switch $object_type {
+        forums_forum {
+            set image_path "[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/forums.png"
+        }
+        as_assessments {
+            set image_path "[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/assessment.png"
+        }
+        default {
+            set image_path "[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/file-storage.png"
+        }
+    }
+    return $image_path
+} 
+
+ad_proc -public imsld::mark_role_part_finished { 
+    -role_part_id:required
+    -imsld_id:required
+    -play_id:required
+    -act_id:required
+} { 
+    mark the role_part as finished, as well as all the referenced activities
+} {
+    set user_id [ad_conn user_id]
+    db_1row role_part_info {
+        select item_id as role_part_item_id
+        from imsld_role_partsi
+        where role_part_id = :role_part_id
+    }
+
+    db_dml insert_role_part {
+        insert into imsld_status_user (imsld_id,
+                                       play_id,
+                                       act_id,
+                                       completed_id,
+                                       user_id,
+                                       type,
+                                       finished_date) 
+        (
+         select :imsld_id,
+         :play_id,
+         :act_id,
+         :role_part_id,
+         :user_id,
+         'act',
+         now()
+         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :role_part_id)
+         )
+    }
+
+    # mark as finished all the referenced activities
+    db_1row role_part_activity {
+        select case
+        when learning_activity_id is not null
+        then 'learning'
+        when support_activity_id is not null
+        then 'support'
+        when activity_structure_id is not null
+        then 'structure'
+        else 'none'
+        end as type,
+        content_item__get_live_revision(coalesce(learning_activity_id,support_activity_id,activity_structure_id)) as activity_id
+        from imsld_role_parts
+        where role_part_id = :role_part_id
+    }
+
+    if { ![string eq $type "none"] } {
+        imsld::finish_component_element -imsld_id $imsld_id \
+            -play_id $play_id \
+            -act_id $act_id \
+            -role_part_id $role_part_id \
+            -element_id $activity_id \
+            -type $type \
+            -code_call
+    }
+}
+
+ad_proc -public imsld::mark_act_finished { 
+    -act_id:required
+    -imsld_id:required
+    -play_id:required
+} { 
+    mark the act as finished, as well as all the referenced role_parts
+} {
+    set user_id [ad_conn user_id]
+    db_1row act_info {
+        select item_id as act_item_id
+        from imsld_actsi
+        where act_id = :act_id
+    }
+
+    db_dml insert_act {
+        insert into imsld_status_user (imsld_id,
+                                       play_id,
+                                       completed_id,
+                                       user_id,
+                                       type,
+                                       finished_date) 
+        (
+         select :imsld_id,
+         :play_id,
+         :act_id,
+         :user_id,
+         'act',
+         now()
+         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :act_id)
+         )
+    }
+
+    foreach referenced_role_part [db_list_of_lists referenced_role_part {
+        select rp.role_part_id
+        from imsld_role_parts rp, imsld_actsi ia
+        where rp.act_id = ia.item_id
+        and ia.act_id = :act_id
+        and content_revision__is_live(rp.role_part_id) = 't'
+    }] {
+        set role_part_id [lindex $referenced_role_part 0]
+        if { ![imsld::role_part_finished_p -role_part_id $role_part_id] } {
+            imsld::mark_role_part_finished -role_part_id $role_part_id \
+                -act_id $act_id \
+                -play_id $play_id \
+                -imsld_id $imsld_id
+        }
+    }
+}
+
+ad_proc -public imsld::mark_play_finished { 
+    -play_id:required
+    -imsld_id:required
+} { 
+    mark the play as finished. In this case there's only need to mark the play finished and not doing anything with the referenced acts, role_parts, etc.
+} {
+    set user_id [ad_conn user_id]
+    db_dml insert_play {
+        insert into imsld_status_user (imsld_id,
+                                       completed_id,
+                                       user_id,
+                                       type,
+                                       finished_date) 
+        (
+         select :imsld_id,
+         :play_id,
+         :user_id,
+         'play',
+         now()
+         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :play_id)
+         )
+    }
+    foreach referenced_act [db_list_of_lists referenced_act {
+        select ia.act_id
+        from imsld_acts ia, imsld_playsi ip
+        where ia.play_id = ip.item_id
+        and ip.play_id = :play_id
+        and content_revision__is_live(ia.act_id) = 't'
+    }] {
+        set act_id [lindex $referenced_act 0]
+        if { ![imsld::act_finished_p -act_id $act_id] } {
+            imsld::mark_act_finished -act_id $act_id \
+                -play_id $play_id \
+                -imsld_id $imsld_id
+        }
+    }
+}
+
+ad_proc -public imsld::mark_unit_of_learning_finished { 
+    -imsld_id:required
+} { 
+    mark the unit of learning as finished
+} {
+    set user_id [ad_conn user_id]
+    db_dml insert_uol {
+        insert into imsld_status_user (imsld_id,
+                                       completed_id,
+                                       user_id,
+                                       type,
+                                       finished_date) 
+        (
+         select :imsld_id,
+         :imsld_id,
+         :user_id,
+         'play',
+         now()
+         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :imsld_id)
+         )
+    }
+
+    foreach referenced_play [db_list_of_lists referenced_plays {
+        select ip.play_id
+        from imsld_plays ip, imsld_methodsi im, imsld_imsldsi ii
+        where ip.method_id = im.item_id
+        and im.imsld_id = ii.item_id
+        and ii.imsld_id = :imsld_id
+    }] {
+        set play_id [lindex $referenced_play 0]
+        if { ![imsld::play_finished_p -play_id $play_id] } {
+            set play_id [lindex $referenced_play 0]
+            imsld::mark_play_finished -play_id $play_id \
+                -imsld_id $imsld_id
+        }
+    }
+}
+
 ad_proc -public imsld::rel_type_delete { 
     -rel_type:required
 } { 
@@ -139,22 +345,26 @@ ad_proc -public imsld::item_revision_new {
 
 ad_proc -public imsld::finish_component_element {
     -imsld_id
-    -role_part_id
+    {-play_id ""}
+    {-act_id ""}
+    {-role_part_id ""}
     -element_id
     -type
-    -recursive_call:boolean
+    -code_call:boolean
 } {
     @option imsld_id
+    @option play_id
+    @option act_id
     @option role_part_id
     @option element_id
     @option type
-    @option recursive_call
+    @option code_call
 
     Mark as finished the given component_id. This is done by adding a row in the table insert_entry.
 
     This function is called from a url, but it can also be called recursively
 } {
-    if { !$recursive_call_p } {
+    if { !$code_call_p } {
         # get the url for parse it and get the info
         set url [ns_conn url]
         regexp {finish-component-element-([0-9]+)-([0-9]+)-([0-9]+)-([a-z]+).imsld$} $url match imsld_id role_part_id element_id type
@@ -162,102 +372,182 @@ ad_proc -public imsld::finish_component_element {
     }
     set user_id [ad_conn user_id]
     # now that we have the necessary info, mark the finished element completed and return
-    db_dml insert_entry {
+    db_dml insert_element_entry {
         insert into imsld_status_user (
                                        select :imsld_id,
+                                       :play_id,
+                                       :act_id,
                                        :role_part_id,
                                        :element_id,
                                        :user_id,
                                        :type,
                                        now()
-                                       where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :element_id and role_part_id = :role_part_id)
+                                       where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :element_id)
                                        )
     }
 
-    db_foreach referencer_structure {
-        select ias.structure_id,
-        ias.item_id as structure_item_id
-        from acs_rels ar, imsld_activity_structuresi ias, cr_items cri
-        where ar.object_id_one = ias.item_id
-        and ar.object_id_two = cri.item_id
-        and cri.live_revision = :element_id
-    } {
-        # if this activity is part of an activity structure, let's check if the rest of referenced 
-        # activities are finished too, so we can mark finished the activity structure as well
-        set scturcture_finished_p 1
-        db_foreach referenced_activity {
-            select content_item__get_live_revision(ar.object_id_two) as activity_id
-            from acs_rels ar
-            where ar.object_id_one = :structure_item_id
-            and ar.rel_type in ('imsld_as_la_rel','imsld_as_sa_rel','imsld_as_as_rel')
-        } {
-            if { ![db_string completed_p {
-                select count(*) from imsld_status_user where completed_id = :activity_id
-            }] } {
-                # there is at leas one no-completed activity, so we can't mark this activity structure yet
-                set scturcture_finished_p 0
+    if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $type "structure"] } {
+        foreach referencer_structure_list [db_list_of_lists referencer_structure {
+            select ias.structure_id,
+            ias.item_id as structure_item_id
+            from acs_rels ar, imsld_activity_structuresi ias, cr_items cri
+            where ar.object_id_one = ias.item_id
+            and ar.object_id_two = cri.item_id
+            and cri.live_revision = :element_id
+        }] {
+            set structure_id [lindex $referencer_structure_list 0]
+            set structure_item_id [lindex $referencer_structure_list 1]
+            # if this activity is part of an activity structure, let's check if the rest of referenced 
+            # activities are finished too, so we can mark finished the activity structure as well
+            set scturcture_finished_p 1
+            db_foreach referenced_activity {
+                select content_item__get_live_revision(ar.object_id_two) as activity_id
+                from acs_rels ar
+                where ar.object_id_one = :structure_item_id
+                and ar.rel_type in ('imsld_as_la_rel','imsld_as_sa_rel','imsld_as_as_rel')
+            } {
+                if { ![db_string completed_p {
+                    select count(*) from imsld_status_user 
+                    where completed_id = :activity_id
+                    and user_id = :user_id
+                }] } {
+                    # there is at leas one no-completed activity, so we can't mark this activity structure yet
+                    set scturcture_finished_p 0
+                }
+            }
+            if { $scturcture_finished_p } {
+                imsld::finish_component_element -imsld_id $imsld_id \
+                    -role_part_id $role_part_id \
+                    -element_id $structure_id \
+                    -type structure \
+                    -code_call
             }
         }
-        if { $scturcture_finished_p } {
-            imsld::finish_component_element -imsld_id $imsld_id \
-                -role_part_id $role_part_id \
-                -element_id $structure_id \
-                -type structure \
-                -recursive_call
+    }
+
+    # we continue with A LOT of validations (in order to support the when-xxx-finished tag of the spec 
+    # -- with xxx in (role_part,act,play)):
+    # 1. let's see if the finished activity triggers the ending of the role_part
+    # 2. let's see if the finished role_part triggers the ending of the act which references it.
+    # 3. let's see if the finished act triggers the ending the play which references it
+    # 4. let's see if the finished play triggers the ending of the method which references it.
+    if { [imsld::role_part_finished_p -role_part_id $role_part_id] && ![db_0or1row already_marked_p {select 1 from imsld_status_user where completed_id = :role_part_id and user_id = :user_id}] } { 
+        # case number 1
+        imsld::finish_component_element -imsld_id $imsld_id \
+            -play_id $play_id \
+            -act_id $act_id \
+            -role_part_id $role_part_id \
+            -element_id $role_part_id \
+            -type role-part \
+            -code_call
+
+        db_1row get_role_part_info {
+            select ii.imsld_id,
+            ip.play_id,
+            ip.item_id as play_item_id,
+            ia.act_id,
+            ia.item_id as act_item_id,
+            ip.when_last_act_completed_p,
+            im.method_id,
+            im.item_id as method_item_id
+            from imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, imsld_actsi ia, imsld_role_parts irp
+            where irp.role_part_id = :role_part_id
+            and irp.act_id = ia.item_id
+            and ia.play_id = ip.item_id
+            and ip.method_id = im.item_id
+            and im.imsld_id = ii.item_id
+            and content_revision__is_live(ii.imsld_id) = 't'
+        }
+
+        set completed_act_p 1 
+        db_foreach referenced_role_part {
+            select ar.object_id_two as role_part_item_id,
+            rp.role_part_id
+            from acs_rels ar, imsld_role_partsi rp
+            where ar.object_id_one = :act_item_id
+            and rp.item_id = ar.object_id_two
+            and ar.rel_type = 'imsld_act_rp_completed_rel'
+            and content_revision__is_live(rp.role_part_id) = 't'
+        } {
+            if { ![imsld::role_part_finished_p -role_part_id $role_part_id] } {
+                set completed_act_p 0
+            }
+        } if_no_rows {
+            # the act doesn't have any imsld_act_rp_completed_rel rel defined.
+            # check if all the role parts have been finished and mar the act as finished.
+            db_foreach directly_referenced_role_part {
+                select irp.role_part_id
+                from imsld_role_parts irp
+                where irp.act_id = :act_item_id
+                and content_revision__is_live(irp.role_part_id) = 't'
+            } {
+                if { ![imsld::role_part_finished_p -role_part_id $role_part_id] } {
+                    set completed_act_p 0
+                }
+            }
+        }
+
+        if { $completed_act_p } {
+            # case number 2
+            imsld::mark_act_finished -act_id $act_id \
+                -play_id $play_id \
+                -imsld_id $imsld_id
+            
+            set completed_play_p 1
+            db_foreach referenced_act {
+                select ia.act_id
+                from imsld_acts ia, imsld_playsi ip
+                where ia.play_id = :play_item_id
+                and ip.item_id = ia.play_id
+                and content_revision__is_live(ia.act_id) = 't'
+            } {
+                if { ![imsld::act_finished_p -act_id $act_id] } {
+                    set completed_play_p 0
+                }
+            }
+            if { $completed_play_p } {
+                # case number 3
+                imsld::mark_play_finished -play_id $play_id \
+                    -imsld_id $imsld_id
+                
+                set completed_unit_of_learning_p 1 
+                db_foreach referenced_play {
+                    select ip.play_id
+                    from acs_rels ar, imsld_playsi ip
+                    where ar.object_id_one = :method_item_id
+                    and ip.item_id = ar.object_id_two
+                    and ar.rel_type = 'imsld_mp_completed_rel'
+                    and content_revision__is_live(ip.play_id) = 't'
+                } {
+                    if { ![imsld::play_finished_p -play_id $play_id] } {
+                        set completed_unit_of_learning_p 0
+                    }
+                } if_no_rows {
+                    # the uol doesn't have any imsld_mp_completed_rel rel defined.
+                    # check if all the plays have been finished and mark the imsld as finished.
+                    db_foreach directly_referenced_plays {
+                        select ip.play_id
+                        from imsld_plays ip
+                        where ip.method_id = :method_item_id
+                        and content_revision__is_live(ip.play_id) = 't'
+                    } {
+                        if { ![imsld::play_finished_p -play_id $play_id] } {
+                            set completed_unit_of_learning_p 0
+                        }
+                    }
+                }
+                        
+                if { $completed_unit_of_learning_p } {
+                    # case number 4
+                    imsld::mark_unit_of_learning_finished -imsld_id $imsld_id
+                }
+            }
         }
     }
-    if { !$recursive_call_p } {
+    if { !$code_call_p } {
         ad_returnredirect "${return_url}"
     }
 } 
-
-# ad_proc -public imsld::root_activity {
-#     -activity_type
-#     -leaf_id
-# } { 
-#     @return The root activity for the nested activity (referenced by leaf_id)
-# } {
-#     switch $activity_type {
-#         learning {
-#             # the learning activity is referenced by an activity structure... digg more
-#             db_1row get_la_activity_structure {
-#                 select as.structure_id, as.item_id as structure_item_id
-#                 from imsld_activity_strucutresi as, acs_rels ar, imsld_learning_activitiesi la
-#                 where ar.object_id_one = as.item_id
-#                 and ar.object_id_two = la.item_id
-#                 and content_revision__is_live(la.activity_id) = 't'
-#                 and content_revision__is_live(as.structure_id) = 't'
-#                 and la.activity_id = :leaf_id
-#             }
-#         }
-#         support {
-#         }
-#         structure {
-#             # the activity structure is referenced by an activity structure... digg more
-#             db_1row get_as_activity_structure {
-#                 select as.structure_id, as.item_id as structure_item_id
-#                 from imsld_activity_strucutresi as, acs_rels ar, imsld_activity_structuresi as_leaf
-#                 where ar.object_id_one = as.item_id
-#                 and ar.object_id_two = as_leaf.item_id
-#                 and content_revision__is_live(as_leaf.structure_id) = 't'
-#                 and content_revision__is_live(as.structure_id) = 't'
-#                 and as_leaf.structure_id = :leaf_id
-#             }
-#         }
-#     }
-#     if { [db_string is_referenced_p {
-#         select count(*) 
-#         from imsld_role_parts irp, imsld_activity_structures as
-#         where irp.learning_activity_id = :structure_item_id
-#         and as.activity_id = :sructure_id
-#     }] } {
-#         # the activity is referenced from this role part, so it is the root activity, the one we are looking for
-#         return $structure_id 
-#     } else {
-#         # nested activity, try again
-#         return [imsld::root_activity -activity_type structure -leaf_id $structure_id]
-#     }
-# } 
 
 ad_proc -public imsld::structure_next_activity {
     -activity_structure_id:required
@@ -265,6 +555,7 @@ ad_proc -public imsld::structure_next_activity {
 } { 
     @return The next learning or support activity (and the type) in the activity structure. 0 if there are none (which should never happen)
 } {
+    set user_id [ad_conn user_id]
     set min_sort_order ""
     set next_activity_id ""
     set next_activity_type ""
@@ -293,6 +584,7 @@ ad_proc -public imsld::structure_next_activity {
                     select count(*)
                     from imsld_status_user
                     where completed_id = :learning_activity_id
+                    and user_id = :user_id
                 }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
                     set min_sort_order $sort_order
                     set next_activity_id $learning_activity_id
@@ -312,6 +604,7 @@ ad_proc -public imsld::structure_next_activity {
                     select count(*)
                     from imsld_status_user
                     where completed_id = :support_activity_id
+                    and user_id = :user_id
                 }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
                     set min_sort_order $sort_order
                     set next_activity_id $support_activity_id
@@ -332,6 +625,7 @@ ad_proc -public imsld::structure_next_activity {
                     select count(*)
                     from imsld_status_user 
                     where completed_id = :structure_id
+                    and user_id = :user_id
                 }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
                     set min_sort_order $sort_order
                     set activity_id $structure_id
@@ -347,10 +641,6 @@ ad_proc -public imsld::structure_next_activity {
             }
         }
     } 
-#     if { [string eq "" $next_activity_id] } {
-#         ad_return_error "<#_ No referenced activities #>" "<#_ No referenced activities for activity_structure $activity_structure_id. This should never happen."
-#         ad_script_abort
-#     }
 
     if { [string eq $next_activity_type structure] } {
         set next_activity_list [imsld::structure_next_activity -activity_structure_id $activity_id -environment_list $environment_list]
@@ -363,11 +653,23 @@ ad_proc -public imsld::structure_next_activity {
 
 ad_proc -public imsld::role_part_finished_p { 
     -role_part_id:required
+    {-user_id ""}
 } { 
     @param role_part_id Role Part identifier
     
-    @return 0 or 1
+    @return 0 if the role part hasn't been finished. 1 otherwise
 } {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    if { [db_0or1row already_marked_p {
+        select 1 
+        from imsld_status_user
+        where completed_id = :role_part_id
+        and user_id = :user_id
+    }] } {
+        # simple case, already marked as finished
+        return 1
+    }
+
     db_1row get_role_part_activity {
         select case
         when learning_activity_id is not null
@@ -389,6 +691,7 @@ ad_proc -public imsld::role_part_finished_p {
             if { [db_string completed {
                 select count(*) from imsld_status_user
                 where completed_id = content_item__get_live_revision(:learning_activity_id)
+                and user_id = :user_id
             }] } {
                 return 1
             }
@@ -397,6 +700,7 @@ ad_proc -public imsld::role_part_finished_p {
             if { [db_string completed {
                 select count(*) from imsld_status_user
                 where completed_id = content_item__get_live_revision(:support_activity_id)
+                and user_id = :user_id
             }] } {
                 return 1
             }
@@ -405,6 +709,7 @@ ad_proc -public imsld::role_part_finished_p {
             if { [db_string completed {
                 select count(*) from imsld_status_user
                 where completed_id = content_item__get_live_revision(:activity_structure_id)
+                and user_id = :user_id
             }] } {
                 return 1
             }
@@ -414,6 +719,40 @@ ad_proc -public imsld::role_part_finished_p {
         }
     }
     return 0
+} 
+
+ad_proc -public imsld::act_finished_p { 
+    -act_id:required
+    {-user_id ""}
+} { 
+    @param act_id
+    
+    @return 0 if the at hasn't been finished. 1 otherwise
+} {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    return [db_0or1row already_marked_p {
+        select 1 
+        from imsld_status_user
+        where completed_id = :act_id
+        and user_id = :user_id
+    }]
+} 
+
+ad_proc -public imsld::play_finished_p { 
+    -play_id:required
+    {-user_id ""}
+} { 
+    @param play_id
+    
+    @return 0 if the play hasn't been finished. 1 otherwise
+} {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    return [db_0or1row play_marked_p {
+        select 1 
+        from imsld_status_user
+        where completed_id = :play_id
+        and user_id = :user_id
+    }]
 } 
 
 ad_proc -public imsld::process_service {
@@ -502,7 +841,7 @@ ad_proc -public imsld::process_environment {
 
     # get environment info
     db_1row environment_info {
-        select coalesce(env.title,env.identifier) as environment_title,
+        select env.title as environment_title,
         env.environment_id
         from imsld_environmentsi env
         where env.item_id = :environment_item_id
@@ -851,78 +1190,71 @@ ad_proc -public imsld::process_resource {
         where item_id = :resource_item_id 
         and content_revision__is_live(resource_id) = 't'
     }
-    set files_lis ""
-    switch $resource_type {
-        forum {
-            # forums package call
-            set forums_package_id [site_node_apm_integration::get_child_package_id \
-                                   -package_id [dotlrn_community::get_package_id $community_id] \
-                                   -package_key "forums"]
-            set file_url "[apm_package_url_from_id $forums_package_id]forum-view?[ad_export_vars { { forum_id $acs_object_id } }]"
-            set forum_title [db_exec_plsql get_froum_title {
-                select acs_object__name(:acs_object_id)
-            }]
-            append files_lis "<a href=[export_vars -base $file_url] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/forums.png\" border=0 alt=\"$forum_title\"></a> "
+    set files_urls ""
+
+    if { [string eq $resource_type "forum"] || [string eq $resource_type "imsqti_xmlv1p0"] || [string eq $resource_type "imsqti_xmlv1p1"] || [string eq $resource_type "imsqti_item_xmlv2p0"] } {
+        if { [db_0or1row is_cr_item {
+            select live_revision from cr_items where item_id = :acs_object_id
+        }] } {
+            db_1row get_cr_info { 
+                select acs_object__name(object_id) as object_title, object_type
+                from acs_objects where object_id = :live_revision
+            } 
+        } else {
+            db_1row get_ao_info { 
+                select acs_object__name(object_id) as object_title, object_type
+                from acs_objects where object_id = :acs_object_id
+            } 
         }
-        imsqti_xmlv1p0 {
-            # assessment package call
-            set assessment_package_id [site_node_apm_integration::get_child_package_id \
-                                           -package_id [dotlrn_community::get_package_id $community_id] \
-                                           -package_key "assessment"]
-            set file_url "[apm_package_url_from_id $assessment_package_id]assessment?[ad_export_vars { { assessment_id $acs_object_id } }]"
-            set assessment_title [db_string get_assessment_title {
-                select title from as_assessmentsi 
-                where item_id = :acs_object_id
-                and content_revision__is_live(assessment_id) = 't'
+        set file_url [acs_sc::invoke -contract FtsContentProvider -operation url -impl $object_type -call_args [list $acs_object_id]]
+        set image_path [imsld::object_type_image_path -object_type $object_type]
+        append files_urls "<a href=[export_vars -base $file_url] target=\"_blank\"><img src=\"$image_path\" border=0 alt=\"$object_title\"></a> "
+    }
+
+    if { [string eq $resource_type "webcontent"] || [string eq $files_urls ""] } {
+        # Get file-storage root folder_id
+        set fs_package_id [site_node_apm_integration::get_child_package_id \
+                               -package_id [dotlrn_community::get_package_id $community_id] \
+                               -package_key "file-storage"]
+        set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
+        # get associated files
+        db_foreach associated_files {
+            select cpf.imsld_file_id,
+            cpf.file_name,
+            cpf.item_id, cpf.parent_id
+            from imsld_cp_filesx cpf,
+            acs_rels ar
+            where ar.object_id_one = :resource_item_id
+            and ar.object_id_two = cpf.item_id
+            and content_revision__is_live(cpf.imsld_file_id) = 't'
+        } {
+            # get the fs file path
+            set folder_path [db_exec_plsql get_folder_path { select content_item__get_path(:parent_id,:root_folder_id); }]
+            set fs_file_url [db_1row get_fs_file_url {
+                select 
+                case 
+                when :folder_path is null
+                then fs.file_upload_name
+                else :folder_path || '/' || fs.file_upload_name
+                end as file_url
+                from fs_objects fs
+                where fs.live_revision = :imsld_file_id
             }]
-                append files_lis "<a href=[export_vars -base $file_url] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/assessment.png\" border=0  alt=\" $assessment_title\"></a> "
+            set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
+            append files_urls "<a href=[export_vars -base $file_url] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/file-storage.png\" alt=\"$file_name\" border=0></a> "
         }
-        webcontent -
-        default {
-            # Gets file-storage root folder_id
-            set fs_package_id [site_node_apm_integration::get_child_package_id \
-                                   -package_id [dotlrn_community::get_package_id $community_id] \
-                                   -package_key "file-storage"]
-            set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
-            # get associated files
-            db_foreach associated_files {
-                select cpf.imsld_file_id,
-                cpf.file_name,
-                cpf.item_id, cpf.parent_id
-                from imsld_cp_filesx cpf,
-                acs_rels ar
-                where ar.object_id_one = :resource_item_id
-                and ar.object_id_two = cpf.item_id
-                and content_revision__is_live(cpf.imsld_file_id) = 't'
-            } {
-                # get the fs file path
-                set folder_path [db_exec_plsql get_folder_path { select content_item__get_path(:parent_id,:root_folder_id); }]
-                set fs_file_url [db_1row get_fs_file_url {
-                    select 
-                    case 
-                    when :folder_path is null
-                    then fs.file_upload_name
-                    else :folder_path || '/' || fs.file_upload_name
-                    end as file_url
-                    from fs_objects fs
-                    where fs.live_revision = :imsld_file_id
-                }]
-                set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
-                append files_lis "<a href=[export_vars -base $file_url] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/file-storage.png\" alt=\"$file_name\" border=0></a> "
-            }
-            # get associated urls
-            db_foreach associated_urls {
-                select url
-                from acs_rels ar,
-                cr_extlinks links
-                where ar.object_id_one = :resource_item_id
-                and ar.object_id_two = links.extlink_id
-            } {
-                append files_lis "<a href=[export_vars -base $url] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/url.png\" border=0  alt=\"$url\"></a> "
-            }
+        # get associated urls
+        db_foreach associated_urls {
+            select url
+            from acs_rels ar,
+            cr_extlinks links
+            where ar.object_id_one = :resource_item_id
+            and ar.object_id_two = links.extlink_id
+        } {
+            append files_urls "<a href=[export_vars -base $url] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/url.png\" border=0  alt=\"$url\"></a> "
         }
     }
-    return $files_lis
+    return $files_urls
 }
 
 ad_proc -public imsld::process_learning_activity { 
@@ -1231,7 +1563,7 @@ ad_proc -public imsld::next_activity {
         # get the completed activities in order to display them
         # save the last one (the last role_part_id of the last completed activity) because we will use it latter
 
-        # JOPEZ: need to split the db_foreach from the body because of db pools
+        # JOPEZ: needed to split the db_foreach from the body because of db pools
         foreach completed_activity [db_list_of_lists completed_activity {
             select stat.completed_id,
             stat.role_part_id,
@@ -1547,6 +1879,7 @@ ad_proc -public imsld::next_activity {
     if { [db_string verify_not_completed {
         select count(*) from imsld_status_user
         where completed_id = :activity_id
+        and user_id = :user_id
     }] } {
         return -code error "IMSLD::imsld::nex_activity: Returning a completed activity!"
         ad_script_abort
