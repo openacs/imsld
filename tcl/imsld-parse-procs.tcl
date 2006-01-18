@@ -31,6 +31,54 @@ ad_proc -public imsld::parse::find_manifest {
     }
 }
 
+ad_proc -public imsld::parse::convert_time_to_seconds {
+    -time
+} {
+    Converts the time string (described in the spec) into seconds to easy the manipulation of this datatype. 
+    @param time The time string
+} {
+    set time [string tolower $time]
+    regsub -all {[^0-9pymdths]} $time "" time
+    set years 0
+    set months 0
+    set days 0
+    set hours 0
+    set minutes 0
+    set seconds 0
+    set t_parsed 0
+    set time_length [string length $time]
+    while { [string length $time] } {
+        regexp {^([0-9]*)([pymdthms])} $time match amount component
+        switch $component {
+            y {
+                set years $amount
+            }
+            m {
+                if { !$t_parsed } {
+                    set months $amount
+                } else {
+                    set minutes $amount
+                }
+            }
+            d {
+                set days $amount
+            }
+            t {
+                set t_parsed 1
+            }
+            h {
+                set hours $amount
+            }
+            s {
+                set seconds $amount
+            }
+        }
+        regsub ${amount}${component} $time "" time
+    }
+    set seconds [expr ($years*946080000 + $months*2592000 + $days*86400 + $hours*3600 + $minutes*60 + $seconds)]
+    return $seconds
+}
+
 ad_proc -public imsld::parse::is_imsld {
     -tree:required
 } {
@@ -1468,8 +1516,9 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
         set time_limit [$complete_activity child all imsld:time-limit]
         if { [llength $time_limit] } {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(learning-activity) -equal
-            set time_amount [imsld::parse::get_element_text -node $time_limit]
-            set time_limit_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_amount]] \
+            set time_string [imsld::parse::get_element_text -node $time_limit]
+            set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
+            set time_limit_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds]] \
                                    -content_type imsld_time_limit \
                                    -parent_id $parent_id]
         }
@@ -1612,10 +1661,11 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
         set time_limit [$complete_activity child all imsld:time-limit]
         if { [llength $time_limit] } {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(support-activity) -equal
-            set time_amount [imsld::parse::get_element_text -node $time_limit]
+            set time_string [imsld::parse::get_element_text -node $time_limit]
+            set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
             set time_limit_id [imsld::item_revision_new -parent_id $parent_id \
                                    -content_type imsld_time_limit \
-                                   -attributes [list [list time_in_seconds $time_amount]]]
+                                   -attributes [list [list time_in_seconds $time_in_seconds]]]
         }
     }
 
@@ -2365,10 +2415,11 @@ ad_proc -public imsld::parse::parse_and_create_act {
         set time_limit [$complete_act child all imsld:time-limit]
         if { [llength $time_limit] } {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(complete-act) -equal
-            set time_amount [imsld::parse::get_element_text -node $time_limit]
+            set time_string [imsld::parse::get_element_text -node $time_limit]
+            set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
             set time_limit_id [imsld::item_revision_new -parent_id $parent_id \
                                    -content_type imsld_time_limit \
-                                   -attributes [list [list time_in_seconds $time_amount]]]
+                                   -attributes [list [list time_in_seconds $time_in_seconds]]]
         }
     }
 
@@ -2497,10 +2548,11 @@ ad_proc -public imsld::parse::parse_and_create_play {
         set time_limit [$complete_play child all imsld:time-limit]
         if { [llength $time_limit] } {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(complete-play) -equal
-            set time_amount [imsld::parse::get_element_text -node $time_limit]
+            set time_string [imsld::parse::get_element_text -node $time_limit]
+            set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
             set time_limit_id [imsld::item_revision_new -parent_id $parent_id \
                                    -content_type imsld_time_limit \
-                                   -attributes [list [list time_in_seconds $time_amount]]]
+                                   -attributes [list [list time_in_seconds $time_in_seconds]]]
         }
         # Play: Complete Play: When Last Act Completed
         set when_last_act_completed [$complete_play child all imsld:when-last-act-completed]
@@ -2836,10 +2888,11 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         set time_limit [$complete_unit_of_learning child all imsld:time-limit]
         if { [llength $time_limit] } {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(complete-unit-of-learning) -equal
-            set time_amount [imsld::parse::get_element_text -node $time_limit]
+            set time_string [imsld::parse::get_element_text -node $time_limit]
+            set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
             set time_limit_id [imsld::item_revision_new -parent_id $cr_folder_id \
                                    -content_type imsld_time_limit \
-                                   -attributes [list [list time_in_seconds $time_amount]]]
+                                   -attributes [list [list time_in_seconds $time_in_seconds]]]
         }
     }
 

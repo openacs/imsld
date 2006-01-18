@@ -45,15 +45,277 @@ ad_proc -public imsld::object_type_image_path {
     return $image_path
 } 
 
+ad_proc -public imsld::community_id_from_manifest_id {
+    -manifest_id:required
+} { 
+    returns the community_id using the manifest_id to search for it
+} {  
+    return [db_string get_community_id {
+        select dc.community_id
+        from imsld_cp_manifestsi im, acs_objects ao, dotlrn_communities dc
+        where im.object_package_id = ao.package_id
+        and ao.context_id = dc.package_id
+        and im.manifest_id = :manifest_id
+    }]
+} 
+
+ad_proc -public imsld::sweep_expired_activities { 
+} { 
+    Sweeps the methods, plays, acts  and activities marking as finished the ones that already have been expired according with the value of time-limit.
+} {
+    # 1. methods
+    foreach referenced_method [db_list_of_lists possible_expired_method {
+        select icm.manifest_id,
+        ii.imsld_id,
+        im.method_id, 
+        tl.time_in_seconds,
+        icm.creation_date
+        from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+        imsld_imsldsi ii, imsld_methodsi im, imsld_time_limitsi tl
+        where im.imsld_id = ii.item_id
+        and ii.organization_id = ico.item_id
+        and ico.manifest_id = icm.item_id
+        and im.time_limit_id is not null
+        and im.time_limit_id = tl.item_id
+        and content_revision__is_live(im.method_id) = 't'
+    }] {
+        set manifest_id [lindex $referenced_method 0]
+        set imsld_id [lindex $referenced_method 1]
+        set method_id [lindex $referenced_method 2]
+        set time_in_seconds [lindex $referenced_method 3]
+        set creation_date [lindex $referenced_method 4]
+        if { [db_0or1row compre_times {
+            select 1
+            where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
+        }] } {
+            # the method has been expired, let's mark it as finished 
+            set community_id [imsld::community_id_from_manifest_id -manifest_id $manifest_id]
+            db_foreach user_in_class {
+                select app.user_id
+                from dotlrn_member_rels_approved app
+                where app.community_id = :community_id
+                and app.member_state = 'approved'
+            } {
+                imsld::mark_method_finished -imsld_id $imsld_id \
+                    -method_id $method_id \
+                    -user_id $user_id
+            }
+        }
+    }
+    # 2. plays
+    foreach referenced_play [db_list_of_lists possible_expired_plays {
+        select icm.manifest_id,
+        ii.imsld_id,
+        ip.play_id,
+        tl.time_in_seconds,
+        icm.creation_date
+        from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+        imsld_imsldsi ii, imsld_methodsi im, imsld_plays ip,
+        imsld_time_limitsi tl
+        where ip.method_id = im.item_id
+        and im.imsld_id = ii.item_id
+        and ii.organization_id = ico.item_id
+        and ico.manifest_id = icm.item_id
+        and ip.time_limit_id is not null
+        and ip.time_limit_id = tl.item_id
+        and content_revision__is_live(ip.play_id) = 't'
+    }] {
+        set manifest_id [lindex $referenced_play 0]
+        set imsld_id [lindex $referenced_play 1]
+        set play_id [lindex $referenced_play 2]
+        set time_in_seconds [lindex $referenced_play 3]
+        set creation_date [lindex $referenced_play 4]
+        if { [db_0or1row compre_times {
+            select 1
+            where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
+        }] } {
+            # the play has been expired, let's mark it as finished 
+            set community_id [imsld::community_id_from_manifest_id -manifest_id $manifest_id]
+            db_foreach user_in_class {
+                select app.user_id
+                from dotlrn_member_rels_approved app
+                where app.community_id = :community_id
+                and app.member_state = 'approved'
+            } {
+                imsld::mark_play_finished -imsld_id $imsld_id \
+                    -play_id $play_id \
+                    -user_id $user_id
+            }
+        }
+    }
+    # 3. acts
+    foreach referenced_act [db_list_of_lists possible_expired_acts {
+        select icm.manifest_id,
+        ii.imsld_id,
+        ip.play_id,
+        ia.act_id,
+        tl.time_in_seconds,
+        icm.creation_date
+        from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+        imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, imsld_acts ia,
+        imsld_time_limitsi tl
+        where ia.play_id = ip.item_id
+        and ip.method_id = im.item_id
+        and im.imsld_id = ii.item_id
+        and ii.organization_id = ico.item_id
+        and ico.manifest_id = icm.item_id
+        and ia.time_limit_id is not null
+        and ia.time_limit_id = tl.item_id
+        and content_revision__is_live(ia.act_id) = 't'
+    }] {
+        set manifest_id [lindex $referenced_act 0]
+        set imsld_id [lindex $referenced_act 1]
+        set play_id [lindex $referenced_act 2]
+        set act_id [lindex $referenced_act 3]
+        set time_in_seconds [lindex $referenced_act 4]
+        set creation_date [lindex $referenced_act 5]
+        if { [db_0or1row compre_times {
+            select 1
+            where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
+        }] } {
+            # the act has been expired, let's mark it as finished 
+            set community_id [imsld::community_id_from_manifest_id -manifest_id $manifest_id]
+            db_foreach user_in_class {
+                select app.user_id
+                from dotlrn_member_rels_approved app
+                where app.community_id = :community_id
+                and app.member_state = 'approved'
+            } {
+                imsld::mark_act_finished -imsld_id $imsld_id \
+                    -play_id $play_id \
+                    -act_id $act_id \
+                    -user_id $user_id
+            }
+        }
+    }
+
+    # 4. support activities
+    foreach referenced_sa [db_list_of_lists possible_expired_support_activities {
+        select icm.manifest_id,
+        sa.activity_id,
+        ii.imsld_id,
+        ip.play_id,
+        ia.act_id,
+        irp.role_part_id,
+        tl.time_in_seconds,
+        icm.creation_date
+        from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+        imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
+        imsld_actsi ia, imsld_role_partsi irp, imsld_support_activitiesi sa,
+        imsld_time_limitsi tl
+        where sa.item_id = irp.support_activity_id
+        and irp.act_id = ia.item_id
+        and ia.play_id = ip.item_id
+        and ip.method_id = im.item_id
+        and im.imsld_id = ii.item_id
+        and ii.organization_id = ico.item_id
+        and ico.manifest_id = icm.item_id
+        and sa.time_limit_id is not null
+        and sa.time_limit_id = tl.item_id
+        and content_revision__is_live(sa.activity_id) = 't'
+    }] {
+        set manifest_id [lindex $referenced_sa 0] 
+        set activity_id [lindex $referenced_sa 1]
+        set imsld_id [lindex $referenced_sa 2]
+        set play_id [lindex $referenced_sa 3]
+        set act_id [lindex $referenced_sa 4]
+        set role_part_id [lindex $referenced_sa 5]
+        set time_in_seconds [lindex $referenced_sa 6]
+        set creation_date [lindex $referenced_sa 7]
+        if { [db_0or1row compre_times {
+            select 1
+            where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
+        }] } {
+            # the act has been expired, let's mark it as finished 
+            set community_id [imsld::community_id_from_manifest_id -manifest_id $manifest_id]
+            db_foreach user_in_class {
+                select app.user_id
+                from dotlrn_member_rels_approved app
+                where app.community_id = :community_id
+                and app.member_state = 'approved'
+            } {
+                imsld::finish_component_element -imsld_id $imsld_id \
+                    -play_id $play_id \
+                    -act_id $act_id \
+                    -role_part_id $role_part_id \
+                    -element_id $activity_id \
+                    -type support \
+                    -user_id $user_id \
+                    -code_call
+            }
+        }
+    }
+    # 5. learning activities
+    foreach referenced_la [db_list_of_lists possible_expired_learning_activities {
+        select icm.manifest_id,
+        la.activity_id,
+        ii.imsld_id,
+        ip.play_id,
+        ia.act_id,
+        irp.role_part_id,
+        tl.time_in_seconds,
+        icm.creation_date
+        from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+        imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
+        imsld_actsi ia, imsld_role_partsi irp, imsld_learning_activitiesi la,
+        imsld_time_limitsi tl
+        where la.item_id = irp.learning_activity_id
+        and irp.act_id = ia.item_id
+        and ia.play_id = ip.item_id
+        and ip.method_id = im.item_id
+        and im.imsld_id = ii.item_id
+        and ii.organization_id = ico.item_id
+        and ico.manifest_id = icm.item_id
+        and la.time_limit_id is not null
+        and la.time_limit_id = tl.item_id
+        and content_revision__is_live(la.activity_id) = 't'
+    }] {
+        set manifest_id [lindex $referenced_la 0] 
+        set activity_id [lindex $referenced_la 1]
+        set imsld_id [lindex $referenced_la 2]
+        set play_id [lindex $referenced_la 3]
+        set act_id [lindex $referenced_la 4]
+        set role_part_id [lindex $referenced_la 5]
+        set time_in_seconds [lindex $referenced_la 6]
+        set creation_date [lindex $referenced_la 7]
+        if { [db_0or1row compre_times {
+            select 1
+            where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
+        }] } {
+            # the act has been expired, let's mark it as finished 
+            set community_id [imsld::community_id_from_manifest_id -manifest_id $manifest_id]
+            db_foreach user_in_class {
+                select app.user_id
+                from dotlrn_member_rels_approved app
+                where app.community_id = :community_id
+                and app.member_state = 'approved'
+            } {
+                imsld::finish_component_element -imsld_id $imsld_id \
+                    -play_id $play_id \
+                    -act_id $act_id \
+                    -role_part_id $role_part_id \
+                    -element_id $activity_id \
+                    -type learning \
+                    -user_id $user_id \
+                    -code_call
+            }
+        }
+    }
+}
+
 ad_proc -public imsld::mark_role_part_finished { 
     -role_part_id:required
     -imsld_id:required
     -play_id:required
     -act_id:required
+    {-user_id ""}
 } { 
     mark the role_part as finished, as well as all the referenced activities
 } {
-    set user_id [ad_conn user_id]
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    if { [imsld::role_part_finished_p -role_part_id $role_part_id -user_id $user_id] } {
+        return
+    }
     db_1row role_part_info {
         select item_id as role_part_item_id
         from imsld_role_partsi
@@ -103,6 +365,7 @@ ad_proc -public imsld::mark_role_part_finished {
             -role_part_id $role_part_id \
             -element_id $activity_id \
             -type $type \
+            -user_id $user_id \
             -code_call
     }
 }
@@ -111,10 +374,14 @@ ad_proc -public imsld::mark_act_finished {
     -act_id:required
     -imsld_id:required
     -play_id:required
+    {-user_id ""}
 } { 
     mark the act as finished, as well as all the referenced role_parts
 } {
-    set user_id [ad_conn user_id]
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    if { [imsld::act_finished_p -act_id $act_id -user_id $user_id] } {
+        return
+    }
     db_1row act_info {
         select item_id as act_item_id
         from imsld_actsi
@@ -147,22 +414,25 @@ ad_proc -public imsld::mark_act_finished {
         and content_revision__is_live(rp.role_part_id) = 't'
     }] {
         set role_part_id [lindex $referenced_role_part 0]
-        if { ![imsld::role_part_finished_p -role_part_id $role_part_id] } {
-            imsld::mark_role_part_finished -role_part_id $role_part_id \
-                -act_id $act_id \
-                -play_id $play_id \
-                -imsld_id $imsld_id
-        }
+        imsld::mark_role_part_finished -role_part_id $role_part_id \
+            -act_id $act_id \
+            -play_id $play_id \
+            -imsld_id $imsld_id \
+            -user_id $user_id
     }
 }
 
 ad_proc -public imsld::mark_play_finished { 
     -play_id:required
     -imsld_id:required
+    {-user_id ""}
 } { 
     mark the play as finished. In this case there's only need to mark the play finished and not doing anything with the referenced acts, role_parts, etc.
 } {
-    set user_id [ad_conn user_id]
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    if { [imsld::play_finished_p -play_id $play_id -user_id $user_id] } {
+        return
+    }
     db_dml insert_play {
         insert into imsld_status_user (imsld_id,
                                        completed_id,
@@ -186,20 +456,23 @@ ad_proc -public imsld::mark_play_finished {
         and content_revision__is_live(ia.act_id) = 't'
     }] {
         set act_id [lindex $referenced_act 0]
-        if { ![imsld::act_finished_p -act_id $act_id] } {
-            imsld::mark_act_finished -act_id $act_id \
-                -play_id $play_id \
-                -imsld_id $imsld_id
-        }
+        imsld::mark_act_finished -act_id $act_id \
+            -play_id $play_id \
+            -imsld_id $imsld_id \
+            -user_id $user_id
     }
 }
 
-ad_proc -public imsld::mark_unit_of_learning_finished { 
+ad_proc -public imsld::mark_imsld_finished { 
     -imsld_id:required
+    {-user_id ""}
 } { 
     mark the unit of learning as finished
 } {
-    set user_id [ad_conn user_id]
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    if { [imsld::imsld_finished_p -imsld_id $imsld_id -user_id $user_id] } {
+        return
+    }
     db_dml insert_uol {
         insert into imsld_status_user (imsld_id,
                                        completed_id,
@@ -224,11 +497,49 @@ ad_proc -public imsld::mark_unit_of_learning_finished {
         and ii.imsld_id = :imsld_id
     }] {
         set play_id [lindex $referenced_play 0]
-        if { ![imsld::play_finished_p -play_id $play_id] } {
-            set play_id [lindex $referenced_play 0]
-            imsld::mark_play_finished -play_id $play_id \
-                -imsld_id $imsld_id
-        }
+        imsld::mark_play_finished -play_id $play_id \
+            -imsld_id $imsld_id \
+            -user_id $user_id
+    }
+}
+
+ad_proc -public imsld::mark_method_finished { 
+    -imsld_id:required
+    -method_id:required
+    {-user_id ""}
+} { 
+    mark the method as finished
+} {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    if { [imsld::method_finished_p -method_id $method_id -user_id $user_id] } {
+        return
+    }
+    db_dml insert_method {
+        insert into imsld_status_user (imsld_id,
+                                       completed_id,
+                                       user_id,
+                                       type,
+                                       finished_date) 
+        (
+         select :imsld_id,
+         :method_id,
+         :user_id,
+         'method',
+         now()
+         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :method_id)
+         )
+    }
+
+    foreach referenced_play [db_list_of_lists referenced_plays {
+        select ip.play_id
+        from imsld_plays ip, imsld_methodsi im
+        where ip.method_id = im.item_id
+        and im.method_id = :method_id
+    }] {
+        set play_id [lindex $referenced_play 0]
+        imsld::mark_play_finished -play_id $play_id \
+            -imsld_id $imsld_id \
+            -user_id $user_id
     }
 }
 
@@ -351,6 +662,7 @@ ad_proc -public imsld::finish_component_element {
     -element_id
     -type
     -code_call:boolean
+    {-user_id ""}
 } {
     @option imsld_id
     @option play_id
@@ -359,18 +671,19 @@ ad_proc -public imsld::finish_component_element {
     @option element_id
     @option type
     @option code_call
+    @option user_id
 
     Mark as finished the given component_id. This is done by adding a row in the table insert_entry.
 
     This function is called from a url, but it can also be called recursively
 } {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     if { !$code_call_p } {
         # get the url for parse it and get the info
         set url [ns_conn url]
         regexp {finish-component-element-([0-9]+)-([0-9]+)-([0-9]+)-([a-z]+).imsld$} $url match imsld_id role_part_id element_id type
         regsub {/finish-component-element.*} $url "" return_url 
     }
-    set user_id [ad_conn user_id]
     # now that we have the necessary info, mark the finished element completed and return
     db_dml insert_element_entry {
         insert into imsld_status_user (
@@ -420,6 +733,7 @@ ad_proc -public imsld::finish_component_element {
                     -role_part_id $role_part_id \
                     -element_id $structure_id \
                     -type structure \
+                    -user_id $user_id \
                     -code_call
             }
         }
@@ -431,7 +745,7 @@ ad_proc -public imsld::finish_component_element {
     # 2. let's see if the finished role_part triggers the ending of the act which references it.
     # 3. let's see if the finished act triggers the ending the play which references it
     # 4. let's see if the finished play triggers the ending of the method which references it.
-    if { [imsld::role_part_finished_p -role_part_id $role_part_id] && ![db_0or1row already_marked_p {select 1 from imsld_status_user where completed_id = :role_part_id and user_id = :user_id}] } { 
+    if { [imsld::role_part_finished_p -role_part_id $role_part_id -user_id $user_id] && ![db_0or1row already_marked_p {select 1 from imsld_status_user where completed_id = :role_part_id and user_id = :user_id}] } { 
         # case number 1
         imsld::finish_component_element -imsld_id $imsld_id \
             -play_id $play_id \
@@ -439,6 +753,7 @@ ad_proc -public imsld::finish_component_element {
             -role_part_id $role_part_id \
             -element_id $role_part_id \
             -type role-part \
+            -user_id $user_id \
             -code_call
 
         db_1row get_role_part_info {
@@ -460,6 +775,7 @@ ad_proc -public imsld::finish_component_element {
         }
 
         set completed_act_p 1 
+        set rel_defined_p 0
         db_foreach referenced_role_part {
             select ar.object_id_two as role_part_item_id,
             rp.role_part_id
@@ -469,11 +785,14 @@ ad_proc -public imsld::finish_component_element {
             and ar.rel_type = 'imsld_act_rp_completed_rel'
             and content_revision__is_live(rp.role_part_id) = 't'
         } {
-            if { ![imsld::role_part_finished_p -role_part_id $role_part_id] } {
+            if { ![imsld::role_part_finished_p -role_part_id $role_part_id -user_id $user_id] } {
                 set completed_act_p 0
             }
         } if_no_rows {
             # the act doesn't have any imsld_act_rp_completed_rel rel defined.
+            set rel_defined_p 1
+        }
+        if { $rel_defined_p } {
             # check if all the role parts have been finished and mar the act as finished.
             db_foreach directly_referenced_role_part {
                 select irp.role_part_id
@@ -481,7 +800,7 @@ ad_proc -public imsld::finish_component_element {
                 where irp.act_id = :act_item_id
                 and content_revision__is_live(irp.role_part_id) = 't'
             } {
-                if { ![imsld::role_part_finished_p -role_part_id $role_part_id] } {
+                if { ![imsld::role_part_finished_p -role_part_id $role_part_id -user_id $user_id] } {
                     set completed_act_p 0
                 }
             }
@@ -491,7 +810,8 @@ ad_proc -public imsld::finish_component_element {
             # case number 2
             imsld::mark_act_finished -act_id $act_id \
                 -play_id $play_id \
-                -imsld_id $imsld_id
+                -imsld_id $imsld_id \
+                -user_id $user_id
             
             set completed_play_p 1
             db_foreach referenced_act {
@@ -501,16 +821,18 @@ ad_proc -public imsld::finish_component_element {
                 and ip.item_id = ia.play_id
                 and content_revision__is_live(ia.act_id) = 't'
             } {
-                if { ![imsld::act_finished_p -act_id $act_id] } {
+                if { ![imsld::act_finished_p -act_id $act_id -user_id $user_id] } {
                     set completed_play_p 0
                 }
             }
             if { $completed_play_p } {
                 # case number 3
                 imsld::mark_play_finished -play_id $play_id \
-                    -imsld_id $imsld_id
+                    -imsld_id $imsld_id \
+                    -user_id $user_id 
                 
                 set completed_unit_of_learning_p 1 
+                set rel_defined_p 0
                 db_foreach referenced_play {
                     select ip.play_id
                     from acs_rels ar, imsld_playsi ip
@@ -519,11 +841,14 @@ ad_proc -public imsld::finish_component_element {
                     and ar.rel_type = 'imsld_mp_completed_rel'
                     and content_revision__is_live(ip.play_id) = 't'
                 } {
-                    if { ![imsld::play_finished_p -play_id $play_id] } {
+                    if { ![imsld::play_finished_p -play_id $play_id -user_id $user_id] } {
                         set completed_unit_of_learning_p 0
                     }
                 } if_no_rows {
                     # the uol doesn't have any imsld_mp_completed_rel rel defined.
+                    set rel_defined_p 1
+                }
+                if { $rel_defined_p } {
                     # check if all the plays have been finished and mark the imsld as finished.
                     db_foreach directly_referenced_plays {
                         select ip.play_id
@@ -531,7 +856,7 @@ ad_proc -public imsld::finish_component_element {
                         where ip.method_id = :method_item_id
                         and content_revision__is_live(ip.play_id) = 't'
                     } {
-                        if { ![imsld::play_finished_p -play_id $play_id] } {
+                        if { ![imsld::play_finished_p -play_id $play_id -user_id $user_id] } {
                             set completed_unit_of_learning_p 0
                         }
                     }
@@ -539,7 +864,7 @@ ad_proc -public imsld::finish_component_element {
                         
                 if { $completed_unit_of_learning_p } {
                     # case number 4
-                    imsld::mark_unit_of_learning_finished -imsld_id $imsld_id
+                    imsld::mark_imsld_finished -imsld_id $imsld_id -user_id $user_id
                 }
             }
         }
@@ -751,6 +1076,40 @@ ad_proc -public imsld::play_finished_p {
         select 1 
         from imsld_status_user
         where completed_id = :play_id
+        and user_id = :user_id
+    }]
+} 
+
+ad_proc -public imsld::method_finished_p { 
+    -method_id:required
+    {-user_id ""}
+} { 
+    @param method_id
+    
+    @return 0 if the method hasn't been finished. 1 otherwise
+} {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    return [db_0or1row method_marked_p {
+        select 1 
+        from imsld_status_user
+        where completed_id = :method_id
+        and user_id = :user_id
+    }]
+} 
+
+ad_proc -public imsld::imsld_finished_p { 
+    -imsld_id:required
+    {-user_id ""}
+} { 
+    @param imsld_id
+    
+    @return 0 if the imsld hasn't been finished. 1 otherwise
+} {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    return [db_0or1row imsld_marked_p {
+        select 1 
+        from imsld_status_user
+        where completed_id = :imsld_id
         and user_id = :user_id
     }]
 } 
@@ -1686,7 +2045,7 @@ ad_proc -public imsld::next_activity {
         # 1.1 if there are no more role_parts then this is the last one
         # 1.2 if we find a "next role_part", it will be treated latter, we just have to set the next role_part_id var
 
-        if { [imsld::role_part_finished_p -role_part_id $role_part_id] } {
+        if { [imsld::role_part_finished_p -role_part_id $role_part_id -user_id $user_id] } {
             # search in the current act_id
             if { ![db_0or1row search_current_act {
                 select role_part_id
@@ -2128,10 +2487,10 @@ ad_proc -public imsld::finish_resource {
                 end as type
         }
 
-            imsld::finish_component_element -imsld_id $imsld_id  \
-                                            -role_part_id $role_part_id \
-                                            -element_id $activity_id \
-                                            -type $type
+        imsld::finish_component_element -imsld_id $imsld_id  \
+            -role_part_id $role_part_id \
+            -element_id $activity_id \
+            -type $type
         }
     }
 }  
