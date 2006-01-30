@@ -43,8 +43,9 @@ if { ![
     }
 
     if { [lsearch [concat $prerequisites_list $objectives_list] $identifier] != "-1" } {
-        
+
     } else {
+
         imsld::finish_resource -resource_id $resource_id
     }
 }
