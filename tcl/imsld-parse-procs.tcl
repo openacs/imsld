@@ -521,7 +521,7 @@ ad_proc -public imsld::parse::initialize_folders {
         content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_play
         content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_act
         content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_role_part
-        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_time_limit
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_complete_act
         content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_on_completion
         content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_cp_manifest
         content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_cp_organization
@@ -839,6 +839,440 @@ ad_proc -public imsld::parse::parse_and_create_role {
     return $role_id
 }
 
+ad_proc -public imsld::parse::parse_and_create_restriction { 
+    -restriction_node
+    -property_id
+    -identifier
+    -component
+    -existing_href
+    -manifest
+    -manifest_id
+    -parent_id
+    -tmp_dir
+} {
+    Parse a restriction and stores all the information in the database.
+
+    Returns a list with the new restriction_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
+    
+    @param restriction_node restriction node to parse
+    @param property_id property_id
+    @param manifest Manifest tree
+    @param manifest_id Manifest ID or the manifest being parsed
+    @param parent_id Parent folder ID
+    @param tmp_dir Temporary directory where the files were exctracted
+} {
+    upvar files_struct_list files_struct_list
+ 
+    set restriction_type [string tolower [imsld::parse::get_attribute -node $restriction_node -attr_name restriction-type]]
+    set restriction_value [imsld::parse::get_element_text -node $restriction_node]
+    set restriction_id [imsld::item_revision_new -attributes [list [list property_id $property_id] \
+                                                                  [list restriction_type $restriction_type] \
+                                                                  [list value $restriction_value]] \
+                            -content_type imsld_restriction \
+                            -parent_id $parent_id
+                       ]
+    return $restriction_id
+}
+
+ad_proc -public imsld::parse::parse_and_create_global_def { 
+    -global_def_node
+    -component_id
+    -type
+    -manifest
+    -manifest_id
+    -parent_id
+    -tmp_dir
+} {
+    Parse a global definition and stores all the information in the database.
+
+    Returns a list with the new global_definition_id (item_id, actually a property_id) created if there were no errors, or 0 and an explanation messge if there was an error.
+    
+    @param global_def_node global_def node to parse
+    @component_id Comoponent id of the one which owns the property
+    @param type Type of the property defined by this global definition, which can be globpers or glob
+    @param manifest Manifest tree
+    @param manifest_id Manifest ID or the manifest being parsed
+    @param parent_id Parent folder ID
+    @param tmp_dir Temporary directory where the files were exctracted
+} {
+    upvar files_struct_list files_struct_list
+    
+    set uri [imsld::parse::get_attribute -node $global_def_node -attr_name uri]
+    set title [imsld::parse::get_title -node $global_def_node -prefix imsld]
+    set datatype [$$global_def_node child all imsld:datatype] 
+    imsld::parse::validate_multiplicity -tree $global_def_node -multiplicity 1 -element_name "global-definition datatype" -equal
+    set datatype [string tolower [imsld::parse::get_attribute -node $global_def_node -attr_name datatype]]
+    set initial_value [$global_def_node child all imsld:initial-value] 
+    imsld::parse::validate_multiplicity -tree $initial_value -multiplicity 1 -element_name "global-definition initial-value" -lower_than
+    if { [llength $initial_value] } {
+        set initial_value [imsld::parse::get_element_text -node $initial_value]
+    } else {
+        set initial_value ""
+    }
+
+    set globpers_property_id [imsld::item_revision_new -attributes [list [list component_id $component_id] \
+                                                                  [list identifier $identifier] \
+                                                                  [list existing_href $existing_href] \
+                                                                  [list uri $uri] \
+                                                                  [list type $type] \
+                                                                  [list datatype $datatype] \
+                                                                  [list initial_value $initial_value]] \
+                            -content_type imsld_property \
+                            -title $title \
+                            -parent_id $parent_id]
+
+    set restrictions [$loc_property child all imsld:restriction]
+    foreach restriction $restrictions {
+        set restriction_list [imsld::parse::parse_and_create_restriction -manifest $manifest \
+                                  -property_id $globpers_property_id \
+                                  -manifest_id $manifest_id \
+                                  -restriction_node $restriction \
+                                  -parent_id $parent_id \
+                                  -tmp_dir $tmp_dir]
+        
+        set restriction_id [lindex $item_list 0]
+        if { !$restriction_id } {
+            # an error happened, abort and return the list whit the error
+            return $restriction_list
+        }
+    }
+
+    return $globpers_property_id
+}
+
+ad_proc -public imsld::parse::parse_and_create_property_group { 
+    -property_group_node
+    -component_id
+    -manifest
+    -manifest_id
+    -parent_id
+    -tmp_dir
+} {
+    Parse a property group and stores all the information in the database.
+
+    Returns a list with the new property_group_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
+    
+    @param property_group_node property_group node to parse
+    @param component_id Component identifier of the one that owns this property
+    @param manifest Manifest tree
+    @param manifest_id Manifest ID or the manifest being parsed
+    @param parent_id Parent folder ID
+    @param tmp_dir Temporary directory where the files were exctracted
+} {
+    upvar files_struct_list files_struct_list
+    
+    set identifier [string tolower [imsld::parse::get_attribute -node $property_group_node -attr_name identifier]]
+    set title [imsld::parse::get_title -node $property_group_node -prefix imsld]
+
+    set property_group_id [imsld::item_revision_new -attributes [list [list identifier $identifier] \
+                                                                     [list component_id $component_id]] \
+                               -content_type imsld_property_group \
+                               -title $title \
+                               -parent_id $parent_id]
+
+    set property_refs [$property_group_node child all imsld:property-ref]
+    foreach property $property_refs {
+        set ref [string tolower [imsld::parse::get_attribute -node $property -attr_name ref]]
+        if { ![db_0or1row get_property_id {
+            select item_id as property_item_id 
+            from imsld_propertiesi 
+            where identifier = :ref 
+            and content_revision__is_live(property_id) = 't' 
+            and component_id = :component_id
+        }] } {
+            # there is no property with that identifier, return the error
+            return [list 0 "<#_ There is no property with the identifier %ref% (referenced by: property group %identifier%) #>"]
+        }
+        relation_add imsld_gprop_prop_rel $property_group_id $property_item_id
+    }
+
+    set property_group_refs [$property_group_node child all imsld:property-group-ref]
+    foreach property_group $property_group_refs {
+        set ref [string tolower [imsld::parse::get_attribute -node $property_group -attr_name ref]]
+        if { ![db_0or1row get_group_property_id {
+            select item_id as group_property_item_id 
+            from imsld_propertiesi 
+            where identifier = :ref 
+            and content_revision__is_live(property_id) = 't' 
+            and component_id = :component_id
+        }] } {
+            # there is no propety group with that identifier. search in the rest of non-created property-groups
+            set organizations [$manifest child all imscp:organizations]
+            if { ![llength $organizations] } {
+                set organizations [$manifest child all organizations]
+            }                    
+            set property_groups [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:property] child all imsld:property-group]
+            
+            set found_p 0
+            foreach referenced_property_group $property_groups {
+                set referenced_identifier [string tolower [imsld::parse::get_attribute -node $referenced_property_group -attr_name identifier]]
+                if { [string eq $ref $referenced_identifier] } {
+                    set found_p 1
+                    set referenced_property_group_node $referenced_property_group
+                }
+            }
+            if { $found_p } {
+                # ok, let's create the property group
+                set property_group_ref_list [imsld::parse::parse_and_create_property_group -property_group_node $referenced_property_group_node \
+                                                     -component_id $component_id \
+                                                     -manifest_id $manifest_id \
+                                                     -manifest $manifest \
+                                                     -parent_id $parent_id \
+                                                     -tmp_dir $tmp_dir]
+                
+                set property_group_ref_id [lindex $property_group_ref_list 0]
+                if { !$property_group_ref_list } {
+                    # there is an error, abort and return the list with the error
+                    return $property_group_ref_list
+                }
+                # finally, do the mappings
+                relation_add imsld_gprop_gprop_rel $property_group_id $property_group_ref_id
+            } else {
+                # error
+                return [list 0 "<#_ There is no property-group with the identifier %ref% (referenced by property-group %identifier%) #>"]
+            }
+        } else {
+            # do the mappings
+            relation_add imsld_gprop_prop_rel $property_group_id $property_item_id
+        }
+    }
+
+    return $property_group_id
+}
+
+ad_proc -public imsld::parse::parse_and_create_property { 
+    -component_id
+    -manifest
+    -manifest_id
+    -property_node
+    -parent_id
+    -tmp_dir
+} {
+    Parse IMS-LD property and stores all the information in the database.
+
+    Returns a list with the new property_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
+    
+    @param role_type staff or learner
+    @param component_id Component identifier which this role belongs to
+    @param manifest Manifest tree
+    @param manifest_id Manifest ID or the manifest being parsed
+    @param roles_node The role node to parse 
+    @param parent_id Parent folder ID
+    @param tmp_dir Temporary directory where the files were exctracted
+    @option parent_role_id Parent role identifier. Default to null
+} {
+    upvar files_struct_list files_struct_list
+    set property_id ""
+    set property_group_id ""
+
+    # loc properties
+    set loc_properties [$property_node child all imsld:loc-property]
+    foreach loc_property $loc_properties {
+        set lp_title [imsld::parse::get_title -node $loc_property -prefix imsld]
+        set lp_identifier [string tolower [imsld::parse::get_attribute -node $loc_property -attr_name identifier]]
+        set lp_datatype [$loc_property child all imsld:datatype] 
+        imsld::parse::validate_multiplicity -tree $lp_datatype -multiplicity 1 -element_name "loc-property datatype" -equal
+        set lp_datatype [string tolower [imsld::parse::get_attribute -node $lp_datatype -attr_name datatype]]
+        set lp_initial_value [$loc_property child all imsld:initial-value] 
+        imsld::parse::validate_multiplicity -tree $lp_initial_value -multiplicity 1 -element_name "loc-property initial-value" -lower_than
+        if { [llength $lp_initial_value] } {
+            set lp_initial_value [imsld::parse::get_element_text -node $lp_initial_value]
+        } else {
+            set lp_initial_value ""
+        }
+
+        set property_id [imsld::item_revision_new -attributes [list [list component_id $component_id] \
+                                                                      [list identifier $lp_identifier] \
+                                                                      [list type loc] \
+                                                                      [list datatype $lp_datatype] \
+                                                                      [list initial_value $lp_initial_value]] \
+                                -content_type imsld_property \
+                                -title $lp_title \
+                                -parent_id $parent_id]
+
+        set lp_restrictions [$loc_property child all imsld:restriction]
+        foreach lp_restriction $lp_restrictions {
+            set restriction_list [imsld::parse::parse_and_create_restriction -manifest $manifest \
+                                      -property_id $property_id \
+                                      -manifest_id $manifest_id \
+                                      -restriction_node $lp_restriction \
+                                      -parent_id $parent_id \
+                                      -tmp_dir $tmp_dir]
+            
+            set restriction_id [lindex $restriction_list 0]
+            if { !$restriction_id } {
+                # an error happened, abort and return the list whit the error
+                return $restriction_list
+            }
+        }
+    }
+
+    # locpers properties
+    set locpers_properties [$property_node child all imsld:locpers-property]
+    foreach locpers_property $locpers_properties {
+        set lpp_title [imsld::parse::get_title -node $locpers_property -prefix imsld]
+        set lpp_identifier [string tolower [imsld::parse::get_attribute -node $locpers_property -attr_name identifier]]
+        set lpp_datatype [$locpers_property child all imsld:datatype] 
+        imsld::parse::validate_multiplicity -tree $lpp_datatype -multiplicity 1 -element_name "locpers-property datatype" -equal
+        set lpp_datatype [string tolower [imsld::parse::get_attribute -node $lpp_datatype -attr_name datatype]]
+        set lpp_initial_value [$locpers_property child all imsld:initial-value] 
+        imsld::parse::validate_multiplicity -tree $lpp_initial_value -multiplicity 1 -element_name "locpers-property initial-value" -lower_than
+        if { [llength $lpp_initial_value] } {
+            set lpp_initial_value [imsld::parse::get_element_text -node $lpp_initial_value]
+        } else {
+            set lpp_initial_value ""
+        }
+
+        set property_id [imsld::item_revision_new -attributes [list [list component_id $component_id] \
+                                                                       [list identifier $lpp_identifier] \
+                                                                       [list type locpers] \
+                                                                       [list datatype $lpp_datatype] \
+                                                                       [list initial_value $lpp_initial_value]] \
+                                 -content_type imsld_property \
+                                 -title $lpp_title \
+                                 -parent_id $parent_id]
+        
+        set lpp_restrictions [$locpers_property child all imsld:restriction]
+        foreach lpp_restriction $lpp_restrictions {
+            set restriction_list [imsld::parse::parse_and_create_restriction -manifest $manifest \
+                                      -property_id $property_id \
+                                      -manifest_id $manifest_id \
+                                      -restriction_node $lpp_restriction \
+                                      -parent_id $parent_id \
+                                      -tmp_dir $tmp_dir]
+            
+            set restriction_id [lindex $restriction_list 0]
+            if { !$restriction_id } {
+                # an error happened, abort and return the list whit the error
+                return $restriction_list
+            }
+        }
+    }
+
+    # locrole properties
+    set locrole_properties [$property_node child all imsld:locrole-property]
+    foreach locrole_property $locrole_properties {
+        set lrp_title [imsld::parse::get_title -node $locrole_property -prefix imsld]
+        set lrp_identifier [string tolower [imsld::parse::get_attribute -node $locrole_property -attr_name identifier]]
+        set lrp_datatype [$locrole_property child all imsld:datatype] 
+        imsld::parse::validate_multiplicity -tree $lrp_datatype -multiplicity 1 -element_name "locrole-property datatype" -equal
+        set lrp_datatype [string tolower [imsld::parse::get_attribute -node $lrp_datatype -attr_name datatype]]
+
+        set role_ref [$lrp_datatype child all imsld:role-ref]
+        imsld::parse::validate_multiplicity -tree $lrp_datatype -multiplicity 1 -element_name "locrole-property role" -equal
+        set ref [string tolower [imsld::parse::get_attribute -node $role_ref -attr_name ref]]
+        if { ![db_0or1row get_role_id {
+            select item_id as role_id 
+            from imsld_rolesi 
+            where identifier = :ref 
+            and content_revision__is_live(role_id) = 't' 
+            and component_id = :component_id
+        }] } {
+            # there is no role with that identifier, return the error
+            return [list 0 "<#_ There is no role with the identifier %ref% (referenced by: locrole property) #>"]
+        }
+
+        set lrp_initial_value [$locrole_property child all imsld:initial-value] 
+        imsld::parse::validate_multiplicity -tree $lrp_initial_value -multiplicity 1 -element_name "locrole-property initial-value" -lower_than
+        if { [llength $lrp_initial_value] } {
+            set lrp_initial_value [imsld::parse::get_element_text -node $lrp_initial_value]
+        } else {
+            set lrp_initial_value ""
+        }
+
+        set property_id [imsld::item_revision_new -attributes [list [list component_id $component_id] \
+                                                                       [list identifier $lrp_identifier] \
+                                                                       [list type locrole] \
+                                                                       [list datatype $lrp_datatype] \
+                                                                       [list role_id $role_id] \
+                                                                       [list initial_value $lrp_initial_value]] \
+                                 -content_type imsld_property \
+                                 -title $lrp_title \
+                                 -parent_id $parent_id]
+        
+        set lrp_restrictions [$locrole_property child all imsld:restriction]
+        foreach lrp_restriction $lrp_restrictions {
+            set restriction_list [imsld::parse::parse_and_create_restriction -manifest $manifest \
+                                      -property_id $property_id \
+                                      -manifest_id $manifest_id \
+                                      -restriction_node $lrp_restriction \
+                                      -parent_id $parent_id \
+                                      -tmp_dir $tmp_dir]
+            
+            set restriction_id [lindex $restriction_list 0]
+            if { !$restriction_id } {
+                # an error happened, abort and return the list whit the error
+                return $restriction_list
+            }
+        }
+    }
+
+    # globpers properties
+    set globpers_properties [$property_node child all imsld:globpers-property]
+    foreach globpers_property $globpers_properties {
+        set gp_identifier [string tolower [imsld::parse::get_attribute -node $globpers_property -attr_name identifier]]
+        set gp_existing [$globpers_property child all imsld:existing] 
+        imsld::parse::validate_multiplicity -tree $gp_exiting -multiplicity 1 -element_name "existing(globpers)" -equal
+        set gp_existing_href [string tolower [imsld::parse::get_attribute -node $gp_exiting -attr_name href]]
+
+        set global_def [$globpers_property child all imsld:global-definition]
+        set global_def_list [imsld::parse::parse__and_create_global_def -type globpers \
+                                 -global_def_node $global_def \
+                                 -component_id $component_id \
+                                 -manifest $manifest \
+                                 -manifest_id $manifest_id \
+                                 -parent_id $parent_id \
+                                 -tmp_dir $tmp_dir]
+        
+        set property_id [lindex $global_def_list 0]
+        if { !$property_id } {
+            # an error happened, abort and return the list whit the error
+            return $global_def_list
+        }
+    }
+
+    # globp properties
+    set glob_properties [$property_node child all imsld:glob-property]
+    foreach glob_property $glob_properties {
+        set g_identifier [string tolower [imsld::parse::get_attribute -node $glob_property -attr_name identifier]]
+        set g_existing [$glob_property child all imsld:existing] 
+        imsld::parse::validate_multiplicity -tree $g_exiting -multiplicity 1 -element_name "existing(glob)" -equal
+        set gp_existing_href [string tolower [imsld::parse::get_attribute -node $g_exiting -attr_name href]]
+
+        set global_def [$glob_property child all imsld:global-definition]
+        set global_def_list [imsld::parse::parse_and_create_global_def -type glob \
+                                 -global_def_node $global_def \
+                                 -component_id $component_id \
+                                 -manifest $manifest \
+                                 -manifest_id $manifest_id \
+                                 -parent_id $parent_id \
+                                 -tmp_dir $tmp_dir]
+        set property_id [lindex $global_def_list 0]
+        if { !$property_id } {
+            # an error happened, abort and return the list whit the error
+            return $global_def_list
+        }
+    }
+
+    # property groups
+    set property_groups [$property_node child all imsld:property-group]
+    foreach property_group $property_groups {
+        set property_group_list [imsld::parse::parse_and_create_property_group -property_group_node $property_group \
+                                     -component_id $component_id \
+                                     -manifest $manifest \
+                                     -manifest_id $manifest_id \
+                                     -parent_id $parent_id \
+                                     -tmp_dir $tmp_dir]
+        set property_group_id [lindex $property_group_list 0]
+        if { !$property_group_id } {
+            # an error happened, abort and return the list whit the error
+            return $property_group_list
+        }
+    }
+
+    return [expr { [string eq $property_id ""] ? $property_group_id : $property_group_id }]
+}
+
 ad_proc -public imsld::parse::parse_and_create_learning_objective { 
     -learning_objective_node
     -manifest:required
@@ -1079,6 +1513,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
         and env.item_id = :environment_id
     }]
 
+    # send mail
     set send_mail [$service_node child all imsld:send-mail]
     if { [llength $send_mail] } {
         # it's a send mail service, get the info and create the service
@@ -1120,14 +1555,50 @@ ad_proc -public imsld::parse::parse_and_create_service {
                 # there is no role with that identifier, return the error
                 return [list 0 "[_ imsld.lt_There_is_no_role_with]"]
             }
+
+            # email-property-ref
+            set email_property_ref [string tolower [imsld::parse::get_attribute -node $email_data -attr_name email-property-ref]]
+            if { ![string eq $email_property_ref ""] } {
+                if { ![db_0or1row get_property_id {
+                    select item_id as email_property_id
+                    from imsld_propertiesi 
+                    where identifier = :email_property_ref
+                    and content_revision__is_live(property_id) = 't' 
+                    and component_id = :component_id }] } {
+                    # there is no property with that identifier, return the error
+                    return [list 0 "<#_ There is no property with the identifier %email_property_ref% (referenced from an email data) #>"]
+                } 
+            } else {
+                set email_property_id ""
+            }
+
+            # username-property-ref
+            set username_property_ref [string tolower [imsld::parse::get_attribute -node $email_data -attr_name username-property-ref]]
+            if { ![string eq $username_property_ref ""] } {
+                if { ![db_0or1row get_property_id {
+                    select item_id as username_property_id
+                    from imsld_propertiesi 
+                    where identifier = :username_property_ref
+                    and content_revision__is_live(property_id) = 't' 
+                    and component_id = :component_id }] } {
+                    # there is no property with that identifier, return the error
+                    return [list 0 "<#_ There is no property with the identifier %username_property_ref% (referenced from an email data) #>"]
+                }
+            } else {
+                set username_property_id ""
+            }
+
             set email_data_id [imsld::item_revision_new -attributes [list [list send_mail_id $send_mail_id] \
                                                                          [list role_id $role_id] \
-                                                                         [list mail_data {}]] \
+                                                                         [list mail_data {}] \
+                                                                         [list email_property_id $email_property_id] \
+                                                                         [list username_property_id $username_property_id]] \
                                    -content_type imsld_send_mail_data \
                                    -parent_id $parent_id]
         }
     }
 
+    # conferences
     set conference [$service_node child all imsld:conference]
     if { [llength $conference] } {
         # it's a conference service, get the info an create the service
@@ -1281,6 +1752,71 @@ ad_proc -public imsld::parse::parse_and_create_service {
         ns_log error "Index-search service not supported"
         return [list 0 "[_ imsld.lt_Index_search_service_]"]
     }
+
+    # monitor service (level b)
+    set monitor_service [$service_node child all imsld:monitor]
+    if { [llength $monitor_service] } {
+        imsld::parse::validate_multiplicity -tree $monitor_service -multiplicity 1 -element_name monitor-service -equal
+        set title [imsld::parse::get_title -node $monitor_service -prefix imsld]
+        # create the service
+        set service_id [imsld::item_revision_new -attributes [list [list environment_id $environment_id] \
+                                                                  [list class $service_class] \
+                                                                  [list identifier $identifier] \
+                                                                  [list is_visible_p $is_visible_p] \
+                                                                  [list parameters $parameters] \
+                                                                  [list service_type monitor]] \
+                            -title $title \
+                            -content_type imsld_service \
+                            -parent_id $parent_id]
+
+        # monitor: role-ref
+        set role_ref [$monitor_service child all imsld:role-ref]
+        imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name role-ref -equal
+        set ref [string tolower [imsld::parse::get_attribute -node $role_ref -attr_name ref]]
+        if { ![db_0or1row get_role_id {
+            select ir.item_id as role_id
+            from imsld_rolesi ir
+            where ir.identifier = :ref 
+            and content_revision__is_live(ir.role_id) = 't' 
+            and ir.component_id = :component_id
+        }] } {
+            # there is no role with that identifier, return the error
+            return [list 0 "<#_ There is no role with the identifier %ref% (referenced from a monitor service) #>"]
+        }
+        
+        # monitor: self
+        set self [$monitor_service child all imsld:self]
+        if { [llength [$monitor_service child all imsld:self]] } {
+            imsld::parse::validate_multiplicity -tree $self -multiplicity 1 -element_name self -equal
+            set self_p t
+        } else {
+            set self_p f
+        }
+        
+        set imsld_item [$monitor_service child all imsld:item]
+        imsld::parse::validate_multiplicity -tree $imsld_item -multiplicity 1 -element_name "imslditem(monitor service)" -equal
+        set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
+                            -manifest_id $manifest_id \
+                            -item_node $imsld_item \
+                            -parent_id $parent_id \
+                            -tmp_dir $tmp_dir]
+        
+        set imsld_item_id [lindex $item_list 0]
+        if { !$imsld_item_id } {
+            # an error happened, abort and return the list whit the error
+            return $item_list
+        }
+    
+        # create the monitor service
+        set send_mail_id [imsld::item_revision_new -attributes [list [list service_id $service_id] \
+                                                                    [list role_id $role_id] \
+                                                                    [list self_p $self_p] \
+                                                                    [list imsld_item_id $imsld_item_id]] \
+                              -parent_id $parent_id \
+                              -content_type imsld_monitor_service \
+                              -title $title]
+    }
+    
     return $service_id
 }
 
@@ -1413,6 +1949,96 @@ ad_proc -public imsld::parse::parse_and_create_environment {
     return $environment_id
 }
 
+ad_proc -public imsld::parse::parse_and_create_property_value { 
+    -component_id
+    -property_value_node
+    -manifest
+    -manifest_id
+    -parent_id
+} {
+    Parse a property value and stores all the information in the database.
+
+    Returns a list with the new property_value_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
+    
+    @param component_id Component identifier which this role belongs to
+    @param manifest Manifest tree
+    @param manifest_id Manifest ID or the manifest being parsed
+    @param activity_node The activity node to parse 
+    @param parent_id Parent folder ID
+} {
+    # Property Ref
+    set property_ref [$property_value_node child all imsld:property-ref]
+    imsld::parse::validate_multiplicity -tree $property_ref -multiplicity 1 -element_name property-ref(property-value) -equal
+    set ref [string tolower [imsld::parse::get_attribute -node $property_ref -attr_name ref]]
+    if { ![db_0or1row get_property_id {
+        select item_id as property_id 
+        from imsld_propertiesi 
+        where identifier = :ref 
+        and content_revision__is_live(property_id) = 't' 
+        and component_id = :component_id
+    }] } {
+        # there is no property with that identifier, return the error
+        return [list 0 "<#_ There is no property with the identifier %ref% (referenced by: property value #>"]
+    }
+    
+    # Property Value
+    set property_value [$property_value_node child all imsld:property-value]
+    imsld::parse::validate_multiplicity -tree $property_value -multiplicity 1 -element_name property-value(property-value) -equal
+
+    # Langstring
+    set langstring [$property_value_node child all imsld:langstring]
+    if { [llength $langstring] } {
+        imsld::parse::validate_multiplicity -tree $langstring -multiplicity 1 -element_name langstring(property-value) -equal
+        set langstring [imsld::parse::get_element_text -node $langstring]
+    } elseif { ![string eq "" [imsld::parse::get_element_text -node $property_value]] } {
+        set langstring [imsld::parse::get_element_text -node $property_value]
+    } else {
+        set langstring ""
+    }
+
+    # Calculate
+    set calculate [$property_value_node child all imsld:calculate]
+    if { [llength $calculate] } {
+        imsld::parse::validate_multiplicity -tree $calculate -multiplicity 1 -element_name calculate(property-value) -equal
+        set calculate_list [imsld::parse::parse_and_create_calculate -calculate_node $$calculate \
+                                -manifest_id $manifest_id \
+                                -parent_id $parent_id \
+                                -manifest $manifest]
+        set calcualte_id [lindex $calculate_list 0]
+        if { !$calculate_id } {
+            # return the error
+            return $calculate_list
+        }
+    } else {
+        set calculate_id ""
+    }
+
+    # Expression
+    set expression [$property_value_node child all imsld:expression]
+    if { [llength $expression] } {
+        imsld::parse::validate_multiplicity -tree $expression -multiplicity 1 -element_name expression(property-value) -equal
+        set expression_list [imsld::parse::parse_and_create_expression -expression_node $expression \
+                                 -manifest_id $manifest_id \
+                                 -parent_id $parent_id \
+                                 -manifest $manifest]
+        set expression_id [lindex $expression_list 0]
+        if { !$expression_id } {
+            # return the error
+            return $expression_list
+        }
+    } else {
+        set expression_id ""
+    }
+
+    set property_value_id [imsld::item_revision_new -attributes [list [list property_id $property_id] \
+                                                                     [list langstring $langstring] \
+                                                                     [list calculate_id $calculate_id] \
+                                                                     [list property_value_ref $property_id]] \
+                               -content_type imsld_property_value \
+                               -parent_id $parent_id]
+    return $property_value_id
+}
+
 ad_proc -public imsld::parse::parse_and_create_learning_activity { 
     -component_id
     -activity_node
@@ -1500,7 +2126,9 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     
     set complete_activity [$activity_node child all imsld:complete-activity]
     set user_choice_p f
-    set time_limit_id ""
+    set complete_act_id ""
+    set time_in_seconds ""
+    set when_prop_value_is_set_id ""
     if { [llength $complete_activity] } {
         imsld::parse::validate_multiplicity -tree $complete_activity -multiplicity 1 -element_name complete-activity(learning-activity) -equal
         
@@ -1518,16 +2146,36 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(learning-activity) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
             set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
-            set time_limit_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds]] \
-                                   -content_type imsld_time_limit \
-                                   -parent_id $parent_id]
         }
+
+        # Learning Activity: Complete Activity: When Property Value is Set
+        set when_prop_value_is_set [$complete_activity child all imsld:when-property-value-is-set] 
+        if { [llength $when_prop_value_is_set] } {
+            imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(learning-activity) -equal
+            set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -component_id $component_id \
+                                                 -property_value_node $when_prop_value_is_set \
+                                                 -manifest_id $manifest_id \
+                                                 -manifest $manifest \
+                                                 -parent_id $parent_id]
+            set when_prop_value_is_set_id [lindex $when_prop_value_is_set_list 0]
+            if { !$when_prop_value_is_set_id } {
+                # there is an error, return it
+                return $when_prop_value_is_set_list
+            }
+        }
+        set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
+                                                                       [list user_choice_p $user_choice_p] \
+                                                                       [list when_prop_val_is_set_id $when_prop_value_is_set_id]] \
+                                 -content_type imsld_complete_act \
+                                 -parent_id $parent_id]
+
     }
 
-    # Learning Activity: On completion
+    # Learning Activity: On Completion
     set on_completion [$activity_node child all imsld:on-completion]
     set on_completion_id ""
     if { [llength $on_completion] } {
+
         set feedback_desc [$on_completion child all imsld:feedback-description]
         if { [llength $feedback_desc] } {
             imsld::parse::validate_multiplicity -tree $feedback_desc -multiplicity 1 -element_name feedback(learning-activity) -equal
@@ -1550,6 +2198,25 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                 # map item with the learning objective
                 relation_add imsld_feedback_rel $on_completion_id $item_id
             }
+        } else {
+            set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
+                                      -content_type imsld_on_completion]
+        }
+
+        # Learning Activity: On Completion: Change Property Value
+        set change_property_value_list [$on_completion child all imsld:change-property-value] 
+        foreach change_property_value $change_property_value_list {
+            set change_prop_value_list [imsld::parse::parse_and_create_property_value -component_id $component_id \
+                                            -property_value_node $change_property_value \
+                                            -manifest_id $manifest_id \
+                                            -manifest $manifest \
+                                            -parent_id $parent_id]
+            set change_prop_value_id [lindex $change_property_value 0]
+            if { !$change_prop_value_id } {
+                # there is an error, return it
+                return $change_prop_value_list
+            }
+            relation add imsld_on_comp_change_pv_rel $on_completion_id $change_prop_value_id
         }
     }
 
@@ -1559,8 +2226,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                                                                         [list activity_description_id $activity_description_id] \
                                                                         [list parameters $parameters] \
                                                                         [list is_visible_p $is_visible_p] \
-                                                                        [list user_choice_p $user_choice_p] \
-                                                                        [list time_limit_id $time_limit_id] \
+                                                                        [list complete_act_id $complete_act_id] \
                                                                         [list on_completion_id $on_completion_id] \
                                                                         [list learning_objective_id $learning_objective_id] \
                                                                         [list prerequisite_id $prerequisite_id]] \
@@ -1645,7 +2311,9 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     
     set complete_activity [$activity_node child all imsld:complete-activity]
     set user_choice_p f
-    set time_limit_id ""
+    set complete_act_id ""
+    set time_in_seconds ""
+    set when_prop_value_is_set_id ""
     if { [llength $complete_activity] } {
         imsld::parse::validate_multiplicity -tree $complete_activity -multiplicity 1 -element_name complete-activity(support-activity) -equal
         
@@ -1663,10 +2331,29 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(support-activity) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
             set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
-            set time_limit_id [imsld::item_revision_new -parent_id $parent_id \
-                                   -content_type imsld_time_limit \
-                                   -attributes [list [list time_in_seconds $time_in_seconds]]]
         }
+        
+        # Support Activity: Complete Activity: When Property Value is Set
+        set when_prop_value_is_set [$complete_activity child all imsld:when-property-value-is-set] 
+        if { [llength $when_prop_value_is_set] } {
+            imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(support-activity) -equal
+            set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -component_id $component_id \
+                                                 -property_value_node $when_prop_value_is_set \
+                                                 -manifest_id $manifest_id \
+                                                 -manifest $manifest \
+                                                 -parent_id $parent_id]
+            set when_prop_value_is_set_id [lindex $when_prop_value_is_set_list 0]
+            if { !$when_prop_value_is_set_id } {
+                # there is an error, return it
+                return $when_prop_value_is_set_list
+            }
+        }
+        set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
+                                                                       [list user_choice_p $user_choice_p] \
+                                                                       [list when_prop_val_is_set_id $when_prop_value_is_set_id]] \
+                                 -content_type imsld_complete_act \
+                                 -parent_id $parent_id]
+
     }
 
     # Support Activity: On completion
@@ -1696,6 +2383,25 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                 # map item with the support objective
                 relation_add imsld_feedback_rel $on_completion_id $item_id
             }
+        } else {
+            set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
+                                      -content_type imsld_on_completion]
+        }
+        
+        # Support Activity: On Completion: Change Property Value
+        set change_property_value_list [$on_completion child all imsld:change-property-value] 
+        foreach change_property_value $change_property_value_list {
+            set change_prop_value_list [imsld::parse::parse_and_create_property_value -component_id $component_id \
+                                            -property_value_node $change_property_value \
+                                            -manifest_id $manifest_id \
+                                            -manifest $manifest \
+                                            -parent_id $parent_id]
+            set change_prop_value_id [lindex $change_property_value 0]
+            if { !$change_prop_value_id } {
+                # there is an error, return it
+                return $change_prop_value_list
+            }
+            relation add imsld_on_comp_change_pv_rel $on_completion_id $change_prop_value_id
         }
     }
 
@@ -1705,8 +2411,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                                                                        [list activity_description_id $activity_description_id] \
                                                                        [list parameters $parameters] \
                                                                        [list is_visible_p $is_visible_p] \
-                                                                       [list user_choice_p $user_choice_p] \
-                                                                       [list time_limit_id $time_limit_id] \
+                                                                       [list complete_act_id $complete_act_id] \
                                                                        [list on_completion_id $on_completion_id]] \
                                  -content_type imsld_support_activity \
                                  -title $title \
@@ -1715,7 +2420,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     # Support Activity: Role ref
     set role_ref_list [$activity_node child all imsld:role-ref]
     foreach role_ref $role_ref_list {
-        set ref [string tolower [imsld::parse::get_attribute -node $role_ref -attr_name role-ref]]
+        set ref [string tolower [imsld::parse::get_attribute -node $role_ref -attr_name ref]]
         if { ![db_0or1row get_role_id {
             select item_id as role_id 
             from imsld_rolesi 
@@ -2408,7 +3113,10 @@ ad_proc -public imsld::parse::parse_and_create_act {
     
     # Act: Complete Act: Time Limit
     set complete_act [$act_node child all imsld:complete-act]
-    set time_limit_id ""
+    set complete_act_id ""
+    set time_in_seconds ""
+    set when_prop_value_is_set_id ""
+    set when_condition_true_id ""
     if { [llength $complete_act] } {
         imsld::parse::validate_multiplicity -tree $complete_act -multiplicity 1 -element_name complete-act -equal
         # Act: Complete Act: Time Limit
@@ -2417,10 +3125,66 @@ ad_proc -public imsld::parse::parse_and_create_act {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(complete-act) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
             set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
-            set time_limit_id [imsld::item_revision_new -parent_id $parent_id \
-                                   -content_type imsld_time_limit \
-                                   -attributes [list [list time_in_seconds $time_in_seconds]]]
         }
+        # Act: Complete Act: When Property Value is Set
+        set when_prop_value_is_set [$complete_act child all imsld:when-property-value-is-set] 
+        if { [llength $when_prop_value_is_set] } {
+            imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(complete-act) -equal
+            set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -component_id $component_id \
+                                                 -property_value_node $when_prop_value_is_set \
+                                                 -manifest_id $manifest_id \
+                                                 -manifest $manifest \
+                                                 -parent_id $parent_id]
+            set when_prop_value_is_set_id [lindex $when_prop_value_is_set_list 0]
+            if { !$when_prop_value_is_set_id } {
+                # there is an error, return it
+                return $when_prop_value_is_set_list
+            }
+        }
+        # Act: Complete Act: When Condition True
+        set when_condition_true [$complete_act child all imsld:when-condition-true] 
+        if { [llength $when_condition_true] } {
+            imsld::parse::validate_multiplicity -tree $when_condition_true -multiplicity 1 -element_name when-condition-true(complete-act) -equal
+            set role_ref [$when_condition_true child all imsld:role-ref]
+            imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name role-ref(when-condition-true) -equal
+            # the roles have already been parsed by now, so the referenced role has to be in the database.
+            # If not, return the error
+            set role_ref_ref [string tolower [imsld::parse::get_attribute -node $role_ref -attr_name ref]]
+            if { ![db_0or1row get_role_id {
+                select ir.item_id as role_id
+                from imsld_rolesi ir
+                where ir.identifier = :role_ref_ref 
+                and content_revision__is_live(ir.role_id) = 't' 
+                and ir.component_id = :component_id}] } {
+                # error, referenced role does not exist
+                return [list 0 "[_ imsld.lt_Referenced_role_role_]"]
+            }
+            set expression [$when_condition_true child all imsld:expression]
+            imsld::parse::validate_multiplicity -tree $expression -multiplicity 1 -element_name expression(when-condition-true) -equal
+            set expression_list [imsld::parse::parse_and_create_expression -expression_node $expression \
+                                     -manifest_id $manifest_id \
+                                     -parent_id $parent_id \
+                                     -manifest $manifest]
+            set expression_id [lindex $expression_list 0]
+            if { !$expression_id } {
+                # error ocurred, return the list with the explanation
+                return $expression_list
+            }
+            
+            set when_condition_true_id [imsld::item_revision_new -attributes [list [list role_id $role_id] \
+                                                                                  [list expression_id $expression_id]] \
+                                            -content_type imsld_when_condition_true \
+                                            -parent_id $parent_id \
+                                            -title $title]
+            
+        }
+        
+        set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
+                                                                       [list when_condition_true_id $when_condition_true_id] \
+                                                                       [list when_prop_val_is_set_id $when_prop_value_is_set_id]] \
+                                 -content_type imsld_complete_act \
+                                 -parent_id $parent_id]
+        
     }
 
     # Act: On Completion
@@ -2450,12 +3214,31 @@ ad_proc -public imsld::parse::parse_and_create_act {
                 # map item with the support objective
                 relation_add imsld_feedback_rel $on_completion_id $item_id
             }
+        } else {
+            set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
+                                      -content_type imsld_on_completion]
+        }
+        
+        # Act: On Completion: Change Property Value
+        set change_property_value_list [$on_completion child all imsld:change-property-value] 
+        foreach change_property_value $change_property_value_list {
+            set change_prop_value_list [imsld::parse::parse_and_create_property_value -component_id $component_id \
+                                            -property_value_node $change_property_value \
+                                            -manifest_id $manifest_id \
+                                            -manifest $manifest \
+                                            -parent_id $parent_id]
+            set change_prop_value_id [lindex $change_property_value 0]
+            if { !$change_prop_value_id } {
+                # there is an error, return it
+                return $change_prop_value_list
+            }
+            relation add imsld_on_comp_change_pv_rel $on_completion_id $change_prop_value_id
         }
     }
 
     set act_id [imsld::item_revision_new -attributes [list [list play_id $play_id] \
                                                           [list identifier $identifier] \
-                                                          [list time_limit_id $time_limit_id] \
+                                                          [list complete_act_id $complete_act_id] \
                                                           [list on_completion_id $on_completion_id] \
                                                           [list sort_order $sort_order]] \
                     -content_type imsld_act \
@@ -2540,8 +3323,10 @@ ad_proc -public imsld::parse::parse_and_create_play {
     
     # Play: Complete Play
     set complete_play [$play_node child all imsld:complete-play]
-    set time_limit_id ""
+    set complete_act_id ""
+    set time_in_seconds ""
     set when_last_act_completed_p f
+    set when_prop_value_is_set_id ""
     if { [llength $complete_play] } {
         imsld::parse::validate_multiplicity -tree $complete_play -multiplicity 1 -element_name complete-play -equal
         # Play: Complete Play: Time Limit
@@ -2550,15 +3335,32 @@ ad_proc -public imsld::parse::parse_and_create_play {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(complete-play) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
             set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
-            set time_limit_id [imsld::item_revision_new -parent_id $parent_id \
-                                   -content_type imsld_time_limit \
-                                   -attributes [list [list time_in_seconds $time_in_seconds]]]
+        }
+        # Play: Complete Play: When Property Value is Set
+        set when_prop_value_is_set [$complete_play child all imsld:when-property-value-is-set] 
+        if { [llength $when_prop_value_is_set] } {
+            imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(complete-play) -equal
+            set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -component_id $component_id \
+                                                 -property_value_node $when_prop_value_is_set \
+                                                 -manifest_id $manifest_id \
+                                                 -manifest $manifest \
+                                                 -parent_id $parent_id]
+            set when_prop_value_is_set_id [lindex $when_prop_value_is_set_list 0]
+            if { !$when_prop_value_is_set_id } {
+                # there is an error, return it
+                return $when_prop_value_is_set_list
+            }
         }
         # Play: Complete Play: When Last Act Completed
         set when_last_act_completed [$complete_play child all imsld:when-last-act-completed]
         if { [llength $when_last_act_completed] } {
             set when_last_act_completed_p t
         }
+        set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
+                                                                       [list when_last_act_completed_p $when_last_act_completed_p] \
+                                                                       [list when_prop_val_is_set_id $when_prop_value_is_set_id]] \
+                                 -content_type imsld_complete_act \
+                                 -parent_id $parent_id]
     }
 
     # Play: On Completion
@@ -2588,14 +3390,33 @@ ad_proc -public imsld::parse::parse_and_create_play {
                 # map item with the support objective
                 relation_add imsld_feedback_rel $on_completion_id $item_id
             }
+        } else {
+            set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
+                                      -content_type imsld_on_completion]
         }
+        
+        # Play: On Completion: Change Property Value
+        set change_property_value_list [$on_completion child all imsld:change-property-value] 
+        foreach change_property_value $change_property_value_list {
+            set change_prop_value_list [imsld::parse::parse_and_create_property_value -component_id $component_id \
+                                            -property_value_node $change_property_value \
+                                            -manifest_id $manifest_id \
+                                            -manifest $manifest \
+                                            -parent_id $parent_id]
+            set change_prop_value_id [lindex $change_property_value 0]
+            if { !$change_prop_value_id } {
+                # there is an error, return it
+                return $change_prop_value_list
+            }
+            relation add imsld_on_comp_change_pv_rel $on_completion_id $change_prop_value_id
+        }
+
     }
 
     set play_id [imsld::item_revision_new -attributes [list [list method_id $method_id] \
                                                            [list is_visible_p $is_visible_p] \
                                                            [list identifier $identifier] \
-                                                           [list when_last_act_completed_p $when_last_act_completed_p] \
-                                                           [list time_limit_id $time_limit_id] \
+                                                           [list complete_act_id $complete_act_id] \
                                                            [list on_completion_id $on_completion_id] \
                                                            [list sort_order $sort_order]] \
                      -content_type imsld_play \
@@ -2625,6 +3446,297 @@ ad_proc -public imsld::parse::parse_and_create_play {
     }
     
     return $play_id
+}
+
+ad_proc -public imsld::parse::parse_and_create_condition { 
+    -condition_node
+    -manifest
+    -manifest_id
+    -parent_id
+} {
+    Parse a condition and stores all the information in the database.
+
+    Returns a list with the condition_id (item_id) if there were no errors, or 0 and an explanation messge if there was an error.
+    
+    @param imsld_id IMS-LD identifier which this play belongs to
+    @param condition_node The condition node to be parsed 
+    @param manifest Manifest tree
+    @param manifest_id Manifest ID or the manifest being parsed
+    @param parent_id Parent folder ID
+} {
+#     set title [imsld::parse::get_title -node $condition_node -prefix imsld]
+#     set if_node [$condition_node child all imsld:if]
+#     imsld::parse::validate_multiplicity -tree $if_node -multiplicity 1 -element_name "if (condition)" -equal
+#     set if_list [imsld::parse::parse_and_create_expression !!!]
+#     set if_id [lindex $if_list 0]
+#     if { !$if_id } {
+#         # an error ocurred
+#         return $if_list
+#     }
+#     set then_node [$condition_node child all imsld:then]
+#     imsld::parse::validate_multiplicity -tree $then_node -multiplicity 1 -element_name "the (condition)" -equal
+#     set then_list [imsld::parse::parse_and_create_then_model !!!]
+#     set then_id [lindex $if_list 0]
+#     if { !$then_id } {
+#         # an error ocurred
+#         return $then_list
+#     }
+#     set else_node [$condition_node child all imsld:else]
+#     if { [llength $else_node] } {
+#         imsld::parse::validate_multiplicity -tree $if_node -multiplicity 1 -element_name "else (condition)" -equal
+#         set else_list [imsld::parse::parse_and_create_then_model !!!]
+#         set else_id [lindex $if_list 0]
+#         if { !$else_id } {
+#             # an error ocurred
+#             return $else_list
+#         }
+#     }
+#     set condition_id [imsld::item_revision_new -attributes [list [list method_id $method_id] \
+#                                                                 [list if_id $if_id] \
+#                                                                 [list then_id $then_id] \
+#                                                                 [list else_id $else_id]] \
+#                           -content_type imsld_condition \
+#                           -title $title \
+#                           -parent_id $parent_id]
+    set condition [$condition_node asXML]
+    set imsld_id [db_1row get_imsld_id {
+        select ii.item_id 
+        from imsld_imsldsi ii, imsld_organisationsi io
+        where ii.organization_id = io.item_id
+        and io.manifest_id = :manifest_id
+        and content_revision__is_live(ii.imsld_id) = 't'
+    }]
+    set condition_id [imsld::item_revision_new -attributes [list [list imsld_id $imsld_id] \
+                                                                [list xml_piece $condition]] \
+                          -content_type imsld_expression \
+                          -parent_id $parent_id]
+    return $condition_id
+}
+
+ad_proc -public imsld::parse::parse_and_create_then_model { 
+    -method_id
+    -then_model_node
+    -manifest
+    -manifest_id
+    -parent_id
+} {
+    Parse a then model and stores all the information in the database.
+
+    Returns a list with the then_model_id (item_id) if there were no errors, or 0 and an explanation messge if there was an error.
+    
+    @param imsld_id IMS-LD identifier which this play belongs to
+    @param then_model_node The then model node to be parsed 
+    @param manifest Manifest tree
+    @param manifest_id Manifest ID or the manifest being parsed
+    @param parent_id Parent folder ID
+    @param sort_order 
+} {
+    set then_model [$then_model_node asXML]
+    set imsld_id [db_1row get_imsld_id {
+        select ii.item_id 
+        from imsld_imsldsi ii, imsld_organisationsi io
+        where ii.organization_id = io.item_id
+        and io.manifest_id = :manifest_id
+        and content_revision__is_live(ii.imsld_id) = 't'
+    }]
+    set then_model_id [imsld::item_revision_new -attributes [list [list imsld_id $imsld_id] \
+                                                                [list xml_piece $then_model]] \
+                          -content_type imsld_expression \
+                          -parent_id $parent_id]
+    return $then_model_id
+}
+
+ad_proc -public imsld::parse::parse_and_create_calculate { 
+    -calculate_node
+    -manifest
+    -manifest_id
+    -parent_id
+} {
+    Parse a condition and stores all the information in the database.
+
+    Returns a list with the condition_id (item_id) if there were no errors, or 0 and an explanation messge if there was an error.
+    
+    @param calculate_node The condition node to be parsed 
+    @param manifest Manifest tree
+    @param manifest_id Manifest ID or the manifest being parsed
+    @param parent_id Parent folder ID
+} {
+    set calculate [$calculate_node asXML]
+    set imsld_id [db_1row get_imsld_id {
+        select ii.item_id 
+        from imsld_imsldsi ii, imsld_organisationsi io
+        where ii.organization_id = io.item_id
+        and io.manifest_id = :manifest_id
+        and content_revision__is_live(ii.imsld_id) = 't'
+    }]
+    set calculate_id [imsld::item_revision_new -attributes [list [list imsld_id $imsld_id] \
+                                                                [list xml_piece $calculate]] \
+                          -content_type imsld_expression \
+                          -parent_id $parent_id]
+    return $calculate_id
+}
+
+ad_proc -public imsld::parse::parse_and_create_expression { 
+    -expression_node
+    -method_id
+    -manifest
+    -manifest_id
+    -parent_id
+} {
+    Parse an expression and stores all the information in the database.
+
+    Returns a list with the new expression_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
+    
+    @param expression_node expression node to parse
+    @param method_id method identifier which "owns" the expression (in the manifest)
+    @param manifest Manifest tree
+    @param manifest_id Manifest ID or the manifest being parsed
+    @param parent_id Parent folder ID
+} {
+#     set expressions_count 0
+#     set expression_type ""
+#     # is-member-of-role
+#     set is_member_of_role [$expression_node child all imsld:is-member-of-role]
+#     if { [llength $is_member_of_role] } {
+#         imsld::parse::validate_multiplicity -tree $is_member_of_role -multiplicity 1 -element_name is-member-of-role(expression) -equal
+#         incr expressions_count
+#         set expression_type is_member_of 
+#         set role_ref [string tolower [imsld::parse::get_attribute -node $is_member_of_role -attr_name ref]]
+#         if { ![db_0or1row get_role_id {
+#             select item_id as role_id 
+#             from imsld_rolesi ir, imsld_methodsi im, imsld_components ic 
+#             where im.imsld_id = ic.imsld_id
+#             and im.item_id = :method_id
+#             and ir.component_id = ic.item_id
+#             and ir.identifier = :role_ref 
+#             and content_revision__is_live(ir.role_id) = 't' 
+#         }] } {
+#             # there is no role with that identifier, return the error
+#             return [list 0 "<#_ There is no role with the identifier %role_ref% (referenced from within an expression) #>]"]
+#         }
+#     }
+
+#     # is
+#     set is [$expression_node child all imsld:is]
+#     if { [llength $is] } {
+#         imsld::parse::validate_multiplicity -tree $is -multiplicity 1 -element_name is(expression) -equal
+#         incr expressions_count
+#         set expression_type is
+#         set calculate_list [imsld::parse::parse_and_create_calculate -calculate_node $is !!!!]
+#         set calculate_id [lindex $calculate_list 0]
+#         if { ![$calculate_id] } {
+#             # error ocurred, return the list with the explanation
+#             return $calculate_list
+#         }
+#     }
+
+#     # is-not
+#     set is_not [$expression_node child all imsld:is-not]
+#     if { [llength $is_not] } {
+#         imsld::parse::validate_multiplicity -tree $is_not -multiplicity 1 -element_name is-not(expression) -equal
+#         incr expressions_count
+#         set expression_type is-not
+#         set calculate_list [imsld::parse::parse_and_create_calculate -calculate_node $is_not !!!!]
+#         set calcualte_id [lindex $calculate_list 0]
+#         if { ![$calculate_id] } {
+#             # error ocurred, return the list with the explanation
+#             return $calculate_list
+#         }
+#     }
+
+#     # and
+#     set and [$expression_node child all imsld:and]
+#     if { [llength $and] } {
+#         imsld::parse::validate_multiplicity -tree $and -multiplicity 1 -element_name and(expression) -equal
+#         set expressions [$and childNodes]
+#         imsld::parse::validate_multiplicity -tree $expressions -multiplicity 2 -element_name and-expressions(expression) -equal
+#         set expression_type and 
+#         incr expressions_count
+#         set expression_one [$and firstChild]
+#         set expression_one_list [imsld::parse::parse_and_crate_expression -expression_node $expression_one !!!]
+#         set exp_one_id [lindex $expression_one_list 0]
+#         if { !$exp_one_id } {
+#             # error ocurred, return the list with the explanation
+#             return $expression_one_list
+#         }
+#         set expression_two [$and lastChild]
+#         set expression_two_list [imsld::parse::parse_and_crate_expression -expression_node $expression_two !!!]
+#         set exp_two_id [lindex $expression_one_list 0]
+#         if { !$exp_two_id } {
+#             # error ocurred, return the list with the explanation
+#             return $expression_two_list
+#         }
+#     }
+
+#     # or
+#     set or [$expression_node child all imsld:or]
+#     if { [llength $or] } {
+#         imsld::parse::validate_multiplicity -tree $or -multiplicity 1 -element_name or(expression) -equal
+#         set expressions [$or childNodes]
+#         imsld::parse::validate_multiplicity -tree $expressions -multiplicity 2 -element_name or-expressions(expression) -equal
+#         set expression_type or 
+#         incr expressions_count
+#         set expression_one [$or firstChild]
+#         set expression_one_list [imsld::parse::parse_and_crate_expression -expression_node $expression_one !!!]
+#         set exp_one_id [lindex $expression_one_list 0]
+#         if { !$exp_one_id } {
+#             # error ocurred, return the list with the explanation
+#             return $expression_one_list
+#         }
+#         set expression_two [$or lastChild]
+#         set expression_two_list [imsld::parse::parse_and_crate_expression -expression_node $expression_two !!!]
+#         set exp_two_id [lindex $expression_one_list 0]
+#         if { !$exp_two_id } {
+#             # error ocurred, return the list with the explanation
+#             return $expression_two_list
+#         }
+#     }
+
+#     # sum
+#     set sum [$expression_node child all imsld:sum]
+#     if { [llength $sum] } {
+#         imsld::parse::validate_multiplicity -tree $sum -multiplicity 1 -element_name sum(expression) -equal
+#         set calulate [$sum childNodes]
+#         imsld::parse::validate_multiplicity -tree $sum -multiplicity 1 -element_name sum-caluclate(expression) -equal
+#         set expression_type sum
+#         incr expressions_count
+#         set calculate_list [imsld::parse::parse_and_create_calcuate -calculate_node !!!]
+#         set calculate_id [lindex $calculate_list 0]
+#         if { !$calculate_id } {
+#             # error ocurred, return the list with the explanation
+#             return $calculate_list
+#         }
+#     }
+
+#     # sum
+#     set sum [$expression_node child all imsld:sum]
+#     if { [llength $sum] } {
+#         imsld::parse::validate_multiplicity -tree $sum -multiplicity 1 -element_name sum(expression) -equal
+#         set calulate [$sum childNodes]
+#         imsld::parse::validate_multiplicity -tree $sum -multiplicity 1 -element_name sum-caluclate(expression) -equal
+#         set expression_type sum
+#         incr expressions_count
+#         set calculate_list [imsld::parse::parse_and_create_calcuate -calculate_node !!!]
+#         set calculate_id [lindex $calculate_list 0]
+#         if { !$calculate_id } {
+#             # error ocurred, return the list with the explanation
+#             return $calculate_list
+#         }
+#     }
+
+    set expression [$expression_node asXML]
+    set imsld_id [db_1row get_imsld_id {
+        select ii.item_id 
+        from imsld_imsldsi ii, imsld_organisationsi io
+        where ii.organization_id = io.item_id
+        and io.manifest_id = :manifest_id
+        and content_revision__is_live(ii.imsld_id) = 't'
+    }]
+    set expression_id [imsld::item_revision_new -attributes [list [list imsld_id $imsld_id] \
+                                                                [list xml_piece $expression]] \
+                          -content_type imsld_expression \
+                          -parent_id $parent_id]
+    return $expression_id
 }
 
 ad_proc -public imsld::parse::parse_and_create_imsld_manifest { 
@@ -2782,7 +3894,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     if { [llength $staff_list] } {
         foreach staff $staff_list {
             set staff_parse_list [imsld::parse::parse_and_create_role -role_type staff \
-                -manifest $manifest \
+                                      -manifest $manifest \
                                       -manifest_id $manifest_id \
                                       -parent_id $cr_folder_id \
                                       -tmp_dir $tmp_dir \
@@ -2792,6 +3904,20 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                     # an error happened, abort and return the list whit the error
                 return $staff_parse_list
             }
+        }
+    }
+
+    # Components: Properties
+    set properties [$components child all imsld:properties]
+    if { [llength $properties] } {
+        imsld::parse::validate_multiplicity -tree $properties -multiplicity 1 -element_name properties -equal
+        foreach property $properties {
+            set properties_list [imsld::parse::parse_and_create_property -property_node $property \
+                                     -manifest $manifest \
+                                     -manifest_id $manifest_id \
+                                     -parent_id $cr_folder_id \
+                                     -tmp_dir $tmp_dir \
+                                     -component_id $component_id]
         }
     }
 
@@ -2880,7 +4006,9 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
 
     # Method: Complete Unit of Learning
     set complete_unit_of_learning [$method child all imsld:complete-unit-of-learning]
-    set time_limit_id ""
+    set complete_act_id ""
+    set time_in_seconds ""
+    set when_prop_value_is_set_id ""
     if { [llength $complete_unit_of_learning] } {
         imsld::parse::validate_multiplicity -tree $complete_unit_of_learning -multiplicity 1 -element_name complete-unit-of-learning -equal
         
@@ -2890,10 +4018,27 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(complete-unit-of-learning) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
             set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
-            set time_limit_id [imsld::item_revision_new -parent_id $cr_folder_id \
-                                   -content_type imsld_time_limit \
-                                   -attributes [list [list time_in_seconds $time_in_seconds]]]
         }
+        # Method: Complete Unit of Learning: When Property Value is Set
+        set when_prop_value_is_set [$complete_unit_of_learning child all imsld:when-property-value-is-set] 
+        if { [llength $when_prop_value_is_set] } {
+            imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(complete-unit-of-learning) -equal
+            set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -component_id $component_id \
+                                                 -property_value_node $when_prop_value_is_set \
+                                                 -manifest_id $manifest_id \
+                                                 -manifest $manifest \
+                                                 -parent_id $cr_folder_id]
+            set when_prop_value_is_set_id [lindex $when_prop_value_is_set_list 0]
+            if { !$when_prop_value_is_set_id } {
+                # there is an error, return it
+                return $when_prop_value_is_set_list
+            }
+        }
+        set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
+                                                                       [list when_prop_val_is_set_id $when_prop_value_is_set_id]] \
+                                 -content_type imsld_complete_act \
+                                 -parent_id $cr_folder_id]
+
     }
 
     # Method: On Completion
@@ -2923,13 +4068,33 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                 # map item with the support objective
                 relation_add imsld_feedback_rel $on_completion_id $item_id
             }
+        } else {
+            set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
+                                      -content_type imsld_on_completion]
         }
+        
+        # Act: On Completion: Change Property Value
+        set change_property_value_list [$on_completion child all imsld:change-property-value] 
+        foreach change_property_value $change_property_value_list {
+            set change_prop_value_list [imsld::parse::parse_and_create_property_value -component_id $component_id \
+                                            -property_value_node $change_property_value \
+                                            -manifest_id $manifest_id \
+                                            -manifest $manifest \
+                                            -parent_id $cr_folder_id]
+            set change_prop_value_id [lindex $change_property_value 0]
+            if { !$change_prop_value_id } {
+                # there is an error, return it
+                return $change_prop_value_list
+            }
+            relation add imsld_on_comp_change_pv_rel $on_completion_id $change_prop_value_id
+        }
+
     }
 
     set method_id [imsld::item_revision_new -parent_id $cr_folder_id \
                        -content_type imsld_method \
                        -attributes [list [list imsld_id $imsld_id] \
-                                        [list time_limit_id $time_limit_id] \
+                                        [list complete_act_id $complete_act_id] \
                                         [list on_completion_id $on_completion_id]]]
 
     # Method: Plays
@@ -2974,7 +4139,21 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
             relation_add imsld_mp_completed_rel $method_id $play_id
         }
     }
+    
+    # Method: Conditions
+    set conditions [$method child all imsld:condition]
+    foreach condition $conditions {
+        set condition_list [imsld::parse::parse_and_create_condition -condition_node $condition \
+                                 -manifest_id $manifest_id \
+                                 -parent_id $parent_id \
+                                 -manifest $manifest]
+        if { ![lindex $condition_list 0] } {
+            # error. return the list
+            return $condition_list
+        }
+    }
 
+    # Resources
     # look for the resource in the manifest and add it to the CR
     set manifest_resources_list [$manifest child all imscp:resources]
     if { ![llength $manifest_resources_list] } {
@@ -3010,7 +4189,3 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     }
     return [list $manifest_id "$warnings"]
 }
-
-
-
-

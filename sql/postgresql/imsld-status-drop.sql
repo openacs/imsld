@@ -5,5 +5,5 @@
 -- @creation-date sept-2005
 --
 
-drop table imsld_status_user;
+drop table imsld_status_user cascade;
 
