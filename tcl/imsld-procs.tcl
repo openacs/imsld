@@ -906,7 +906,7 @@ ad_proc -public imsld::structure_next_activity {
                     where item_id = :object_id_two
                     and content_revision__is_live(activity_id) = 't'
                 }
-                if { ![db_string completed_p {
+                if { ![db_string completed_p_from_la {
                     select count(*)
                     from imsld_status_user
                     where completed_id = :learning_activity_id
@@ -926,7 +926,7 @@ ad_proc -public imsld::structure_next_activity {
                     where item_id = :object_id_two
                     and content_revision__is_live(activity_id) = 't'
                 }
-                if { ![db_string completed_p {
+                if { ![db_string completed_p_from_sa {
                     select count(*)
                     from imsld_status_user
                     where completed_id = :support_activity_id
@@ -1014,7 +1014,7 @@ ad_proc -public imsld::role_part_finished_p {
     }
     switch $type {
         learning {
-            if { [db_string completed {
+            if { [db_string completed_from_la {
                 select count(*) from imsld_status_user
                 where completed_id = content_item__get_live_revision(:learning_activity_id)
                 and user_id = :user_id
@@ -1023,7 +1023,7 @@ ad_proc -public imsld::role_part_finished_p {
             }
         }
         support {
-            if { [db_string completed {
+            if { [db_string completed_from_sa {
                 select count(*) from imsld_status_user
                 where completed_id = content_item__get_live_revision(:support_activity_id)
                 and user_id = :user_id
@@ -1032,7 +1032,7 @@ ad_proc -public imsld::role_part_finished_p {
             }
         }
         structure {
-            if { [db_string completed {
+            if { [db_string completed_from_as {
                 select count(*) from imsld_status_user
                 where completed_id = content_item__get_live_revision(:activity_structure_id)
                 and user_id = :user_id
@@ -1311,14 +1311,14 @@ ad_proc -public imsld::process_learning_objective {
     
     set learning_objective_item_id ""
     if { ![string eq "" $imsld_item_id] } {
-        db_0or1row get_lo_id { 
+        db_0or1row get_lo_id_from_iii { 
             select learning_objective_id as learning_objective_item_id
             from imsld_imsldsi
             where item_id = :imsld_item_id
             and content_revision__is_live(imsld_id) = 't'
         }
     } elseif { ![string eq "" $activity_item_id] } {
-        db_0or1row get_lo_id { 
+        db_0or1row get_lo_id_from_aii { 
             select learning_objective_id as learning_objective_item_id
             from imsld_learning_activitiesi
             where item_id = :activity_item_id
@@ -1404,14 +1404,14 @@ ad_proc -public imsld::process_prerequisite {
     
     set prerequisite_item_id ""
     if { ![string eq "" $imsld_item_id] } {
-        db_0or1row get_lo_id { 
+        db_0or1row get_lo_id_from_iii { 
             select prerequisite_id as prerequisite_item_id
             from imsld_imsldsi
             where item_id = :imsld_item_id
             and content_revision__is_live(imsld_id) = 't'
         }
     } elseif { ![string eq "" $activity_item_id] } {
-        db_0or1row get_lo_id { 
+        db_0or1row get_lo_id_from_aii { 
             select prerequisite_id as prerequisite_item_id
             from imsld_learning_activitiesi
             where item_id = :activity_item_id
@@ -2005,7 +2005,7 @@ ad_proc -public imsld::next_activity {
                         finished
                 }
                 support {
-                    db_1row get_support_activity_info {
+                    db_1row get_support_activity_info_from_isa {
                         select coalesce(title,identifier) as activity_title,
                         item_id as activity_item_id
                         from imsld_support_activitiesi
@@ -2035,7 +2035,7 @@ ad_proc -public imsld::next_activity {
                         finished
                 }
                 structure {
-                    db_1row get_support_activity_info {
+                    db_1row get_support_activity_info_from_ias {
                         select coalesce(title,identifier) as activity_title,
                         item_id as structure_item_id
                         from imsld_activity_structuresi
@@ -2461,8 +2461,8 @@ ad_proc -public imsld::finish_resource {
 
    
 #if not done yet, tag the resource as finished
-    if {![db_0or1row check_completed_resource {
-            select 1
+    if {![db_string check_completed_resource {
+            select count(*)
             from imsld_status_user 
             where completed_id=:resource_id
         }] } {

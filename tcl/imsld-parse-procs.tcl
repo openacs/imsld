@@ -1545,7 +1545,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
             set role_ref [$email_data child all imsld:role-ref]
             imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name role-ref(email-data) -equal
             set ref [string tolower [imsld::parse::get_attribute -node $role_ref -attr_name ref]]
-            if { ![db_0or1row get_role_id {
+            if { ![db_0or1row get_role_id_from_ref {
                 select ir.item_id as role_id
                 from imsld_rolesi ir
                 where ir.identifier = :ref 
@@ -1612,7 +1612,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
         if { [llength $manager] } {
             imsld::parse::validate_multiplicity -tree $manager -multiplicity 1 -element_name conference-manager -equal
             set role_ref [string tolower [imsld::parse::get_attribute -node $manager -attr_name role-ref]]
-            if { ![db_0or1row get_role_id {
+            if { ![db_0or1row get_role_id_from_role_ref {
                 select item_id as manager_id 
                 from imsld_rolesi 
                 where identifier = :role_ref 
@@ -1620,6 +1620,8 @@ ad_proc -public imsld::parse::parse_and_create_service {
                 and component_id = :component_id }] } {
                 # there is no role with that identifier, return the error
                 return [list 0 "[_ imsld.lt_There_is_no_role_with_1]"]
+            } else {
+                set manager_id $the_item_id
             }
         }
 
@@ -1691,7 +1693,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
         imsld::parse::validate_multiplicity -tree $participant_list -multiplicity 1 -element_name conference-participant -greather_than
         foreach participant $participant_list {
             set role_ref [string tolower [imsld::parse::get_attribute -node $participant -attr_name role-ref]]
-            if { ![db_0or1row get_role_id {
+            if { ![db_0or1row get_role_id_from_role_ref {
                 select item_id as participant_id 
                 from imsld_rolesi 
                 where identifier = :role_ref 
@@ -1700,6 +1702,8 @@ ad_proc -public imsld::parse::parse_and_create_service {
             }] } {
                 # there is no role with that identifier, return the error
                 return [list 0 "[_ imsld.lt_There_is_no_role_with_2]"]
+            } else {
+                set participant_id $the_item_id
             }
             # map conference with participant role
             relation_add imsld_conf_part_rel $conference_id $participant_id
@@ -1710,7 +1714,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
         if { [llength $observer_list] } {
             foreach observer $observer_list {
                 set role_ref [string tolower [imsld::parse::get_attribute -node $observer -attr_name role-ref]]
-                if { ![db_0or1row get_role_id {
+                if { ![db_0or1row get_role_id_from_role_ref {
                     select item_id as observer_id 
                     from imsld_rolesi 
                     where identifier = :role_ref 
@@ -1719,6 +1723,8 @@ ad_proc -public imsld::parse::parse_and_create_service {
                 }] } {
                     # there is no role with that identifier, return the error
                     return [list 0 "[_ imsld.lt_There_is_no_role_with_3]"]
+                } else {
+                    set observer_id $the_item_id
                 }
                 # map conference with observer role
                 relation_add imsld_conf_obser_rel $conference_id $observer_id
@@ -1730,7 +1736,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
         if { [llength $moderator_list] } {
             foreach moderator $moderator_list {
                 set role_ref [string tolower [imsld::parse::get_attribute -node $moderator -attr_name role-ref]]
-                if { ![db_0or1row get_role_id {
+                if { ![db_0or1row get_role_id_from_role_ref {
                     select item_id as moderator_id 
                     from imsld_rolesi 
                     where identifier = :role_ref 
@@ -1739,6 +1745,8 @@ ad_proc -public imsld::parse::parse_and_create_service {
                 }] } {
                     # there is no role with that identifier, return the error
                     return [list 0 "[_ imsld.lt_There_is_no_role_with_4]"]
+                } else {
+                    set moderator_id $the_item_list
                 }
                 # map conference with moderator role
                 relation_add imsld_conf_moder_rel $conference_id $moderator_id
@@ -2573,6 +2581,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     and component_id = :component_id
                 }] } {
                     # ok, last try: searching in the rest of activity structures...
+                    set searching_ref $learning_activity_ref
                     if { [db_0or1row get_struct_id {
                         select item_id as refrenced_struct_id,
                         structure_id
@@ -2586,7 +2595,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                         # do the mappings
                         relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
                         # store the order
-                        db_dml update_activity_structure {
+                        db_dml update_activity_structure_from_structure_id {
                             update imsld_activity_structures
                             set sort_order = :sort_order
                             where structure_id = :structure_id
@@ -2627,7 +2636,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                             # finally, do the mappings
                             relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
                             # store the order
-                            db_dml update_activity_structure {
+                            db_dml update_activity_structure_from_activity_structure_ref_id {
                                 update imsld_activity_structures
                                 set sort_order = :sort_order
                                 where structure_id = (select live_revision from cr_items where item_id = :activity_structure_ref_id)
@@ -2688,6 +2697,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     and component_id = :component_id
                 }] } {
                     # ok, last try: searching in the rest of activity structures...
+                    set searching_ref $support_activity_ref
                     if { [db_0or1row get_struct_id {
                         select item_id as refrenced_struct_id,
                         structure_id
@@ -2701,7 +2711,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                         # do the mappings
                         relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
                         # store the order
-                        db_dml update_activity_structure {
+                        db_dml update_activity_structure_from_structure_id {
                             update imsld_activity_structures
                             set sort_order = :sort_order
                             where structure_id = :structure_id
@@ -2742,7 +2752,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                             # finally, do the mappings
                             relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
                             # store the order
-                            db_dml update_activity_structure {
+                            db_dml update_activity_structure_from_activity_structure_ref_id {
                                 update imsld_activity_structures
                                 set sort_order = :sort_order
                                 where structure_id = (select live_revision from cr_items where item_id = :activity_structure_ref_id)
@@ -2785,6 +2795,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
             # 1. the referenced activity structure has already been created: get the id from the database and do the mappings
             # 2. the referenced activity structure hasn't been created: invoke the parse_and_create_activity_structure proc,
             #    but first verify that the activity structure exists in the manifest
+                set searching_ref $ref
             if { [db_0or1row get_struct_id {
                 select item_id as refrenced_struct_id,
                 structure_id
@@ -2796,7 +2807,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 # case one, just do the mappings
                 relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
                 # store the order
-                db_dml update_activity_structure {
+                db_dml update_activity_structure_from_structure_id {
                     update imsld_activity_structures
                     set sort_order = :sort_order
                     where structure_id = :structure_id
@@ -2835,7 +2846,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     # finally, do the mappings
                     relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
                     # store the order
-                    db_dml update_activity_structure {
+                    db_dml update_activity_structure_from_activity_structure_ref_id {
                         update imsld_activity_structures
                         set sort_order = :sort_order
                         where structure_id = (select live_revision from cr_items where item_id = :activity_structure_ref_id)
