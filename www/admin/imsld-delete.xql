@@ -3,12 +3,14 @@
 
 
 
-	<fullquery name="get_grade_info">
+	<fullquery name="delete_imsld">
 		<querytext>
-    select title as imsld_title
-    from imsld_imsldsi
-	where imsld_id = :imsld_id
+            update cr_items 
+            set live_revision = NULL
+            where item_id = (select item_id from cr_items where live_revision = :imsld_id)
+        
 		</querytext>
 	</fullquery>
+
 </queryset>
 

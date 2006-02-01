@@ -16,6 +16,7 @@
   <msg key="Create_New">Create New?</msg>
   <msg key="Creating_new_IMS-LD">Creating new IMS-LD...</msg>
   <msg key="Data_Type">Data Type</msg>
+  <msg key="Delete_IMS_LD">Delete IMS LD</msg>
   <msg key="Else_Identifier">Else Identifier</msg>
   <msg key="Error_parsing_file">Error parsing file</msg>
   <msg key="Existing_href">Existing href</msg>
@@ -77,6 +78,7 @@
   <msg key="IMS-LD_Time_Limits">IMS-LD Time Limits</msg>
   <msg key="IMS-LD_ZIP_File">IMS-LD ZIP File</msg>
   <msg key="IMS-LDs">IMS-LDs</msg>
+  <msg key="IMS_LD_Name">IMS LD Name</msg>
   <msg key="Initial_Value">Initial Value</msg>
   <msg key="Is_shared">Is shared?</msg>
   <msg key="Is_Visible">Is Visible?</msg>
@@ -101,10 +103,12 @@
   <msg key="lt_Email_Propery_Identif">Email Propery Identifier</msg>
   <msg key="lt_Environment_Identifie">Environment Identifier</msg>
   <msg key="lt_Error_creating_folder">Error creating folder</msg>
+  <msg key="lt_Error_deleting_IMS_LD">Error deleting IMS LD</msg>
   <msg key="lt_Error_parsing_manifes">Error parsing manifest.</msg>
   <msg key="lt_Expression_Identifier">Expression Identifier</msg>
   <msg key="lt_Expression_One_Identi">Expression One Identifier</msg>
   <msg key="lt_Expression_Two_Identi">Expression Two Identifer</msg>
+  <msg key="lt_Import_IMS-LD_ZIP_Fil">Import IMS-LD ZIP File</msg>
   <msg key="lt_IMS-LD_Activity_Descr">IMS-LD Activity Description</msg>
   <msg key="lt_IMS-LD_Activity_Descr_1">IMS-LD Activity Descriptions</msg>
   <msg key="lt_IMS-LD_Activity_Struc">IMS-LD Activity Structure</msg>
@@ -202,6 +206,7 @@
   <msg key="lt_There_must_be_exactly">There must be exactly %multiplicity% %element_name% and there are %tree_length%. This is not supported, sorry.</msg>
   <msg key="lt_There_was_an_error_cr">There was an error creating the folder. Aborting.</msg>
   <msg key="lt_There_was_an_error_cr_1">There was an error creating the tmp_dir to unzip the file.</msg>
+  <msg key="lt_There_was_an_error_de">There was an error deleting the IMS LD $imsld_id. This is the error: &lt;pre&gt;%errmsg%&lt;/pre&gt;</msg>
   <msg key="lt_There_was_an_error_ge">There was an error generating the tmp_dir to unzip the file.</msg>
   <msg key="lt_There_was_an_error_pa">There was an error parsing the manifest. Please correct it and try again. &lt;br /&gt;&lt;code&gt;%errmsg%&lt;/code&gt;</msg>
   <msg key="lt_There_was_an_error_tr">There was an error trying to delete the dir %dir%.</msg>
@@ -217,6 +222,7 @@
   <msg key="lt_When_Last_Act_Complet">When Last Act Completed?</msg>
   <msg key="lt_When_Property_Value_i">When Property Value is Set Identifier</msg>
   <msg key="Mail_Data">Mail Data</msg>
+  <msg key="Make_it_live">Make it live</msg>
   <msg key="Manager_Identifier">Manager Identifier</msg>
   <msg key="Manifest_Identifier">Manifest Identifier</msg>
   <msg key="Match_Persons">Match Persons?</msg>

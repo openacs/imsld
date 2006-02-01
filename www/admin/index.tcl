@@ -28,7 +28,7 @@ set manifest_id [db_nextval acs_object_id_seq]
 # form to upload an IMS LD ZIP file
 
 ad_form -name upload_file_form -html {enctype multipart/form-data} -cancel_url $return_url -action imsld-new -form {
-    {upload_file:file {label "Import IMS-LD ZIP File"}}
+    {upload_file:file {label "[_ imsld.lt_Import_IMS-LD_ZIP_Fil]"}}
     {return_url:text {widget hidden} {value $return_url}}
     {manifest_id:integer {widget hidden} {value $manifest_id}}
 } 
@@ -40,7 +40,7 @@ template::list::create \
     -key imsld_id \
     -elements {
         imsld_title {
-            label "IMS LD Name"
+            label "[_ imsld.IMS_LD_Name]"
             orderby_asc {imsld_title asc}
             orderby_desc {imsld_title desc}
         }
@@ -48,7 +48,7 @@ template::list::create \
             label {}
             sub_class narrow
             display_template {@imslds.delete_template;noquote@} 
-            link_html { title "Delete IMS LD" }
+            link_html { title "[_ imsld.Delete_IMS_LD]" }
         }
     }
 
@@ -77,7 +77,7 @@ db_multirow  -extend { delete_template } imslds  get_imslds {
     and cr3.item_id = imsld.item_id
 } {
     if { [empty_string_p $live_revision] } {
-        set delete_template "<span style=\"font-style: italic; color: red; font-size: 9pt;\">Deleted</span> <a href=[export_vars -base "index" { {set_imsld_id_live $item_id} }]>Make it live</a>"
+        set delete_template "<span style=\"font-style: italic; color: red; font-size: 9pt;\">Deleted</span> <a href=[export_vars -base "index" { {set_imsld_id_live $item_id} }]>[_ imsld.Make_it_live]</a>"
     } else {
         set delete_template "<a href=\"[export_vars -base "imsld-delete" { imsld_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\"></a>"
     }

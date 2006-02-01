@@ -1628,7 +1628,8 @@ ad_proc -public imsld::process_resource {
     }
     set files_urls ""
 
-    if { [string eq $resource_type "forum"] || [string eq $resource_type "imsqti_xmlv1p0"] || [string eq $resource_type "imsqti_xmlv1p1"] || [string eq $resource_type "imsqti_item_xmlv2p0"] } {
+    if { ![string eq $resource_type "webcontent"] } {
+###[string eq $resource_type "imsqti_xmlv1p0"] || [string eq $resource_type "imsqti_xmlv1p1"] || [string eq $resource_type "imsqti_item_xmlv2p0"]
         if { [db_0or1row is_cr_item {
             select live_revision from cr_items where item_id = :acs_object_id
         }] } {
@@ -1645,9 +1646,9 @@ ad_proc -public imsld::process_resource {
         set file_url [acs_sc::invoke -contract FtsContentProvider -operation url -impl $object_type -call_args [list $acs_object_id]]
         set image_path [imsld::object_type_image_path -object_type $object_type]
         append files_urls "<a href=[export_vars -base imsld/imsld-finish-resource {file_url $file_url resource_item_id $resource_item_id}] target=\"_blank\"><img src=\"$image_path\" border=0 alt=\"$object_title\"></a> "
-    }
+    } else {
 
-    if { [string eq $resource_type "webcontent"] || [string eq $files_urls ""] } {
+###[string eq $resource_type "webcontent"] || [string eq $files_urls ""]
         # Get file-storage root folder_id
         set fs_package_id [site_node_apm_integration::get_child_package_id \
                                -package_id [dotlrn_community::get_package_id $community_id] \

@@ -1,30 +1,28 @@
 # /packages/imsld/www/admin/imsld-delete.tcl
 
 ad_page_contract {
-
-	Deletes a imsld after confirmation
-
-    @author jopez@inv.it.uc3m.es
+    Deletes imsld
+    
+    @author jopez@galileo.edu
     @creation-date Nov 2005
     @cvs-id $Id$
-
 } {
-	imsld_id:integer,notnull
-	{return_url "index"}
+    imsld_id:integer,notnull
+    return_url
+} 
+
+db_transaction {
+    
+    db_dml delete_imsld {
+        update cr_items 
+        set live_revision = NULL
+        where item_id = (select item_id from cr_items where live_revision = :imsld_id)
+    }
+} on_error {
+    ad_return_error "[_ imsld.lt_Error_deleting_IMS_LD]" "[_ imsld.lt_There_was_an_error_de]"
+    ad_script_abort
 }
 
-set user_id [ad_conn user_id]
+db_release_unused_handles
 
-set page_title "Delete IMS LD"
-
-set context [list [list "index" "Admin IMS LD"] "Delete IMS LD"]
-
-db_1row get_grade_info {
-    select title as imsld_title
-    from imsld_imsldsi
-	where imsld_id = :imsld_id
-}
-
-set export_vars [export_form_vars imsld_id return_url]
-
-ad_return_template
+ad_returnredirect $return_url
