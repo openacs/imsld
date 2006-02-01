@@ -1,4 +1,4 @@
-get_manifestsad_page_contract {
+ad_page_contract {
 }
 
 set page_title index
