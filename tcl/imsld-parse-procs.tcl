@@ -981,7 +981,7 @@ ad_proc -public imsld::parse::parse_and_create_property_group {
             and component_id = :component_id
         }] } {
             # there is no property with that identifier, return the error
-            return [list 0 "<#_ There is no property with the identifier %ref% (referenced by: property group %identifier%) #>"]
+            return [list 0 "[_ imsld.lt_There_is_no_property_]"]
         }
         relation_add imsld_gprop_prop_rel $property_group_id $property_item_id
     }
@@ -1029,7 +1029,7 @@ ad_proc -public imsld::parse::parse_and_create_property_group {
                 relation_add imsld_gprop_gprop_rel $property_group_id $property_group_ref_id
             } else {
                 # error
-                return [list 0 "<#_ There is no property-group with the identifier %ref% (referenced by property-group %identifier%) #>"]
+                return [list 0 "[_ imsld.lt_There_is_no_property-]"]
             }
         } else {
             # do the mappings
@@ -1169,7 +1169,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
             and component_id = :component_id
         }] } {
             # there is no role with that identifier, return the error
-            return [list 0 "<#_ There is no role with the identifier %ref% (referenced by: locrole property) #>"]
+            return [list 0 "[_ imsld.lt_There_is_no_role_with_6]"]
         }
 
         set lrp_initial_value [$locrole_property child all imsld:initial-value] 
@@ -1566,7 +1566,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
                     and content_revision__is_live(property_id) = 't' 
                     and component_id = :component_id }] } {
                     # there is no property with that identifier, return the error
-                    return [list 0 "<#_ There is no property with the identifier %email_property_ref% (referenced from an email data) #>"]
+                    return [list 0 "[_ imsld.lt_There_is_no_property__1]"]
                 } 
             } else {
                 set email_property_id ""
@@ -1582,7 +1582,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
                     and content_revision__is_live(property_id) = 't' 
                     and component_id = :component_id }] } {
                     # there is no property with that identifier, return the error
-                    return [list 0 "<#_ There is no property with the identifier %username_property_ref% (referenced from an email data) #>"]
+                    return [list 0 "[_ imsld.lt_There_is_no_property__2]"]
                 }
             } else {
                 set username_property_id ""
@@ -1789,7 +1789,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
             and ir.component_id = :component_id
         }] } {
             # there is no role with that identifier, return the error
-            return [list 0 "<#_ There is no role with the identifier %ref% (referenced from a monitor service) #>"]
+            return [list 0 "[_ imsld.lt_There_is_no_role_with_7]"]
         }
         
         # monitor: self
@@ -1986,7 +1986,7 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
         and component_id = :component_id
     }] } {
         # there is no property with that identifier, return the error
-        return [list 0 "<#_ There is no property with the identifier %ref% (referenced by: property value #>"]
+        return [list 0 "[_ imsld.lt_There_is_no_property__3]"]
     }
     
     # Property Value
@@ -3623,7 +3623,7 @@ ad_proc -public imsld::parse::parse_and_create_expression {
 #             and content_revision__is_live(ir.role_id) = 't' 
 #         }] } {
 #             # there is no role with that identifier, return the error
-#             return [list 0 "<#_ There is no role with the identifier %role_ref% (referenced from within an expression) #>]"]
+#             return [list 0 "[_ imsld.lt_There_is_no_role_with_8]]"]
 #         }
 #     }
 

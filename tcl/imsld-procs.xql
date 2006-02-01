@@ -20,15 +20,15 @@
         select icm.manifest_id,
         ii.imsld_id,
         im.method_id, 
-        tl.time_in_seconds,
+        ca.time_in_seconds,
         icm.creation_date
         from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
-        imsld_imsldsi ii, imsld_methodsi im, imsld_time_limitsi tl
+        imsld_imsldsi ii, imsld_methodsi im, imsld_complete_actsi ca
         where im.imsld_id = ii.item_id
         and ii.organization_id = ico.item_id
         and ico.manifest_id = icm.item_id
-        and im.time_limit_id is not null
-        and im.time_limit_id = tl.item_id
+        and im.complete_act_id = ca.item_id
+        and ca.time_in_seconds is not null
         and content_revision__is_live(im.method_id) = 't'
     
 		</querytext>
@@ -60,17 +60,17 @@
         select icm.manifest_id,
         ii.imsld_id,
         ip.play_id,
-        tl.time_in_seconds,
+        ca.time_in_seconds,
         icm.creation_date
         from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
         imsld_imsldsi ii, imsld_methodsi im, imsld_plays ip,
-        imsld_time_limitsi tl
+        imsld_complete_actsi ca
         where ip.method_id = im.item_id
         and im.imsld_id = ii.item_id
         and ii.organization_id = ico.item_id
         and ico.manifest_id = icm.item_id
-        and ip.time_limit_id is not null
-        and ip.time_limit_id = tl.item_id
+        and ip.complete_act_id = ca.item_id
+        and ca.time_in_seconds is not null
         and content_revision__is_live(ip.play_id) = 't'
     
 		</querytext>
@@ -86,18 +86,18 @@
         ii.imsld_id,
         ip.play_id,
         ia.act_id,
-        tl.time_in_seconds,
+        ca.time_in_seconds,
         icm.creation_date
         from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
         imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, imsld_acts ia,
-        imsld_time_limitsi tl
+        imsld_complete_actsi ca
         where ia.play_id = ip.item_id
         and ip.method_id = im.item_id
         and im.imsld_id = ii.item_id
         and ii.organization_id = ico.item_id
         and ico.manifest_id = icm.item_id
-        and ia.time_limit_id is not null
-        and ia.time_limit_id = tl.item_id
+        and ia.complete_act_id = ca.item_id
+        and ca.time_in_seconds is not null
         and content_revision__is_live(ia.act_id) = 't'
     
 		</querytext>
@@ -107,68 +107,77 @@
 
 
 
-	<fullquery name="imsld::sweep_expired_activities.possible_expired_support_activities">
+	<fullquery name="imsld::sweep_expired_activities.referenced_sas">
 		<querytext>
-        select icm.manifest_id,
+        select sa.item_id as sa_item_id,
         sa.activity_id,
-        ii.imsld_id,
-        ip.play_id,
-        ia.act_id,
-        irp.role_part_id,
-        tl.time_in_seconds,
-        icm.creation_date
-        from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
-        imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
-        imsld_actsi ia, imsld_role_partsi irp, imsld_support_activitiesi sa,
-        imsld_time_limitsi tl
-        where sa.item_id = irp.support_activity_id
-        and irp.act_id = ia.item_id
-        and ia.play_id = ip.item_id
-        and ip.method_id = im.item_id
-        and im.imsld_id = ii.item_id
-        and ii.organization_id = ico.item_id
-        and ico.manifest_id = icm.item_id
-        and sa.time_limit_id is not null
-        and sa.time_limit_id = tl.item_id
-        and content_revision__is_live(sa.activity_id) = 't'
+        ca.time_in_seconds
+        from imsld_support_activitiesi sa,
+        imsld_complete_actsi ca
+        where sa.complete_act_id = ca.item_id
+        and content_revision__is_live(ca.complete_act_id) = 't'
+        and ca.time_in_seconds is not null
     
 		</querytext>
 	</fullquery>
 
-
-
-
-
-	<fullquery name="imsld::sweep_expired_activities.possible_expired_learning_activities">
+	<fullquery name="imsld::sweep_expired_activities.get_sa_activity_info">
 		<querytext>
-        select icm.manifest_id,
-        la.activity_id,
-        ii.imsld_id,
-        ip.play_id,
-        ia.act_id,
-        irp.role_part_id,
-        tl.time_in_seconds,
-        icm.creation_date
-        from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
-        imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
-        imsld_actsi ia, imsld_role_partsi irp, imsld_learning_activitiesi la,
-        imsld_time_limitsi tl
-        where la.item_id = irp.learning_activity_id
-        and irp.act_id = ia.item_id
-        and ia.play_id = ip.item_id
-        and ip.method_id = im.item_id
-        and im.imsld_id = ii.item_id
-        and ii.organization_id = ico.item_id
-        and ico.manifest_id = icm.item_id
-        and la.time_limit_id is not null
-        and la.time_limit_id = tl.item_id
-        and content_revision__is_live(la.activity_id) = 't'
+            select icm.manifest_id,
+            ii.imsld_id,
+            ip.play_id,
+            ia.act_id,
+            icm.creation_date
+            from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+            imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
+            imsld_actsi ia, imsld_role_partsi irp
+            where irp.role_part_id = :role_part_id
+            and irp.act_id = ia.item_id
+            and ia.play_id = ip.item_id
+            and ip.method_id = im.item_id
+            and im.imsld_id = ii.item_id
+            and ii.organization_id = ico.item_id
+            and ico.manifest_id = icm.item_id
+            and content_revision__is_live(icm.manifest_id) = 't'
     
 		</querytext>
 	</fullquery>
 
+	<fullquery name="imsld::sweep_expired_activities.referenced_las">
+		<querytext>
+        select la.item_id as la_item_id,
+        la.activity_id,
+        ca.time_in_seconds
+        from imsld_learning_activitiesi la,
+        imsld_complete_actsi ca
+        where la.complete_act_id = ca.item_id
+        and content_revision__is_live(ca.complete_act_id) = 't'
+        and ca.time_in_seconds is not null
+    
+		</querytext>
+	</fullquery>
 
+	<fullquery name="imsld::sweep_expired_activities.get_la_activity_info">
+		<querytext>
+            select icm.manifest_id,
+            ii.imsld_id,
+            ip.play_id,
+            ia.act_id,
+            icm.creation_date
+            from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+            imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
+            imsld_actsi ia, imsld_role_partsi irp
+            where irp.role_part_id = :role_part_id
+            and irp.act_id = ia.item_id
+            and ia.play_id = ip.item_id
+            and ip.method_id = im.item_id
+            and im.imsld_id = ii.item_id
+            and ii.organization_id = ico.item_id
+            and ico.manifest_id = icm.item_id
+            and content_revision__is_live(icm.manifest_id) = 't'
 
+		</querytext>
+	</fullquery>
 
 
 	<fullquery name="imsld::mark_role_part_finished.role_part_info">
@@ -459,16 +468,17 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
             ip.item_id as play_item_id,
             ia.act_id,
             ia.item_id as act_item_id,
-            ip.when_last_act_completed_p,
+            ica.when_last_act_completed_p,
             im.method_id,
             im.item_id as method_item_id
-            from imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, imsld_actsi ia, imsld_role_parts irp
+            from imsld_imsldsi ii, imsld_actsi ia, imsld_role_parts irp, 
+               imsld_methodsi im, imsld_playsi ip left outer join imsld_complete_actsi ica on (ip.complete_act_id = ica.item_id)
             where irp.role_part_id = :role_part_id
             and irp.act_id = ia.item_id
             and ia.play_id = ip.item_id
             and ip.method_id = im.item_id
             and im.imsld_id = ii.item_id
-            and content_revision__is_live(ii.imsld_id) = 't'
+            and content_revision__is_live(ii.imsld_id) = 't';
         
 		</querytext>
 	</fullquery>
@@ -1448,8 +1458,7 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
             select la.activity_id,
             la.item_id as activity_item_id,
             la.title as activity_title,
-            la.identifier,
-            la.user_choice_p
+            la.identifier
             from imsld_learning_activitiesi la
             where la.activity_id = :activity_id
         
@@ -1462,8 +1471,7 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
             select sa.activity_id,
             sa.item_id as activity_item_id,
             sa.title as activity_title,
-            sa.identifier,
-            sa.user_choice_p
+            sa.identifier
             from imsld_support_activitiesi sa
             where sa.activity_id = :activity_id
         

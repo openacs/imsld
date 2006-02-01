@@ -273,7 +273,7 @@ ad_proc -public imsld::sweep_expired_activities {
         set activity_id [lindex $referenced_sa 1]
         set time_in_seconds [lindex $referenced_sa 2]
         set role_part_id [imsld::get_role_part_from_activity -activity_type support -leaf_id $sa_item_id]
-        db_1row get_activity_info {
+        db_1row get_sa_activity_info {
             select icm.manifest_id,
             ii.imsld_id,
             ip.play_id,
@@ -330,7 +330,7 @@ ad_proc -public imsld::sweep_expired_activities {
         set activity_id [lindex $referenced_la 1]
         set time_in_seconds [lindex $referenced_la 2]
         set role_part_id [imsld::get_role_part_from_activity -activity_type learning -leaf_id $la_item_id]
-        db_1row get_activity_info {
+        db_1row get_la_activity_info {
             select icm.manifest_id,
             ii.imsld_id,
             ip.play_id,
@@ -2185,7 +2185,7 @@ ad_proc -public imsld::next_activity {
                         and rp.sort_order = (select min(irp2.sort_order) from imsld_role_parts irp2 where irp2.act_id = ia.item_id)
                     }] } {
                         # there is no more to search, we reached the end of the unit of learning
-                        template::multirow append imsld_multirow {} {} {} {} {} "<#_ Learning Unit finished #>"
+                        template::multirow append imsld_multirow {} {} {} {} {} "[_ imsld.lt_Learning_Unit_finishe]"
                         return [template::multirow size imsld_multirow]
                     }
                 }

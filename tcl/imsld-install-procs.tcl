@@ -88,12 +88,12 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name component_id -datatype number -pretty_name "#imsld.Component_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name activity_description_id -datatype number -pretty_name "#imsld.lt_Activity_Description_#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name is_visible_p -datatype string -pretty_name "#imsld.Is_Visible#" -column_spec "char(1)"
-    content::type::attribute::new -content_type imsld_learning_activity -attribute_name complete_act_id -datatype number -pretty_name "<#_ Complete Act Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_learning_activity -attribute_name complete_act_id -datatype number -pretty_name "#imsld.lt_Complete_Act_Identifi#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name on_completion_id -datatype number -pretty_name "#imsld.lt_On_Completion_Identif#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name parameters -datatype string -pretty_name "#imsld.Parameters#" -column_spec "varchar(4000)"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name learning_objective_id -datatype number -pretty_name "#imsld.lt_Learning_Objective_ID#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_learning_activity -attribute_name prerequisite_id -datatype number -pretty_name "#imsld.Prerequistes_ID#" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_learning_activity -attribute_name sort_order -datatype number -pretty_name "<#_ Sort Order #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_learning_activity -attribute_name sort_order -datatype number -pretty_name "#imsld.Sort_Order#" -column_spec "integer"
 
     # support activities
     content::type::new -content_type imsld_support_activity -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Support_Activi#" -pretty_plural "#imsld.lt_IMS-LD_Support_Activi_1#" -table_name imsld_support_activities -id_column activity_id
@@ -103,10 +103,10 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_support_activity -attribute_name activity_description_id -datatype number -pretty_name "#imsld.lt_Activity_Description_#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_support_activity -attribute_name parameter_id -datatype number -pretty_name "#imsld.Parameter_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_support_activity -attribute_name is_visible_p -datatype string -pretty_name "#imsld.Is_Visible#" -column_spec "char(1)"
-    content::type::attribute::new -content_type imsld_support_activity -attribute_name complete_act_id -datatype number -pretty_name "<#_ Complete Act Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_support_activity -attribute_name complete_act_id -datatype number -pretty_name "#imsld.lt_Complete_Act_Identifi#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_support_activity -attribute_name on_completion_id -datatype number -pretty_name "#imsld.lt_On_Completion_Identif#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_support_activity -attribute_name parameters -datatype string -pretty_name "#imsld.Parameters#" -column_spec "varchar(4000)"
-    content::type::attribute::new -content_type imsld_support_activity -attribute_name sort_order -datatype number -pretty_name "<#_ Sort Order #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_support_activity -attribute_name sort_order -datatype number -pretty_name "#imsld.Sort_Order#" -column_spec "integer"
 
     # activity structures
     content::type::new -content_type imsld_activity_structure -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Activity_Struc#" -pretty_plural "#imsld.lt_IMS-LD_Activity_Struc_1#" -table_name imsld_activity_structures -id_column structure_id 
@@ -116,7 +116,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_activity_structure -attribute_name number_to_select -datatype number -pretty_name "#imsld.Number_to_Select#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_activity_structure -attribute_name structure_type -datatype string -pretty_name "#imsld.Structure_Type#" -column_spec "char(9)"
     content::type::attribute::new -content_type imsld_activity_structure -attribute_name sort -datatype string -pretty_name "#imsld.Sort#" -column_spec "varchar(4)"
-    content::type::attribute::new -content_type imsld_activity_structure -attribute_name sort_order -datatype number -pretty_name "<#_ Sort Order #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_activity_structure -attribute_name sort_order -datatype number -pretty_name "#imsld.Sort_Order#" -column_spec "integer"
 
     # environments
     content::type::new -content_type imsld_environment -supertype content_revision -pretty_name "#imsld.IMD-LD_Environment#" -pretty_plural "#imsld.IMD-LD_Environments#" -table_name imsld_environments -id_column environment_id
@@ -161,7 +161,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::new -content_type imsld_method -supertype content_revision -pretty_name "#imsld.IMS-LD_Method#" -pretty_plural "#imsld.IMS-LD_Methods#" -table_name imsld_methods -id_column method_id
     
     content::type::attribute::new -content_type imsld_method -attribute_name imsld_id -datatype number -pretty_name "#imsld.IMS-LD_Identifier#" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_method -attribute_name complete_act_id -datatype number -pretty_name "<#_ Complete Act Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_method -attribute_name complete_act_id -datatype number -pretty_name "#imsld.lt_Complete_Act_Identifi#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_method -attribute_name on_completion_id -datatype number -pretty_name "#imsld.lt_On_Completion_Identif#" -column_spec "integer"
 
     # plays
@@ -170,7 +170,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_play -attribute_name method_id -datatype number -pretty_name "#imsld.Method_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_play -attribute_name is_visible_p -datatype string -pretty_name "#imsld.Is_Visible#" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_play -attribute_name identifier -datatype string -pretty_name "#imsld.Identifier#" -column_spec "varchar(100)"
-    content::type::attribute::new -content_type imsld_play -attribute_name complete_act_id -datatype number -pretty_name "<#_ Complete Act Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_play -attribute_name complete_act_id -datatype number -pretty_name "#imsld.lt_Complete_Act_Identifi#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_play -attribute_name on_completion_id -datatype number -pretty_name "#imsld.lt_On_Completion_Identif#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_play -attribute_name sort_order -datatype number -pretty_name "#imsld.Sort_Order#" -column_spec "integer"
     
@@ -178,7 +178,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::new -content_type imsld_act -supertype content_revision -pretty_name "#imsld.IMS-LD_Act#" -pretty_plural "#imsld.IMS-LD_Acts#" -table_name imsld_acts -id_column act_id
 
     content::type::attribute::new -content_type imsld_act -attribute_name play_id -datatype number -pretty_name "#imsld.Play_Identifier#" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_act -attribute_name complete_act_id -datatype number -pretty_name "<#_ Complete Act Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_act -attribute_name complete_act_id -datatype number -pretty_name "#imsld.lt_Complete_Act_Identifi#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_act -attribute_name identifier -datatype string -pretty_name "#imsld.Identifier#" -column_spec "varchar(100)"
     content::type::attribute::new -content_type imsld_act -attribute_name on_completion_id -datatype number -pretty_name "#imsld.lt_On_Completion_Identif#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_act -attribute_name sort_order -datatype number -pretty_name "#imsld.Sort_Order#" -column_spec "integer"
@@ -196,7 +196,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_role_part -attribute_name sort_order -datatype number -pretty_name "#imsld.Sort_Order#" -column_spec "integer"
 
     # complete acts
-    content::type::new -content_type imsld_complete_act -supertype content_revision -pretty_name "<#_ Complete Act #>" -pretty_plural "<#_ Complete Acts #>" -table_name imsld_complete_acts -id_column complete_act_id
+    content::type::new -content_type imsld_complete_act -supertype content_revision -pretty_name "#imsld.Complete_Act#" -pretty_plural "#imsld.Complete_Acts#" -table_name imsld_complete_acts -id_column complete_act_id
     
     content::type::attribute::new -content_type imsld_complete_act -attribute_name time_in_seconds -datatype number -pretty_name "#imsld.Time_in_Seconds#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_complete_act -attribute_name user_choice_p -datatype string -pretty_name "#imsld.User_Choice#" -column_spec "char(1)"
@@ -247,95 +247,95 @@ ad_proc -public imsld::install::init_content_repository {
     ### IMS-LD LEVEL B
 
     # properties
-    content::type::new -content_type imsld_property -supertype content_revision -pretty_name "<#_ IMS-LD Property #>" -pretty_plural "<#_ IMS-LD Properties #>" -table_name imsld_properties -id_column property_id
+    content::type::new -content_type imsld_property -supertype content_revision -pretty_name "#imsld.IMS-LD_Property#" -pretty_plural "#imsld.IMS-LD_Properties#" -table_name imsld_properties -id_column property_id
 
-    content::type::attribute::new -content_type imsld_property -attribute_name component_id -datatype number -pretty_name "<#_ Component Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_property -attribute_name identifier -datatype string -pretty_name "<#_ Identifier #>" -column_spec "varchar(100)"
-    content::type::attribute::new -content_type imsld_property -attribute_name type -datatype string -pretty_name "<#_ Type #>" -column_spec "varchar(20)"
-    content::type::attribute::new -content_type imsld_property -attribute_name datatype -datatype string -pretty_name "<#_ Data Type #>" -column_spec "varchar(20)"
-    content::type::attribute::new -content_type imsld_property -attribute_name initial_value -datatype string -pretty_name "<#_ Initial Value #>" -column_spec "varchar(4000)"
-    content::type::attribute::new -content_type imsld_property -attribute_name role_id -datatype number -pretty_name "<#_ Role Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_property -attribute_name existing_href -datatype string -pretty_name "<#_ Existing href #>" -column_spec "varchar(2000)"
-    content::type::attribute::new -content_type imsld_property -attribute_name uri -datatype string -pretty_name "<#_ URI #>" -column_spec "varchar(2000)"
+    content::type::attribute::new -content_type imsld_property -attribute_name component_id -datatype number -pretty_name "#imsld.Component_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_property -attribute_name identifier -datatype string -pretty_name "#imsld.Identifier#" -column_spec "varchar(100)"
+    content::type::attribute::new -content_type imsld_property -attribute_name type -datatype string -pretty_name "#imsld.Type#" -column_spec "varchar(20)"
+    content::type::attribute::new -content_type imsld_property -attribute_name datatype -datatype string -pretty_name "#imsld.Data_Type#" -column_spec "varchar(20)"
+    content::type::attribute::new -content_type imsld_property -attribute_name initial_value -datatype string -pretty_name "#imsld.Initial_Value#" -column_spec "varchar(4000)"
+    content::type::attribute::new -content_type imsld_property -attribute_name role_id -datatype number -pretty_name "#imsld.Role_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_property -attribute_name existing_href -datatype string -pretty_name "#imsld.Existing_href#" -column_spec "varchar(2000)"
+    content::type::attribute::new -content_type imsld_property -attribute_name uri -datatype string -pretty_name "#imsld.URI#" -column_spec "varchar(2000)"
 
     # property groups
-    content::type::new -content_type imsld_property_group -supertype content_revision -pretty_name "<#_ IMS-LD Property Group #>" -pretty_plural "<#_ IMS-LD Property Groups #>" -table_name imsld_property_groups -id_column property_group_id
+    content::type::new -content_type imsld_property_group -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Property_Group#" -pretty_plural "#imsld.lt_IMS-LD_Property_Group_1#" -table_name imsld_property_groups -id_column property_group_id
 
-    content::type::attribute::new -content_type imsld_property_group -attribute_name component_id -datatype number -pretty_name "<#_ Component Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_property_group -attribute_name identifier -datatype string -pretty_name "<#_ Identifier #>" -column_spec "varchar(100)"
+    content::type::attribute::new -content_type imsld_property_group -attribute_name component_id -datatype number -pretty_name "#imsld.Component_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_property_group -attribute_name identifier -datatype string -pretty_name "#imsld.Identifier#" -column_spec "varchar(100)"
 
     # restrictions
-    content::type::new -content_type imsld_restriction -supertype content_revision -pretty_name "<#_ IMS-LD Restriction #>" -pretty_plural "<#_ IMS-LD Restrictions #>" -table_name imsld_restrictions -id_column restriction_id
+    content::type::new -content_type imsld_restriction -supertype content_revision -pretty_name "#imsld.IMS-LD_Restriction#" -pretty_plural "#imsld.IMS-LD_Restrictions#" -table_name imsld_restrictions -id_column restriction_id
 
-    content::type::attribute::new -content_type imsld_restriction -attribute_name property_id -datatype number -pretty_name "<#_ Property Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_restriction -attribute_name restriction_type -datatype string -pretty_name "<#_ Restriction Type #>" -column_spec "varchar(20)"
-    content::type::attribute::new -content_type imsld_restriction -attribute_name value -datatype string -pretty_name "<#_ Value #>" -column_spec "varchar"
+    content::type::attribute::new -content_type imsld_restriction -attribute_name property_id -datatype number -pretty_name "#imsld.Property_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_restriction -attribute_name restriction_type -datatype string -pretty_name "#imsld.Restriction_Type#" -column_spec "varchar(20)"
+    content::type::attribute::new -content_type imsld_restriction -attribute_name value -datatype string -pretty_name "#imsld.Value#" -column_spec "varchar"
 
     # property values
-    content::type::new -content_type imsld_property_value -supertype content_revision -pretty_name "<#_ IMS-LD Property Value #>" -pretty_plural "<#_ IMS-LD Property Values #>" -table_name imsld_property_values -id_column property_value_id
+    content::type::new -content_type imsld_property_value -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Property_Value#" -pretty_plural "#imsld.lt_IMS-LD_Property_Value_1#" -table_name imsld_property_values -id_column property_value_id
 
-    content::type::attribute::new -content_type imsld_property_value -attribute_name property_id -datatype number -pretty_name "<#_ Property Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_property_value -attribute_name langstring -datatype string -pretty_name "<#_ Langstring #>" -column_spec "varchar(4000)"
-    content::type::attribute::new -content_type imsld_property_value -attribute_name calculate_id -datatype number -pretty_name "<#_ Calulate Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_property_value -attribute_name property_value_ref -datatype number -pretty_name "<#_ Property Value Ref. #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_property_value -attribute_name property_id -datatype number -pretty_name "#imsld.Property_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_property_value -attribute_name langstring -datatype string -pretty_name "#imsld.Langstring#" -column_spec "varchar(4000)"
+    content::type::attribute::new -content_type imsld_property_value -attribute_name calculate_id -datatype number -pretty_name "#imsld.Calulate_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_property_value -attribute_name property_value_ref -datatype number -pretty_name "#imsld.Property_Value_Ref#" -column_spec "integer"
 
     # complete acts
-    content::type::attribute::new -content_type imsld_complete_act -attribute_name time_property_id -datatype number -pretty_name "<#_ Time Property Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_complete_act -attribute_name when_prop_val_is_set_id -datatype number -pretty_name "<#_ When Property Value is Set Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_complete_act -attribute_name when_condition_true_id -datatype number -pretty_name "<#_ When Condition True #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_complete_act -attribute_name time_property_id -datatype number -pretty_name "#imsld.lt_Time_Property_Identif#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_complete_act -attribute_name when_prop_val_is_set_id -datatype number -pretty_name "#imsld.lt_When_Property_Value_i#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_complete_act -attribute_name when_condition_true_id -datatype number -pretty_name "#imsld.When_Condition_True#" -column_spec "integer"
 
     # monitor service
-    content::type::new -content_type imsld_monitor_service -supertype content_revision -pretty_name "<#_ IMS-LD Monitor Service #>" -pretty_plural "<#_ IMS-LD Monitor Services #>" -table_name imsld_monitor_services -id_column monitor_id
+    content::type::new -content_type imsld_monitor_service -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Monitor_Servic#" -pretty_plural "#imsld.lt_IMS-LD_Monitor_Servic_1#" -table_name imsld_monitor_services -id_column monitor_id
 
-    content::type::attribute::new -content_type imsld_monitor_service -attribute_name service_id -datatype number -pretty_name "<#_ Service Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_monitor_service -attribute_name role_id -datatype number -pretty_name "<#_ Role Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_monitor_service -attribute_name self_p -datatype string -pretty_name "<#_ Self #>" -column_spec "char(1)"
-    content::type::attribute::new -content_type imsld_monitor_service -attribute_name imsld_item_id -datatype number -pretty_name "<#_ IMS-LD Item Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_monitor_service -attribute_name service_id -datatype number -pretty_name "#imsld.Service_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_monitor_service -attribute_name role_id -datatype number -pretty_name "#imsld.Role_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_monitor_service -attribute_name self_p -datatype string -pretty_name "#imsld.Self#" -column_spec "char(1)"
+    content::type::attribute::new -content_type imsld_monitor_service -attribute_name imsld_item_id -datatype number -pretty_name "#imsld.lt_IMS-LD_Item_Identifie#" -column_spec "integer"
 
     # send mail service
-    content::type::attribute::new -content_type imsld_send_mail_service -attribute_name email_property_id -datatype number -pretty_name "<#_ Email Propery Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_send_mail_service -attribute_name username_property_id -datatype number -pretty_name "<#_ Username Property Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_send_mail_service -attribute_name email_property_id -datatype number -pretty_name "#imsld.lt_Email_Propery_Identif#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_send_mail_service -attribute_name username_property_id -datatype number -pretty_name "#imsld.lt_Username_Property_Ide#" -column_spec "integer"
 
     # when condition true
-    content::type::new -content_type imsld_when_condition_true -supertype content_revision -pretty_name "<#_ IMS-LD When Condition True #>" -pretty_plural "<#_ IMS-LD When Conditions True #>" -table_name imsld_when_condition_true -id_column when_condition_true_id
+    content::type::new -content_type imsld_when_condition_true -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_When_Condition#" -pretty_plural "#imsld.lt_IMS-LD_When_Condition_1#" -table_name imsld_when_condition_true -id_column when_condition_true_id
 
-    content::type::attribute::new -content_type imsld_when_condition_true -attribute_name role_id -datatype number -pretty_name "<#_ Role Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_when_condition_true -attribute_name expression_id -datatype number -pretty_name "<#_ Expression Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_when_condition_true -attribute_name role_id -datatype number -pretty_name "#imsld.Role_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_when_condition_true -attribute_name expression_id -datatype number -pretty_name "#imsld.lt_Expression_Identifier#" -column_spec "integer"
 
     # expressions, conditions and calculate
-    content::type::new -content_type imsld_expression -supertype content_revision -pretty_name "<#_ IMS-LD Expression #>" -pretty_plural "<#_ IMS-LD Expressions #>" -table_name imsld_expressions -id_column expression_id
+    content::type::new -content_type imsld_expression -supertype content_revision -pretty_name "#imsld.IMS-LD_Expression#" -pretty_plural "#imsld.IMS-LD_Expressions#" -table_name imsld_expressions -id_column expression_id
 
-    content::type::attribute::new -content_type imsld_expression -attribute_name imsld_id -datatype number -pretty_name "<#_ IMS-LD Intifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_expression -attribute_name xml_piece -datatype string -pretty_name "<#_ XML Piece #>" -column_spec "text"
+    content::type::attribute::new -content_type imsld_expression -attribute_name imsld_id -datatype number -pretty_name "#imsld.IMS-LD_Intifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_expression -attribute_name xml_piece -datatype string -pretty_name "#imsld.XML_Piece#" -column_spec "text"
 
 #     # conditions 
-#     content::type::new -content_type imsld_condition -supertype content_revision -pretty_name "<#_ IMS-LD Condition #>" -pretty_plural "<#_ IMS-LD Conditions #>" -table_name imsld_conditions -id_column condition_id
+#     content::type::new -content_type imsld_condition -supertype content_revision -pretty_name "#imsld.IMS-LD_Condition#" -pretty_plural "#imsld.IMS-LD_Conditions#" -table_name imsld_conditions -id_column condition_id
 
-#     content::type::attribute::new -content_type imsld_condition -attribute_name method_id -datatype number -pretty_name "<#_ Method Identifier #>" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_condition -attribute_name if_id -datatype number -pretty_name "<#_ If Identifier #>" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_condition -attribute_name then_id -datatype number -pretty_name "<#_ Then Identifier #>" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_condition -attribute_name else_id -datatype number -pretty_name "<#_ Else Identifier #>" -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_condition -attribute_name method_id -datatype number -pretty_name "#imsld.Method_Identifier#" -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_condition -attribute_name if_id -datatype number -pretty_name "#imsld.If_Identifier#" -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_condition -attribute_name then_id -datatype number -pretty_name "#imsld.Then_Identifier#" -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_condition -attribute_name else_id -datatype number -pretty_name "#imsld.Else_Identifier#" -column_spec "integer"
 
 #     # expressions
-#     content::type::new -content_type imsld_expression -supertype content_revision -pretty_name "<#_ IMS-LD Expression #>" -pretty_plural "<#_ IMS-LD Expressions #>" -table_name imsld_expressions -id_column expression_id
+#     content::type::new -content_type imsld_expression -supertype content_revision -pretty_name "#imsld.IMS-LD_Expression#" -pretty_plural "#imsld.IMS-LD_Expressions#" -table_name imsld_expressions -id_column expression_id
 
-#     content::type::attribute::new -content_type imsld_expression -attribute_name type -datatype string -pretty_name "<#_ Type #>" -column_spec "varchar(25)"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name role_id -datatype number -pretty_name "<#_ Role Identifier #>" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name calculate_id -datatype number -pretty_name "<#_ Caluclate Identifier  #>" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name exp_one_id -datatype number -pretty_name "<#_ Expression One Identifier #>" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name exp_two_id -datatype number -pretty_name "<#_ Expression Two Identifer #>" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name property_id -datatype number -pretty_name "<#_ Property Identifier #>" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name ref_type -datatype string -pretty_name "<#_ Reference Type #>" -column_spec "varchar(20)"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name ref_id -datatype number -pretty_name "<#_ Reference Identifier #>" -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_expression -attribute_name type -datatype string -pretty_name "#imsld.Type#" -column_spec "varchar(25)"
+#     content::type::attribute::new -content_type imsld_expression -attribute_name role_id -datatype number -pretty_name "#imsld.Role_Identifier#" -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_expression -attribute_name calculate_id -datatype number -pretty_name "#imsld.Caluclate_Identifier#" -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_expression -attribute_name exp_one_id -datatype number -pretty_name "#imsld.lt_Expression_One_Identi#" -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_expression -attribute_name exp_two_id -datatype number -pretty_name "#imsld.lt_Expression_Two_Identi#" -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_expression -attribute_name property_id -datatype number -pretty_name "#imsld.Property_Identifier#" -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_expression -attribute_name ref_type -datatype string -pretty_name "#imsld.Reference_Type#" -column_spec "varchar(20)"
+#     content::type::attribute::new -content_type imsld_expression -attribute_name ref_id -datatype number -pretty_name "#imsld.Reference_Identifier#" -column_spec "integer"
 
 #     # then model
-#     content::type::new -content_type imsld_then_model -supertype content_revision -pretty_name "<#_ IMS-LD Then Model #>" -pretty_plural "<#_ IMS-LD Then Models #>" -table_name imsld_then_model -id_column then_model_id
+#     content::type::new -content_type imsld_then_model -supertype content_revision -pretty_name "#imsld.IMS-LD_Then_Model#" -pretty_plural "#imsld.IMS-LD_Then_Models#" -table_name imsld_then_model -id_column then_model_id
 
-#     content::type::attribute::new -content_type imsld_then_model -attribute_name type -datatype string -pretty_name "<#_ Type #>" -column_spec "varchar(20)"
-#     content::type::attribute::new -content_type imsld_then_model -attribute_name ref_type -datatype string -pretty_name "<#_ Reference Type #>" -column_spec "varchar(20)"
-#     content::type::attribute::new -content_type imsld_then_model -attribute_name ref_id -datatype number -pretty_name "<#_ Reference Identifier #>" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_then_model -attribute_name with_control_p -datatype string -pretty_name "<#_ With Control #>" -column_spec "char(1)"
-#     content::type::attribute::new -content_type imsld_then_model -attribute_name change_prop_val_id -datatype number -pretty_name "<#_ Change Property Value Identifier #>" -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_then_model -attribute_name type -datatype string -pretty_name "#imsld.Type#" -column_spec "varchar(20)"
+#     content::type::attribute::new -content_type imsld_then_model -attribute_name ref_type -datatype string -pretty_name "#imsld.Reference_Type#" -column_spec "varchar(20)"
+#     content::type::attribute::new -content_type imsld_then_model -attribute_name ref_id -datatype number -pretty_name "#imsld.Reference_Identifier#" -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_then_model -attribute_name with_control_p -datatype string -pretty_name "#imsld.With_Control#" -column_spec "char(1)"
+#     content::type::attribute::new -content_type imsld_then_model -attribute_name change_prop_val_id -datatype number -pretty_name "#imsld.lt_Change_Property_Value#" -column_spec "integer"
 
 }
 

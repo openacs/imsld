@@ -137,7 +137,7 @@ ad_proc -public imsld::cr::get_root_folder {
 
     set folder_id [content::item::get_id -item_path "imsld_root_cr_folder_${community_id}" -resolve_index f]
     if { [string eq "" $folder_id] } {
-        ad_return_error "<#_ No parent folder found #>" "<#_ No parent folder found for the ims-ld in the community %community_id%. Please report this error to the administrator. #>"
+        ad_return_error "[_ imsld.lt_No_parent_folder_foun]" "[_ imsld.lt_No_parent_folder_foun_1]"
         ad_script_abort
     }
     return $folder_id
