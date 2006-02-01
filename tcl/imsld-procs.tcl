@@ -38,11 +38,80 @@ ad_proc -public imsld::object_type_image_path {
         as_assessments {
             set image_path "[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/assessment.png"
         }
+        ims_manifest_object {
+            set image_path "[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/lors.png"
+        }
         default {
             set image_path "[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/file-storage.png"
         }
     }
     return $image_path
+} 
+
+ad_proc -public imsld::get_role_part_from_activity {
+    -activity_type
+    -leaf_id
+} { 
+    @return A the role_part_id that references the passed activity_item_id (leaf_id)
+} {
+    switch $activity_type {
+        learning {
+            if { [db_0or1row directly_mapped {
+                select item_id as rp_item_id, role_part_id
+                from imsld_role_partsi
+                where learning_activity_id = :leaf_id
+            }] } {
+                return $role_part_id
+            }
+           # the learning activity is referenced by an activity structure... digg more
+            db_1row get_la_activity_structure {
+                select ias.structure_id, ias.item_id as leaf_id
+                from imsld_activity_structuresi ias, acs_rels ar, imsld_learning_activitiesi la
+                where ar.object_id_one = ias.item_id
+                and ar.object_id_two = la.item_id
+                and content_revision__is_live(ias.structure_id) = 't'
+                and la.item_id = :leaf_id
+            }
+            return [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
+        }
+        support {
+            if { [db_0or1row directly_mapped {
+                select item_id as rp_item_id, role_part_id
+                from imsld_role_partsi
+                where support_activity_id = :leaf_id
+            }] } {
+                return $role_part_id
+            }
+            # the support activity is referenced by an activity structure... digg more
+            db_1row get_sa_activity_structure {
+                select ias.structure_id, ias.item_id as leaf_id
+                from imsld_activity_structuresi ias, acs_rels ar, imsld_learning_activitiesi sa
+                where ar.object_id_one = ias.item_id
+                and ar.object_id_two = sa.item_id
+                and content_revision__is_live(ias.structure_id) = 't'
+                and la.item_id = :leaf_id
+            }
+            return [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
+        }
+        structure {
+            if { [db_0or1row directly_mapped {
+                select item_id as rp_item_id, role_part_id
+                from imsld_role_partsi
+                where activity_structure_id = :leaf_id
+            }] } {
+                return $role_part_id
+            }
+            # the activity structure is referenced by an activity structure... digg more
+            db_1row get_as_activity_structure {
+                select ias.structure_id, ias.item_id as structure_item_id
+                from imsld_activity_structuresi ias, acs_rels ar
+                where ar.object_id_one = ias.item_id
+                and ar.object_id_two = :leaf_id
+                and content_revision__is_live(ias.structure_id) = 't'
+            }
+            return [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
+        }
+    }
 } 
 
 ad_proc -public imsld::community_id_from_manifest_id {
@@ -76,7 +145,7 @@ ad_proc -public imsld::sweep_expired_activities {
         and ii.organization_id = ico.item_id
         and ico.manifest_id = icm.item_id
         and im.complete_act_id = ca.item_id
-        and ca.time_in_secontds is not null
+        and ca.time_in_seconds is not null
         and content_revision__is_live(im.method_id) = 't'
     }] {
         set manifest_id [lindex $referenced_method 0]
@@ -159,7 +228,7 @@ ad_proc -public imsld::sweep_expired_activities {
         and im.imsld_id = ii.item_id
         and ii.organization_id = ico.item_id
         and ico.manifest_id = icm.item_id
-        and ia.complete_act_id = tl.item_id
+        and ia.complete_act_id = ca.item_id
         and ca.time_in_seconds is not null
         and content_revision__is_live(ia.act_id) = 't'
     }] {
@@ -190,38 +259,38 @@ ad_proc -public imsld::sweep_expired_activities {
     }
 
     # 4. support activities
-    foreach referenced_sa [db_list_of_lists possible_expired_support_activities {
-        select icm.manifest_id,
+    foreach referenced_sa [db_list_of_lists referenced_sas {
+        select sa.item_id as sa_item_id,
         sa.activity_id,
-        ii.imsld_id,
-        ip.play_id,
-        ia.act_id,
-        irp.role_part_id,
-        ca.time_in_seconds,
-        icm.creation_date
-        from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
-        imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
-        imsld_actsi ia, imsld_role_partsi irp, imsld_support_activitiesi sa,
+        ca.time_in_seconds
+        from imsld_support_activitiesi sa,
         imsld_complete_actsi ca
-        where sa.item_id = irp.support_activity_id
-        and irp.act_id = ia.item_id
-        and ia.play_id = ip.item_id
-        and ip.method_id = im.item_id
-        and im.imsld_id = ii.item_id
-        and ii.organization_id = ico.item_id
-        and ico.manifest_id = icm.item_id
-        and sa.complete_act_id = tl.item_id
+        where sa.complete_act_id = ca.item_id
+        and content_revision__is_live(ca.complete_act_id) = 't'
         and ca.time_in_seconds is not null
-        and content_revision__is_live(sa.activity_id) = 't'
     }] {
-        set manifest_id [lindex $referenced_sa 0] 
+        set sa_item_id [lindex $referenced_sa 0]
         set activity_id [lindex $referenced_sa 1]
-        set imsld_id [lindex $referenced_sa 2]
-        set play_id [lindex $referenced_sa 3]
-        set act_id [lindex $referenced_sa 4]
-        set role_part_id [lindex $referenced_sa 5]
-        set time_in_seconds [lindex $referenced_sa 6]
-        set creation_date [lindex $referenced_sa 7]
+        set time_in_seconds [lindex $referenced_sa 2]
+        set role_part_id [imsld::get_role_part_from_activity -activity_type support -leaf_id $sa_item_id]
+        db_1row get_activity_info {
+            select icm.manifest_id,
+            ii.imsld_id,
+            ip.play_id,
+            ia.act_id,
+            icm.creation_date
+            from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+            imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
+            imsld_actsi ia, imsld_role_partsi irp
+            where irp.role_part_id = :role_part_id
+            and irp.act_id = ia.item_id
+            and ia.play_id = ip.item_id
+            and ip.method_id = im.item_id
+            and im.imsld_id = ii.item_id
+            and ii.organization_id = ico.item_id
+            and ico.manifest_id = icm.item_id
+            and content_revision__is_live(icm.manifest_id) = 't'
+        }
         if { [db_0or1row compre_times {
             select 1
             where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
@@ -245,39 +314,40 @@ ad_proc -public imsld::sweep_expired_activities {
             }
         }
     }
+
     # 5. learning activities
-    foreach referenced_la [db_list_of_lists possible_expired_learning_activities {
-        select icm.manifest_id,
+    foreach referenced_la [db_list_of_lists referenced_las {
+        select la.item_id as la_item_id,
         la.activity_id,
-        ii.imsld_id,
-        ip.play_id,
-        ia.act_id,
-        irp.role_part_id,
-        ca.time_in_seconds,
-        icm.creation_date
-        from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
-        imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
-        imsld_actsi ia, imsld_role_partsi irp, imsld_learning_activitiesi la,
+        ca.time_in_seconds
+        from imsld_learning_activitiesi la,
         imsld_complete_actsi ca
-        where la.item_id = irp.learning_activity_id
-        and irp.act_id = ia.item_id
-        and ia.play_id = ip.item_id
-        and ip.method_id = im.item_id
-        and im.imsld_id = ii.item_id
-        and ii.organization_id = ico.item_id
-        and ico.manifest_id = icm.item_id
-        and la.complete_act_id = tl.item_id
+        where la.complete_act_id = ca.item_id
+        and content_revision__is_live(ca.complete_act_id) = 't'
         and ca.time_in_seconds is not null
-        and content_revision__is_live(la.activity_id) = 't'
     }] {
-        set manifest_id [lindex $referenced_la 0] 
+        set la_item_id [lindex $referenced_la 0]
         set activity_id [lindex $referenced_la 1]
-        set imsld_id [lindex $referenced_la 2]
-        set play_id [lindex $referenced_la 3]
-        set act_id [lindex $referenced_la 4]
-        set role_part_id [lindex $referenced_la 5]
-        set time_in_seconds [lindex $referenced_la 6]
-        set creation_date [lindex $referenced_la 7]
+        set time_in_seconds [lindex $referenced_la 2]
+        set role_part_id [imsld::get_role_part_from_activity -activity_type learning -leaf_id $la_item_id]
+        db_1row get_activity_info {
+            select icm.manifest_id,
+            ii.imsld_id,
+            ip.play_id,
+            ia.act_id,
+            icm.creation_date
+            from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+            imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
+            imsld_actsi ia, imsld_role_partsi irp
+            where irp.role_part_id = :role_part_id
+            and irp.act_id = ia.item_id
+            and ia.play_id = ip.item_id
+            and ip.method_id = im.item_id
+            and im.imsld_id = ii.item_id
+            and ii.organization_id = ico.item_id
+            and ico.manifest_id = icm.item_id
+            and content_revision__is_live(icm.manifest_id) = 't'
+        }
         if { [db_0or1row compre_times {
             select 1
             where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
@@ -2115,7 +2185,7 @@ ad_proc -public imsld::next_activity {
                         and rp.sort_order = (select min(irp2.sort_order) from imsld_role_parts irp2 where irp2.act_id = ia.item_id)
                     }] } {
                         # there is no more to search, we reached the end of the unit of learning
-                        template::multirow append imsld_multirow {} {} {} {} {} {IMS LD finished}
+                        template::multirow append imsld_multirow {} {} {} {} {} "<#_ Learning Unit finished #>"
                         return [template::multirow size imsld_multirow]
                     }
                 }
@@ -2251,7 +2321,7 @@ ad_proc -public imsld::next_activity {
     }
         
     # this should never happen, but in case the next activiy is already finished, let's throw an error
-    # instead of not doing anything.
+    # instead of doing nothing
     if { [db_string verify_not_completed {
         select count(*) from imsld_status_user
         where completed_id = :activity_id
@@ -2383,23 +2453,6 @@ ad_proc -public imsld::get_activity_from_resource {
     return $activity_item_id
 }
 
-ad_proc -public imsld::get_rolepart_from_activity { 
-   -activity_id
-} { 
-    @return The role_part_id from which the activity is being used.
-} {
-    db_1row get_role_part_from_activity {
-        select irp.role_part_id as role_part_id
-        from imsld_role_parts irp,
-             imsld_learning_activitiesi ilai,
-             acs_rels ar 
-        where ilai.activity_id=:activity_id 
-             and ar.object_id_two=ilai.item_id 
-             and irp.activity_structure_id=ar.object_id_one
-    }
-    return $role_part_id
-}
-
 ad_proc -public imsld::get_imsld_from_activity { 
    -activity_id
 } { 
@@ -2455,7 +2508,7 @@ ad_proc -public imsld::finish_resource {
     }
 
 #get info
-    set role_part_id [imsld::get_rolepart_from_activity -activity_id $activity_id]
+    set role_part_id [imsld::get_role_part_from_activity -activity_type learning -leaf_id $activity_item_id]
     set imsld_id [imsld::get_imsld_from_activity -activity_id $activity_id]
     set user_id [ad_conn user_id]
 
