@@ -1,13 +1,10 @@
-get_manifestsad_page_contract {
-}
+<?xml version="1.0"?>
+<queryset>
 
-set page_title index
-set context {}
-set community_id [dotlrn_community::get_community_id]
 
-set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
 
-db_multirow imslds_in_class get_manifests {
+	<fullquery name="get_manifests">
+		<querytext>
     select cr3.item_id as imsld_id,
     coalesce(imsld.title, imsld.identifier) as imsld_title
     from cr_items cr1, cr_items cr2, cr_items cr3, cr_items cr4,
@@ -19,5 +16,7 @@ db_multirow imslds_in_class get_manifests {
     and imsld.organization_id = cr2.item_id
     and cr2.live_revision = ico.organization_id
     and cr3.live_revision = imsld.imsld_id
-} {
-}
+		</querytext>
+	</fullquery>
+</queryset>
+
