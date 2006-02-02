@@ -1261,6 +1261,27 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 		</querytext>
 	</fullquery>
 
+	<fullquery name="imsld::next_activity.is_assessment">
+		<querytext>
+        select acs_object_id as assessment_id 
+        from imsld_cp_resourcesi 
+        where type='imsqti_xmlv1p0'
+              and item_id=:resource_activity
+		</querytext>
+	</fullquery>
+
+
+	<fullquery name="imsld::next_activity.get_as_site_node">
+		<querytext>
+            select sn.node_id as node_id 
+            from acs_objects ao,
+                 site_nodes sn 
+            where ao.package_id=sn.object_id 
+                  and ao.object_id=:assessment_id;
+        </querytext>
+	</fullquery>
+
+
 
 	<fullquery name="imsld::next_activity.get_ismld_info">
 		<querytext>

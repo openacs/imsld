@@ -2062,12 +2062,22 @@ ad_proc -public imsld::next_activity {
                     
                     set activities "$activity_title <br /> [join [lindex $activities_list 3] " "]"
 
-
                     set feedbacks ""
                     if { [llength [lindex $activities_list 4]] } {
                         set feedbacks "[lindex [lindex $activities_list 4] 0] <br/>"
                         append feedbacks "[join [lindex [lindex $activities_list 4] 1] " "]"
                     }
+
+                    set resources_activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
+                    foreach resource_activity [join $resources_activities_list] {
+                       if {[db_0or1row is_assessment {} ] } {
+                            db_1row get_as_site_node {} 
+                            set as_feedback_url "[site_node::get_url -node_id $node_id][export_vars -base sessions {assessment_id $assessment_id}]"
+                            set as_feedback_link "<a href=[export_vars -base $as_feedback_url] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/sessions.png\" border=0  alt=\"$as_feedback_url\"></a>"
+                            append feedbacks $as_feedback_link
+                       } 
+                    }
+                    
                     template::multirow append imsld_multirow $prerequisites \
                         $objectives \
                         $environments \
@@ -2542,9 +2552,14 @@ ad_proc -public imsld::finish_resource {
         }
         
 #find all the resouces in the same activity 
-      set resources_item_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
-#        lappend resources_item_list [imsld::process_environment -environment_item_id $activity_item_id -resource_mode "t"]
-        
+      set first_resources_item_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
+
+#only the learning_activities must be finished
+      set resources_item_list [lindex $first_resources_item_list 3]
+      if { [llength $resources_item_list] == 0 } {
+          set resources_item_list [lindex $first_resources_item_list 2]
+      }
+
         set resource_list [list]
         foreach resource_item_id $resources_item_list { 
             foreach res_id $resource_item_id {
