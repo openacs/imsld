@@ -43,6 +43,14 @@
 		</querytext>
 	</fullquery>
 
+	<fullquery name="is_assessment">
+		<querytext>
+        select count(*)
+        from imsld_cp_resources
+        where resource_id=:resource_id and
+              type='imsqti_xmlv1p0'
+		</querytext>
+	</fullquery>
 
 	<fullquery name="get_identifier_resource_id">
 		<querytext>

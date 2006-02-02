@@ -21,32 +21,36 @@ if { ![
                             where ifre.rel_id=ar1.rel_id and 
                                   ar1.object_id_two=ar2.object_id_one and 
                                   ar2.object_id_two=:resource_item_id 
-    } ] } { 
+    } ] } {
 
-    set prerequisites_list [db_list get_all_prerequisites {
-        select prerequisite_id
-        from imsld_imslds
-    }]
-    set objectives_list [db_list get_all_objectives {
-        select learning_objective_id
-        from imsld_imslds
-    }]
+#assessment is finished by a callback when results are submited
+        if {![db_string is_assessment {} ]} {
+
+        set prerequisites_list [db_list get_all_prerequisites {
+            select prerequisite_id
+            from imsld_imslds
+        }]
+        set objectives_list [db_list get_all_objectives {
+            select learning_objective_id
+            from imsld_imslds
+        }]
 
 #para no finalizar los prerequisitos y objetivos globales
-    set identifier ""
-    db_0or1row get_identifier_resource_id {
-            select ar1.object_id_one as identifier 
-            from acs_rels ar1, 
-                 acs_rels ar2 
-            where ar1.object_id_two=ar2.object_id_one 
-                 and ar2.object_id_two=:resource_item_id;
-    }
+        set identifier ""
+        db_0or1row get_identifier_resource_id {
+                select ar1.object_id_one as identifier 
+                from acs_rels ar1, 
+                     acs_rels ar2 
+                where ar1.object_id_two=ar2.object_id_one 
+                     and ar2.object_id_two=:resource_item_id;
+        }
 
-    if { [lsearch [concat $prerequisites_list $objectives_list] $identifier] != "-1" } {
+        if { [lsearch [concat $prerequisites_list $objectives_list] $identifier] != "-1" } {
 
-    } else {
+        } else {
 
-        imsld::finish_resource -resource_id $resource_id
-    }
+            imsld::finish_resource -resource_id $resource_id
+        }
+        }
 }
 ad_returnredirect $file_url
