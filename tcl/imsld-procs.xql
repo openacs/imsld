@@ -1510,17 +1510,34 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 	</fullquery>
 
 
-	<fullquery name="imsld::get_activity_from_resource.is_learning_activity">
+	<fullquery name="imsld::get_activity_from_resource.learning_activity_resource">
 		<querytext>
-                            select ila.activity_id as activity_item_id 
-                            from imsld_cp_resourcesi icri,
-                                 acs_rels ar1,
-                                 acs_rels ar2,
-                                 imsld_learning_activities ila 
-                            where ar2.object_id_two=icri.item_id 
-                                  and ar1.object_id_two=ar2.object_id_one 
-                                  and ila.activity_description_id=ar1.object_id_one 
-                                  and icri.resource_id= :resource_id
+        select ila.activity_id,
+        ila.item_id as activity_item_id
+        from imsld_cp_resourcesi icri,
+        acs_rels ar1,
+        acs_rels ar2,
+        imsld_learning_activitiesi ila 
+        where ar2.object_id_two=icri.item_id 
+        and ar1.object_id_two=ar2.object_id_one 
+        and ila.activity_description_id=ar1.object_id_one 
+        and icri.resource_id= :resource_id
+    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::get_activity_from_resource.support_activity_resource">
+		<querytext>
+        select isa.activity_id,
+        isa.item_id as activity_item_id
+        from imsld_cp_resourcesi icri,
+        acs_rels ar1,
+        acs_rels ar2,
+        imsld_support_activitiesi isa 
+        where ar2.object_id_two=icri.item_id 
+        and ar1.object_id_two=ar2.object_id_one 
+        and isa.activity_description_id=ar1.object_id_one 
+        and icri.resource_id= :resource_id
     
 		</querytext>
 	</fullquery>
@@ -1528,20 +1545,19 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 
 	<fullquery name="imsld::get_activity_from_resource.get_imsld_item_id">
 		<querytext>
- 
-                select ar1.object_id_one as imsld_item_item_id 
-                from imsld_cp_resourcesi icri,
-                     acs_rels ar1 
-                where icri.item_id=ar1.object_id_two 
-                     and icri.resource_id= :resource_id
-        
+        select ar1.object_id_one as imsld_item_item_id 
+        from imsld_cp_resourcesi icri,
+        acs_rels ar1 
+        where icri.item_id=ar1.object_id_two 
+        and icri.resource_id= :resource_id
+
 		</querytext>
 	</fullquery>
 
 
 	<fullquery name="imsld::get_activity_from_resource.is_conference_service">
 		<querytext>
-select 1 from imsld_conference_services where imsld_item_id=:imsld_item_item_id
+    select 1 from imsld_conference_services where imsld_item_id=:imsld_item_item_id
 		</querytext>
 	</fullquery>
 
@@ -1560,11 +1576,24 @@ select 1 from imsld_conference_services where imsld_item_id=:imsld_item_item_id
 
 	<fullquery name="imsld::get_activity_from_resource.get_learning_activity_from_environment">
 		<querytext>
-                    select ila.activity_id as activity_item_id 
+                    select ila.activity_id,
+                           ila.item_id as activity_item_id 
                     from acs_rels ar,
                          imsld_learning_activitiesi ila 
                     where ila.item_id=ar.object_id_one 
-                         and ar.object_id_two=:environment_item_id;
+                         and ar.object_id_two=:environment_item_id
+            
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::get_activity_from_resource.get_support_activity_from_environment">
+		<querytext>
+                select isa.activity_id,
+                       isa.item_id as activity_item_id 
+                    from acs_rels ar,
+                         imsld_support_activitiesi isa 
+                    where isa.item_id=ar.object_id_one 
+                         and ar.object_id_two=:environment_item_id
             
 		</querytext>
 	</fullquery>
@@ -1572,7 +1601,7 @@ select 1 from imsld_conference_services where imsld_item_id=:imsld_item_item_id
 
 	<fullquery name="imsld::get_activity_from_resource.is_learning_object">
 		<querytext>
-select 1 from acs_rels where rel_type='imsld_l_object_item_rel' and object_id_two=:imsld_item_item_id 
+    select 1 from acs_rels where rel_type='imsld_l_object_item_rel' and object_id_two=:imsld_item_item_id 
 		</querytext>
 	</fullquery>
 
@@ -1587,8 +1616,6 @@ select 1 from acs_rels where rel_type='imsld_l_object_item_rel' and object_id_tw
             
 		</querytext>
 	</fullquery>
-
-
 
 	<fullquery name="imsld::get_activity_from_resource.get_activity_from_resource">
 		<querytext>
@@ -1614,9 +1641,10 @@ select 1 from acs_rels where rel_type='imsld_l_object_item_rel' and object_id_tw
 
 	<fullquery name="imsld::get_activity_from_resource.get_activity_id_from_prerequisite">
 		<querytext>
-                select activity_id as activity_item_id 
-                from imsld_learning_activitiesi 
-                where prerequisite_id=:resource_element_id 
+            select activity_id,
+            item_id as activity_item_id 
+            from imsld_learning_activitiesi 
+            where prerequisite_id=:resource_element_id 
             
 		</querytext>
 	</fullquery>
@@ -1631,9 +1659,10 @@ select 1 from acs_rels where rel_type='imsld_l_object_item_rel' and object_id_tw
 
 	<fullquery name="imsld::get_activity_from_resource.get_activity_id_from_objective">
 		<querytext>
-                select activity_id as activity_item_id
-                from imsld_learning_activitiesi
-                where learning_objective_id=:resource_element_id
+            select activity_id,
+            item_id as activity_item_id
+            from imsld_learning_activitiesi
+            where learning_objective_id=:resource_element_id
             
 		</querytext>
 	</fullquery>
@@ -1679,18 +1708,6 @@ select 1 from acs_rels where rel_type='imsld_l_object_item_rel' and object_id_tw
 		</querytext>
 	</fullquery>
 
-
-	<fullquery name="imsld::finish_resource.get_activity_item_id">
-		<querytext>
- 
-        select item_id as activity_item_id
-        from imsld_learning_activitiesi 
-        where activity_id=:activity_id 
-    
-		</querytext>
-	</fullquery>
-
-
 	<fullquery name="imsld::finish_resource.insert_completed_resource">
 		<querytext>
                 insert into imsld_status_user (
@@ -1714,11 +1731,13 @@ select 1 from acs_rels where rel_type='imsld_l_object_item_rel' and object_id_tw
 	</fullquery>
 
 
-	<fullquery name="imsld::finish_resource.get_activity_item">
+	<fullquery name="imsld::finish_resource.resource_finished_p">
 		<querytext>
-                    select resource_id as rid 
-                    from imsld_cp_resourcesi
-                    where item_id =:res_id 
+                    select 1 
+                    from imsld_status_user stat, imsld_cp_resourcesi icr
+                    where icr.item_id = :res_id
+                    and icr.resource_id = stat.completed_id
+                    and user_id = :user_id
                 
 		</querytext>
 	</fullquery>
@@ -1734,17 +1753,5 @@ select 1 from acs_rels where rel_type='imsld_l_object_item_rel' and object_id_tw
 	</fullquery>
 
 
-	<fullquery name="imsld::finish_resource.get_activity_type">
-		<querytext>
-            select case 
-                when (select 1 from imsld_learning_activities where activity_id=:activity_id)=1 
-                    then 'learning' 
-                when  (select 1 from imsld_support_activities where activity_id=:activity_id)=1 
-                    then 'support' 
-                else 'none' 
-                end as type
-        
-		</querytext>
-	</fullquery>
 </queryset>
 

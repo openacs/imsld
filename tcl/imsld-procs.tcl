@@ -1627,9 +1627,7 @@ ad_proc -public imsld::process_resource {
         and content_revision__is_live(resource_id) = 't'
     }
     set files_urls ""
-
-    if { ![string eq $resource_type "webcontent"] } {
-###[string eq $resource_type "imsqti_xmlv1p0"] || [string eq $resource_type "imsqti_xmlv1p1"] || [string eq $resource_type "imsqti_item_xmlv2p0"]
+    if { ![string eq $resource_type "webcontent"] && ![string eq $acs_object_id ""] } {
         if { [db_0or1row is_cr_item {
             select live_revision from cr_items where item_id = :acs_object_id
         }] } {
@@ -1647,8 +1645,6 @@ ad_proc -public imsld::process_resource {
         set image_path [imsld::object_type_image_path -object_type $object_type]
         append files_urls "<a href=[export_vars -base imsld/imsld-finish-resource {file_url $file_url resource_item_id $resource_item_id}] target=\"_blank\"><img src=\"$image_path\" border=0 alt=\"$object_title\"></a> "
     } else {
-
-###[string eq $resource_type "webcontent"] || [string eq $files_urls ""]
         # Get file-storage root folder_id
         set fs_package_id [site_node_apm_integration::get_child_package_id \
                                -package_id [dotlrn_community::get_package_id $community_id] \
@@ -2055,9 +2051,6 @@ ad_proc -public imsld::next_activity {
                         append environments "[join [lindex [lindex $activities_list 2] 1] " "] "
                         append environments "[join [lindex [lindex $activities_list 2] 2] " "] "
                         append environments "[join [lindex [lindex $activities_list 2] 3] " "]"
-                        #             foreach nested_environment {
-                        #                 append environments_files [expr { [llength [lindex [lindex $activities_list 2] 3]] ? [join [lindex [lindex $activities_list 2] 2] "<br />"] : "" }]
-                        #             }
                     }
                     
                     set activities "$activity_title <br /> [join [lindex $activities_list 3] " "]"
@@ -2346,122 +2339,171 @@ ad_proc -public imsld::next_activity {
     return [template::multirow size imsld_multirow]
 }
 
-
 ad_proc -public imsld::get_activity_from_resource { 
    -resource_id
 } { 
-    @return The activity_id from which the resource is being used.
+    @return The a list of the activity_id, activity_item_id and activity_type from which the resource is being referenced
 } {
-#set a flag. while 1, keep trying
-    #if the resource is an activities_list
-    set element_flag [ db_0or1row is_learning_activity {
-                            select ila.activity_id as activity_item_id 
-                            from imsld_cp_resourcesi icri,
-                                 acs_rels ar1,
-                                 acs_rels ar2,
-                                 imsld_learning_activities ila 
-                            where ar2.object_id_two=icri.item_id 
-                                  and ar1.object_id_two=ar2.object_id_one 
-                                  and ila.activity_description_id=ar1.object_id_one 
-                                  and icri.resource_id= :resource_id
-    } ]
+    #set a flag. while 1, keep trying
+    
+    # Case 1: check if it is referenced from a learning activity (trhough the activity_description)
+    set activity_item_id ""
+    if { [db_0or1row learning_activity_resource {
+        select ila.activity_id,
+        ila.item_id as activity_item_id
+        from imsld_cp_resourcesi icri,
+        acs_rels ar1,
+        acs_rels ar2,
+        imsld_learning_activitiesi ila 
+        where ar2.object_id_two=icri.item_id 
+        and ar1.object_id_two=ar2.object_id_one 
+        and ila.activity_description_id=ar1.object_id_one 
+        and icri.resource_id= :resource_id
+    }] } {
+        # found it, it's referenced from a learning activity
+        return [list $activity_id $activity_item_id learning]
+    }
 
-#if the resource is not into a learning activity
-    if { $element_flag =="0" } { 
-        #if is a service
-#get the imsld_item_id
+    # Case 2: check if it is referenced from a support activity (trhough the activity_description)
+    set activity_item_id ""
+    if { [db_0or1row support_activity_resource {
+        select isa.activity_id,
+        isa.item_id as activity_item_id
+        from imsld_cp_resourcesi icri,
+        acs_rels ar1,
+        acs_rels ar2,
+        imsld_support_activitiesi isa 
+        where ar2.object_id_two=icri.item_id 
+        and ar1.object_id_two=ar2.object_id_one 
+        and isa.activity_description_id=ar1.object_id_one 
+        and icri.resource_id= :resource_id
+    }] } {
+        # found it, it's referenced from a support activity
+        return [list $activity_id $activity_item_id support]
+    }
 
-        db_1row get_imsld_item_id { 
-                select ar1.object_id_one as imsld_item_item_id 
-                from imsld_cp_resourcesi icri,
-                     acs_rels ar1 
-                where icri.item_id=ar1.object_id_two 
-                     and icri.resource_id= :resource_id
+    # Case 3: check if it is referenced from a service
+
+    # first get the imsld_item_id
+    db_1row get_imsld_item_id { 
+        select ar1.object_id_one as imsld_item_item_id 
+        from imsld_cp_resourcesi icri,
+        acs_rels ar1 
+        where icri.item_id=ar1.object_id_two 
+        and icri.resource_id= :resource_id
+    }
+
+    # there are three options: a service, a conference service or a learning object
+
+    # FIX ME: VALID ONLY FOR CONFERENCE_SERVICES!!!
+    if { [db_0or1row is_conference_service {select 1 from imsld_conference_services where imsld_item_id=:imsld_item_item_id} ] } {
+        # conference service
+        # get the environment_id
+        db_1row get_environment_id_from_cs {
+            select isi.environment_id as environment_item_id 
+            from imsld_conference_services ics,
+            imsld_servicesi isi 
+            where isi.item_id=ics.service_id 
+            and ics.imsld_item_id=:imsld_item_item_id
         }
-#here, there are threeoptions: a service, a conference service or a learning object
-
-#conference service
-#get the environment_id
-#FIX ME: VALID ONLY FOR CONFERENCE_SERVICES!!!
-        if { [db_0or1row is_conference_service {select 1 from imsld_conference_services where imsld_item_id=:imsld_item_item_id} ] } {
-            set element_flag 1
-            db_1row get_environment_id_from_cs {
-                select isi.environment_id as environment_item_id 
-                from imsld_conference_services ics,
-                     imsld_servicesi isi 
-                where isi.item_id=ics.service_id 
-                      and ics.imsld_item_id=:imsld_item_item_id
-            }
-             db_1row get_learning_activity_from_environment {
-                    select ila.activity_id as activity_item_id 
+        
+        # evironment referenced from learning activity ?
+        if { [db_0or1row get_learning_activity_from_environment {
+                select ila.activity_id,
+                       ila.item_id as activity_item_id 
                     from acs_rels ar,
                          imsld_learning_activitiesi ila 
                     where ila.item_id=ar.object_id_one 
-                         and ar.object_id_two=:environment_item_id;
-            }
+                         and ar.object_id_two=:environment_item_id
+        }] } {
+            return [list $activity_id $activity_item_id learning]
         }
 
+        # evironment referenced from support activity ?
+        if { [db_0or1row get_support_activity_from_environment {
+                select isa.activity_id,
+                       isa.item_id as activity_item_id 
+                    from acs_rels ar,
+                         imsld_support_activitiesi isa 
+                    where isa.item_id=ar.object_id_one 
+                         and ar.object_id_two=:environment_item_id
+        }] } {
+            return [list $activity_id $activity_item_id support]
+        }
+    }
+    
 
-#learning objects
-        if { [db_0or1row is_learning_object {select 1 from acs_rels where rel_type='imsld_l_object_item_rel' and object_id_two=:imsld_item_item_id } ] } {
-            set element_flag 1
-
-            db_1row get_environment_id_from_lo {
+    # Case 4: learning objects
+    if { [db_0or1row is_learning_object {
+        select 1 from acs_rels where rel_type='imsld_l_object_item_rel' and object_id_two=:imsld_item_item_id 
+    } ] } {
+        db_1row get_environment_id_from_lo {
                 select iloi.environment_id as environment_item_id 
                 from imsld_learning_objectsi iloi,
                      acs_rels ar 
                 where iloi.item_id=ar.object_id_one
                      and ar.object_id_two=:imsld_item_item_id
-            }
+        }
 
-             db_1row get_learning_activity_from_environment {
-                    select ila.activity_id as activity_item_id 
+        # learning object referenced from a learning activity ?
+        if { [db_0or1row get_learning_activity_from_environment {
+                    select ila.activity_id,
+                           ila.item_id as activity_item_id 
                     from acs_rels ar,
                          imsld_learning_activitiesi ila 
                     where ila.item_id=ar.object_id_one 
-                         and ar.object_id_two=:environment_item_id;
-            }
+                         and ar.object_id_two=:environment_item_id
+        }] } {
+            return [list $activity_id $activity_item_id learning]
         }
 
-#get the learning_activity_id
-
+        # learning object referenced from a support activity ?
+        if { [db_0or1row get_support_activity_from_environment {
+                    select isa.activity_id,
+                           isa.item_id as activity_item_id 
+                    from acs_rels ar,
+                         imsld_support_activitiesi isa 
+                    where isa.item_id=ar.object_id_one 
+                         and ar.object_id_two=:environment_item_id
+        }] } {
+            return [list $activity_id $activity_item_id support]
+        }
     }
 
+    # Case 5: the last one. it has to be referenced fron a learning objective or prerequisite,
+    # which is referenced from a larning activity
 
-    if {$element_flag =="0"} {
-
-#get the element with which the resource is asociated (prerequisite,learning objective,environment or learning activity)
-        db_1row get_activity_from_resource { 
-            select ar1.object_id_one as resource_element_id
-            from acs_rels ar1,
-                 acs_rels ar2,
-                 imsld_cp_resourcesi icr 
-            where ar1.object_id_two=ar2.object_id_one 
-                 and ar2.object_id_two=icr.item_id 
-                 and icr.resource_id = :resource_id;
-        }
+    #get the element with which the resource is asociated (prerequisite,learning objective,environment or learning activity)
+    db_1row get_activity_from_resource { 
+        select ar1.object_id_one as resource_element_id
+        from acs_rels ar1,
+        acs_rels ar2,
+        imsld_cp_resourcesi icr 
+        where ar1.object_id_two=ar2.object_id_one 
+        and ar2.object_id_two=icr.item_id 
+        and icr.resource_id = :resource_id;
+    }
             
-#choose if the resource is a prerequisite or a learning objective
-        if { [db_0or1row is_prerequisite { select 1 from imsld_prerequisitesi where item_id=:resource_element_id }] } {
-
-            db_1row get_activity_id_from_prerequisite {
-                select activity_id as activity_item_id 
-                from imsld_learning_activitiesi 
-                where prerequisite_id=:resource_element_id 
-            }
-        } elseif {[db_0or1row is_learning_objective { select 1 from imsld_learning_objectivesi where item_id=:resource_element_id } ] } {
-
-             db_1row get_activity_id_from_objective {
-                select activity_id as activity_item_id
-                from imsld_learning_activitiesi
-                where learning_objective_id=:resource_element_id
-            }
-        } else { 
-
+    # prerequisite ?
+    if { [db_0or1row is_prerequisite { select 1 from imsld_prerequisitesi where item_id=:resource_element_id }] } {
+        db_1row get_activity_id_from_prerequisite {
+            select activity_id,
+            item_id as activity_item_id 
+            from imsld_learning_activitiesi 
+            where prerequisite_id=:resource_element_id 
         }
-            set element_flag 1
-    }
-    return $activity_item_id
+        return [list $activity_id $activity_item_id learning]
+    } elseif { [db_0or1row is_learning_objective { select 1 from imsld_learning_objectivesi where item_id=:resource_element_id } ] } {
+        # learning objective?
+        db_1row get_activity_id_from_objective {
+            select activity_id,
+            item_id as activity_item_id
+            from imsld_learning_activitiesi
+            where learning_objective_id=:resource_element_id
+        }
+        return [list $activity_id $activity_item_id support]
+    } 
+    return -code error "IMSLD::imsld::get_activity_from_resource no activity_id found for resource"
 }
 
 ad_proc -public imsld::get_imsld_from_activity { 
@@ -2509,15 +2551,13 @@ ad_proc -public imsld::finish_resource {
 
 
 #look for the asociated activity
-    set activity_id [imsld::get_activity_from_resource -resource_id $resource_id]
+    # get the activity_id, activity_item_id and activity_type
+    set activity_list [imsld::get_activity_from_resource -resource_id $resource_id]
+    set activity_id [lindex $activity_list 0]
+    set activity_item_id [lindex $activity_list 1]
+    set activity_type [lindex $activity_list 2]
 
-
-    db_1row get_activity_item_id { 
-        select item_id as activity_item_id
-        from imsld_learning_activitiesi 
-        where activity_id=:activity_id 
-    }
-
+    
 #get info
     set role_part_id [imsld::get_role_part_from_activity -activity_type learning -leaf_id $activity_item_id]
     set imsld_id [imsld::get_imsld_from_activity -activity_id $activity_id]
@@ -2525,85 +2565,68 @@ ad_proc -public imsld::finish_resource {
 
    
 #if not done yet, tag the resource as finished
-    if {![db_string check_completed_resource {
-            select count(*)
-            from imsld_status_user 
-            where completed_id=:resource_id
-        }] } {
-         db_transaction {
-            db_dml insert_completed_resource {
-                insert into imsld_status_user (
-                                                imsld_id,
-                                                role_part_id,
-                                                completed_id,
-                                                user_id,
-                                                type,
-                                                finished_date
-                                               )
-                                               (
-                                                select :imsld_id,
-                                                :role_part_id,
-                                                :resource_id,
-                                                :user_id,
-                                                'resource',
-                                                now()
-                                               )
-            }
+    if { ![db_string check_completed_resource {
+        select count(*)
+        from imsld_status_user 
+        where completed_id=:resource_id
+        and user_id = :user_id
+    }] } {
+        db_dml insert_completed_resource {
+            insert into imsld_status_user (
+                                           imsld_id,
+                                           role_part_id,
+                                           completed_id,
+                                           user_id,
+                                           type,
+                                           finished_date
+                                           )
+            (
+             select :imsld_id,
+             :role_part_id,
+             :resource_id,
+             :user_id,
+             'resource',
+             now()
+             )
         }
         
 #find all the resouces in the same activity 
-      set first_resources_item_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
+        set first_resources_item_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
 
 #only the learning_activities must be finished
-      set resources_item_list [lindex $first_resources_item_list 3]
-      if { [llength $resources_item_list] == 0 } {
-          set resources_item_list [lindex $first_resources_item_list 2]
-      }
-
-        set resource_list [list]
+        set resources_item_list [lindex $first_resources_item_list 3]
+        if { [llength $resources_item_list] == 0 } {
+            set resources_item_list [lindex $first_resources_item_list 2]
+        }
+        
+        set all_finished_p 1
         foreach resource_item_id $resources_item_list { 
             foreach res_id $resource_item_id {
-                db_1row get_activity_item {
-                    select resource_id as rid 
-                    from imsld_cp_resourcesi
-                    where item_id =:res_id 
+                if { ![db_0or1row resource_finished_p {
+                    select 1 
+                    from imsld_status_user stat, imsld_cp_resourcesi icr
+                    where icr.item_id = :res_id
+                    and icr.resource_id = stat.completed_id
+                    and user_id = :user_id
+                }] } {
+                    # if the resource is not in the imsld_status_user, then the resource is not finished
+                    set all_finished_p 0
+                    break
                 }
-                lappend resource_list $rid
             }
         }
 
-#check if all the resources are finished
-        set all_finished_p "t"
-        foreach resource_id $resource_list {
-           if { ![db_string check_completed_resource {
-                select count(*)
-                from imsld_status_user
-                where completed_id = :resource_id
-           } ] } {
-               set all_finished_p "f"
-           }
-        }
-        
 #if all are finished, tag the activity as finished
-        if { [string eq "t" $all_finished_p]} {
-        
-        db_1row get_activity_type {
-            select case 
-                when (select 1 from imsld_learning_activities where activity_id=:activity_id)=1 
-                    then 'learning' 
-                when  (select 1 from imsld_support_activities where activity_id=:activity_id)=1 
-                    then 'support' 
-                else 'none' 
-                end as type
-        }
-        imsld::finish_component_element -imsld_id $imsld_id  \
-            -role_part_id $role_part_id \
-            -element_id $activity_id \
-            -type $type\
-            -code_call
+        if { $all_finished_p } {
+            imsld::finish_component_element -imsld_id $imsld_id  \
+                -role_part_id $role_part_id \
+                -element_id $activity_id \
+                -type $activity_type\
+                -code_call
         }
     }
-}  
+}
+
 
 ad_register_proc GET /finish-component-element* imsld::finish_component_element
 ad_register_proc POST /finish-component-element* imsld::finish_component_element
