@@ -13,6 +13,28 @@
 		</querytext>
 	</fullquery>
 
+    <fullquery name="imsld::parse::parse_and_create_service.get_allowed_parties">
+		<querytext>
+        select aopp.party_id 
+        from acs_object_party_privilege_map aopp,
+             party_names pn 
+        where aopp.privilege='read' and 
+              aopp.party_id=pn.party_id and 
+              aopp.object_id=:acs_object_id
+		</querytext>
+	</fullquery>
+
+    <fullquery name="imsld::parse::parse_and_create_resource.get_allowed_parties">
+		<querytext>
+        select aopp.party_id 
+        from acs_object_party_privilege_map aopp,
+             party_names pn 
+        where aopp.privilege='read' and 
+              aopp.party_id=pn.party_id and 
+              aopp.object_id=:acs_object_id
+		</querytext>
+	</fullquery>
+
 
 	<fullquery name="imsld::parse::parse_and_create_service.get_component_id">
 		<querytext>

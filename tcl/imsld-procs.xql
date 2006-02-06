@@ -1699,6 +1699,24 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 		</querytext>
 	</fullquery>
 
+    <fullquery name="imsld::next_activity.get_cr_item_from_resource">
+		<querytext>
+            select ar.object_id_two as the_object_id
+            from acs_rels ar 
+            where ar.object_id_one=:the_resource_id and
+                  ar.rel_type='imsld_res_files_rel'
+        </querytext>
+	</fullquery>
+
+
+	<fullquery name="imsld::next_activity.get_object_from_resource">
+		<querytext>
+        select acs_object_id as the_object_id
+        from imsld_cp_resourcesi
+        where item_id = :the_resource_id and 
+              acs_object_id is not null
+		</querytext>
+	</fullquery>
 
 	<fullquery name="imsld::get_resource_from_object.get_resource">
 		<querytext>

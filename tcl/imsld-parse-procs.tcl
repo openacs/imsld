@@ -566,6 +566,15 @@ ad_proc -public imsld::parse::parse_and_create_resource {
         set acs_object_id [callback -catch imsld::import -res_type $resource_type -res_href $resource_href -tmp_dir $tmp_dir -community_id $community_id]
         # Integration with other packages
         # This callback gets the href of the imported content (if some package imported it)
+
+        #revoke permissions until first usage of resources
+        if {[info exist acs_object_id]} {
+            permission::set_not_inherit -object_id $acs_object_id
+            set party_id [db_list get_allowed_parties {}]
+            foreach parti $party_id {
+                permission::revoke -party_id $parti -object_id $acs_object_id -privilege "read"
+            }
+        }
         
         set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
                              -identifier $resource_identifier \
@@ -593,6 +602,16 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             if { !$filex_id } {
                 # an error ocurred when creating the file
                 return [list 0 "[_ imsld.lt_The_file_filex_href_w]"]
+            } else {
+                permission::set_not_inherit -object_id $filex_id
+
+                set acs_object_id $filex_id 
+                set party_id [db_list get_allowed_parties {}]
+                foreach parti $party_id {
+                    permission::revoke -party_id $parti -object_id $filex_id -privilege "read"
+                }
+
+            
             }
             # map resource with file
             relation_add imsld_res_files_rel $resource_id $filex_id
@@ -1641,6 +1660,14 @@ ad_proc -public imsld::parse::parse_and_create_service {
                                        -package_id [dotlrn_community::get_package_id $community_id] \
                                        -package_key "forums"]
             set acs_object_id [forum::new -name $title -package_id $forums_package_id]
+#revoke read permissions until first usage
+            if {[info exist acs_object_id]} {
+                permission::set_not_inherit -object_id $acs_object_id
+                set party_id [db_list get_allowed_parties {}]
+                foreach parti $party_id {
+                    permission::revoke -party_id $parti -object_id $acs_object_id -privilege "read"
+                }
+            }
             
             set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
                                  -identifier "forumresource-$service_id" \

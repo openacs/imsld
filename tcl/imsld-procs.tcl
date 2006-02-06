@@ -1800,7 +1800,7 @@ ad_proc -public imsld::process_learning_activity {
     if {[string eq "t" $resource_mode]} {
         #put in order the environments_id(s)
         set environments_ids [concat [lindex [lindex $environments_list 1] [expr [llength [lindex $environments_list 1] ] - 1 ]] \
-                                     [lindex [lindex $environments_list 1] [expr [llength [lindex $environments_list 2] ] - 1 ]] ]
+                                     [lindex [lindex $environments_list 2] [expr [llength [lindex $environments_list 2] ] - 1 ]] ]
 
          return [list [lindex $prerequisites_list [expr [llength $prerequisites_list] - 1]] \
                       [lindex $objectives_list [expr [llength $objectives_list ] - 1]]\
@@ -2064,6 +2064,9 @@ ad_proc -public imsld::next_activity {
 
                     set resources_activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
                     foreach resource_activity [join $resources_activities_list] {
+
+                        
+#assessment must have an extra feedback item
                        if {[db_0or1row is_assessment {} ] } {
                             db_1row get_as_site_node {} 
                             set as_feedback_url "[site_node::get_url -node_id $node_id][export_vars -base sessions {assessment_id $assessment_id}]"
@@ -2268,6 +2271,26 @@ ad_proc -public imsld::next_activity {
             where la.activity_id = :activity_id
         }
         set activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id]
+
+                    set resources_activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
+                    foreach resource_activity [join $resources_activities_list] {
+
+#grant permissions for newly appeared resources
+                        ns_log Notice "join $resources_activities_list"
+                        ns_log Notice "[join $resources_activities_list]"
+                        foreach the_resource_id [join $resources_activities_list] {
+                            if {![db_0or1row get_object_from_resource {}]} {
+                                db_1row get_cr_item_from_resource {} 
+                              ns_log Notice "grant: usuario $user_id, cr_item $the_object_id"                               
+                                permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+                            } else {
+                             ns_log Notice "grant: usuario $user_id, objeto $the_object_id"
+                                permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+                            }
+                        } 
+                    }
+
+            
         set prerequisites ""
         if { [llength [lindex $activities_list 0]] } {
             set prerequisites "[lindex [lindex $activities_list 0] 0] <br/>"
