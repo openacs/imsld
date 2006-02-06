@@ -1337,6 +1337,7 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
             where stat.imsld_id = :imsld_id
             and stat.user_id = :user_id
             and stat.role_part_id = rp.role_part_id
+            and stat.type in ('learning','support','structure')
             order by stat.finished_date
         
 		</querytext>
@@ -1725,6 +1726,7 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
                                                 :user_id,
                                                 'resource',
                                                 now()
+                                                where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :resource_id)
                                                )
             
 		</querytext>
@@ -1739,6 +1741,12 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
                     and icr.resource_id = stat.completed_id
                     and user_id = :user_id
                 
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::finish_resource.already_finished">
+		<querytext>
+            select 1 from imsld_status_user where completed_id = :activity_id and user_id = :user_id
 		</querytext>
 	</fullquery>
 

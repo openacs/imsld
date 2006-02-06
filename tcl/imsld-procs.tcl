@@ -2016,6 +2016,7 @@ ad_proc -public imsld::next_activity {
             where stat.imsld_id = :imsld_id
             and stat.user_id = :user_id
             and stat.role_part_id = rp.role_part_id
+            and stat.type in ('learning','support','structure')
             order by stat.finished_date
         }] {
             set completed_id [lindex $completed_activity 0]
@@ -2587,6 +2588,7 @@ ad_proc -public imsld::finish_resource {
              :user_id,
              'resource',
              now()
+             where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :resource_id)
              )
         }
         
@@ -2617,7 +2619,7 @@ ad_proc -public imsld::finish_resource {
         }
 
 #if all are finished, tag the activity as finished
-        if { $all_finished_p } {
+        if { $all_finished_p && ![db_0or1row already_finished { *SQL* }] } {
             imsld::finish_component_element -imsld_id $imsld_id  \
                 -role_part_id $role_part_id \
                 -element_id $activity_id \
