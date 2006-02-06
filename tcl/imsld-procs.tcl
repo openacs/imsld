@@ -2331,7 +2331,7 @@ ad_proc -public imsld::next_activity {
         where completed_id = :activity_id
         and user_id = :user_id
     }] } {
-        return -code error "IMSLD::imsld::nex_activity: Returning a completed activity!"
+        return -code error "IMSLD::imsld::next_activity: Returning a completed activity!"
         ad_script_abort
     }
     
