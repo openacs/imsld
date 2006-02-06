@@ -423,7 +423,8 @@ ad_proc -public imsld::mark_role_part_finished {
         then 'structure'
         else 'none'
         end as type,
-        content_item__get_live_revision(coalesce(learning_activity_id,support_activity_id,activity_structure_id)) as activity_id
+        content_item__get_live_revision(coalesce(learning_activity_id,support_activity_id,activity_structure_id)) as activity_id,
+        coalesce(learning_activity_id, support_activity_id, activity_structure_id) as activity_item_id
         from imsld_role_parts
         where role_part_id = :role_part_id
     }
@@ -437,6 +438,19 @@ ad_proc -public imsld::mark_role_part_finished {
             -type $type \
             -user_id $user_id \
             -code_call
+    }
+
+    set resources_activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
+    foreach resource_activity [join $resources_activities_list] {
+        #grant permissions for newly appeared resources
+        foreach the_resource_id [join $resources_activities_list] {
+            if {![db_0or1row get_object_from_resource {}]} {
+                db_1row get_cr_item_from_resource {} 
+                permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+            } else {
+                permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+            }
+        } 
     }
 }
 

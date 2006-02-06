@@ -225,10 +225,30 @@
         then 'structure'
         else 'none'
         end as type,
-        content_item__get_live_revision(coalesce(learning_activity_id,support_activity_id,activity_structure_id)) as activity_id
+        content_item__get_live_revision(coalesce(learning_activity_id,support_activity_id,activity_structure_id)) as activity_id,
+        coalesce(learning_activity_id, support_activity_id, activity_structure_id) as activity_item_id
         from imsld_role_parts
         where role_part_id = :role_part_id
-    
+
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::mark_role_part_finished.get_object_from_resource">
+		<querytext>
+        select acs_object_id as the_object_id
+        from imsld_cp_resourcesi
+        where item_id = :the_resource_id and 
+              acs_object_id is not null
+
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::mark_role_part_finished.get_cr_item_from_resource">
+		<querytext>
+            select ar.object_id_two as the_object_id
+            from acs_rels ar 
+            where ar.object_id_one=:the_resource_id and
+                  ar.rel_type='imsld_res_files_rel'
 		</querytext>
 	</fullquery>
 
