@@ -1960,15 +1960,20 @@ ad_proc -public imsld::next_activity {
    
     # global prerequisites and learning objectives
 
-    set prerequisites_list [imsld::process_prerequisite -imsld_item_id $imsld_item_id]
-
+    set prerequisites_list_temp [imsld::process_prerequisite -imsld_item_id $imsld_item_id -resource_mode "t"]
+    set prerequisites_list [list [lindex $prerequisites_list_temp 0] [lindex $prerequisites_list_temp 1]]
+    set prerequisites_list_ids [lindex $prerequisites_list_temp 2]
+    
     set prerequisites ""
     if { [llength $prerequisites_list] } {
         set prerequisites "[lindex $prerequisites_list 0]" 
         append prerequisites "[join [lindex $prerequisites_list 1] " "]"
     }
-
-    set objectives_list [imsld::process_learning_objective -imsld_item_id $imsld_item_id]
+    
+    set objectives_list_temp [imsld::process_learning_objective -imsld_item_id $imsld_item_id -resource_mode "t"]
+    set objectives_list [list [lindex $objectives_list_temp 0] [lindex $objectives_list_temp 1]]
+    set objectives_list_ids [lindex $objectives_list_temp 2]
+    
     set objectives ""
     if { [llength $objectives_list] } {
         set objectives "[lindex $objectives_list 0] <br/>"
@@ -1976,6 +1981,15 @@ ad_proc -public imsld::next_activity {
     }
     if { [string length "${prerequisites}${objectives}"] } {
         template::multirow append imsld_multirow $prerequisites $objectives {} {} {} {}
+
+        foreach the_resource_id [join [list $prerequisites_list_ids $objectives_list_ids]] {
+                if {![db_0or1row get_object_from_resource {}]} {
+                    db_1row get_cr_item_from_resource {} 
+                    permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+                } else {
+                    permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+                }
+            }
     }
     
     if { ![db_string get_last_entry {
@@ -2276,15 +2290,13 @@ ad_proc -public imsld::next_activity {
                     foreach resource_activity [join $resources_activities_list] {
 
 #grant permissions for newly appeared resources
-                        ns_log Notice "join $resources_activities_list"
-                        ns_log Notice "[join $resources_activities_list]"
-                        foreach the_resource_id [join $resources_activities_list] {
+                         foreach the_resource_id [join $resources_activities_list] {
                             if {![db_0or1row get_object_from_resource {}]} {
                                 db_1row get_cr_item_from_resource {} 
-                              ns_log Notice "grant: usuario $user_id, cr_item $the_object_id"                               
+ 
                                 permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
                             } else {
-                             ns_log Notice "grant: usuario $user_id, objeto $the_object_id"
+
                                 permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
                             }
                         } 
