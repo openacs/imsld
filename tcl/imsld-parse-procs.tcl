@@ -563,7 +563,11 @@ ad_proc -public imsld::parse::parse_and_create_resource {
         set resource_href [imsld::parse::get_attribute -node $resource_node -attr_name href]
         set community_id [dotlrn_community::get_community_id]
         
-        set acs_object_id [callback -catch imsld::import -res_type $resource_type -res_href $resource_href -tmp_dir $tmp_dir -community_id $community_id]
+        if { ![string eq $resource_type forum] } {
+            set acs_object_id [callback -catch imsld::import -res_type $resource_type -res_href $resource_href -tmp_dir $tmp_dir -community_id $community_id]
+        } else {
+            set acs_object_id [imsld::parse::parse_and_create_forum -name Forum]            
+        }
         # Integration with other packages
         # This callback gets the href of the imported content (if some package imported it)
 
@@ -1498,6 +1502,30 @@ ad_proc -public imsld::parse::parse_and_create_learning_object {
     return $learning_object_id
 }
 
+ad_proc -public imsld::parse::parse_and_create_forum { 
+    -name
+} {
+    Create a forum with the given name.
+
+    @param name Forum's name
+} {
+    
+    set community_id [dotlrn_community::get_community_id]
+    set forums_package_id [site_node_apm_integration::get_child_package_id \
+                               -package_id [dotlrn_community::get_package_id $community_id] \
+                               -package_key "forums"]
+    set acs_object_id [forum::new -name $name -package_id $forums_package_id]
+    #revoke read permissions until first usage
+    if {[info exist acs_object_id]} {
+        permission::set_not_inherit -object_id $acs_object_id
+        set party_id [db_list get_allowed_parties {}]
+        foreach parti $party_id {
+            permission::revoke -party_id $parti -object_id $acs_object_id -privilege "read"
+        }
+    }
+    return $acs_object_id
+}
+
 ad_proc -public imsld::parse::parse_and_create_service { 
     -service_node
     -environment_id
@@ -1655,20 +1683,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
                             -parent_id $parent_id]
         
         if { [string eq $conference_type "asynchronous"] } {
-            set community_id [dotlrn_community::get_community_id]
-            set forums_package_id [site_node_apm_integration::get_child_package_id \
-                                       -package_id [dotlrn_community::get_package_id $community_id] \
-                                       -package_key "forums"]
-            set acs_object_id [forum::new -name $title -package_id $forums_package_id]
-#revoke read permissions until first usage
-            if {[info exist acs_object_id]} {
-                permission::set_not_inherit -object_id $acs_object_id
-                set party_id [db_list get_allowed_parties {}]
-                foreach parti $party_id {
-                    permission::revoke -party_id $parti -object_id $acs_object_id -privilege "read"
-                }
-            }
-            
+            set acs_object_id [imsld::parse::parse_and_create_forum -name $title]            
             set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
                                  -identifier "forumresource-$service_id" \
                                  -type "forum" \

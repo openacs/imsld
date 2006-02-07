@@ -445,8 +445,9 @@ ad_proc -public imsld::mark_role_part_finished {
         #grant permissions for newly appeared resources
         foreach the_resource_id [join $resources_activities_list] {
             if {![db_0or1row get_object_from_resource {}]} {
-                db_1row get_cr_item_from_resource {} 
-                permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+                if { [db_0or1row get_cr_item_from_resource {}] } { 
+                    permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+                }
             } else {
                 permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
             }
@@ -1998,8 +1999,9 @@ ad_proc -public imsld::next_activity {
 
         foreach the_resource_id [join [list $prerequisites_list_ids $objectives_list_ids]] {
                 if {![db_0or1row get_object_from_resource {}]} {
-                    db_1row get_cr_item_from_resource {} 
-                    permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+                    if { [db_0or1row get_cr_item_from_resource {}] } { 
+                        permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+                    }
                 } else {
                     permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
                 }
@@ -2108,7 +2110,7 @@ ad_proc -public imsld::next_activity {
                         $environments \
                         $activities \
                         $feedbacks \
-                        finished
+                        {}
                 }
                 support {
                     db_1row get_support_activity_info_from_isa {
@@ -2138,7 +2140,7 @@ ad_proc -public imsld::next_activity {
                         $environments \
                         $activities \
                         $feedbacks \
-                        finished
+                        {}
                 }
                 structure {
                     db_1row get_support_activity_info_from_ias {
@@ -2157,7 +2159,7 @@ ad_proc -public imsld::next_activity {
                             append environments "[join [lindex $structure_list 3] " "]<br/>"
                         }
                     }
-                    template::multirow append imsld_multirow {} {} $environments $activity_title {} finished
+                    template::multirow append imsld_multirow {} {} $environments $activity_title {} {}
                 }
             }
         }
@@ -2306,9 +2308,9 @@ ad_proc -public imsld::next_activity {
 #grant permissions for newly appeared resources
                          foreach the_resource_id [join $resources_activities_list] {
                             if {![db_0or1row get_object_from_resource {}]} {
-                                db_1row get_cr_item_from_resource {} 
- 
-                                permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+                                if { [db_0or1row get_cr_item_from_resource {}] } { 
+                                    permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+                                }
                             } else {
 
                                 permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
@@ -2341,7 +2343,8 @@ ad_proc -public imsld::next_activity {
             $environments \
             $activities \
             {} \
-            "<a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld>finish</a>"
+            {not completed}
+        #"<a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld>finish</a>"
     }
 
     # support activity
@@ -2371,9 +2374,10 @@ ad_proc -public imsld::next_activity {
             $environments \
             $activities \
             {} \
-            "<a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-support.imsld>finish</a>"
+            {not completed}
+        #"<a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-support.imsld>finish</a>"
     }
-        
+    
     # this should never happen, but in case the next activiy is already finished, let's throw an error
     # instead of doing nothing
     if { [db_string verify_not_completed {

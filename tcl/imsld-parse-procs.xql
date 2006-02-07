@@ -13,7 +13,7 @@
 		</querytext>
 	</fullquery>
 
-    <fullquery name="imsld::parse::parse_and_create_service.get_allowed_parties">
+    <fullquery name="imsld::parse::parse_and_create_forum.get_allowed_parties">
 		<querytext>
         select aopp.party_id 
         from acs_object_party_privilege_map aopp,
