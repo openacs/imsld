@@ -441,18 +441,8 @@ ad_proc -public imsld::mark_role_part_finished {
     }
 
     set resources_activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
-    foreach resource_activity [join $resources_activities_list] {
         #grant permissions for newly appeared resources
-        foreach the_resource_id [join $resources_activities_list] {
-            if {![db_0or1row get_object_from_resource {}]} {
-                if { [db_0or1row get_cr_item_from_resource {}] } { 
-                    permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
-                }
-            } else {
-                permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
-            }
-        } 
-    }
+        imsld::grant_permissions -resources_activities_list $resources_activities_list -user_id $user_id
 }
 
 ad_proc -public imsld::mark_act_finished { 
@@ -1997,15 +1987,8 @@ ad_proc -public imsld::next_activity {
     if { [string length "${prerequisites}${objectives}"] } {
         template::multirow append imsld_multirow $prerequisites $objectives {} {} {} {}
 
-        foreach the_resource_id [join [list $prerequisites_list_ids $objectives_list_ids]] {
-                if {![db_0or1row get_object_from_resource {}]} {
-                    if { [db_0or1row get_cr_item_from_resource {}] } { 
-                        permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
-                    }
-                } else {
-                    permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
-                }
-            }
+
+        imsld::grant_permissions -resources_activities_list [join [list $prerequisites_list_ids $objectives_list_ids]] -user_id $user_id
     }
     
     if { ![db_string get_last_entry {
@@ -2303,22 +2286,10 @@ ad_proc -public imsld::next_activity {
         set activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id]
 
                     set resources_activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
-                    foreach resource_activity [join $resources_activities_list] {
 
-#grant permissions for newly appeared resources
-                         foreach the_resource_id [join $resources_activities_list] {
-                            if {![db_0or1row get_object_from_resource {}]} {
-                                if { [db_0or1row get_cr_item_from_resource {}] } { 
-                                    permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
-                                }
-                            } else {
+        #grant permissions for newly appeared resources
+        imsld::grant_permissions -resources_activities_list $resources_activities_list -user_id $user_id
 
-                                permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
-                            }
-                        } 
-                    }
-
-            
         set prerequisites ""
         if { [llength [lindex $activities_list 0]] } {
             set prerequisites "[lindex [lindex $activities_list 0] 0] <br/>"
@@ -2683,5 +2654,28 @@ ad_proc -public imsld::finish_resource {
 }
 
 
+ad_proc -public imsld::grant_permissions {
+    -resources_activities_list
+    -user_id
+} {
+    <p>Grant permissions to imsld files related to imsld resources</p>
+
+    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+} {
+        foreach the_resource_id [join $resources_activities_list] {
+
+            if {![db_0or1row get_object_from_resource {}]} {
+            
+                set related_cr_items [db_list get_cr_item_from_resource {} ]
+                
+                foreach the_object_id $related_cr_items {
+                    permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+                }
+            } else {
+                permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+            }
+        }
+
+}
 ad_register_proc GET /finish-component-element* imsld::finish_component_element
 ad_register_proc POST /finish-component-element* imsld::finish_component_element
