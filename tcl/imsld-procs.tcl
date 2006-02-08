@@ -392,25 +392,7 @@ ad_proc -public imsld::mark_role_part_finished {
         where role_part_id = :role_part_id
     }
 
-    db_dml insert_role_part {
-        insert into imsld_status_user (imsld_id,
-                                       play_id,
-                                       act_id,
-                                       completed_id,
-                                       user_id,
-                                       type,
-                                       finished_date) 
-        (
-         select :imsld_id,
-         :play_id,
-         :act_id,
-         :role_part_id,
-         :user_id,
-         'act',
-         now()
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :role_part_id)
-         )
-    }
+    db_dml insert_role_part { *SQL* }
 
     # mark as finished all the referenced activities
     db_1row role_part_activity {
@@ -463,23 +445,7 @@ ad_proc -public imsld::mark_act_finished {
         where act_id = :act_id
     }
 
-    db_dml insert_act {
-        insert into imsld_status_user (imsld_id,
-                                       play_id,
-                                       completed_id,
-                                       user_id,
-                                       type,
-                                       finished_date) 
-        (
-         select :imsld_id,
-         :play_id,
-         :act_id,
-         :user_id,
-         'act',
-         now()
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :act_id)
-         )
-    }
+    db_dml insert_act { *SQL* }
 
     foreach referenced_role_part [db_list_of_lists referenced_role_part {
         select rp.role_part_id
@@ -508,21 +474,7 @@ ad_proc -public imsld::mark_play_finished {
     if { [imsld::play_finished_p -play_id $play_id -user_id $user_id] } {
         return
     }
-    db_dml insert_play {
-        insert into imsld_status_user (imsld_id,
-                                       completed_id,
-                                       user_id,
-                                       type,
-                                       finished_date) 
-        (
-         select :imsld_id,
-         :play_id,
-         :user_id,
-         'play',
-         now()
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :play_id)
-         )
-    }
+    db_dml insert_play { *SQL* }
     foreach referenced_act [db_list_of_lists referenced_act {
         select ia.act_id
         from imsld_acts ia, imsld_playsi ip
@@ -548,21 +500,7 @@ ad_proc -public imsld::mark_imsld_finished {
     if { [imsld::imsld_finished_p -imsld_id $imsld_id -user_id $user_id] } {
         return
     }
-    db_dml insert_uol {
-        insert into imsld_status_user (imsld_id,
-                                       completed_id,
-                                       user_id,
-                                       type,
-                                       finished_date) 
-        (
-         select :imsld_id,
-         :imsld_id,
-         :user_id,
-         'play',
-         now()
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :imsld_id)
-         )
-    }
+    db_dml insert_uol { *SQL* }
 
     foreach referenced_play [db_list_of_lists referenced_plays {
         select ip.play_id
@@ -589,21 +527,7 @@ ad_proc -public imsld::mark_method_finished {
     if { [imsld::method_finished_p -method_id $method_id -user_id $user_id] } {
         return
     }
-    db_dml insert_method {
-        insert into imsld_status_user (imsld_id,
-                                       completed_id,
-                                       user_id,
-                                       type,
-                                       finished_date) 
-        (
-         select :imsld_id,
-         :method_id,
-         :user_id,
-         'method',
-         now()
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :method_id)
-         )
-    }
+    db_dml insert_method { *SQL* }
 
     foreach referenced_play [db_list_of_lists referenced_plays {
         select ip.play_id
@@ -760,19 +684,7 @@ ad_proc -public imsld::finish_component_element {
         regsub {/finish-component-element.*} $url "" return_url 
     }
     # now that we have the necessary info, mark the finished element completed and return
-    db_dml insert_element_entry {
-        insert into imsld_status_user (
-                                       select :imsld_id,
-                                       :play_id,
-                                       :act_id,
-                                       :role_part_id,
-                                       :element_id,
-                                       :user_id,
-                                       :type,
-                                       now()
-                                       where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :element_id)
-                                       )
-    }
+    db_dml insert_element_entry { *SQL* }
 
     if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $type "structure"] } {
         foreach referencer_structure_list [db_list_of_lists referencer_structure {
@@ -794,11 +706,7 @@ ad_proc -public imsld::finish_component_element {
                 where ar.object_id_one = :structure_item_id
                 and ar.rel_type in ('imsld_as_la_rel','imsld_as_sa_rel','imsld_as_as_rel')
             } {
-                if { ![db_string completed_p {
-                    select count(*) from imsld_status_user 
-                    where completed_id = :activity_id
-                    and user_id = :user_id
-                }] } {
+                if { ![db_string completed_p { *SQL* }] } {
                     # there is at leas one no-completed activity, so we can't mark this activity structure yet
                     set scturcture_finished_p 0
                 }
@@ -820,7 +728,7 @@ ad_proc -public imsld::finish_component_element {
     # 2. let's see if the finished role_part triggers the ending of the act which references it.
     # 3. let's see if the finished act triggers the ending the play which references it
     # 4. let's see if the finished play triggers the ending of the method which references it.
-    if { [imsld::role_part_finished_p -role_part_id $role_part_id -user_id $user_id] && ![db_0or1row already_marked_p {select 1 from imsld_status_user where completed_id = :role_part_id and user_id = :user_id}] } { 
+    if { [imsld::role_part_finished_p -role_part_id $role_part_id -user_id $user_id] && ![db_0or1row already_marked_p { *SQL* }] } { 
         # case number 1
         imsld::finish_component_element -imsld_id $imsld_id \
             -play_id $play_id \
@@ -981,12 +889,7 @@ ad_proc -public imsld::structure_next_activity {
                     where item_id = :object_id_two
                     and content_revision__is_live(activity_id) = 't'
                 }
-                if { ![db_string completed_p_from_la {
-                    select count(*)
-                    from imsld_status_user
-                    where completed_id = :learning_activity_id
-                    and user_id = :user_id
-                }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
+                if { ![db_string completed_p_from_la { *SQL* }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
                     set min_sort_order $sort_order
                     set next_activity_id $learning_activity_id
                     set next_activity_type learning
@@ -1001,12 +904,7 @@ ad_proc -public imsld::structure_next_activity {
                     where item_id = :object_id_two
                     and content_revision__is_live(activity_id) = 't'
                 }
-                if { ![db_string completed_p_from_sa {
-                    select count(*)
-                    from imsld_status_user
-                    where completed_id = :support_activity_id
-                    and user_id = :user_id
-                }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
+                if { ![db_string completed_p_from_sa { *SQL* }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
                     set min_sort_order $sort_order
                     set next_activity_id $support_activity_id
                     set next_activity_type support
@@ -1014,7 +912,6 @@ ad_proc -public imsld::structure_next_activity {
             }
             imsld_as_as_rel {
                 # recursive call?
-
                 db_1row get_as_info {
                     select sort_order, structure_id, item_id
                     from imsld_activity_structuresi
@@ -1022,12 +919,7 @@ ad_proc -public imsld::structure_next_activity {
                     and content_revision__is_live(structure_id) = 't'
                 }
 
-                if { ![db_string completed_p { 
-                    select count(*)
-                    from imsld_status_user 
-                    where completed_id = :structure_id
-                    and user_id = :user_id
-                }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
+                if { ![db_string completed_p { *SQL* }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
                     set min_sort_order $sort_order
                     set activity_id $structure_id
                     set next_activity_type structure
@@ -2019,20 +1911,8 @@ ad_proc -public imsld::next_activity {
         # save the last one (the last role_part_id of THE LAST completed activity) because we will use it latter
 
         # JOPEZ: needed to split the db_foreach from the body because of db pools
-        foreach completed_activity [db_list_of_lists completed_activity {
-            select stat.completed_id,
-            stat.role_part_id,
-            stat.type,
-            rp.sort_order,
-            rp.act_id
-            from imsld_status_user stat, imsld_role_parts rp
-            where stat.imsld_id = :imsld_id
-            and stat.user_id = :user_id
-            and stat.role_part_id = rp.role_part_id
-            and stat.type in ('learning','support','structure')
-            order by stat.finished_date
-        }] {
-            set completed_id [lindex $completed_activity 0]
+        foreach completed_activity [db_list_of_lists completed_activity { *SQL* }] {
+            set related_id [lindex $completed_activity 0]
             set role_part_id [lindex $completed_activity 1]
             set type [lindex $completed_activity 2]
             set sort_order [lindex $completed_activity 3]
@@ -2093,7 +1973,7 @@ ad_proc -public imsld::next_activity {
                         $environments \
                         $activities \
                         $feedbacks \
-                        {}
+                        "<img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/completed.png\">" 
                 }
                 support {
                     db_1row get_support_activity_info_from_isa {
@@ -2123,7 +2003,7 @@ ad_proc -public imsld::next_activity {
                         $environments \
                         $activities \
                         $feedbacks \
-                        {}
+                        "<img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/completed.png\">" 
                 }
                 structure {
                     db_1row get_support_activity_info_from_ias {
@@ -2314,7 +2194,7 @@ ad_proc -public imsld::next_activity {
             $environments \
             $activities \
             {} \
-            {not completed}
+            {}
         #"<a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld>finish</a>"
     }
 
@@ -2345,19 +2225,8 @@ ad_proc -public imsld::next_activity {
             $environments \
             $activities \
             {} \
-            {not completed}
+            {}
         #"<a href=finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-support.imsld>finish</a>"
-    }
-    
-    # this should never happen, but in case the next activiy is already finished, let's throw an error
-    # instead of doing nothing
-    if { [db_string verify_not_completed {
-        select count(*) from imsld_status_user
-        where completed_id = :activity_id
-        and user_id = :user_id
-    }] } {
-        return -code error "IMSLD::imsld::next_activity: Returning a completed activity!"
-        ad_script_abort
     }
     
     # first parameter: activity name
@@ -2590,66 +2459,42 @@ ad_proc -public imsld::finish_resource {
 
    
 #if not done yet, tag the resource as finished
-    if { ![db_string check_completed_resource {
-        select count(*)
-        from imsld_status_user 
-        where completed_id=:resource_id
-        and user_id = :user_id
-    }] } {
-        db_dml insert_completed_resource {
-            insert into imsld_status_user (
-                                           imsld_id,
-                                           role_part_id,
-                                           completed_id,
-                                           user_id,
-                                           type,
-                                           finished_date
-                                           )
-            (
-             select :imsld_id,
-             :role_part_id,
-             :resource_id,
-             :user_id,
-             'resource',
-             now()
-             where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :resource_id)
-             )
-        }
-        
+    if { ![db_string check_completed_resource { *SQL* }] } {
+        db_dml insert_completed_resource { *SQL* }
+    }
 #find all the resouces in the same activity 
-        set first_resources_item_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
+    set first_resources_item_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
 
 #only the learning_activities must be finished
-        set resources_item_list [lindex $first_resources_item_list 3]
-        if { [llength $resources_item_list] == 0 } {
-            set resources_item_list [lindex $first_resources_item_list 2]
-        }
+    set resources_item_list [lindex $first_resources_item_list 3]
+    if { [llength $resources_item_list] == 0 } {
+        set resources_item_list [lindex $first_resources_item_list 2]
+    }
         
-        set all_finished_p 1
-        foreach resource_item_id $resources_item_list { 
-            foreach res_id $resource_item_id {
-                if { ![db_0or1row resource_finished_p {
-                    select 1 
-                    from imsld_status_user stat, imsld_cp_resourcesi icr
-                    where icr.item_id = :res_id
-                    and icr.resource_id = stat.completed_id
-                    and user_id = :user_id
-                }] } {
-                    # if the resource is not in the imsld_status_user, then the resource is not finished
-                    set all_finished_p 0
-                    break
-                }
+    set all_finished_p 1
+    foreach resource_item_id $resources_item_list { 
+        foreach res_id $resource_item_id {
+            if { ![db_0or1row resource_finished_p {
+                select 1 
+                from imsld_status_user stat, imsld_cp_resourcesi icr
+                where icr.item_id = :res_id
+                and icr.resource_id = stat.completed_id
+                and user_id = :user_id
+            }] } {
+                # if the resource is not in the imsld_status_user, then the resource is not finished
+                set all_finished_p 0
+                break
             }
         }
+    }
 
 #if all are finished, tag the activity as finished
-        if { $all_finished_p && ![db_0or1row already_finished { *SQL* }] } {
-            imsld::finish_component_element -imsld_id $imsld_id  \
-                -role_part_id $role_part_id \
-                -element_id $activity_id \
-                -type $activity_type\
-                -code_call
-        }
+    if { $all_finished_p && ![db_0or1row already_finished { *SQL* }] } {
+        imsld::finish_component_element -imsld_id $imsld_id  \
+            -role_part_id $role_part_id \
+            -element_id $activity_id \
+            -type $activity_type\
+            -code_call
     }
 }
 

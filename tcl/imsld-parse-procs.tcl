@@ -535,6 +535,7 @@ ad_proc -public imsld::parse::initialize_folders {
 ad_proc -public imsld::parse::parse_and_create_resource { 
     -manifest
     -manifest_id
+    {-activity_name ""}
     -resource_node
     -parent_id
     -tmp_dir
@@ -545,6 +546,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
     
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
+    @option activity_name In case the resource forms part of an activity, the name is passed to name the possible acs_object associated
     @param resource_node Resource tree being parsed
     @param parent_id Parent folder ID
     @tmp_dir Temporary directory where the files were exctracted
@@ -563,10 +565,12 @@ ad_proc -public imsld::parse::parse_and_create_resource {
         set resource_href [imsld::parse::get_attribute -node $resource_node -attr_name href]
         set community_id [dotlrn_community::get_community_id]
         
-        if { ![string eq $resource_type forum] } {
-            set acs_object_id [callback -catch imsld::import -res_type $resource_type -res_href $resource_href -tmp_dir $tmp_dir -community_id $community_id]
+        if { [string eq $resource_type forum] } {
+            # particular case specially treated in .LRN
+            # (this is not part of the spec)
+            set acs_object_id [imsld::parse::parse_and_create_forum -name $activity_name]
         } else {
-            set acs_object_id [imsld::parse::parse_and_create_forum -name Forum]            
+            set acs_object_id [callback -catch imsld::import -res_type $resource_type -res_href $resource_href -tmp_dir $tmp_dir -community_id $community_id]
         }
         # Integration with other packages
         # This callback gets the href of the imported content (if some package imported it)
@@ -653,6 +657,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             set dependency_resource_list [imsld::parse::parse_and_create_resource -resource_node $resourcex \
                                               -manifest $manifest \
                                               -manifest_id $manifest_id \
+                                              -activity_name $activity_name \
                                               -parent_id $parent_id \
                                               -tmp_dir $tmp_dir]
             if { ![lindex $dependency_resource_list 0] } {
@@ -667,6 +672,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
 ad_proc -public imsld::parse::parse_and_create_item { 
     -manifest
     -manifest_id
+    {-activity_name ""}
     -item_node
     -parent_id
     -tmp_dir
@@ -678,6 +684,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
     
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
+    @option activity_name In case the item is asociated with an activity, the name is pased to hame the possible associated objects which require pretty names
     @param item_node The item node to parse 
     @param parent_id Parent folder ID
     @param tmp_dir Temporary directory where the files were exctracted
@@ -715,6 +722,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
         set resource_list [imsld::parse::parse_and_create_resource -resource_node $resourcex \
                                -manifest $manifest \
                                -manifest_id $manifest_id \
+                               -activity_name $activity_name \
                                -parent_id $parent_id \
                                -tmp_dir $tmp_dir]
         set resource_id [lindex $resource_list 0]
@@ -733,6 +741,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
             set nested_item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                       -manifest_id $manifest_id \
                                       -item_node $nested_item \
+                                      -activity_name $activity_name \
                                       -parent_id $parent_id \
                                       -tmp_dir $tmp_dir \
                                       -parent_item_id $item_id]
@@ -1293,7 +1302,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
         }
     }
 
-    return [expr { [string eq $property_id ""] ? $property_group_id : $property_group_id }]
+    return [expr { [string eq $property_id ""] ? $property_group_id : $property_id }]
 }
 
 ad_proc -public imsld::parse::parse_and_create_learning_objective { 
@@ -1310,6 +1319,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_objective {
     @param learning_objective_node learning objective node to parse
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
+    @option activity_name In case the learning objective forms part of an activity, the name is provided to be used as the pretty name of the possible associated objects
     @param parent_id Parent folder ID
     @param tmp_dir Temporary directory where the files were exctracted
 } {
@@ -1398,6 +1408,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_description {
     -activity_description_node
     -manifest
     -manifest_id
+    {-activity_name ""}
     -parent_id
     -tmp_dir
 } {
@@ -1408,6 +1419,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_description {
     @param activity_description_node activity description node to parse
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
+    @option activity_name Provided to name the possible objects associated with the activity
     @param parent_id Parent folder ID
     @param tmp_dir Temporary directory where the files were exctracted
 } {
@@ -1427,6 +1439,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_description {
             set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                -manifest_id $manifest_id \
                                -item_node $imsld_item \
+                               -activity_name $activity_name \
                                -parent_id $parent_id \
                                -tmp_dir $tmp_dir]
             
@@ -2154,12 +2167,14 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
         set prerequisite_id ""
     }
 
+    # Learning Activity: Activity Description
     set activity_description [$activity_node child all imsld:activity-description] 
     imsld::parse::validate_multiplicity -tree $activity_description -multiplicity 1 -element_name activity-description(learning-activity) -equal
 
     set activity_description_list [imsld::parse::parse_and_create_activity_description -activity_description_node $activity_description \
                                        -manifest_id $manifest_id \
                                        -manifest $manifest \
+                                       -activity_name $title \
                                        -parent_id $parent_id \
                                        -tmp_dir $tmp_dir]
 
@@ -2339,12 +2354,14 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     set parameters [imsld::parse::get_attribute -node $activity_node -attr_name parameters]
     set title [imsld::parse::get_title -node $activity_node -prefix imsld]
 
+    # Support Activity: Activity Description
     set activity_description [$activity_node child all imsld:activity-description] 
     imsld::parse::validate_multiplicity -tree $activity_description -multiplicity 1 -element_name activity-description(support-activity) -equal
 
     set activity_description_list [imsld::parse::parse_and_create_activity_description -activity_description_node $activity_description \
                                        -manifest_id $manifest_id \
                                        -manifest $manifest \
+                                       -activity_name $title \
                                        -parent_id $parent_id \
                                        -tmp_dir $tmp_dir]
 

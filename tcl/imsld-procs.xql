@@ -195,10 +195,11 @@
         insert into imsld_status_user (imsld_id,
                                        play_id,
                                        act_id,
-                                       completed_id,
+                                       related_id,
                                        user_id,
                                        type,
-                                       finished_date) 
+                                       status_date,
+                                       status) 
         (
          select :imsld_id,
          :play_id,
@@ -206,8 +207,9 @@
          :role_part_id,
          :user_id,
          'act',
-         now()
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :role_part_id)
+         now(),
+         'finished'
+         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :role_part_id and status = 'finished')
          )
     
 		</querytext>
@@ -267,18 +269,20 @@
 		<querytext>
         insert into imsld_status_user (imsld_id,
                                        play_id,
-                                       completed_id,
+                                       related_id,
                                        user_id,
                                        type,
-                                       finished_date) 
+                                       status_date,
+                                       status) 
         (
          select :imsld_id,
          :play_id,
          :act_id,
          :user_id,
          'act',
-         now()
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :act_id)
+         now(),
+         'finished'
+         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :act_id and status = 'finished')
          )
     
 		</querytext>
@@ -300,17 +304,19 @@
 	<fullquery name="imsld::mark_play_finished.insert_play">
 		<querytext>
         insert into imsld_status_user (imsld_id,
-                                       completed_id,
+                                       related_id,
                                        user_id,
                                        type,
-                                       finished_date) 
+                                       status_date,
+                                       status) 
         (
          select :imsld_id,
          :play_id,
          :user_id,
          'play',
-         now()
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :play_id)
+         now(),
+         'finished'
+         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :play_id and status = 'finished')
          )
     
 		</querytext>
@@ -332,17 +338,19 @@
 	<fullquery name="imsld::mark_imsld_finished.insert_uol">
 		<querytext>
         insert into imsld_status_user (imsld_id,
-                                       completed_id,
+                                       related_id,
                                        user_id,
                                        type,
-                                       finished_date) 
+                                       status_date,
+                                       status) 
         (
          select :imsld_id,
          :imsld_id,
          :user_id,
          'play',
-         now()
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :imsld_id)
+         now(),
+         'finished'
+         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :imsld_id and status = 'finished')
          )
     
 		</querytext>
@@ -364,17 +372,19 @@
 	<fullquery name="imsld::mark_method_finished.insert_method">
 		<querytext>
         insert into imsld_status_user (imsld_id,
-                                       completed_id,
+                                       related_id,
                                        user_id,
                                        type,
-                                       finished_date) 
+                                       status_date,
+                                       status) 
         (
          select :imsld_id,
          :method_id,
          :user_id,
          'method',
-         now()
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :method_id)
+         now(),
+         'finished'
+         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :method_id and status = 'finished')
          )
     
 		</querytext>
@@ -424,7 +434,18 @@
 
     <fullquery name="imsld::finish_component_element.insert_element_entry">
 		<querytext>
-        insert into imsld_status_user (
+                insert into imsld_status_user (
+                                                imsld_id,
+                                                play_id,
+                                                act_id,
+                                                role_part_id,
+                                                related_id,
+                                                user_id,
+                                                type,
+                                                status_date,
+                                                status
+                                               )
+                                               (
                                        select :imsld_id,
                                        :play_id,
                                        :act_id,
@@ -432,8 +453,9 @@
                                        :element_id,
                                        :user_id,
                                        :type,
-                                       now()
-                                       where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :element_id)
+                                       now(),
+                                       'finished'
+                                       where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :element_id and status = 'finished')
                                        )
     
 		</querytext>
@@ -467,8 +489,9 @@
 	<fullquery name="imsld::finish_component_element.completed_p">
 		<querytext>
                     select count(*) from imsld_status_user 
-                    where completed_id = :activity_id
+                    where related_id = :activity_id
                     and user_id = :user_id
+                    and status = 'finished'
                 
 		</querytext>
 	</fullquery>
@@ -476,7 +499,7 @@
 
 	<fullquery name="imsld::finish_component_element.already_marked_p">
 		<querytext>
-select 1 from imsld_status_user where completed_id = :role_part_id and user_id = :user_id
+select 1 from imsld_status_user where related_id = :role_part_id and user_id = :user_id and status = 'finished'
 		</querytext>
 	</fullquery>
 
@@ -594,8 +617,9 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 		<querytext>
                     select count(*)
                     from imsld_status_user
-                    where completed_id = :learning_activity_id
+                    where related_id = :learning_activity_id
                     and user_id = :user_id
+                    and status = 'finished'
                 
 		</querytext>
 	</fullquery>
@@ -617,9 +641,9 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 		<querytext>
                     select count(*)
                     from imsld_status_user
-                    where completed_id = :support_activity_id
+                    where related_id = :support_activity_id
                     and user_id = :user_id
-                
+                    and status = 'finished'                
 		</querytext>
 	</fullquery>
 
@@ -640,9 +664,9 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
  
                     select count(*)
                     from imsld_status_user 
-                    where completed_id = :structure_id
+                    where related_id = :structure_id
                     and user_id = :user_id
-                
+                    and status = 'finished'
 		</querytext>
 	</fullquery>
 
@@ -651,9 +675,9 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 		<querytext>
         select 1 
         from imsld_status_user
-        where completed_id = :role_part_id
+        where related_id = :role_part_id
         and user_id = :user_id
-    
+        and status = 'finished'
 		</querytext>
 	</fullquery>
 
@@ -682,9 +706,9 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 	<fullquery name="imsld::role_part_finished_p.completed_from_la">
 		<querytext>
                 select count(*) from imsld_status_user
-                where completed_id = content_item__get_live_revision(:learning_activity_id)
+                where related_id = content_item__get_live_revision(:learning_activity_id)
                 and user_id = :user_id
-            
+                and status = 'finished'
 		</querytext>
 	</fullquery>
 
@@ -692,9 +716,9 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 	<fullquery name="imsld::role_part_finished_p.completed_from_sa">
 		<querytext>
                 select count(*) from imsld_status_user
-                where completed_id = content_item__get_live_revision(:support_activity_id)
+                where related_id = content_item__get_live_revision(:support_activity_id)
                 and user_id = :user_id
-            
+                and status = 'finished'
 		</querytext>
 	</fullquery>
 
@@ -702,9 +726,9 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 	<fullquery name="imsld::role_part_finished_p.completed_from_as">
 		<querytext>
                 select count(*) from imsld_status_user
-                where completed_id = content_item__get_live_revision(:activity_structure_id)
+                where related_id = content_item__get_live_revision(:activity_structure_id)
                 and user_id = :user_id
-            
+                and status = 'finished'
 		</querytext>
 	</fullquery>
 
@@ -713,9 +737,9 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 		<querytext>
         select 1 
         from imsld_status_user
-        where completed_id = :act_id
+        where related_id = :act_id
         and user_id = :user_id
-    
+        and status = 'finished'
 		</querytext>
 	</fullquery>
 
@@ -724,9 +748,9 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 		<querytext>
         select 1 
         from imsld_status_user
-        where completed_id = :play_id
+        where related_id = :play_id
         and user_id = :user_id
-    
+        and status = 'finished'
 		</querytext>
 	</fullquery>
 
@@ -735,9 +759,9 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 		<querytext>
         select 1 
         from imsld_status_user
-        where completed_id = :method_id
+        where related_id = :method_id
         and user_id = :user_id
-    
+        and status = 'finished'
 		</querytext>
 	</fullquery>
 
@@ -746,9 +770,9 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 		<querytext>
         select 1 
         from imsld_status_user
-        where completed_id = :imsld_id
+        where related_id = :imsld_id
         and user_id = :user_id
-    
+        and status = 'finished'
 		</querytext>
 	</fullquery>
 
@@ -1320,7 +1344,8 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
         from imsld_status_user
         where user_id = :user_id
         and imsld_id = :imsld_id
-    
+        and status = 'finished'
+        and type = 'role-part'
 		</querytext>
 	</fullquery>
 
@@ -1348,7 +1373,7 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 
 	<fullquery name="imsld::next_activity.completed_activity">
 		<querytext>
-            select stat.completed_id,
+            select stat.related_id,
             stat.role_part_id,
             stat.type,
             rp.sort_order,
@@ -1358,7 +1383,7 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
             and stat.user_id = :user_id
             and stat.role_part_id = rp.role_part_id
             and stat.type in ('learning','support','structure')
-            order by stat.finished_date
+            order by stat.status_date
         
 		</querytext>
 	</fullquery>
@@ -1369,7 +1394,7 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
                         select coalesce(title,identifier) as activity_title,
                         item_id as activity_item_id
                         from imsld_learning_activitiesi
-                        where activity_id = :completed_id
+                        where activity_id = :related_id
                     
 		</querytext>
 	</fullquery>
@@ -1380,7 +1405,7 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
                         select coalesce(title,identifier) as activity_title,
                         item_id as activity_item_id
                         from imsld_support_activitiesi
-                        where activity_id = :completed_id
+                        where activity_id = :related_id
                     
 		</querytext>
 	</fullquery>
@@ -1391,7 +1416,7 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
                         select coalesce(title,identifier) as activity_title,
                         item_id as structure_item_id
                         from imsld_activity_structuresi
-                        where structure_id = :completed_id
+                        where structure_id = :related_id
                     
 		</querytext>
 	</fullquery>
@@ -1524,9 +1549,9 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 	<fullquery name="imsld::next_activity.verify_not_completed">
 		<querytext>
         select count(*) from imsld_status_user
-        where completed_id = :activity_id
+        where related_id = :activity_id
         and user_id = :user_id
-    
+        and status = 'finished'
 		</querytext>
 	</fullquery>
 
@@ -1734,10 +1759,11 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
                 insert into imsld_status_user (
                                                 imsld_id,
                                                 role_part_id,
-                                                completed_id,
+                                                related_id,
                                                 user_id,
                                                 type,
-                                                finished_date
+                                                status_date,
+                                                status
                                                )
                                                (
                                                 select :imsld_id,
@@ -1745,8 +1771,9 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
                                                 :resource_id,
                                                 :user_id,
                                                 'resource',
-                                                now()
-                                                where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and completed_id = :resource_id)
+                                                now(),
+                                                'finished'
+                                                where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :resource_id and status = 'finished')
                                                )
             
 		</querytext>
@@ -1758,15 +1785,15 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
                     select 1 
                     from imsld_status_user stat, imsld_cp_resourcesi icr
                     where icr.item_id = :res_id
-                    and icr.resource_id = stat.completed_id
+                    and icr.resource_id = stat.related_id
                     and user_id = :user_id
-                
+                    and status = 'finished'
 		</querytext>
 	</fullquery>
 
 	<fullquery name="imsld::finish_resource.already_finished">
 		<querytext>
-            select 1 from imsld_status_user where completed_id = :activity_id and user_id = :user_id
+            select 1 from imsld_status_user where related_id = :activity_id and user_id = :user_id and status = 'finished'
 		</querytext>
 	</fullquery>
 
@@ -1775,8 +1802,8 @@ select 1 from imsld_status_user where completed_id = :role_part_id and user_id =
 		<querytext>
                 select count(*)
                 from imsld_status_user
-                where completed_id = :resource_id
-           
+                where related_id = :resource_id
+                and status = 'finished'
 		</querytext>
 	</fullquery>
 
