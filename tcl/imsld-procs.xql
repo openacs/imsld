@@ -235,6 +235,14 @@
 		</querytext>
 	</fullquery>
 
+    <fullquery name="imsld::grant_permissions.is_forum">
+		<querytext>
+        select 1 
+        from forums_forums ff 
+        where ff.forum_id=:the_object_id 
+		</querytext>
+	</fullquery>
+
 	<fullquery name="imsld::grant_permissions.get_object_from_resource">
 		<querytext>
         select acs_object_id as the_object_id
@@ -430,6 +438,28 @@
             END;
         
 		</querytext>
+	</fullquery>
+
+    <fullquery name="imsld::finish_component_element.get_related_on_completion_id">
+		<querytext>
+            select on_completion_id as related_on_completion
+            from $table_name
+            where $element_name=:element_id and 
+                  on_completion_id is not null
+            
+		</querytext>
+	</fullquery>
+
+    <fullquery name="imsld::finish_component_element.get_related_resource_id">
+		<querytext>
+         select ar2.object_id_two as related_resource
+         from acs_rels ar1,
+              acs_rels ar2 
+         where ar2.object_id_one=ar1.object_id_two and 
+               ar2.rel_type='imsld_item_res_rel' and 
+               ar1.rel_type='imsld_feedback_rel' and  
+               ar1.object_id_one=:related_on_completion
+  		</querytext>
 	</fullquery>
 
     <fullquery name="imsld::finish_component_element.insert_element_entry">

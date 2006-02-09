@@ -686,6 +686,36 @@ ad_proc -public imsld::finish_component_element {
     # now that we have the necessary info, mark the finished element completed and return
     db_dml insert_element_entry { *SQL* }
 
+
+    switch $type {
+        learning { 
+            set table_name "imsld_learning_activities"
+            set element_name "activity_id"
+        }
+        support { 
+             set table_name "imsld_support_activities"
+            set element_name "activity_id"
+        }
+        method { 
+             set table_name "imsld_methods"
+            set element_name "method_id"
+        }
+        play { 
+             set table_name "imsld_plays"
+            set element_name "play_id"
+        }
+        act { 
+             set table_name "imsld_acts"
+            set element_name "act_id"
+        }
+    }
+    
+    if { [info exists table_name] } {
+        if { [db_0or1row get_related_on_completion_id ""] } {
+            db_1row get_related_resource_id {}
+            imsld::grant_permissions -resources_activities_list $related_resource -user_id $user_id
+        }
+    }
     if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $type "structure"] } {
         foreach referencer_structure_list [db_list_of_lists referencer_structure {
             select ias.structure_id,
@@ -2517,10 +2547,13 @@ ad_proc -public imsld::grant_permissions {
                     permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
                 }
             } else {
+                if {[db_0or1row is_forum {}]} {
+                    permission::grant -party_id $user_id -object_id $the_object_id  -privilege "forum_moderate"
+                } 
+
                 permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
             }
-        }
-
+   }
 }
 ad_register_proc GET /finish-component-element* imsld::finish_component_element
 ad_register_proc POST /finish-component-element* imsld::finish_component_element
