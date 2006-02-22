@@ -58,7 +58,19 @@
             from acs_rels ar1, 
                  acs_rels ar2 
             where ar1.object_id_two=ar2.object_id_one 
-                 and ar2.object_id_two=:resource_item_id;
+                 and ar2.object_id_two=:resource_item_id
+    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="identifier_count">
+		<querytext>
+
+            select count(ar1.object_id_one)
+            from acs_rels ar1, 
+                 acs_rels ar2 
+            where ar1.object_id_two=ar2.object_id_one 
+                 and ar2.object_id_two=:resource_item_id
     
 		</querytext>
 	</fullquery>

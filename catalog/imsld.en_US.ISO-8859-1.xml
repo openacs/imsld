@@ -108,6 +108,7 @@
   <msg key="lt_Expression_Identifier">Expression Identifier</msg>
   <msg key="lt_Expression_One_Identi">Expression One Identifier</msg>
   <msg key="lt_Expression_Two_Identi">Expression Two Identifer</msg>
+  <msg key="lt_h2Uploading_new_IMS_L">&lt;h2&gt;Uploading new IMS Learning Design&lt;/h2&gt;</msg>
   <msg key="lt_Import_IMS-LD_ZIP_Fil">Import IMS-LD ZIP File</msg>
   <msg key="lt_IMS-LD_Activity_Descr">IMS-LD Activity Description</msg>
   <msg key="lt_IMS-LD_Activity_Descr_1">IMS-LD Activity Descriptions</msg>
@@ -146,6 +147,7 @@
   <msg key="lt_Learning_Objectives_I">Learning Objectives ID</msg>
   <msg key="lt_Learning_Unit_finishe">Learning Unit finished</msg>
   <msg key="lt_li_desc_no_file_assoc">&lt;li&gt; desc (no file associated) &lt;/li&gt;</msg>
+  <msg key="lt_More_than_one_service">More than one service in environment %identifier%. Just one used (the first one)</msg>
   <msg key="lt_More_than_one_validat">More than one validation tried at the same time</msg>
   <msg key="lt_No_imsmanifestxml_fou">No imsmanifest.xml found</msg>
   <msg key="lt_No_imsmanifestxml_was">No imsmanifest.xml was found in the compressed file. Aborting.</msg>

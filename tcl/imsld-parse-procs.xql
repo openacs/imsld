@@ -61,7 +61,7 @@
 
 	<fullquery name="imsld::parse::parse_and_create_service.get_role_id_from_role_ref">
 		<querytext>
-                select item_id as the_item_id 
+                select item_id as role_item_id 
                 from imsld_rolesi 
                 where identifier = :role_ref 
                 and content_revision__is_live(role_id) = 't' 
@@ -156,18 +156,41 @@
 	</fullquery>
 
 
-	<fullquery name="imsld::parse::parse_and_create_activity_structure.get_struct_id">
+	<fullquery name="imsld::parse::parse_and_create_activity_structure.get_struct_id_from_as_ref">
 		<querytext>
                         select item_id as refrenced_struct_id,
                         structure_id
                         from imsld_activity_structuresi 
-                        where identifier = :searching_ref 
+                        where identifier = :ref 
                         and content_revision__is_live(structure_id) = 't' 
                         and component_id = :component_id
                     
 		</querytext>
 	</fullquery>
 
+	<fullquery name="imsld::parse::parse_and_create_activity_structure.get_struct_id_from_la_ref">
+		<querytext>
+                        select item_id as refrenced_struct_id,
+                        structure_id
+                        from imsld_activity_structuresi 
+                        where identifier = :learning_activity_ref 
+                        and content_revision__is_live(structure_id) = 't' 
+                        and component_id = :component_id
+                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::parse::parse_and_create_activity_structure.get_struct_id_from_sa_ref">
+		<querytext>
+                        select item_id as refrenced_struct_id,
+                        structure_id
+                        from imsld_activity_structuresi 
+                        where identifier = :support_activity_ref
+                        and content_revision__is_live(structure_id) = 't' 
+                        and component_id = :component_id
+                    
+		</querytext>
+	</fullquery>
 
 	<fullquery name="imsld::parse::parse_and_create_activity_structure.update_activity_structure_from_structure_id">
 		<querytext>

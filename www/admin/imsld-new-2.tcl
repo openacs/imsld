@@ -28,7 +28,7 @@ ad_progress_bar_begin \
     -message_1 "[_ imsld.lt_Uploading_and_process]" \
     -message_2 "[_ imsld.lt_We_will_continue_auto]"
 
-ns_write "<h2>Uploading new IMS Learning Design</h2><blockquote>"
+ns_write "[_ imsld.lt_h2Uploading_new_IMS_L] <blockquote>"
 
 set community_id [dotlrn_community::get_community_id]
 # Atempting to create the new IMS LD.
@@ -56,6 +56,7 @@ if { ![string eq "" $warnings] } {
     ns_sleep 5
 }
 
+ns_write "</blockquote>"
 # jump to the front page
 ad_progress_bar_end -url [dotlrn_community::get_community_url $community_id]
 

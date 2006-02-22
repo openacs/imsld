@@ -40,7 +40,7 @@ create table imsld_status_user (
     status                  varchar(20)
                             check (status in ('started','finished')),
     constraint imsld_status_un
-    unique (related_id,user_id)
+    unique (related_id,user_id,status)
 );
 
 create index imsld_stat_imsld_idx on imsld_status_user(imsld_id);

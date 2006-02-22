@@ -8,9 +8,12 @@ ad_page_contract {
 
 imsld::next_activity -imsld_item_id $imsld_item_id -return_url [ad_conn url] imsld_multirow
 
-set elements [list prereqs \
-                  [list label "Prerequisites" \
-                       display_template "@imsld_multirow.prerequisites;noquote@"]]
+set elements [list estilo \
+                  [list display_template "@imsld_multirow.estilo@" \
+                       hide_p 1]]
+lappend elements prereqs \
+    [list label "Prerequisites" \
+         display_template "@imsld_multirow.prerequisites;noquote@"]
 lappend elements objectives \
     [list label "Learning Objectives" \
          display_template "@imsld_multirow.objectives;noquote@"]

@@ -680,11 +680,13 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::structure_next_activity.get_as_info">
 		<querytext>
-                    select sort_order, structure_id, item_id
+
+                    select sort_order, structure_id, title,
+                    item_id
                     from imsld_activity_structuresi
                     where item_id = :object_id_two
                     and content_revision__is_live(structure_id) = 't'
-                
+                                
 		</querytext>
 	</fullquery>
 
@@ -882,6 +884,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::process_environment.item_linear_list">
 		<querytext>
+            
             select ii.imsld_item_id
             from imsld_items ii,
             cr_items cr,
@@ -889,25 +892,26 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
             where ar.object_id_one = :learning_object_item_id
             and ar.object_id_two = cr.item_id
             and cr.live_revision = ii.imsld_item_id
-        
+                
 		</querytext>
 	</fullquery>
 
 
 	<fullquery name="imsld::process_environment.env_nested_associated_items">
 		<querytext>
-                select cpr.resource_id,
-                cpr.item_id as resource_item_id,
-                cpr.type as resource_type
-                from imsld_cp_resourcesi cpr, imsld_itemsi ii,
-                acs_rels ar
-                where ar.object_id_one = ii.item_id
-                and ar.object_id_two = cpr.item_id
-                and content_revision__is_live(cpr.resource_id) = 't'
+        select cpr.resource_id,
+        cr2.item_id as resource_item_id,
+        cpr.type as resource_type
+        from imsld_cp_resources cpr, imsld_items ii,
+        acs_rels ar, cr_items cr1, cr_items cr2
+        where ar.object_id_one = cr1.item_id
+        and ar.object_id_two = cr2.item_id
+        and cr1.live_revision = ii.imsld_item_id
+        and cr2.live_revision = cpr.resource_id 
                 and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      or ii.imsld_item_id = :imsld_item_id)
-            
+                        
 		</querytext>
 	</fullquery>
 
@@ -988,14 +992,15 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::process_learning_objective.lo_nested_associated_items">
 		<querytext>
-            select cpr.resource_id,
-            cpr.item_id as resource_item_id,
-            cpr.type as resource_type
-            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
-            acs_rels ar
-            where ar.object_id_one = ii.item_id
-            and ar.object_id_two = cpr.item_id
-            and content_revision__is_live(cpr.resource_id) = 't'
+        select cpr.resource_id,
+        cr2.item_id as resource_item_id,
+        cpr.type as resource_type
+        from imsld_cp_resources cpr, imsld_items ii,
+        acs_rels ar, cr_items cr1, cr_items cr2
+        where ar.object_id_one = cr1.item_id
+        and ar.object_id_two = cr2.item_id
+        and cr1.live_revision = ii.imsld_item_id
+        and cr2.live_revision = cpr.resource_id 
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
@@ -1055,14 +1060,15 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::process_prerequisite.prereq_nested_associated_items">
 		<querytext>
-            select cpr.resource_id,
-            cpr.item_id as resource_item_id,
-            cpr.type as resource_type
-            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
-            acs_rels ar
-            where ar.object_id_one = ii.item_id
-            and ar.object_id_two = cpr.item_id
-            and content_revision__is_live(cpr.resource_id) = 't'
+        select cpr.resource_id,
+        cr2.item_id as resource_item_id,
+        cpr.type as resource_type
+        from imsld_cp_resources cpr, imsld_items ii,
+        acs_rels ar, cr_items cr1, cr_items cr2
+        where ar.object_id_one = cr1.item_id
+        and ar.object_id_two = cr2.item_id
+        and cr1.live_revision = ii.imsld_item_id
+        and cr2.live_revision = cpr.resource_id 
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
@@ -1073,7 +1079,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::process_feedback.feedback_info">
 		<querytext>
-        select coalesce(oc.feedback_title, oc.title) as feedback_title
+        select oc.feedback_title as feedback_title
         from imsld_on_completioni oc
         where oc.item_id = :on_completion_item_id
         and content_revision__is_live(oc.on_completion_id) = 't'
@@ -1097,14 +1103,15 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::process_feedback.feedback_nested_associated_items">
 		<querytext>
-            select cpr.resource_id,
-            cpr.item_id as resource_item_id,
-            cpr.type as resource_type
-            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
-            acs_rels ar
-            where ar.object_id_one = ii.item_id
-            and ar.object_id_two = cpr.item_id
-            and content_revision__is_live(cpr.resource_id) = 't'
+        select cpr.resource_id,
+        cr2.item_id as resource_item_id,
+        cpr.type as resource_type
+        from imsld_cp_resources cpr, imsld_items ii,
+        acs_rels ar, cr_items cr1, cr_items cr2
+        where ar.object_id_one = cr1.item_id
+        and ar.object_id_two = cr2.item_id
+        and cr1.live_revision = ii.imsld_item_id
+        and cr2.live_revision = cpr.resource_id 
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
@@ -1115,13 +1122,14 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::process_resource.get_resource_info">
 		<querytext>
-        select identifier,
-        type as resource_type,
-        title as resource_title,
+        select cpr.identifier,
+        cpr.type as resource_type,
+        cr.title as resource_title,
         acs_object_id
-        from imsld_cp_resourcesi 
-        where item_id = :resource_item_id 
-        and content_revision__is_live(resource_id) = 't'
+        from imsld_cp_resources cpr, cr_revisions cr, cr_items cri
+        where cr.item_id = :resource_item_id
+        and cr.revision_id = cri.live_revision
+        and cr.revision_id = cpr.resource_id
     
 		</querytext>
 	</fullquery>
@@ -1159,12 +1167,13 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 		<querytext>
             select cpf.imsld_file_id,
             cpf.file_name,
-            cpf.item_id, cpf.parent_id
-            from imsld_cp_filesx cpf,
+            cr.item_id, 
+            cr.parent_id
+            from imsld_cp_files cpf, cr_items cr,
             acs_rels ar
             where ar.object_id_one = :resource_item_id
-            and ar.object_id_two = cpf.item_id
-            and content_revision__is_live(cpf.imsld_file_id) = 't'
+            and ar.object_id_two = cr.item_id
+            and cpf.imsld_file_id = cr.live_revision
         
 		</querytext>
 	</fullquery>
@@ -1233,15 +1242,16 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 	<fullquery name="imsld::process_learning_activity.item_linear_list">
 		<querytext>
         select ii.imsld_item_id
-        from imsld_items ii, imsld_activity_descs lad, imsld_learning_activitiesi la,
-        cr_items cr1, cr_items cr2,
+        from imsld_items ii, imsld_activity_descs lad, imsld_learning_activities la,
+        cr_items cr1, cr_items cr2, cr_items cr3,
         acs_rels ar
-        where la.item_id = :activity_item_id
+        where cr3.item_id = :activity_item_id
         and la.activity_description_id = cr1.item_id
         and cr1.live_revision = lad.description_id
         and ar.object_id_one = la.activity_description_id
         and ar.object_id_two = cr2.item_id
         and cr2.live_revision = ii.imsld_item_id
+        and cr3.live_revision = la.activity_id
     
 		</querytext>
 	</fullquery>
@@ -1249,14 +1259,15 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::process_learning_activity.la_nested_associated_items">
 		<querytext>
-            select cpr.resource_id,
-            cpr.item_id as resource_item_id,
-            cpr.type as resource_type
-            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
-            acs_rels ar
-            where ar.object_id_one = ii.item_id
-            and ar.object_id_two = cpr.item_id
-            and content_revision__is_live(cpr.resource_id) = 't'
+        select cpr.resource_id,
+        cr2.item_id as resource_item_id,
+        cpr.type as resource_type
+        from imsld_cp_resources cpr, imsld_items ii,
+        acs_rels ar, cr_items cr1, cr_items cr2
+        where ar.object_id_one = cr1.item_id
+        and ar.object_id_two = cr2.item_id
+        and cr1.live_revision = ii.imsld_item_id
+        and cr2.live_revision = cpr.resource_id 
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
@@ -1292,15 +1303,16 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 	<fullquery name="imsld::process_support_activity.item_linear_list">
 		<querytext>
         select ii.imsld_item_id
-        from imsld_items ii, imsld_activity_descs sad, imsld_support_activitiesi sa,
-        cr_items cr1, cr_items cr2,
+        from imsld_items ii, imsld_activity_descs sad, imsld_support_activities sa,
+        cr_items cr1, cr_items cr2, cr_items cr3,
         acs_rels ar
-        where sa.item_id = :activity_item_id
+        where cr3.item_id = :activity_item_id
         and sa.activity_description_id = cr1.item_id
         and cr1.live_revision = sad.description_id
         and ar.object_id_one = sa.activity_description_id
         and ar.object_id_two = cr2.item_id
         and cr2.live_revision = ii.imsld_item_id
+        and cr3.live_revision = sa.activity_id
     
 		</querytext>
 	</fullquery>
@@ -1308,14 +1320,15 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::process_support_activity.sa_nested_associated_items">
 		<querytext>
-            select cpr.resource_id,
-            cpr.item_id as resource_item_id,
-            cpr.type as resource_type
-            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
-            acs_rels ar
-            where ar.object_id_one = ii.item_id
-            and ar.object_id_two = cpr.item_id
-            and content_revision__is_live(cpr.resource_id) = 't'
+        select cpr.resource_id,
+        cr2.item_id as resource_item_id,
+        cpr.type as resource_type
+        from imsld_cp_resources cpr, imsld_items ii,
+        acs_rels ar, cr_items cr1, cr_items cr2
+        where ar.object_id_one = cr1.item_id
+        and ar.object_id_two = cr2.item_id
+        and cr1.live_revision = ii.imsld_item_id
+        and cr2.live_revision = cpr.resource_id 
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
@@ -1374,15 +1387,15 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
         from imsld_status_user
         where user_id = :user_id
         and imsld_id = :imsld_id
-        and status = 'finished'
-        and type = 'role-part'
+        and type in ('learning','support','structure')
 		</querytext>
 	</fullquery>
 
 
 	<fullquery name="imsld::next_activity.get_first_role_part">
 		<querytext>
-            select irp.role_part_id
+
+            select irp.role_part_id, ia.act_id, ip.play_id
             from cr_items cr0, cr_items cr1, cr_items cr2, imsld_methods im, imsld_plays ip, imsld_acts ia, imsld_role_parts irp
             where im.imsld_id = :imsld_item_id
             and ip.method_id = cr0.item_id
@@ -1395,19 +1408,19 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
             and ip.sort_order = (select min(ip2.sort_order) from imsld_plays ip2 where ip2.method_id = cr0.item_id)
             and ia.sort_order = (select min(ia2.sort_order) from imsld_acts ia2 where ia2.play_id = cr1.item_id)
             and irp.sort_order = (select min(irp2.sort_order) from imsld_role_parts irp2 where irp2.act_id = cr2.item_id)
-        
-		</querytext>
+        </querytext>
 	</fullquery>
 
 
 
-	<fullquery name="imsld::next_activity.completed_activity">
+	<fullquery name="imsld::next_activity.marked_activity">
 		<querytext>
             select stat.related_id,
             stat.role_part_id,
             stat.type,
             rp.sort_order,
-            rp.act_id
+            rp.act_id,
+            stat.status
             from imsld_status_user stat, imsld_role_parts rp
             where stat.imsld_id = :imsld_id
             and stat.user_id = :user_id
@@ -1421,7 +1434,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::next_activity.get_learning_activity_info">
 		<querytext>
-                        select coalesce(title,identifier) as activity_title,
+                        select title as activity_title,
                         item_id as activity_item_id
                         from imsld_learning_activitiesi
                         where activity_id = :related_id
@@ -1432,7 +1445,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::next_activity.get_support_activity_info_from_isa">
 		<querytext>
-                        select coalesce(title,identifier) as activity_title,
+                        select title as activity_title,
                         item_id as activity_item_id
                         from imsld_support_activitiesi
                         where activity_id = :related_id
@@ -1443,7 +1456,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::next_activity.get_support_activity_info_from_ias">
 		<querytext>
-                        select coalesce(title,identifier) as activity_title,
+                        select title as activity_title,
                         item_id as structure_item_id
                         from imsld_activity_structuresi
                         where structure_id = :related_id
@@ -1555,7 +1568,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
             select la.activity_id,
             la.item_id as activity_item_id,
             la.title as activity_title,
-            la.identifier
+            la.identifier, la.component_id
             from imsld_learning_activitiesi la
             where la.activity_id = :activity_id
         
@@ -1650,26 +1663,28 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 	</fullquery>
 
 
-	<fullquery name="imsld::get_activity_from_resource.get_learning_activity_from_environment">
+	<fullquery name="imsld::get_activity_from_resource.get_learning_activities_from_environment">
 		<querytext>
-                    select ila.activity_id,
-                           ila.item_id as activity_item_id 
-                    from acs_rels ar,
-                         imsld_learning_activitiesi ila 
-                    where ila.item_id=ar.object_id_one 
-                         and ar.object_id_two=:environment_item_id
-            
+            select ila.activity_id,
+            ila.item_id as activity_item_id,
+            'learning'
+            from acs_rels ar,
+            imsld_learning_activitiesi ila 
+            where ila.item_id=ar.object_id_one 
+            and ar.object_id_two=:environment_item_id
+
 		</querytext>
 	</fullquery>
 
-	<fullquery name="imsld::get_activity_from_resource.get_support_activity_from_environment">
+	<fullquery name="imsld::get_activity_from_resource.get_support_activities_from_environment">
 		<querytext>
-                select isa.activity_id,
-                       isa.item_id as activity_item_id 
-                    from acs_rels ar,
-                         imsld_support_activitiesi isa 
-                    where isa.item_id=ar.object_id_one 
-                         and ar.object_id_two=:environment_item_id
+            select isa.activity_id,
+            isa.item_id as activity_item_id,
+            'learning'
+            from acs_rels ar,
+            imsld_support_activitiesi isa 
+            where isa.item_id=ar.object_id_one 
+            and ar.object_id_two=:environment_item_id
             
 		</querytext>
 	</fullquery>
@@ -1758,7 +1773,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 	</fullquery>
 
 
-	<fullquery name="imsld::get_imsld_from_activity.get_imsld_from_activity">
+	<fullquery name="imsld::get_imsld_from_activity.get_imsld_from_la_activity">
 		<querytext>
             select iii.imsld_id as imsld_id
             from imsld_imsldsi iii,
@@ -1774,6 +1789,37 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 		</querytext>
 	</fullquery>
 
+	<fullquery name="imsld::get_imsld_from_activity.get_imsld_from_sa_activity">
+		<querytext>
+            select iii.imsld_id as imsld_id
+            from imsld_imsldsi iii,
+                 cr_items cr,
+                 cr_items cr2,
+                 imsld_support_activitiesi isai 
+            where isai.activity_id=:activity_id
+                 and isai.item_id=cr.item_id 
+                 and cr2.parent_id=cr.parent_id 
+                 and cr2.content_type='imsld_imsld' 
+                 and iii.item_id=cr2.item_id
+    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::get_imsld_from_activity.get_imsld_from_as_activity">
+		<querytext>
+            select iii.imsld_id as imsld_id
+            from imsld_imsldsi iii,
+                 cr_items cr,
+                 cr_items cr2,
+                 imsld_activity_structuresi iasi 
+            where iasi.structureid=:activity_id
+                 and iasi.item_id=cr.item_id 
+                 and cr2.parent_id=cr.parent_id 
+                 and cr2.content_type='imsld_imsld' 
+                 and iii.item_id=cr2.item_id
+    
+		</querytext>
+	</fullquery>
 
 	<fullquery name="imsld::get_resource_from_object.get_resource">
 		<querytext>
@@ -1788,7 +1834,6 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 		<querytext>
                 insert into imsld_status_user (
                                                 imsld_id,
-                                                role_part_id,
                                                 related_id,
                                                 user_id,
                                                 type,
@@ -1797,7 +1842,6 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
                                                )
                                                (
                                                 select :imsld_id,
-                                                :role_part_id,
                                                 :resource_id,
                                                 :user_id,
                                                 'resource',
