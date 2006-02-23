@@ -38,6 +38,9 @@ ad_proc -public imsld::object_type_image_path {
         as_assessments {
             set image_path "[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/assessment.png"
         }
+        send-mail {
+             set image_path "[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/send-mail.png"
+        }
         ims_manifest_object {
             set image_path "[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/lors.png"
         }
@@ -1203,6 +1206,17 @@ ad_proc -public imsld::process_service {
                 ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
             }
         }
+
+        send-mail {
+#escoger los destinatarios: all-in-role. Hasta que no esten los roles soportados, nada se puede hacer.
+#escoger los destinatarios: selected. Hasta que no esten los roles soportados, nada se puede hacer.
+
+#montar el enlace a "spam"  con los destinatarios elegidos y devolverlo
+            set image_path [imsld::object_type_image_path -object_type $service_type]
+            set services_list "<a href=\"[export_vars -base spam-recipients {referer one-community-admin}]\"  target=\"_blank\"><img src=\"$image_path\" width=\"16\" height=\"16\" border=\"0\" alt=\"Send-Mail service\"></a>"
+            set resource_item_list ""
+        }
+        
         default {
             ad_return_error "send-mail serivce not implemented yet" "Sorry, that service type ($service_type) hasn't been implemented yet. But be patience, we are working on it =)"
             ad_script_abort
@@ -1211,7 +1225,7 @@ ad_proc -public imsld::process_service {
     if {[string eq "t" $resource_mode]} {
         return [list $services_list $resource_item_list]
     } else {
-        return "$services_list"       
+        return "$services_list"
     }
 
 }
