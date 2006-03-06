@@ -1983,8 +1983,6 @@ ad_proc -public imsld::next_activity {
         set first_p 1
         db_1row get_first_role_part { *SQL* }
     } else {
-        ns_log notice "uno"
-        
         # get the completed activities in order to display them
         # save the last one (the last role_part_id of THE LAST completed activity) because we will use it latter
 
@@ -2190,8 +2188,6 @@ ad_proc -public imsld::next_activity {
     # 1. if it is a learning or support activity, no problem, find the associated files and return the lists
     # 2. if it is an activity structure we have verify which activities are already completed and return the next
     #    activity in the activity structure, handling the case when the next activity is also an activity structure
-    ns_log notice "dos"
-
     db_1row get_role_part_activity {
         select case
         when learning_activity_id is not null
@@ -2256,7 +2252,6 @@ ad_proc -public imsld::next_activity {
             append environments "[join [lindex $environment 3] " "]<br/>"
         }
     }
-    ns_log notice "tres acti $activity_id "
 
     # learning activity
     if { [string eq $activity_type learning] } {
