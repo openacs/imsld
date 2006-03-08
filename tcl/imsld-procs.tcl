@@ -2481,7 +2481,7 @@ ad_proc -public imsld::get_activity_from_resource {
                 select serv.environment_id as environment_item_id
                 from imsld_conference_servicesi ecs,
                 imsld_servicesi serv
-                where ecs.item_id = :object_id_nested
+                where ecs.item_id = :object_id_one
                 and ecs.service_id = serv.item_id
             }] } {
                 set activities_list [concat $activities_list [imsld::get_activity_from_environment -environment_item_id $environment_item_id]]
