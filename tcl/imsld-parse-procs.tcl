@@ -862,8 +862,7 @@ ad_proc -public imsld::parse::parse_and_create_role {
                                -roles_node $nested_role \
                                -parent_role_id $role_id \
                                -component_id $component_id]
-            set role_id [lindex $role_list 0]
-            if { !$role_id } {
+            if { ![lindex $role_list 0] } {
                 # an error happened, abort and return the list whit the error
                 return $role_list
             }
