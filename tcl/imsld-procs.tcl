@@ -1659,13 +1659,12 @@ ad_proc -public imsld::process_resource {
 
 ad_proc -public imsld::process_learning_activity { 
     -activity_item_id:required
-    {-community_id ""}
     {-resource_mode "f"}
 } {
-    @param 
-    @option user_id default [ad_conn user_id]
+    @param activity_item_id
+    @option resource_mode default f
     
-    @return The list (activity_name, list of associated urls) of the next activity for the user in the IMS-LD.
+    @return The list (activity_name, list of associated urls) of the activity in the IMS-LD.
 } {
     db_1row activity_info {
         select on_completion_id as on_completion_item_id,
