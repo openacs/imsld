@@ -82,7 +82,7 @@ ad_proc -public imsld::parse::convert_time_to_seconds {
 ad_proc -public imsld::parse::is_imsld {
     -tree:required
 } {
-    Checks it the given tree has the IMS LD extension and if the IMS LD comes in the organization.
+    Checks if the given tree has the IMS LD extension and if the IMS LD comes in the organization.
 
     Returns a list (pair of values): 1 + empty if succeeded, 0 + error message otherwise.
 
@@ -184,19 +184,19 @@ ad_proc -public imsld::parse::expand_file {
             # Therefore it if it is 1, then it concluded successfully
             # but with warnings, so we switch it back to 0
             
-            if { $error_p == 1 } {
-                set error_p 0
+            if { $error_p == 0 } {
+                set error_p 1
             }
         }
         default {
-            set error_p 1
+            set error_p 0
             set errmsg "[_ imsld.lt_Could_not_determine_w]"
         }
     }
     
-    if { $error_p } {
-        imsld::parse::remove_dir -dir $tmp_dir
+    if { !$error_p } {
         ns_log Notice "IMSLD::imsld::parse::expand_file: extract type $type failed $errmsg"
+        imsld::parse::remove_dir -dir $tmp_dir
         return -code error "IMSLD::imsld::parse::expand_file: extract type $type failed $errmsg"
     }
     return $tmp_dir
@@ -322,10 +322,8 @@ ad_proc -public imsld::parse::remove_dir {
 
     @param dir directory to be deleted.
 } {
-    if { [file exist $dir] } {
-        if { [catch {exec rm -rf $dir} errmsg] } {
-            return -code error "IMSLD:imsld::parse::remove_dir: [_ imsld.lt_There_was_an_error_tr] $errmsg"
-        }
+    if { [catch {file delete -force -- $dir} errmsg] } {
+        return -code error "IMSLD:imsld::parse::remove_dir: [_ imsld.lt_There_was_an_error_tr] $errmsg"
     }
 
     return 1
@@ -2686,14 +2684,13 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     }] } {
                         # warning message
                         append warnings "<li> [_ imsld.lt_Referenced_support_ac] </li>"
+                        set extra_vars [ns_set create]
+                        oacs_util::vars_to_ns_set \
+                            -ns_set $extra_vars \
+                            -var_list { sort_order }
+                        
                         # do the mappings
-                        relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
-                        # store the order
-                        db_dml update_activity_structure_from_structure_id {
-                            update imsld_activity_structures
-                            set sort_order = :sort_order
-                            where structure_id = :structure_id
-                        }
+                        relation_add -extra_vars $extra_vars imsld_as_as_rel $activity_structure_id $refrenced_struct_id 
                         incr sort_order
                     } else {
                         # search in the manifest ...
@@ -2727,14 +2724,12 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                             }
                             # warning message
                             append warnings "<li> [_ imsld.lt_Referenced_learning_a] </li>"
+                            set extra_vars [ns_set create]
+                            oacs_util::vars_to_ns_set \
+                                -ns_set $extra_vars \
+                                -var_list { sort_order }
                             # finally, do the mappings
-                            relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
-                            # store the order
-                            db_dml update_activity_structure_from_activity_structure_ref_id {
-                                update imsld_activity_structures
-                                set sort_order = :sort_order
-                                where structure_id = (select live_revision from cr_items where item_id = :activity_structure_ref_id)
-                            }
+                            relation_add -extra_vars $extra_vars imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
                             incr sort_order
                         } else {
                             # error, referenced learning activity does not exist
@@ -2745,24 +2740,20 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     # warning message
                     append warnings "<li> [_ imsld.lt_Referenced_learning_a_2] </li>"
                     # map support activity with activity structure
-                    relation_add imsld_as_sa_rel $activity_structure_id $activity_id
-                    # store the order
-                    db_dml update_support_activity {
-                        update imsld_support_activities
-                        set sort_order = :sort_order
-                        where activity_id = :support_activity_id
-                    }
+                    set extra_vars [ns_set create]
+                    oacs_util::vars_to_ns_set \
+                        -ns_set $extra_vars \
+                        -var_list { sort_order }
+                    relation_add -extra_vars $extra_vars imsld_as_sa_rel $activity_structure_id $activity_id
                     incr sort_order
                 }
             } else {
                 # map learning activity with activity structure
-                relation_add imsld_as_la_rel $activity_structure_id $activity_id
-                # store the order
-                db_dml update_learning_activity {
-                    update imsld_learning_activities
-                    set sort_order = :sort_order
-                    where activity_id = :learning_activity_id
-                }
+                set extra_vars [ns_set create]
+                oacs_util::vars_to_ns_set \
+                    -ns_set $extra_vars \
+                    -var_list { sort_order }
+                relation_add -extra_vars $extra_vars imsld_as_la_rel $activity_structure_id $activity_id
                 incr sort_order
             }
         }
@@ -2801,15 +2792,13 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     }] } {
                         # warning message
                         append warnings "<li> [_ imsld.lt_Referenced_support_ac_1] </li>"
+                        set extra_vars [ns_set create]
+                        oacs_util::vars_to_ns_set \
+                            -ns_set $extra_vars \
+                            -var_list { sort_order }
                         # do the mappings
-                        relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
-                        # store the order
-                        db_dml update_activity_structure_from_structure_id {
-                            update imsld_activity_structures
-                            set sort_order = :sort_order
-                            where structure_id = :structure_id
-                        }
-                    incr sort_order
+                        relation_add -extra_vars $extra_vars imsld_as_as_rel $activity_structure_id $refrenced_struct_id
+                        incr sort_order
                     } else {
                         # search in the manifest ...
                         set organizations [$manifest child all imscp:organizations]
@@ -2842,14 +2831,13 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                             }
                             # warning message
                             append warnings "<li> [_ imsld.lt_Referenced_support_ac_1] </li>"
+                            set extra_vars [ns_set create]
+                            oacs_util::vars_to_ns_set \
+                                -ns_set $extra_vars \
+                                -var_list { sort_order }
                             # finally, do the mappings
-                            relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
-                            # store the order
-                            db_dml update_activity_structure_from_activity_structure_ref_id {
-                                update imsld_activity_structures
-                                set sort_order = :sort_order
-                                where structure_id = (select live_revision from cr_items where item_id = :activity_structure_ref_id)
-                            }
+                            relation_add -extra_vars $extra_vars imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
+                            incr sort_order
                         } else {
                             # error, referenced support activity does not exist
                             return [list 0 "[_ imsld.lt_Referenced_support_ac_2]"]
@@ -2858,24 +2846,22 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 } else {
                     # warning message
                     append warnings "<li> [_ imsld.lt_Referenced_support_ac_3] </li>"
+                    set extra_vars [ns_set create]
+                    oacs_util::vars_to_ns_set \
+                        -ns_set $extra_vars \
+                        -var_list { sort_order }
                     # map the learning activity with activity structure
-                    relation_add imsld_as_la_rel $activity_structure_id $activity_id
-                    # store the order
-                    db_dml update_learning_activity {
-                        update imsld_learning_activities
-                        set sort_order = :sort_order
-                        where activity_id = :learning_activity_id
-                    }
+                    relation_add -extra_vars $extra_vars imsld_as_la_rel $activity_structure_id $activity_id
+                    incr sort_order
                 }
             } else {
+                set extra_vars [ns_set create]
+                oacs_util::vars_to_ns_set \
+                    -ns_set $extra_vars \
+                    -var_list { sort_order }
                 # map support activity with activity structure
-                relation_add imsld_as_sa_rel $activity_structure_id $activity_id
-                # store the order
-                db_dml update_support_activity {
-                    update imsld_support_activities
-                    set sort_order = :sort_order
-                    where activity_id = :support_activity_id
-                }
+                relation_add -extra_vars $extra_vars imsld_as_sa_rel $activity_structure_id $activity_id
+                incr sort_order
             }
         }
        
@@ -2896,14 +2882,12 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 and content_revision__is_live(structure_id) = 't' 
                 and component_id = :component_id
             }] } {
+                set extra_vars [ns_set create]
+                oacs_util::vars_to_ns_set \
+                    -ns_set $extra_vars \
+                    -var_list { sort_order }
                 # case one, just do the mappings
-                relation_add imsld_as_as_rel $activity_structure_id $refrenced_struct_id
-                # store the order
-                db_dml update_activity_structure_from_structure_id {
-                    update imsld_activity_structures
-                    set sort_order = :sort_order
-                    where structure_id = :structure_id
-                }
+                relation_add -extra_vars $extra_vars imsld_as_as_rel $activity_structure_id $refrenced_struct_id
                 incr sort_order
             } else {
                  # case two, first verify that the referenced activity structure exists
@@ -2935,14 +2919,12 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                         # there is an error, abort and return the list with the error
                         return $activity_structure_ref_list
                     }
+                    set extra_vars [ns_set create]
+                    oacs_util::vars_to_ns_set \
+                        -ns_set $extra_vars \
+                        -var_list { sort_order }
                     # finally, do the mappings
-                    relation_add imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
-                    # store the order
-                    db_dml update_activity_structure_from_activity_structure_ref_id {
-                        update imsld_activity_structures
-                        set sort_order = :sort_order
-                        where structure_id = (select live_revision from cr_items where item_id = :activity_structure_ref_id)
-                    }
+                    relation_add -extra_vars $extra_vars imsld_as_as_rel $activity_structure_id $activity_structure_ref_id
                     incr sort_order
                 } else {
                     # error, return
@@ -3959,7 +3941,6 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                       -parent_id $cr_folder_id]
 
     # Components
-#    set components [[$imsld childNodesLive] child all imsld:components]
     set components [$imsld child all imsld:components]
     imsld::parse::validate_multiplicity -tree $components -multiplicity 1 -element_name components -equal
     set component_id [imsld::item_revision_new -attributes [list [list imsld_id $imsld_id]] \
@@ -3983,7 +3964,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                     -roles_node $learner \
                                     -component_id $component_id]
         if { ![lindex $learner_parse_list 0] } {
-                    # an error happened, abort and return the list whit the error
+            # an error happened, abort and return the list whit the error
             return $learner_parse_list
         }
     }

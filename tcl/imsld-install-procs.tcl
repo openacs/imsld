@@ -435,19 +435,37 @@ ad_proc -public imsld::install::init_rels {
         content_item 0 {}
 
     # Activity Structure - Learning Activities (learning-activity-ref)
-    rel_types::new imsld_as_la_rel "Activity Structure - Learning Activities (learning-activity-ref) rel" "Activity Structure - Learning Activities (learning-activity-ref) rels" \
+    rel_types::new -table_name imsld_as_la_rels \
+        -create_table_p 0 \
+        imsld_as_la_rel \
+        "Activity Structure - Learning Activities (learning-activity-ref) rel" "Activity Structure - Learning Activities (learning-activity-ref) rels" \
         content_item 0 {} \
         content_item 0 {}
-
+    attribute::add -min_n_values 0 -max_n_values 0 imsld_as_la_rel integer "sort_order" "Sort orders"
+    # FIX ME (there is no way to add attributes to the rels without creating the whole plsql code)
+    package_recreate_hierarchy imsld_as_la_rel
+    
     # Activity Structure - Support Activities (support-activity-ref)
-    rel_types::new imsld_as_sa_rel "Activity Structure - Support Activities (support-activity-ref) rel" "Activity Structure - Support Activities (support-activity-ref) rels" \
+    rel_types::new -table_name imsld_as_sa_rels \
+        -create_table_p 0 \
+        imsld_as_sa_rel  \
+        "Activity Structure - Support Activities (support-activity-ref) rel" "Activity Structure - Support Activities (support-activity-ref) rels" \
         content_item 0 {} \
         content_item 0 {}
-
+    attribute::add -min_n_values 0 -max_n_values 0 imsld_as_sa_rel integer "sort_order" "Sort orders"
+    # FIX ME (there is no way to add attributes to the rels without creating the whole plsql code)
+    package_recreate_hierarchy imsld_as_sa_rel
+    
     # Activity Structure - Activity Structures (activity-structure-ref)
-    rel_types::new imsld_as_as_rel "Activity Structure - Activity Structures (activity-structure-ref) rel" "Activity Structure - Activity Structures (activity-structure-ref) rels" \
+    rel_types::new -table_name imsld_as_as_rels \
+        -create_table_p 0 \
+        imsld_as_as_rel \
+        "Activity Structure - Activity Structures (activity-structure-ref) rel" "Activity Structure - Activity Structures (activity-structure-ref) rels" \
         content_item 0 {} \
         content_item 0 {}
+    attribute::add -min_n_values 0 -max_n_values 0 imsld_as_as_rel integer "sort_order" "Sort orders"
+    # FIX ME (there is no way to add attributes to the rels without creating the whole plsql code)
+    package_recreate_hierarchy imsld_as_as_rel
 
     # Act - Role Parts (when-role-part-completed)
     rel_types::new imsld_act_rp_completed_rel "Act - Role Parts (when-role-part-completed) rel" "Act - Role Parts (when-role-part-completed) rels" \

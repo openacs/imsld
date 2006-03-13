@@ -78,7 +78,10 @@ ad_proc -public imsld::get_role_part_from_activity {
             }] {
                 set stucture_id [lindex $la_structure_list 0]
                 set leaf_id [lindex $la_structure_list 1]
-                lappend role_part_list [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
+                set referencer_list [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
+                if { [llength $referencer_list] } {
+                    lappend role_part_list $referencer_list
+                }
             }
             return $role_part_list
         }
@@ -90,16 +93,24 @@ ad_proc -public imsld::get_role_part_from_activity {
             }] } {
                 return $role_part_id
             }
-            # the support activity is referenced by an activity structure... digg more
-            db_1row get_sa_activity_structure {
+            set role_part_list [list]
+            # the learning activity is referenced by some activity structures... digg more
+            foreach sa_structure_list [db_list_of_lists get_sa_activity_structures {
                 select ias.structure_id, ias.item_id as leaf_id
-                from imsld_activity_structuresi ias, acs_rels ar, imsld_learning_activitiesi sa
+                from imsld_activity_structuresi ias, acs_rels ar, imsld_support_activitiesi sa
                 where ar.object_id_one = ias.item_id
                 and ar.object_id_two = sa.item_id
                 and content_revision__is_live(ias.structure_id) = 't'
-                and la.item_id = :leaf_id
+                and sa.item_id = :leaf_id
+            }] {
+                set stucture_id [lindex $sa_structure_list 0]
+                set leaf_id [lindex $sa_structure_list 1]
+                set referencer_list [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
+                if { [llength $referencer_list] } {
+                    lappend role_part_list $referencer_list
+                }
             }
-            return [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
+            return $role_part_list
         }
         structure {
             if { [db_0or1row directly_mapped {
@@ -690,14 +701,13 @@ ad_proc -public imsld::finish_component_element {
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     if { !$code_call_p } {
-        # get the url for parse it and get the info
+        # get the url to parse it and get the info
         set url [ns_conn url]
         regexp {finish-component-element-([0-9]+)-([0-9]+)-([0-9]+)-([a-z]+).imsld$} $url match imsld_id role_part_id element_id type
         regsub {/finish-component-element.*} $url "" return_url 
     }
     # now that we have the necessary info, mark the finished element completed and return
     db_dml insert_element_entry { *SQL* }
-
 
     switch $type {
         learning { 
@@ -724,24 +734,19 @@ ad_proc -public imsld::finish_component_element {
     
     if { [info exists table_name] } {
         if { [db_0or1row get_related_on_completion_id ""] } {
-            db_1row get_related_resource_id {}
+            db_1row get_related_resource_id { *SQL* }
             imsld::grant_permissions -resources_activities_list $related_resource -user_id $user_id
         }
     }
     if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $type "structure"] } {
-        foreach referencer_structure_list [db_list_of_lists referencer_structure {
-            select ias.structure_id,
-            ias.item_id as structure_item_id
-            from acs_rels ar, imsld_activity_structuresi ias, cr_items cri
-            where ar.object_id_one = ias.item_id
-            and ar.object_id_two = cri.item_id
-            and cri.live_revision = :element_id
-        }] {
+        foreach referencer_structure_list [db_list_of_lists referencer_structure { *SQL* }] {
             set structure_id [lindex $referencer_structure_list 0]
             set structure_item_id [lindex $referencer_structure_list 1]
+            set number_to_select [lindex $referencer_structure_list 2]
             # if this activity is part of an activity structure, let's check if the rest of referenced 
             # activities are finished too, so we can mark finished the activity structure as well
             set scturcture_finished_p 1
+            set total_completed 0
             db_foreach referenced_activity {
                 select content_item__get_live_revision(ar.object_id_two) as activity_id
                 from acs_rels ar
@@ -751,8 +756,12 @@ ad_proc -public imsld::finish_component_element {
                 if { ![db_string completed_p { *SQL* }] } {
                     # there is at leas one no-completed activity, so we can't mark this activity structure yet
                     set scturcture_finished_p 0
+                } else {
+                    incr total_completed
                 }
             }
+            # FIX ME: when the tree wokrs fine, change the if condition for thisone
+            # if { $scturcture_finished_p || (![string eq $number_to_select ""] && ($total_completed >= $number_to_select)) } {}
             if { $scturcture_finished_p } {
                 imsld::finish_component_element -imsld_id $imsld_id \
                     -role_part_id $role_part_id \
@@ -898,7 +907,7 @@ ad_proc -public imsld::finish_component_element {
     if { !$code_call_p } {
         ad_returnredirect "${return_url}"
     }
-} 
+}
 
 ad_proc -public imsld::structure_next_activity {
     -activity_structure_id:required
@@ -950,15 +959,13 @@ ad_proc -public imsld::structure_next_activity {
     foreach referenced_activity [db_list_of_lists struct_referenced_activities { *SQL* }] {
         set object_id_two [lindex $referenced_activity 0]
         set rel_type [lindex $referenced_activity 1]
+        set rel_id [lindex $referenced_activity 2]
         switch $rel_type {
             imsld_as_la_rel {
                 # find out if is the next one
-                db_1row get_la_info {
-                    select sort_order, 
-                    activity_id as learning_activity_id
-                    from imsld_learning_activitiesi
-                    where item_id = :object_id_two
-                    and content_revision__is_live(activity_id) = 't'
+                db_1row get_la_info { *SQL* }
+                db_1row get_sort_order {
+                    select sort_order from imsld_as_la_rels where rel_id = :rel_id
                 }
                 if { ![db_string completed_p_from_la { *SQL* }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
                     set min_sort_order $sort_order
@@ -975,6 +982,9 @@ ad_proc -public imsld::structure_next_activity {
                     where item_id = :object_id_two
                     and content_revision__is_live(activity_id) = 't'
                 }
+                db_1row get_sort_order {
+                    select sort_order from imsld_as_sa_rels where rel_id = :rel_id
+                }
                 if { ![db_string completed_p_from_sa { *SQL* }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
                     set min_sort_order $sort_order
                     set next_activity_id $support_activity_id
@@ -984,6 +994,9 @@ ad_proc -public imsld::structure_next_activity {
             imsld_as_as_rel {
                 # recursive call?
                 db_1row get_as_info { *SQL* }
+                db_1row get_sort_order {
+                    select sort_order from imsld_as_as_rels where rel_id = :rel_id
+                }
                 if { ![db_string completed_p { *SQL* }] && ( [string eq "" $min_sort_order] || $sort_order < $min_sort_order ) } {
                     set min_sort_order $sort_order
                     set next_activity_id $structure_id
@@ -1010,6 +1023,64 @@ ad_proc -public imsld::structure_next_activity {
     return [list $next_activity_id $next_activity_type $environment_list $structures_names]
 } 
 
+ad_proc -public imsld::structure_finished_p { 
+    -structure_id:required
+    {-user_id ""}
+} { 
+    @param structure_id
+    @option user_id
+    
+    @return 0 if the any activity referenced from the activity structure hasn't been finished. 1 otherwise
+} {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    
+    set all_completed 1
+    foreach referenced_activity [db_list_of_lists struct_referenced_activities {
+        select ar.object_id_two,
+        ar.rel_type
+        from acs_rels ar, imsld_activity_structuresi ias
+        where ar.object_id_one = ias.item_id
+        and ias.structure_id = :structure_id
+        order by ar.object_id_two
+    }] {
+        # get all the directly referenced activities (from the activity structure)
+        set object_id_two [lindex $referenced_activity 0]
+        set rel_type [lindex $referenced_activity 1]
+        switch $rel_type {
+            imsld_as_la_rel -
+            imsld_as_sa_rel {
+                # is the activity finished ?
+                if { ![db_0or1row completed_p {
+                    select 1 from imsld_status_user 
+                    where related_id = content_item__get_live_revision(:object_id_two) and user_id = :user_id and status = 'finished'
+                }] } {
+                    set all_completed 0
+                }
+            }
+            imsld_as_as_rel {
+                # search recursively trough the referenced 
+                db_1row get_activity_structure_info {
+                    select structure_id
+                    from imsld_activity_structuresi
+                    where item_id = :object_id_two
+                    and content_revision__is_live(structure_id) = 't'
+                }
+                # is the activity finished ?
+                if { ![db_0or1row completed_p {
+                    select 1 from imsld_status_user 
+                    where related_id = :structure_id and user_id = :user_id and status = 'finished'
+                }] } {
+                    set all_completed 0
+                }
+                if { ![imsld::structure_finished_p -structure_id $structure_id -user_id $user_id] } {
+                    set all_completed 0
+                }
+            }
+        }
+    }
+    return $all_completed
+} 
+
 ad_proc -public imsld::role_part_finished_p { 
     -role_part_id:required
     {-user_id ""}
@@ -1019,12 +1090,7 @@ ad_proc -public imsld::role_part_finished_p {
     @return 0 if the role part hasn't been finished. 1 otherwise
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
-    if { [db_0or1row already_marked_p {
-        select 1 
-        from imsld_status_user
-        where completed_id = :role_part_id
-        and user_id = :user_id
-    }] } {
+    if { [db_0or1row already_marked_p { *SQL* }] } {
         # simple case, already marked as finished
         return 1
     }
@@ -1065,13 +1131,12 @@ ad_proc -public imsld::role_part_finished_p {
             }
         }
         structure {
-            if { [db_string completed_from_as {
-                select count(*) from imsld_status_user
-                where completed_id = content_item__get_live_revision(:activity_structure_id)
-                and user_id = :user_id
-            }] } {
-                return 1
+            db_1row get_sa_info {
+                select structure_id
+                from imsld_activity_structuresi
+                where item_id = :activity_structure_id
             }
+            return [imsld::structure_finished_p -structure_id $structure_id -user_id $user_id]
         }
         none {
             return 1
@@ -1208,10 +1273,7 @@ ad_proc -public imsld::process_service {
         }
 
         send-mail {
-#escoger los destinatarios: all-in-role. Hasta que no esten los roles soportados, nada se puede hacer.
-#escoger los destinatarios: selected. Hasta que no esten los roles soportados, nada se puede hacer.
-
-#montar el enlace a "spam"  con los destinatarios elegidos y devolverlo
+            # FIX ME: when roles be supported, fix it so the mail is sent to the propper role
             set image_path [imsld::object_type_image_path -object_type $service_type]
             set services_list "<a href=\"[export_vars -base spam-recipients {referer one-community-admin}]\"  target=\"_blank\"><img src=\"$image_path\" width=\"16\" height=\"16\" border=\"0\" alt=\"Send-Mail service\"></a>"
             set resource_item_list ""
@@ -1891,13 +1953,7 @@ ad_proc -public imsld::process_activity_structure {
 } {
     # get environments
     set environments_list [list]
-    set associated_environments_list [db_list sa_associated_environments {
-        select ar.object_id_two as environment_item_id
-        from acs_rels ar
-        where ar.object_id_one = :structure_item_id
-        and ar.rel_type = 'imsld_as_env_rel'
-        order by ar.object_id_two
-    }]
+    set associated_environments_list [db_list sa_associated_environments { *SQL* }]
     foreach environment_item_id $associated_environments_list {
         if { [llength $environments_list] } {
             set environments_list [concat [list $environments_list] \
@@ -1909,10 +1965,252 @@ ad_proc -public imsld::process_activity_structure {
     if { [string eq "t" $resource_mode] } {
         #put in order the environments_id(s)
         set environments_ids [concat [lindex [lindex $environments_list 1] [expr [llength [lindex $environments_list 1] ] - 1 ]] \
-                                  [lindex [lindex $environments_list 2] [expr [llength [lindex $environments_list 2] ] - 1 ]] ]
+                                  [lindex [lindex $environments_list 2] [expr [llength [lindex $environments_list 2] ] - 1 ]]]
     }
-
+    
     return $environments_list
+}
+
+ad_proc -public imsld::generate_structure_activities_list {
+    -imsld_id
+    -structure_item_id
+    -user_id
+    -role_part_id
+    {-next_activity_id ""}
+    -dom_node
+    -dom_doc
+} {
+    @param imsld_id
+    @param structure_item_id
+    @param user_id
+
+    @return A list of lists of the activities referenced from the activity structure
+} {
+    # auxiliary list to store the activities
+    set completed_list [list]
+    # get the structure info
+    db_1row structure_info { *SQL* }
+    # get the referenced activities which are referenced from the structure
+    foreach referenced_activity [db_list_of_lists struct_referenced_activities { *SQL* }] {
+        # get all the directly referenced activities (from the activity structure)
+        set object_id_two [lindex $referenced_activity 0]
+        set rel_type [lindex $referenced_activity 1]
+        set rel_id [lindex $referenced_activity 2]
+        switch $rel_type {
+            imsld_as_la_rel {
+                # add the activiti to the TCL list
+                db_1row get_learning_activity_info { *SQL* }
+                db_1row get_sort_order {
+                    select sort_order from imsld_as_la_rels where rel_id = :rel_id
+                }
+                set completed_p [db_0or1row completed_p { *SQL* }]
+                # show the activity only if:
+                # 1. it has been already completed
+                # 2. if the structure-type is "selection"
+                # 3. if it is the next activity to be done (and structure-type is "sequence") 
+                if { $completed_p || [string eq $complete_act_id ""] || [string eq $structure_type "selection"] || ([string eq $is_visible_p "t"] && [string eq $next_activity_id $activity_id]) } {
+                    set activity_node [$dom_doc createElement li]
+                    $activity_node setAttribute class "liOpen"
+
+                    set a_node [$dom_doc createElement a]
+                    $a_node setAttribute href "[ad_conn url]/[export_vars -base "activity-frame" -url {activity_id}]"
+                    set text [$dom_doc createTextNode "$activity_title"]
+                    $a_node appendChild $text
+                    $activity_node appendChild $a_node
+
+                    set text [$dom_doc createTextNode " "]
+                    $activity_node appendChild $text
+
+                    set a_node [$dom_doc createElement a]
+                    $a_node setAttribute href "[ad_conn url]/finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld"
+                    set text [$dom_doc createTextNode "(finish)"]
+                    $a_node appendChild $text
+                    $activity_node appendChild $a_node
+
+                    set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
+                }
+            }
+            imsld_as_sa_rel {
+                # add the activiti to the TCL list
+                db_1row get_support_activity_info { *SQL* }
+                db_1row get_sort_order {
+                    select sort_order from imsld_as_sa_rels where rel_id = :rel_id
+                }
+                set completed_p [db_0or1row completed_p { *SQL* }]
+                # show the activity only if:
+                # 1. it has been already completed
+                # 2. if the structure-type is "selection"
+                # 3. if it is the next activity to be done (and structure-type is "sequence") 
+                if { $completed_p || [string eq $complete_act_id ""] || [string eq $is_visible_p "t"] || [string eq $structure_type "selection"] || [string eq $next_activity_id $activity_id] } {
+                    set activity_node [$dom_doc createElement li]
+                    $activity_node setAttribute class "liOpen"
+                    set a_node [$dom_doc createElement a]
+                    $a_node setAttribute href "[ad_conn url]/[export_vars -base "activity-frame" -url {activity_id}]"
+                    set text [$dom_doc createTextNode "$activity_title"]
+                    $a_node appendChild $text
+                    $activity_node appendChild $a_node
+
+                    set text [$dom_doc createTextNode " "]
+                    $activity_node appendChild $text
+
+                    set a_node [$dom_doc createElement a]
+                    $a_node setAttribute href "[ad_conn url]/finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-support.imsld"
+                    set text [$dom_doc createTextNode "(finish)"]
+                    $a_node appendChild $text
+                    $activity_node appendChild $a_node
+
+                    set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
+                }
+            }
+            imsld_as_as_rel {
+                # add the structure to the list only if:
+                # 1. the structure has already been started or finished
+                # 2. the referencer structure-type is "selection"
+                # (if it is the next activity to be done then it should had been marked as started 
+                #  in the "structure_next_activity" function. which is the case when structure-type is "sequence")
+                db_1row get_activity_structure_info { *SQL* }
+                db_1row get_sort_order {
+                    select sort_order from imsld_as_as_rels where rel_id = :rel_id
+                }
+                set started_p [db_0or1row as_completed_p { *SQL* }]
+                if { $started_p || [string eq $structure_type "selection"] } {
+                    set structure_node [$dom_doc createElement li]
+                    $structure_node setAttribute class "liOpen"
+                    set a_node [$dom_doc createElement a]
+                    $a_node setAttribute href "[ad_conn url]/[export_vars -base "activity-frame" -url {structure_id}]"
+                    set text [$dom_doc createTextNode "$activity_title"]
+                    $a_node appendChild $text
+                    $structure_node appendChild $a_node
+
+                    set nested_activities_list [imsld::generate_structure_activities_list -imsld_id $imsld_id \
+                                                    -structure_item_id $structure_item_id \
+                                                    -user_id $user_id \
+                                                    -next_activity_id $next_activity_id \
+                                                    -role_part_id $role_part_id \
+                                                    -dom_node $structure_node \
+                                                    -dom_doc $dom_doc]
+                    set ul_node [$dom_doc createElement ul]
+                    foreach nested_activity $nested_activities_list {
+                        $ul_node appendFromList $nested_activity
+                    }
+                    $structure_node appendChild $ul_node
+                    set completed_list [linsert $completed_list $sort_order [$structure_node asList]]
+                }
+            }
+        }
+    }
+    return $completed_list
+}
+
+ad_proc -public imsld::generate_activities_tree {
+    -imsld_id:required
+    -user_id
+    {-next_activity_id ""}
+    -dom_node
+    -dom_doc
+} {
+    @param imsld_id
+    @param user_id
+
+    @return A list of lists of the activities 
+} {
+    # start with the role parts
+    foreach role_part_list [db_list_of_lists referenced_role_parts { *SQL* }] {
+        set type [lindex $role_part_list 0]
+        set activity_id [lindex $role_part_list 1]
+        set role_part_id [lindex $role_part_list 2]
+        switch $type {
+            learning {
+                # add the learning activity to the tree
+                db_1row get_learning_activity_info { *SQL* }
+                set completed_activity_p [db_0or1row already_completed {
+                    select 1 from imsld_status_user where related_id = :activity_id and user_id = :user_id
+                }]
+                if { [string eq $complete_act_id ""] || [string eq $is_visible_p "t"] || $completed_activity_p || $activity_id == $next_activity_id } {
+                    set activity_node [$dom_doc createElement li]
+                    $activity_node setAttribute class "liOpen"
+                    set a_node [$dom_doc createElement a]
+                    $a_node setAttribute href "[ad_conn url]/[export_vars -base "activity-frame" -url {activity_id}]"
+                    set text [$dom_doc createTextNode "$activity_title"]
+                    $a_node appendChild $text
+                    $activity_node appendChild $a_node
+
+                    set text [$dom_doc createTextNode " "]
+                    $activity_node appendChild $text
+
+                    set a_node [$dom_doc createElement a]
+                    $a_node setAttribute href "[ad_conn url]/finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld"
+                    set text [$dom_doc createTextNode "(finish)"]
+                    $a_node appendChild $text
+                    $activity_node appendChild $a_node
+
+                    set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
+                    $dom_node appendChild $activity_node
+                }
+            }
+            support {
+                # add the support activity to the tree
+                db_1row get_support_activity_info { *SQL* }
+                set completed_activity_p [db_0or1row already_completed {
+                    select 1 from imsld_status_user where related_id = :activity_id and user_id = :user_id
+                }]
+                if { [string eq $complete_act_id ""] || [string eq $is_visible_p "t"] || $completed_activity_p || $activity_id == $next_activity_id } {
+                    set activity_node [$dom_doc createElement li]
+                    $activity_node setAttribute class "liOpen"
+                    set a_node [$dom_doc createElement a]
+                    $a_node setAttribute href "[ad_conn url]/[export_vars -base "activity-frame" -url {activity_id}]"
+                    set text [$dom_doc createTextNode "$activity_title"]
+                    $a_node appendChild $text
+                    $activity_node appendChild $a_node
+
+                    set text [$dom_doc createTextNode " "]
+                    $activity_node appendChild $text
+
+                    set a_node [$dom_doc createElement a]
+                    $a_node setAttribute href "[ad_conn url]/finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-support.imsld"
+                    set text [$dom_doc createTextNode "(finish)"]
+                    $a_node appendChild $text
+                    $activity_node appendChild $a_node
+
+                    set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
+                    $dom_node appendChild $activity_node
+                }
+            }
+            structure {
+                # this is a special case since there are some conditions to check
+                # in order to determine if the referenced activities have to be shown
+                # because of that the proc generate_structure_activities_list is called,
+                # which returns a tcl list in tDOM format.
+                
+                # anyway, we add the structure to the tree only if:
+                # 1. the structure has already been started or finished
+                # 2. the referencer structure-type is "selection"
+                # (if it is the next activity to be done then it should had been marked as started 
+                #  in the "structure_next_activity" function. which is the case when structure-type is "sequence")
+                db_1row get_activity_structure_info { *SQL* }
+                set started_p [db_0or1row as_completed_p { *SQL* }]
+                if { $started_p || [string eq $structure_type "selection"] } {
+                    set structure_node [$dom_doc createElement li]
+                    $structure_node setAttribute class "liOpen"
+                    set a_node [$dom_doc createElement a]
+                    $a_node setAttribute href "[ad_conn url]/[export_vars -base "activity-frame" -url {structure_id}]"
+                    set text [$dom_doc createTextNode "$activity_title"]
+                    $a_node appendChild $text
+                    $structure_node appendChild $a_node
+                    set nested_list [imsld::generate_structure_activities_list -imsld_id $imsld_id \
+                                         -structure_item_id $structure_item_id \
+                                         -user_id $user_id \
+                                         -next_activity_id $next_activity_id \
+                                         -role_part_id $role_part_id \
+                                         -dom_doc $dom_doc \
+                                         -dom_node $dom_node]
+                    # the nested finished activities are returned as a tcl list in tDOM format
+                    $structure_node appendFromList [list ul [list] [concat [list] $nested_list]]
+                    $dom_node appendChild $structure_node
+                }
+            }
+        }
+    }
 }
 
 ad_proc -public imsld::next_activity { 
@@ -1950,9 +2248,8 @@ ad_proc -public imsld::next_activity {
         and content_revision__is_live(imsld_id) = 't'
     }
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
-   
+       
     # global prerequisites and learning objectives
-
     set prerequisites_list_temp [imsld::process_prerequisite -imsld_item_id $imsld_item_id -resource_mode "t"]
     set prerequisites_list [list [lindex $prerequisites_list_temp 0] [lindex $prerequisites_list_temp 1]]
     set prerequisites_list_ids [lindex $prerequisites_list_temp 2]
@@ -2114,7 +2411,7 @@ ad_proc -public imsld::next_activity {
                 }
             }
         }
-        
+
         # the last completed is now stored in completed_id, let's find out the next role_part_id that the user has to work on.
         # Procedure (knowing that the info of the last role_part are stored in the last iteration vars):
         # 0. check if all the activities referenced by the current role_part_id are finished
@@ -2187,6 +2484,7 @@ ad_proc -public imsld::next_activity {
     # 1. if it is a learning or support activity, no problem, find the associated files and return the lists
     # 2. if it is an activity structure we have verify which activities are already completed and return the next
     #    activity in the activity structure, handling the case when the next activity is also an activity structure
+
     db_1row get_role_part_activity {
         select case
         when learning_activity_id is not null
@@ -2242,6 +2540,7 @@ ad_proc -public imsld::next_activity {
             incr tab_structures
         }
     }
+
     set environments ""
     if { [llength $environment_list] } {
         foreach environment $environment_list {
@@ -2251,7 +2550,6 @@ ad_proc -public imsld::next_activity {
             append environments "[join [lindex $environment 3] " "]<br/>"
         }
     }
-
     # learning activity
     if { [string eq $activity_type learning] } {
         db_1row learning_activity { *SQL* }
@@ -2321,9 +2619,177 @@ ad_proc -public imsld::next_activity {
             {} \
             $status
     }
-    
     # first parameter: activity name
     return [template::multirow size imsld_multirow]
+}
+
+ad_proc -public imsld::get_next_activity { 
+    -imsld_item_id:required
+    {-user_id ""}
+    {-community_id ""}
+} {
+    @param imsld_item_id
+    @option user_id default [ad_conn user_id]
+    @option community_id
+    
+    @return The activity_id of the next activity to be done by the user_id
+} {
+    # get the imsld info
+    db_1row get_ismld_info {
+        select imsld_id
+        from imsld_imsldsi
+        where item_id = :imsld_item_id
+        and content_revision__is_live(imsld_id) = 't'
+    }
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+       
+    if { ![db_string get_last_entry { 
+        select count(*)
+        from imsld_status_user
+        where user_id = :user_id
+        and imsld_id = :imsld_id
+        and type in ('learning','support','structure')
+    }] } {
+        # special case: the user has no entry, the ims-ld hasn't started yet for that user
+        set first_p 1
+        db_1row get_first_role_part {
+            select irp.role_part_id, ia.act_id, ip.play_id
+            from cr_items cr0, cr_items cr1, cr_items cr2, imsld_methods im, imsld_plays ip, imsld_acts ia, imsld_role_parts irp
+            where im.imsld_id = :imsld_item_id
+            and ip.method_id = cr0.item_id
+            and cr0.live_revision = im.method_id
+            and ia.play_id = cr1.item_id
+            and cr1.live_revision = ip.play_id
+            and irp.act_id = cr2.item_id
+            and cr2.live_revision = ia.act_id
+            and content_revision__is_live(irp.role_part_id) = 't'
+            and ip.sort_order = (select min(ip2.sort_order) from imsld_plays ip2 where ip2.method_id = cr0.item_id)
+            and ia.sort_order = (select min(ia2.sort_order) from imsld_acts ia2 where ia2.play_id = cr1.item_id)
+            and irp.sort_order = (select min(irp2.sort_order) from imsld_role_parts irp2 where irp2.act_id = cr2.item_id)
+        }
+    } else {
+        # get the last role_part_id of the last completed activity
+        
+        db_1row get_last_completed {
+            select stat.related_id,
+            stat.role_part_id,
+            stat.type,
+            rp.sort_order,
+            rp.act_id,
+            stat.status
+            from imsld_status_user stat, imsld_role_parts rp
+            where stat.imsld_id = :imsld_id
+            and stat.user_id = :user_id
+            and stat.role_part_id = rp.role_part_id
+            and stat.type in ('learning','support','structure')
+            order by stat.status_date desc
+            limit 1
+        }
+
+        # now let's find out the next role_part_id that the user has to work on.
+        # Procedure (knowing that the info of the last role_part are stored in the last iteration vars):
+        # 0. check if all the activities referenced by the current role_part_id are finished
+        # 0.1 if all of them are not finished yet, skip this section and preserve the last role_part_id, otherwise, continue
+        # 1. get the next role_part from imsld_role_parts according to sort_number, first 
+        #    search in the current act_id, then in the current play_id, then in the next play_id and so on...
+        # 1.1 if there are no more role_parts then this is the last one
+        # 1.2 if we find a "next role_part", it will be treated latter, we just have to set the next role_part_id var
+
+        if { [imsld::role_part_finished_p -role_part_id $role_part_id -user_id $user_id] } {
+            # search in the current act_id
+            if { ![db_0or1row search_current_act {
+                select role_part_id
+                from imsld_role_parts
+                where sort_order = :sort_order + 1
+                and act_id = :act_id
+            }] } {
+                # get current act_id's sort_order and search in the next act in the current play_id
+                db_1row get_current_play_id {
+                    select ip.item_id as play_item_id,
+                    ip.play_id,
+                    ia.sort_order as act_sort_order
+                    from imsld_playsi ip, imsld_acts ia, cr_items cr
+                    where ip.item_id = ia.play_id
+                    and ia.act_id = cr.live_revision
+                    and cr.item_id = :act_id
+                }
+                if { ![db_0or1row search_current_play {
+                    select rp.role_part_id
+                    from imsld_role_parts rp, imsld_actsi ia
+                    where ia.play_id = :play_item_id
+                    and ia.sort_order = :act_sort_order + 1
+                    and rp.act_id = ia.item_id
+                    and content_revision__is_live(rp.role_part_id) = 't'
+                    and content_revision__is_live(ia.act_id) = 't'
+                    and rp.sort_order = (select min(irp2.sort_order) from imsld_role_parts irp2 where irp2.act_id = rp.act_id)
+                }] } {
+                    # get the current play_id's sort_order and sarch in the next play in the current method_id
+                    db_1row get_current_method {
+                        select im.item_id as method_item_id,
+                        ip.sort_order as play_sort_order
+                        from imsld_methodsi im, imsld_plays ip
+                        where im.item_id = ip.method_id
+                        and ip.play_id = :play_id
+                    }
+                    if { ![db_0or1row search_current_method {
+                        select rp.role_part_id
+                        from imsld_role_parts rp, imsld_actsi ia, imsld_playsi ip
+                        where ip.method_id = :method_item_id
+                        and ia.play_id = ip.item_id
+                        and rp.act_id = ia.item_id
+                        and ip.sort_order = :play_sort_order + 1
+                        and content_revision__is_live(rp.role_part_id) = 't'
+                        and content_revision__is_live(ia.act_id) = 't'
+                        and content_revision__is_live(ip.play_id) = 't'
+                        and ia.sort_order = (select min(ia2.sort_order) from imsld_acts ia2 where ia2.play_id = ip.item_id)
+                        and rp.sort_order = (select min(irp2.sort_order) from imsld_role_parts irp2 where irp2.act_id = ia.item_id)
+                    }] } {
+                        # there is no more to search, we reached the end of the unit of learning
+                        return ""
+                    }
+                }
+            }
+        }
+    }
+
+    # find the next activity referenced by the role_part
+    # (learning_activity, support_activity, activity_structure)  
+    # 1. if it is a learning or support activity, no problem, find the associated files and return the lists
+    # 2. if it is an activity structure we have verify which activities are already completed and return the next
+    #    activity in the activity structure, handling the case when the next activity is also an activity structure
+
+    db_1row get_role_part_activity {
+        select case
+        when learning_activity_id is not null
+        then 'learning'
+        when support_activity_id is not null
+        then 'support'
+        when activity_structure_id is not null
+        then 'structure'
+        else 'none'
+        end as activity_type,
+        case
+        when learning_activity_id is not null
+        then content_item__get_live_revision(learning_activity_id)
+        when support_activity_id is not null
+        then content_item__get_live_revision(support_activity_id)
+        when activity_structure_id is not null
+        then content_item__get_live_revision(activity_structure_id)
+        else content_item__get_live_revision(environment_id)
+        end as next_activity_id,
+        environment_id as rp_environment_item_id
+        from imsld_role_parts
+        where role_part_id = :role_part_id
+    }
+    # activity structure
+    if { [string eq $activity_type structure] } {
+        # activity structure. we have to look for the next learning or support activity
+        set activity_list [imsld::structure_next_activity -activity_structure_id $next_activity_id -imsld_id $imsld_id -role_part_id $role_part_id]
+        set next_activity_id [lindex $activity_list 0]
+    }
+
+    # return the next_activity_id
+    return $next_activity_id
 }
 
 ad_proc -public imsld::get_activity_from_environment { 

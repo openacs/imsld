@@ -495,7 +495,8 @@
 	<fullquery name="imsld::finish_component_element.referencer_structure">
 		<querytext>
             select ias.structure_id,
-            ias.item_id as structure_item_id
+            ias.item_id as structure_item_id,
+            ias.number_to_select
             from acs_rels ar, imsld_activity_structuresi ias, cr_items cri
             where ar.object_id_one = ias.item_id
             and ar.object_id_two = cri.item_id
@@ -621,7 +622,8 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 	<fullquery name="imsld::structure_next_activity.struct_referenced_activities">
 		<querytext>
         select ar.object_id_two,
-        ar.rel_type
+        ar.rel_type,
+        ar.rel_id
         from acs_rels ar, imsld_activity_structuresi ias
         where ar.object_id_one = ias.item_id
         and ias.structure_id = :activity_structure_id
@@ -633,11 +635,11 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::structure_next_activity.get_la_info">
 		<querytext>
-                    select sort_order, 
-                    activity_id as learning_activity_id
-                    from imsld_learning_activitiesi
-                    where item_id = :object_id_two
-                    and content_revision__is_live(activity_id) = 't'
+    
+                    select la.activity_id as learning_activity_id
+                    from imsld_learning_activitiesi la
+                    where la.item_id = :object_id_two
+                    and content_revision__is_live(la.activity_id) = 't'
                 
 		</querytext>
 	</fullquery>
@@ -657,8 +659,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::structure_next_activity.get_sa_info">
 		<querytext>
-                    select sort_order, 
-                    activity_id as support_activity_id
+                    select activity_id as support_activity_id
                     from imsld_support_activitiesi
                     where item_id = :object_id_two
                     and content_revision__is_live(activity_id) = 't'
@@ -681,7 +682,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 	<fullquery name="imsld::structure_next_activity.get_as_info">
 		<querytext>
 
-                    select sort_order, structure_id, title,
+                    select structure_id, title,
                     item_id
                     from imsld_activity_structuresi
                     where item_id = :object_id_two
@@ -1339,12 +1340,180 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::process_activity_structure.sa_associated_environments">
 		<querytext>
+    
         select ar.object_id_two as environment_item_id
         from acs_rels ar
         where ar.object_id_one = :structure_item_id
         and ar.rel_type = 'imsld_as_env_rel'
         order by ar.object_id_two
     
+    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_structure_activities_list.structure_info">
+		<querytext>
+    
+
+        select structure_id,
+        structure_type
+        from imsld_activity_structuresi
+        where item_id = :structure_item_id
+        
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_structure_activities_list.struct_referenced_activities">
+		<querytext>
+
+
+        select ar.object_id_two,
+        ar.rel_type,
+        ar.rel_id
+        from acs_rels ar, imsld_activity_structuresi ias
+        where ar.object_id_one = ias.item_id
+        and ias.structure_id = :structure_id
+        order by ar.object_id_two
+        
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_structure_activities_list.get_learning_activity_info">
+		<querytext>
+
+                    select title as activity_title,
+                    item_id as activity_item_id,
+                    activity_id,
+                    complete_act_id,
+                    is_visible_p
+                    from imsld_learning_activitiesi
+                    where item_id = :object_id_two
+                    and content_revision__is_live(activity_id) = 't'
+                
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_structure_activities_list.completed_p">
+		<querytext>
+
+                    select 1 from imsld_status_user 
+                    where related_id = :activity_id and user_id = :user_id and status = 'finished'
+                
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_structure_activities_list.get_support_activity_info">
+		<querytext>
+
+                    select title as activity_title,
+                    item_id as activity_item_id,
+                    activity_id,
+                    complete_act_id,
+                    is_visible_p
+                    from imsld_support_activitiesi
+                    where item_id = :object_id_two
+                    and content_revision__is_live(activity_id) = 't'
+                
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_structure_activities_list.get_activity_structure_info">
+		<querytext>
+
+                    select title as activity_title,
+                    item_id as structure_item_id,
+                    structure_id,
+                    structure_type
+                    from imsld_activity_structuresi
+                    where item_id = :object_id_two
+                    and content_revision__is_live(structure_id) = 't'
+                
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_structure_activities_list.as_completed_p">
+		<querytext>
+
+                    select 1 from imsld_status_user
+                    where related_id = :structure_id and user_id = :user_id and status = 'started'
+                
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_activities_tree.referenced_role_parts">
+		<querytext>
+
+        select case
+        when rp.learning_activity_id is not null
+        then 'learning'
+        when rp.support_activity_id is not null
+        then 'support'
+        when rp.activity_structure_id is not null
+        then 'structure'
+        else 'none'
+        end as type,
+        content_item__get_live_revision(coalesce(rp.learning_activity_id,rp.support_activity_id,rp.activity_structure_id)) as activity_id,
+        rp.role_part_id
+        from imsld_role_partsi rp, imsld_actsi ia, imsld_playsi ip, imsld_imsldsi ii,
+        imsld_methodsi im
+        where  rp.act_id = ia.item_id
+        and ia.play_id = ip.item_id
+        and ip.method_id = im.item_id
+        and im.imsld_id = ii.item_id
+        and ii.imsld_id = :imsld_id
+        and content_revision__is_live(rp.role_part_id) = 't'
+        order by rp.sort_order
+        
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_activities_tree.get_learning_activity_info">
+		<querytext>
+
+                    select title as activity_title,
+                    item_id as activity_item_id,
+                    activity_id,
+                    is_visible_p,
+                    complete_act_id
+                    from imsld_learning_activities
+                    where activity_id = :activity_id
+                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_activities_tree.get_support_activity_info">
+		<querytext>
+
+                    select title as activity_title,
+                    item_id as activity_item_id,
+                    activity_id,
+                    is_visible_p,
+                    complete_act_id
+                    from imsld_learning_activitiesi
+                    where activity_id = :activity_id
+                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_activities_tree.get_activity_structure_info">
+		<querytext>
+
+                    select title as activity_title,
+                    item_id as structure_item_id,
+                    structure_id,
+                    structure_type
+                    from imsld_activity_structuresi
+                    where structure_id = :activity_id
+                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_activities_tree.as_completed_p">
+		<querytext>
+
+                    select 1 from imsld_status_user
+                    where related_id = :activity_id and user_id = :user_id and status = 'started'
+                    
 		</querytext>
 	</fullquery>
 

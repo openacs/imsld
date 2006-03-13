@@ -32,7 +32,7 @@ set manifest [imsld::parse::find_manifest -dir $tmp_dir -file_name "imsmanifest.
 
 # see if the file actually is where it suppose to be. Othewise abort
 if {$manifest == 0} {
-    imsld::parse::remove_dir -dir $tmp_dir
+#    imsld::parse::remove_dir -dir $tmp_dir
     ad_return_error "[_ imsld.lt_No_imsmanifestxml_fou]" "[_ imsld.lt_No_imsmanifestxml_was]"
     ad_script_abort
 }

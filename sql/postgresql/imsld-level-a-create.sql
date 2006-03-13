@@ -687,3 +687,36 @@ The underlying item elements point to a resource (of type webcontent or imsldcon
 
 Feedback are items that are mapped to this table with the imsld_feedback_rel.';
 
+create table imsld_as_la_rels (
+    rel_id      integer
+                constraint imsld_as_la_rels_fk
+                references acs_rels
+                constraint imsld_as_la_rels_pk
+                primary key
+);
+
+comment on table imsld_as_la_rels is '
+This table stores the information of the relationship between the activity structures and the learning activities.';
+
+create table imsld_as_sa_rels (
+    rel_id      integer
+                constraint imsld_as_sa_rels_fk
+                references acs_rels
+                constraint imsld_as_sa_rels_pk
+                primary key
+);
+
+comment on table imsld_as_sa_rels is '
+This table stores the information of the relationship between the activity structures and the support activities.';
+
+create table imsld_as_as_rels (
+    rel_id      integer
+                constraint imsld_as_as_rels_fk
+                references acs_rels
+                constraint imsld_as_as_rels_pk
+                primary key
+);
+
+comment on table imsld_as_as_rels is '
+This table stores the information of the relationship between the activity structures (between them).';
+
