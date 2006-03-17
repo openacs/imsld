@@ -1724,6 +1724,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
         then content_item__get_live_revision(activity_structure_id)
         else content_item__get_live_revision(environment_id)
         end as activity_id,
+        coalesce(learning_activity_id,support_activity_id,activity_structure_id) as activity_item_id,
         environment_id as rp_environment_item_id
         from imsld_role_parts
         where role_part_id = :role_part_id

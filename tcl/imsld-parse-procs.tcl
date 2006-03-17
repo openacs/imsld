@@ -643,7 +643,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             # look for the resource in the manifest and add it to the CR
             set resources [$manifest child all imscp:resources]
             if { ![llength $resources] } {
-                set imsld [$manifest child all resources]
+                set resources [$manifest child all resources]
             }
             
             # there must be at least one reource for the learning objective
@@ -1937,12 +1937,8 @@ ad_proc -public imsld::parse::parse_and_create_environment {
                             -parent_id $parent_id]
 
     # environment: learning object
-    set learning_object [$environment_node child all imsld:learning-object]
-    if { [llength $learning_object] } {
-        if { [llength $learning_object] > 1 } {
-            set learning_object [lindex $learning_object 0]
-            append warnings "<li> [_ imsld.lt_Warning_More_than_one] </li>"
-        }
+    set learning_objects [$environment_node child all imsld:learning-object]
+    foreach learning_object $learning_objects {
         set learning_object_list [imsld::parse::parse_and_create_learning_object -learning_object_node $learning_object \
                                       -environment_id $environment_id \
                                       -manifest_id $manifest_id \
@@ -1958,22 +1954,15 @@ ad_proc -public imsld::parse::parse_and_create_environment {
     }
 
     # environment: service
-    set service [$environment_node child all imsld:service]
-    set service_id ""
-    if { [llength $service] } {
-        if { [llength $$service] > 1 } {
-            set service [lindex $service 0]
-            append warnings "<li>[_ imsld.lt_More_than_one_service]</li>"
-        }
-        imsld::parse::validate_multiplicity -tree $service -multiplicity 1 -element_name service(environment) -equal
+    set services [$environment_node child all imsld:service]
+    foreach service $services {
         set service_list [imsld::parse::parse_and_create_service -service_node $service \
                               -environment_id $environment_id \
                               -manifest_id $manifest_id \
                               -manifest $manifest \
                               -parent_id $parent_id \
                               -tmp_dir $tmp_dir]
-        set service_id [lindex $service_list 0]
-        if { !$service_id } {
+        if { ![lindex $service_list 0] } {
             # there is an error, abort and return the list with the error
             return $service_list
         }

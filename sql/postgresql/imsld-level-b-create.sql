@@ -33,7 +33,7 @@ create table imsld_properties (
 create index imsld_prop_comp_idx on imsld_properties(component_id);
 
 comment on table imsld_properties is '
-Properties are introduced in the level B of the IMS-LD spec, and are stored in this table (the definition, because the instantiantion for each user/role is stored in other table).
+Properties are introduced in the level B of the IMS-LD spec, and are stored in this table (the definition, because the instantiantion for each user/role is stored in the imsld_property_instanced table).
 
 The global definitions of the globpers and global property types are stored in the same row of the table (in this case the existing_href field is not null)';
 

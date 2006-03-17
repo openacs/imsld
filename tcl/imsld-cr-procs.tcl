@@ -85,7 +85,7 @@ ad_proc -public imsld::cr::file_new {
     set creation_date [expr { [empty_string_p $creation_date] ? [dt_sysdate] : $creation_date }]
     set package_id [expr { [empty_string_p $package_id] ? [ad_conn package_id] : $package_id }]
     set item_id [expr { [empty_string_p $item_id] ? [db_nextval "acs_object_id_seq"] : $item_id }]
-
+    
     set content_type imsld_cp_file
     set item_name "${item_id}_imsld_cp_file"
     set title [expr { [empty_string_p $title] ? $item_name : $title }]

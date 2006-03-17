@@ -914,7 +914,7 @@ ad_proc -public imsld::structure_next_activity {
     {-environment_list ""}
     -imsld_id
     -role_part_id
-    {-structures_names ""}
+    {-structures_info ""}
 } { 
     @return The next learning or support activity (and the type) in the activity structure. 0 if there are none (which should never happen), the next activity type and the list of the structure names of the activity structures in the path of the returned activity
 } {
@@ -947,12 +947,13 @@ ad_proc -public imsld::structure_next_activity {
              )
         }
     
-        lappend structures_names [db_string get_structure_name {
+        set structures_info [concat $structures_info [db_list_of_lists get_structure_info {
             select 
-            coalesce(title,identifier) as structure_name
+            coalesce(title,identifier) as structure_name,
+            item_id
             from imsld_activity_structuresi
             where structure_id = :activity_structure_id
-        }]
+        }]]
     }
 
     # get referenced activities
@@ -1014,13 +1015,13 @@ ad_proc -public imsld::structure_next_activity {
     } 
 
     if { [string eq $next_activity_type structure] } {
-        set next_activity_list [imsld::structure_next_activity -activity_structure_id $next_activity_id -environment_list $environment_list -imsld_id $imsld_id -role_part_id $role_part_id -structures_names $structures_names]
+        set next_activity_list [imsld::structure_next_activity -activity_structure_id $next_activity_id -environment_list $environment_list -imsld_id $imsld_id -role_part_id $role_part_id -structures_info $structures_info]
         set next_activity_id [lindex $next_activity_list 0]
         set next_activity_type [lindex $next_activity_list 1]
         set environment_list [concat $environment_list [lindex $next_activity_list 2]]
-        set structures_names [lindex $next_activity_list 3]
+        set structures_info [lindex $next_activity_list 3]
     }
-    return [list $next_activity_id $next_activity_type $environment_list $structures_names]
+    return [list $next_activity_id $next_activity_type $environment_list $structures_info]
 } 
 
 ad_proc -public imsld::structure_finished_p { 
@@ -1316,14 +1317,17 @@ ad_proc -public imsld::process_environment {
     }
 
     set environment_learning_objects_list [list]
-    if { [db_0or1row get_learning_object_info {
+    foreach learning_objects_list [db_list_of_lists get_learning_object_info {
         select item_id as learning_object_item_id,
         learning_object_id,
         identifier
         from imsld_learning_objectsi
         where environment_id = :environment_item_id
         and content_revision__is_live(learning_object_id) = 't'
-    }] } {
+    }] {
+        set learning_object_item_id [lindex $learning_objects_list 0]
+        set learning_object_id [lindex $learning_objects_list 1]
+        set identifier [lindex $learning_objects_list 2]
         # learning object item. get the files associated
         set linear_item_list [db_list_of_lists item_linear_list { *SQL* }]
         foreach imsld_item_id $linear_item_list {
@@ -1335,20 +1339,14 @@ ad_proc -public imsld::process_environment {
                     lappend resource_item_list $resource_item_id
                 }
                 set one_learning_object_list [imsld::process_resource -resource_item_id $resource_item_id]
-                if { [string eq "" $one_learning_object_list] } {
-                    lappend environment_learning_objects_list "[_ imsld.lt_li_desc_no_file_assoc]"
-                } else {
+                if { ![string eq "" $one_learning_object_list] } {
                     if { [string eq "t" $resource_mode] } { 
                      set environment_learning_objects_list [concat $environment_learning_objects_list \
                                                                [list $one_learning_object_list] \
                                                                $resource_item_list ]
                     } else { 
-                        if { ![string eq "" $environment_learning_objects_list] } {
-                            set environment_learning_objects_list [concat $environment_learning_objects_list \
-                                                                       [list $one_learning_object_list]]
-                        } else {
-                            set environment_learning_objects_list $one_learning_object_list
-                        }
+                        set environment_learning_objects_list [concat $environment_learning_objects_list \
+                                                                   [list $one_learning_object_list]]
                     }
                 }
             } 
@@ -1356,7 +1354,7 @@ ad_proc -public imsld::process_environment {
     }
     # services
     set environment_services_list [list]
-    if { [db_0or1row get_service_info {
+    foreach services_list [db_list_of_lists get_service_info {
         select service_id,
         item_id as service_item_id,
         identifier,
@@ -1364,13 +1362,13 @@ ad_proc -public imsld::process_environment {
         from imsld_servicesi
         where environment_id = :environment_item_id
         and content_revision__is_live(service_id) = 't'
-    }] } {
-        if { [string eq "" $environment_services_list] } {
-            set environment_services_list [imsld::process_service -service_item_id $service_item_id -resource_mode $resource_mode]
-        } else {
-            set environment_services_list [concat $environment_services_list \
-                                               [imsld::process_service -service_item_id $service_item_id -resource_mode $resource_mode]]
-        }
+    }] {
+        set service_id [lindex $environment_services_list 0]
+        set service_item_id [lindex $environment_services_list 1]
+        set identifier [lindex $environment_services_list 2]
+        set service_type [lindex $environment_services_list 3]
+        set environment_services_list [concat $environment_services_list \
+                                           [list [imsld::process_service -service_item_id $service_item_id -resource_mode $resource_mode]]]
     }
 
     set nested_environment_list [list]
@@ -1379,11 +1377,13 @@ ad_proc -public imsld::process_environment {
         set one_nested_environment_list [imsld::process_environment -environment_item_id $nested_environment_item_id]
         # the title is stored in [lindex $one_nested_environment_list 0], but is not returned for displaying porpouses
         set nested_environment_list [concat $nested_environment_list \
-                                         [list [lindex $one_nested_environment_list 1] \
-                                              [lindex $one_nested_environment_list 2] \
-                                              [lindex $one_nested_environment_list 3]]]
+                                         [lindex $one_nested_environment_list 1] \
+                                         [lindex $one_nested_environment_list 2] \
+                                         [lindex $one_nested_environment_list 3]]
+        regsub -all "{}" $nested_environment_list "" nested_environment_list
     }
-    return [list $environment_title $environment_learning_objects_list $environment_services_list $nested_environment_list]
+    set return_list [list $environment_title $environment_learning_objects_list $environment_services_list $nested_environment_list]
+    return $return_list
 }
 
 ad_proc -public imsld::process_learning_objective {
@@ -1956,7 +1956,7 @@ ad_proc -public imsld::process_activity_structure {
     set associated_environments_list [db_list sa_associated_environments { *SQL* }]
     foreach environment_item_id $associated_environments_list {
         if { [llength $environments_list] } {
-            set environments_list [concat [list $environments_list] \
+            set environments_list [concat $environments_list \
                                        [list [imsld::process_environment -environment_item_id $environment_item_id -resource_mode $resource_mode]]]
         } else {
             set environments_list [imsld::process_environment -environment_item_id $environment_item_id -resource_mode $resource_mode]
@@ -1967,7 +1967,6 @@ ad_proc -public imsld::process_activity_structure {
         set environments_ids [concat [lindex [lindex $environments_list 1] [expr [llength [lindex $environments_list 1] ] - 1 ]] \
                                   [lindex [lindex $environments_list 2] [expr [llength [lindex $environments_list 2] ] - 1 ]]]
     }
-    
     return $environments_list
 }
 
@@ -2391,14 +2390,13 @@ ad_proc -public imsld::next_activity {
                     }
                     set structure_envs [imsld::process_activity_structure -structure_item_id $structure_item_id]
                     set environments ""
-                    foreach structure_list $structure_envs {
-                        if { [llength [lindex $structure_list 0]] } {
-                            append environments "[lindex $structure_list 0] <br/>"
-                            append environments "[join [lindex $structure_list 1] " "] "
-                            append environments "[join [lindex $structure_list 2] " "] "
-                            append environments "[join [lindex $structure_list 3] " "]<br/>"
-                        }
+                    if { [llength $structure_envs] } {
+                        append environments "[lindex $structure_envs 0] <br/>"
                     }
+                    append environments "[join [lindex $structure_envs 1] " "] "
+                    append environments "[join [lindex $structure_envs 2] " "] "
+                    append environments "[join [lindex $structure_envs 3] " "]<br/>"
+                    
                     if { [string eq $status "started"] } {
                         set structure_title "<div style=\"padding-left:[expr ${tab_structures}*15]px\"><span style=\"color: green; font-size: larger; font-weight: bold\">[string repeat "(" $tab_structures]</span>$activity_title</div>"
                         set stat ""
@@ -2485,33 +2483,10 @@ ad_proc -public imsld::next_activity {
     # 2. if it is an activity structure we have verify which activities are already completed and return the next
     #    activity in the activity structure, handling the case when the next activity is also an activity structure
 
-    db_1row get_role_part_activity {
-        select case
-        when learning_activity_id is not null
-        then 'learning'
-        when support_activity_id is not null
-        then 'support'
-        when activity_structure_id is not null
-        then 'structure'
-        else 'none'
-        end as activity_type,
-        case
-        when learning_activity_id is not null
-        then content_item__get_live_revision(learning_activity_id)
-        when support_activity_id is not null
-        then content_item__get_live_revision(support_activity_id)
-        when activity_structure_id is not null
-        then content_item__get_live_revision(activity_structure_id)
-        else content_item__get_live_revision(environment_id)
-        end as activity_id,
-        environment_id as rp_environment_item_id
-        from imsld_role_parts
-        where role_part_id = :role_part_id
-    }
+    db_1row get_role_part_activity { *SQL* }
 
     # environments
     set environment_list [list]
-    set environments ""
     # get the environments associated to the role_part
     if { ![string eq "" $rp_environment_item_id] } {
         set environment_list [concat [list $environment_list] [imsld::process_environment -environment_item_id $rp_environment_item_id]]
@@ -2519,6 +2494,7 @@ ad_proc -public imsld::next_activity {
     
     # activity structure
     if { [string eq $activity_type structure] } {
+
         # activity structure. we have to look for the next learning or support activity
         set activity_list [imsld::structure_next_activity -activity_structure_id $activity_id -imsld_id $imsld_id -role_part_id $role_part_id -environment_list $environment_list]
         set activity_id [lindex $activity_list 0]
@@ -2529,11 +2505,23 @@ ad_proc -public imsld::next_activity {
             set environment_list [lindex $activity_list 2]
         }
         # flush the structures names in the path of the next activity
-        set structures_names [lindex $activity_list 3]
-        foreach structure_name $structures_names {
+        set structures_info [lindex $activity_list 3]
+        foreach marked_structure $structures_info {
+            # environments
+            set structure_name [lindex $marked_structure 0]
+            set structure_item_id [lindex $marked_structure 1]
+            set structure_envs [imsld::process_activity_structure -structure_item_id $structure_item_id]
+            set environments ""
+            if { [llength $structure_envs] } {
+                append environments "[lindex $structure_envs 0] <br/>"
+            }
+            append environments "[join [lindex $structure_envs 1] " "] "
+            append environments "[join [lindex $structure_envs 2] " "] "
+            append environments "[join [lindex $structure_envs 3] " "]<br/>"
+
             template::multirow append imsld_multirow {} \
                 {} \
-                {} \
+                $environments \
                 "<div style=\"padding-left:[expr ${tab_structures}*15]px\"><span style=\"color: green; font-size: larger; font-weight: bold\">[string repeat ( $tab_structures]</span>$structure_name</div>" \
                 {} \
                 {}
@@ -2542,6 +2530,7 @@ ad_proc -public imsld::next_activity {
     }
 
     set environments ""
+    
     if { [llength $environment_list] } {
         foreach environment $environment_list {
             append environments "[lindex $environment 0] <br/>"

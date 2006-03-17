@@ -110,7 +110,7 @@ ad_proc -public imsld::fs::file_new {
                         if { !$database_p } {
                             set storage_type file
                         } else {
-                            set storabe_tupe lob
+                            set storage_type lob
                         }
                         set file_id [imsld::cr::file_new -file_name $file_name \
                                          -path_to_file $path_to_file \
