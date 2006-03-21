@@ -164,7 +164,7 @@ ad_proc -public imsld::fs::file_new {
                 # create dir
                 regexp {[^//\\]+$} $path_to_file folder_label
                 set folder_label [imsld::safe_url_name -name $folder_label]
-                set folder_name ${folder_label}_${item_id}
+                set folder_name ${folder_label}
                 set file_id [imsld::cr::folder_new -folder_id $item_id \
                                  -parent_id $parent_id \
                                  -folder_name $folder_name \
