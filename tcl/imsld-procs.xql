@@ -1929,16 +1929,71 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 	</fullquery>
 
 
-	<fullquery name="imsld::get_rolepart_from_activity.get_role_part_from_activity">
+	<fullquery name="imsld::get_role_part_from_activity.la_directly_mapped">
 		<querytext>
-        select irp.role_part_id as role_part_id
-        from imsld_role_parts irp,
-             imsld_learning_activitiesi ilai,
-             acs_rels ar 
-        where ilai.activity_id=:activity_id 
-             and ar.object_id_two=ilai.item_id 
-             and irp.activity_structure_id=ar.object_id_one
     
+                select role_part_id
+                from imsld_role_parts
+                where learning_activity_id = :leaf_id
+            
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::get_role_part_from_activity.sa_directly_mapped">
+		<querytext>
+    
+                select role_part_id
+                from imsld_role_parts
+                where support_activity_id = :leaf_id
+            
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::get_role_part_from_activity.as_directly_mapped">
+		<querytext>
+    
+                select role_part_id
+                from imsld_role_partsi
+                where activity_structure_id = :leaf_id
+            
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::get_role_part_from_activity.get_la_activity_structures">
+		<querytext>
+    
+                select ias.structure_id, ias.item_id as leaf_id
+                from imsld_activity_structuresi ias, acs_rels ar, imsld_learning_activitiesi la
+                where ar.object_id_one = ias.item_id
+                and ar.object_id_two = la.item_id
+                and content_revision__is_live(ias.structure_id) = 't'
+                and la.item_id = :leaf_id
+
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::get_role_part_from_activity.get_sa_activity_structures">
+		<querytext>
+
+                select ias.structure_id, ias.item_id as leaf_id
+                from imsld_activity_structuresi ias, acs_rels ar, imsld_support_activitiesi sa
+                where ar.object_id_one = ias.item_id
+                and ar.object_id_two = sa.item_id
+                and content_revision__is_live(ias.structure_id) = 't'
+                and sa.item_id = :leaf_id
+                
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::get_role_part_from_activity.get_as_activity_structures">
+		<querytext>
+    
+                select ias.structure_id, ias.item_id as leaf_id
+                from imsld_activity_structuresi ias, acs_rels ar
+                where ar.object_id_one = ias.item_id
+                and ar.object_id_two = :leaf_id
+                and content_revision__is_live(ias.structure_id) = 't'
+            
 		</querytext>
 	</fullquery>
 

@@ -55,83 +55,57 @@ ad_proc -public imsld::get_role_part_from_activity {
     -activity_type
     -leaf_id
 } { 
-    @return A the role_part_id that references the passed activity_item_id (leaf_id)
+    @return A the list of role_part_ids that reference the given activity_item_id (leaf_id)
 } {
     switch $activity_type {
         learning {
-            if { [db_0or1row directly_mapped {
-                select item_id as rp_item_id, role_part_id
-                from imsld_role_partsi
-                where learning_activity_id = :leaf_id
-            }] } {
-                return [list $role_part_id]
-            }
             set role_part_list [list]
-            # the learning activity is referenced by some activity structures... digg more
-            foreach la_structure_list [db_list_of_lists get_la_activity_structures {
-                select ias.structure_id, ias.item_id as leaf_id
-                from imsld_activity_structuresi ias, acs_rels ar, imsld_learning_activitiesi la
-                where ar.object_id_one = ias.item_id
-                and ar.object_id_two = la.item_id
-                and content_revision__is_live(ias.structure_id) = 't'
-                and la.item_id = :leaf_id
-            }] {
+            set referncer_list [db_list la_directly_mapped { *SQL* }]
+            if { [llength $referncer_list] } {
+                set role_part_list [concat $role_part_list $referncer_list]
+            }
+            # check if the learning activity is referenced by some activity structures... digg more
+            foreach la_structure_list [db_list_of_lists get_la_activity_structures { *SQL* }] {
                 set stucture_id [lindex $la_structure_list 0]
                 set leaf_id [lindex $la_structure_list 1]
                 set referencer_list [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
                 if { [llength $referencer_list] } {
-                    lappend role_part_list $referencer_list
+                    set role_part_list [concat $role_part_list $referencer_list]
                 }
             }
             return $role_part_list
         }
         support {
-            if { [db_0or1row directly_mapped {
-                select item_id as rp_item_id, role_part_id
-                from imsld_role_partsi
-                where support_activity_id = :leaf_id
-            }] } {
-                return $role_part_id
-            }
             set role_part_list [list]
-            # the learning activity is referenced by some activity structures... digg more
-            foreach sa_structure_list [db_list_of_lists get_sa_activity_structures {
-                select ias.structure_id, ias.item_id as leaf_id
-                from imsld_activity_structuresi ias, acs_rels ar, imsld_support_activitiesi sa
-                where ar.object_id_one = ias.item_id
-                and ar.object_id_two = sa.item_id
-                and content_revision__is_live(ias.structure_id) = 't'
-                and sa.item_id = :leaf_id
-            }] {
+            set referncer_list [db_list sa_directly_mapped { *SQL* }]
+            if { [llength $referncer_list] } {
+                set role_part_list [concat $role_part_list $referncer_list]
+            }
+            # check if the support activity is referenced by some activity structures... digg more
+            foreach sa_structure_list [db_list_of_lists get_sa_activity_structures { *SQL* }] {
                 set stucture_id [lindex $sa_structure_list 0]
                 set leaf_id [lindex $sa_structure_list 1]
                 set referencer_list [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
                 if { [llength $referencer_list] } {
-                    lappend role_part_list $referencer_list
+                    set role_part_list [concat $role_part_list $referencer_list]
                 }
             }
             return $role_part_list
         }
         structure {
-            if { [db_0or1row directly_mapped {
-                select item_id as rp_item_id, role_part_id
-                from imsld_role_partsi
-                where activity_structure_id = :leaf_id
-            }] } {
-                return [list $role_part_id]
-            }
-            # the activity structure is referenced by an activity structure... digg more
             set role_part_list [list]
-            foreach sa_structure_list [db_list_of_lists get_as_activity_structures {
-                select ias.structure_id, ias.item_id as leaf_id
-                from imsld_activity_structuresi ias, acs_rels ar
-                where ar.object_id_one = ias.item_id
-                and ar.object_id_two = :leaf_id
-                and content_revision__is_live(ias.structure_id) = 't'
-            }] {
+            set referncer_list [db_list as_directly_mapped { *SQL* }]
+            if { [llength $referncer_list] } {
+                set role_part_list [concat $role_part_list $referncer_list]
+            }
+            # check if the activity structure is referenced by an activity structure... digg more
+            foreach sa_structure_list [db_list_of_lists get_as_activity_structures { *SQL* }] {
                 set stucture_id [lindex $sa_structure_list 0]
                 set leaf_id [lindex $sa_structure_list 1] 
-                lappend role_part_list [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
+                set referencer_list [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
+                if { [llength $referencer_list] } {
+                    set role_part_list [concat $role_part_list $referencer_list]
+                } 
             }
             return $role_part_list
         }
@@ -296,45 +270,47 @@ ad_proc -public imsld::sweep_expired_activities {
         set sa_item_id [lindex $referenced_sa 0]
         set activity_id [lindex $referenced_sa 1]
         set time_in_seconds [lindex $referenced_sa 2]
-        set role_part_id [imsld::get_role_part_from_activity -activity_type support -leaf_id $sa_item_id]
-        db_1row get_sa_activity_info {
-            select icm.manifest_id,
-            ii.imsld_id,
-            ip.play_id,
-            ia.act_id,
-            icm.creation_date
-            from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
-            imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
-            imsld_actsi ia, imsld_role_partsi irp
-            where irp.role_part_id = :role_part_id
-            and irp.act_id = ia.item_id
-            and ia.play_id = ip.item_id
-            and ip.method_id = im.item_id
-            and im.imsld_id = ii.item_id
-            and ii.organization_id = ico.item_id
-            and ico.manifest_id = icm.item_id
-            and content_revision__is_live(icm.manifest_id) = 't'
-        }
-        if { [db_0or1row compre_times {
-            select 1
-            where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
-        }] } {
-            # the act has been expired, let's mark it as finished 
-            set community_id [imsld::community_id_from_manifest_id -manifest_id $manifest_id]
-            db_foreach user_in_class {
-                select app.user_id
-                from dotlrn_member_rels_approved app
-                where app.community_id = :community_id
-                and app.member_state = 'approved'
-            } {
-                imsld::finish_component_element -imsld_id $imsld_id \
-                    -play_id $play_id \
-                    -act_id $act_id \
-                    -role_part_id $role_part_id \
-                    -element_id $activity_id \
-                    -type support \
-                    -user_id $user_id \
-                    -code_call
+        set role_part_id_list [imsld::get_role_part_from_activity -activity_type support -leaf_id $sa_item_id]
+        set community_id [imsld::community_id_from_manifest_id -manifest_id $manifest_id]
+        foreach role_part_id $role_part_id_list {
+            db_1row get_sa_activity_info {
+                select icm.manifest_id,
+                ii.imsld_id,
+                ip.play_id,
+                ia.act_id,
+                icm.creation_date
+                from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+                imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
+                imsld_actsi ia, imsld_role_partsi irp
+                where irp.role_part_id = :role_part_id
+                and irp.act_id = ia.item_id
+                and ia.play_id = ip.item_id
+                and ip.method_id = im.item_id
+                and im.imsld_id = ii.item_id
+                and ii.organization_id = ico.item_id
+                and ico.manifest_id = icm.item_id
+                and content_revision__is_live(icm.manifest_id) = 't'
+            }
+            if { [db_0or1row compre_times {
+                select 1
+                where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
+            }] } {
+                # the act has been expired, let's mark it as finished 
+                db_foreach user_in_class {
+                    select app.user_id
+                    from dotlrn_member_rels_approved app
+                    where app.community_id = :community_id
+                    and app.member_state = 'approved'
+                } {
+                    imsld::finish_component_element -imsld_id $imsld_id \
+                        -play_id $play_id \
+                        -act_id $act_id \
+                        -role_part_id $role_part_id \
+                        -element_id $activity_id \
+                        -type support \
+                        -user_id $user_id \
+                        -code_call
+                }
             }
         }
     }
@@ -2143,7 +2119,6 @@ ad_proc -public imsld::generate_activities_tree {
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
 
-                    set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
                     $dom_node appendChild $activity_node
                 }
             }
@@ -2171,7 +2146,6 @@ ad_proc -public imsld::generate_activities_tree {
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
 
-                    set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
                     $dom_node appendChild $activity_node
                 }
             }
