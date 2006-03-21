@@ -1475,7 +1475,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
                     activity_id,
                     is_visible_p,
                     complete_act_id
-                    from imsld_learning_activities
+                    from imsld_learning_activitiesi
                     where activity_id = :activity_id
                     
 		</querytext>
