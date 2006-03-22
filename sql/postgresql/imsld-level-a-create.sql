@@ -349,7 +349,9 @@ create table imsld_activity_structures (
     number_to_select            integer,
     structure_type              char(9)
                                 check (structure_type in ('selection','sequence')),
-    sort                        varchar(4),
+    sort                        varchar(16)
+                                check (sort in ('as-is','visibility-order'))
+                                default 'as-is',
     sort_order                  integer
                                 default 0 
 );

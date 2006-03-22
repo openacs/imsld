@@ -2566,6 +2566,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
     set identifier [string tolower [imsld::parse::get_attribute -node $activity_node -attr_name identifier]]
     set number_to_select [imsld::parse::get_attribute -node $activity_node -attr_name number-to-select]
     set sort [imsld::parse::get_attribute -node $activity_node -attr_name sort]
+    set sort [expr { [string eq "" $sort] ? "as-is" : "[string tolower $sort]" }]
     set structure_type [imsld::parse::get_attribute -node $activity_node -attr_name structure-type]
     set title [imsld::parse::get_title -node $activity_node -prefix imsld]
     
