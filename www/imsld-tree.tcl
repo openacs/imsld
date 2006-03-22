@@ -6,7 +6,7 @@ ad_page_contract {
 }
 
 # initialize variables
-set page_title "[_ imsld.Unist_of_Learning]"
+set page_title "[_ imsld.units-of-learning]"
 set context ""
 set community_id [dotlrn_community::get_community_id]
 set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
