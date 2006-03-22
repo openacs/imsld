@@ -1988,7 +1988,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     $activity_node setAttribute class "liOpen"
 
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[ad_conn url]/[export_vars -base "activity-frame" -url {activity_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id}]"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
@@ -1997,7 +1997,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     $activity_node appendChild $text
 
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[ad_conn url]/finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld"
+                    $a_node setAttribute href "finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld"
                     set text [$dom_doc createTextNode "(finish)"]
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
@@ -2020,7 +2020,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     set activity_node [$dom_doc createElement li]
                     $activity_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[ad_conn url]/[export_vars -base "activity-frame" -url {activity_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id}]"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
@@ -2029,7 +2029,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     $activity_node appendChild $text
 
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[ad_conn url]/finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-support.imsld"
+                    $a_node setAttribute href "finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-support.imsld"
                     set text [$dom_doc createTextNode "(finish)"]
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
@@ -2052,7 +2052,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     set structure_node [$dom_doc createElement li]
                     $structure_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[ad_conn url]/[export_vars -base "activity-frame" -url {structure_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {structure_id}]"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
                     $structure_node appendChild $a_node
@@ -2105,7 +2105,7 @@ ad_proc -public imsld::generate_activities_tree {
                     set activity_node [$dom_doc createElement li]
                     $activity_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[ad_conn url]/[export_vars -base "activity-frame" -url {activity_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id}]"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
@@ -2114,7 +2114,7 @@ ad_proc -public imsld::generate_activities_tree {
                     $activity_node appendChild $text
 
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[ad_conn url]/finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld"
+                    $a_node setAttribute href "finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-learning.imsld"
                     set text [$dom_doc createTextNode "(finish)"]
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
@@ -2132,7 +2132,7 @@ ad_proc -public imsld::generate_activities_tree {
                     set activity_node [$dom_doc createElement li]
                     $activity_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[ad_conn url]/[export_vars -base "activity-frame" -url {activity_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id}]"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
@@ -2141,7 +2141,7 @@ ad_proc -public imsld::generate_activities_tree {
                     $activity_node appendChild $text
 
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[ad_conn url]/finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-support.imsld"
+                    $a_node setAttribute href "finish-component-element-${imsld_id}-${role_part_id}-${activity_id}-support.imsld"
                     set text [$dom_doc createTextNode "(finish)"]
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
@@ -2166,7 +2166,7 @@ ad_proc -public imsld::generate_activities_tree {
                     set structure_node [$dom_doc createElement li]
                     $structure_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[ad_conn url]/[export_vars -base "activity-frame" -url {structure_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {structure_id}]"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
                     $structure_node appendChild $a_node
