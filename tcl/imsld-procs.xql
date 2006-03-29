@@ -1036,7 +1036,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 
 	<fullquery name="imsld::process_prerequisite.prerequisite_info">
 		<querytext>
-        select coalesce(pre.pretty_title, '') as prerequisite_title,
+        select pre.pretty_title as prerequisite_title,
         pre.prerequisite_id
         from imsld_prerequisitesi pre
         where pre.item_id = :prerequisite_item_id
@@ -1453,7 +1453,9 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
         else 'none'
         end as type,
         content_item__get_live_revision(coalesce(rp.learning_activity_id,rp.support_activity_id,rp.activity_structure_id)) as activity_id,
-        rp.role_part_id
+        rp.role_part_id,
+        ia.act_id,
+        ip.play_id
         from imsld_role_partsi rp, imsld_actsi ia, imsld_playsi ip, imsld_imsldsi ii,
         imsld_methodsi im
         where  rp.act_id = ia.item_id

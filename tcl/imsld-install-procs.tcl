@@ -272,7 +272,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_restriction -attribute_name value -datatype string -pretty_name "#imsld.Value#" -column_spec "varchar"
 
     # property values
-    content::type::new -content_type imsld_property_value -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Property_Value#" -pretty_plural "#imsld.lt_IMS-LD_Property_Value_1#" -table_name imsld_property_values -id_column property_value_id
+    content::type::new -content_type imsld_property_value -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Property_Value#" -pretty_plural "#imsld.lt_IMS-LD_Property_Value_1#" -table_name imsld_properties_values -id_column property_value_id
 
     content::type::attribute::new -content_type imsld_property_value -attribute_name property_id -datatype number -pretty_name "#imsld.Property_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_property_value -attribute_name langstring -datatype string -pretty_name "#imsld.Langstring#" -column_spec "varchar(4000)"
@@ -336,6 +336,15 @@ ad_proc -public imsld::install::init_content_repository {
 #     content::type::attribute::new -content_type imsld_then_model -attribute_name ref_id -datatype number -pretty_name "#imsld.Reference_Identifier#" -column_spec "integer"
 #     content::type::attribute::new -content_type imsld_then_model -attribute_name with_control_p -datatype string -pretty_name "#imsld.With_Control#" -column_spec "char(1)"
 #     content::type::attribute::new -content_type imsld_then_model -attribute_name change_prop_val_id -datatype number -pretty_name "#imsld.lt_Change_Property_Value#" -column_spec "integer"
+
+    ### IMS-LD Production and Delivery
+
+    # properties instances
+    content::type::new -content_type imsld_property_instance -supertype imsld_property -pretty_name "<#_ Property Instance #>" -pretty_plural "<#_ Property Instances #>" -table_name imsld_property_instances -id_column instance_id
+
+    content::type::attribute::new -content_type imsld_property_instance -attribute_name property_id -datatype number -pretty_name "<#_ Property Identifier #> " -column_spec "integer"
+    content::type::attribute::new -content_type imsld_property_instance -attribute_name party_id -datatype number -pretty_name "<#_ Party Identifier #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_property_instance -attribute_name value -datatype string -pretty_name "<#_ Value #>" -column_spec "varchar(4000)"
 
 }
 
@@ -607,6 +616,11 @@ ad_proc -public imsld::uninstall::empty_content_repository {
 #     content::type::attribute::delete -content_type imsld_then_model -attribute_name with_control_p
 #     content::type::attribute::delete -content_type imsld_then_model -attribute_name change_prop_val_id
 
+    ### IMS-LD Production and Delivery
+    content::type::attribute::delete -content_type imsld_property_instance -attribute_name property_id
+    content::type::attribute::delete -content_type imsld_property_instance -attribute_name party_id
+    content::type::attribute::delete -content_type imsld_property_instance -attribute_name value
+
     ### IMS-LD level A
 
     # learning objects
@@ -827,5 +841,10 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::delete -content_type imsld_cp_resource -drop_table_p t
     content::type::delete -content_type imsld_cp_dependency -drop_table_p t
     content::type::delete -content_type imsld_cp_file -drop_table_p t
+
+    ### IMS-LD Production and Delivery
+
+    content::type::delete -content_type imsld_property_instance -drop_table_p t
+
 }
 
