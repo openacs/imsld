@@ -50,5 +50,27 @@ create index imsld_stat_user_idx on imsld_status_user(user_id);
 
 comment on table imsld_status_user is '
 This table holds the status of each user in the run of the unit of learning.
-Each entry in this table says that the user referenced by user_id(role_id) has already started or completed the event referenced by _id. Extra information like the imsld_id, play_id, etc. is stored in order to avoid wasting of time.';
+Each entry in this table says that the user referenced by user_id(role_id) has already started or completed the event referenced by _id. Extra information like the imsld_id, play_id, etc. is stored as cache purposes.';
 
+create table imsld_property_instances (
+    instance_id     integer
+                    constraint imsld_pin_fk
+                    references cr_revisions
+                    on delete cascade
+                    constraint imsld_pin_pk
+                    primary key,
+    property_id     integer
+                    constraint imsld_pin_pro_fk
+                    references imsld_properties --since this table will only be used during run time, and because
+                    not null,                   --of performance issues, the reference is directly to the imsld_properties table
+    party_id        integer
+                    references parties,         --for the property of type loc, locpers, locrole orpst globpers
+    value           varchar(4000)
+);
+
+create index imsld_prop_pin_pro_idx on imsld_property_instances(property_id);
+create index imsld_prop_pin_party_idx on imsld_property_instances(party_id);
+
+comment on table imsld_property_instances is '
+This table holds the property instance values of the unit of learning.
+The property may refer to a role (role instance, which is a group) or a single user, using the party_id field.';

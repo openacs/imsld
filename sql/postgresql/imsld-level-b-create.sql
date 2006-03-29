@@ -78,7 +78,7 @@ create index imsld_rest_idx on imsld_restrictions(property_id);
 comment on table imsld_restrictions is '
 Restrictions of the properties. Defined in the IMS-LD spec';
 
-create table imsld_property_values (
+create table imsld_properties_values (
     property_value_id   integer
                         constraint imsld_propv_id_fk
                         references cr_revisions
@@ -95,10 +95,10 @@ create table imsld_property_values (
                         references cr_items,    --imsld_expressions
     property_value_ref  integer
                         constraint imsld_prop_ref_fk
-                        references cr_items     --imsld_property_values
+                        references cr_items     --imsld_properties_values
 );
 
-comment on table imsld_property_values is '
+comment on table imsld_properties_values is '
 Table used to store the values of the properties for the ''when_property_value_is set'' and ''change_property_value''.';
 
 create table imsld_monitor_services (
@@ -143,7 +143,7 @@ create table imsld_when_condition_true (
                             not null,
     expression_id           integer
                             constraint imsld_then_cpv_fk
-                            references cr_items     --imsld_property_values
+                            references cr_items     --imsld_properties_values
                             not null
 );
 
@@ -157,7 +157,7 @@ alter table imsld_send_mail_services add column email_property_id integer constr
 alter table imsld_send_mail_services add column username_property_id integer constraint imsld_unameprop_fk references cr_items; --imsld_properties
 
 alter table imsld_complete_acts add column time_property_id integer constraint imsld_compa_timepropv_fk references cr_items;        --imsld_properties
-alter table imsld_complete_acts add column when_prop_val_is_set_id integer constraint imsld_compa_wpvis_fk references cr_items;     --imsld_property_values
+alter table imsld_complete_acts add column when_prop_val_is_set_id integer constraint imsld_compa_wpvis_fk references cr_items;     --imsld_properties_values
 alter table imsld_complete_acts add column when_condition_true_id integer constraint imsld_compa_whencondt_fk references cr_items;  --imsld_properties
 
 
@@ -233,7 +233,7 @@ The expression is parsed and evaluated when the imsmanifest is uploaded and each
 --                    references cr_items,    --imsld_roles
 --    calculate_id    integer
 --                    constraint imsld_exp_calc_fk
---                    references cr_items,    --imsld_property_values
+--                    references cr_items,    --imsld_properties_values
 --    exp_one_id      integer
 --                    constraint imsld_exp_one_fk
 --                    references cr_items,    --imsld_expressions
@@ -286,7 +286,7 @@ The expression is parsed and evaluated when the imsmanifest is uploaded and each
 --                        default 'f',
 --    change_prop_val_id  integer
 --                        constraint imsld_then_cpv_fk
---                        references cr_items     --imsld_property_values
+--                        references cr_items     --imsld_properties_values
 --);
 
 --create index imsld_then_ref_idx on imsld_then_model(ref_id);

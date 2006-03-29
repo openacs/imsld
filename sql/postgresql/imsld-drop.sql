@@ -11,6 +11,6 @@
 
 \i imsld-cp-drop.sql
 
-\i imsld-status-drop.sql
+\i imsld-production-delivery-drop.sql
 
 \i imsld-level-b-drop.sql
