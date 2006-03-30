@@ -50,6 +50,10 @@ template::list::create \
             display_template {@imslds.delete_template;noquote@} 
             link_html { title "[_ imsld.Delete_IMS_LD]" }
         }
+        manage {
+            label {}
+            display_template {@imslds.manage;noquote@} 
+        }
     }
 
 set orderby [template::list::orderby_clause -orderby -name imslds]
@@ -61,7 +65,7 @@ if {[string equal $orderby ""]} {
 set community_id [dotlrn_community::get_community_id]
 set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
 
-db_multirow  -extend { delete_template } imslds  get_imslds {
+db_multirow  -extend { delete_template manage} imslds  get_imslds {
     select imsld.imsld_id,
     coalesce(imsld.title, imsld.identifier) as imsld_title,
     cr3.item_id,
@@ -76,9 +80,13 @@ db_multirow  -extend { delete_template } imslds  get_imslds {
     and cr2.live_revision = ico.organization_id
     and cr3.item_id = imsld.item_id
 } {
+
     if { [empty_string_p $live_revision] } {
         set delete_template "<span style=\"font-style: italic; color: red; font-size: 9pt;\">Deleted</span> <a href=[export_vars -base "index" { {set_imsld_id_live $item_id} }]>[_ imsld.Make_it_live]</a>"
+        set manage none
     } else {
         set delete_template "<a href=\"[export_vars -base "imsld-delete" { imsld_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\"></a>"
+        set manage "<a href=\"[export_vars -base "imsld-admin-roles" {imsld_id $imsld_id}]\">Manage Members</a>"
+ 
     }
 }

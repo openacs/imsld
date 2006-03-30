@@ -57,7 +57,9 @@ if { ![string eq "" $warnings] } {
 }
 
 ns_write "</blockquote>"
-# jump to the front page
-ad_progress_bar_end -url [dotlrn_community::get_community_url $community_id]
+
+#get imslds ang jump to admin members page
+set imsld_id [db_list get_imslds_from_manifest {}]
+ad_progress_bar_end -url [export_vars -base imsld-admin-roles {imsld_id}]
 
 
