@@ -340,11 +340,11 @@ ad_proc -public imsld::install::init_content_repository {
     ### IMS-LD Production and Delivery
 
     # properties instances
-    content::type::new -content_type imsld_property_instance -supertype imsld_property -pretty_name "<#_ Property Instance #>" -pretty_plural "<#_ Property Instances #>" -table_name imsld_property_instances -id_column instance_id
+#    content::type::new -content_type imsld_property_instance -supertype imsld_property -pretty_name "<#_ Property Instance #>" -pretty_plural "<#_ Property Instances #>" -table_name imsld_property_instances -id_column instance_id
 
-    content::type::attribute::new -content_type imsld_property_instance -attribute_name property_id -datatype number -pretty_name "<#_ Property Identifier #> " -column_spec "integer"
-    content::type::attribute::new -content_type imsld_property_instance -attribute_name party_id -datatype number -pretty_name "<#_ Party Identifier #>" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_property_instance -attribute_name value -datatype string -pretty_name "<#_ Value #>" -column_spec "varchar(4000)"
+#    content::type::attribute::new -content_type imsld_property_instance -attribute_name property_id -datatype number -pretty_name "<#_ Property Identifier #> " -column_spec "integer"
+#    content::type::attribute::new -content_type imsld_property_instance -attribute_name party_id -datatype number -pretty_name "<#_ Party Identifier #>" -column_spec "integer"
+#    content::type::attribute::new -content_type imsld_property_instance -attribute_name value -datatype string -pretty_name "<#_ Value #>" -column_spec "varchar(4000)"
 
 }
 
