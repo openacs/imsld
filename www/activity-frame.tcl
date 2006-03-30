@@ -10,8 +10,13 @@ ad_page_contract {
 
 set user_id [ad_conn user_id]
 
+dom createDocument ul doc
+set dom_root [$doc documentElement]
+
 set activity_item_id [content::revision::item_id -revision_id $activity_id]
-set activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id]
+imsld::process_activity_as_ul -activity_item_id $activity_item_id -dom_doc $doc -dom_node $dom_root
+
+set activities_list [$dom_root asXML] 
 
 set page_title {}
 set context [list]
