@@ -20,7 +20,7 @@ db_1row imslds_in_class {
     where imsld.imsld_id = :imsld_id
 } 
 
-set next_activity_id [imsld::get_next_activity -imsld_item_id $imsld_item_id -user_id $user_id -community_id $community_id]
+set next_activity_id [imsld::get_next_activity_list -imsld_item_id $imsld_item_id -user_id $user_id -community_id $community_id]
 
 dom createDocument ul doc
 set dom_root [$doc documentElement]
@@ -36,7 +36,7 @@ set activities_node [$doc createElement ul]
 
 imsld::generate_activities_tree -imsld_id $imsld_id \
     -user_id $user_id \
-    -next_activity_id $next_activity_id \
+    -next_activity_id_list $next_activity_id \
     -dom_node $activities_node \
     -dom_doc $doc
 
