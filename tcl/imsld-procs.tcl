@@ -2301,9 +2301,9 @@ ad_proc -public imsld::process_resource {
 
 ad_proc -public imsld::process_activity_as_ul { 
     -activity_item_id:required
-    {-resource_mode "f"}
-    -dom_node
+    -dom_node:required
     -dom_doc
+    {-resource_mode "f"}
 } {
     @param activity_item_id
     @option resource_mode default f
