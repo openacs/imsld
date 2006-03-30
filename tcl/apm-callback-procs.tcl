@@ -21,6 +21,11 @@ ad_proc -public imsld::apm_callback::after_install {
     # create default relationships
     imsld::install::init_rels
 
+    imsld::install::create_group_types
+
+    # create default relationships with non IMSLD objects
+    imsld::install::init_rels2
+
     return 1
 }
 

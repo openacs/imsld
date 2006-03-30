@@ -347,6 +347,24 @@ ad_proc -public imsld::install::init_content_repository {
 #    content::type::attribute::new -content_type imsld_property_instance -attribute_name value -datatype string -pretty_name "<#_ Value #>" -column_spec "varchar(4000)"
 
 }
+ad_proc -public imsld::install::create_group_types {  
+} { 
+    create groups needed to manage imsld-roles
+} { 
+    group_type::new -group_type imsld_role_group  -supertype group  "Role defined by IMS-LD" "Roles defined by IMS-LD"
+   
+}
+
+ad_proc -public imsld::install::init_rels2 {  
+} { 
+    create default rels between imsld items and acs objects
+} { 
+    # ims-ld roles - oacs groups
+     rel_types::new imsld_role_group_rel "ims-ld role - imsld_role_group" "ims-ld roles - imsld_role_groups"  \
+        content_item 0 {} \
+        imsld_role_group 0 {}
+   
+}
 
 ad_proc -public imsld::install::init_rels {  
 } { 
