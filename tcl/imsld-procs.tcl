@@ -3129,7 +3129,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     $activity_node setAttribute class "liOpen"
 
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "imsld-frameset" -url {activity_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id}]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -3163,7 +3163,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     set activity_node [$dom_doc createElement li]
                     $activity_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "imsld-frameset" -url {activity_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id}]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -3197,7 +3197,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     set structure_node [$dom_doc createElement li]
                     $structure_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "imsld-frameset" -url {{activity_id $structure_id}}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {{activity_id $structure_id}}]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -3255,7 +3255,7 @@ ad_proc -public imsld::generate_activities_tree {
                     set activity_node [$dom_doc createElement li]
                     $activity_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "imsld-frameset" -url {activity_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id}]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -3284,7 +3284,7 @@ ad_proc -public imsld::generate_activities_tree {
                     set activity_node [$dom_doc createElement li]
                     $activity_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "imsld-frameset" -url {activity_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id}]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -3320,7 +3320,7 @@ ad_proc -public imsld::generate_activities_tree {
                     set structure_node [$dom_doc createElement li]
                     $structure_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "imsld-frameset" -url {{activity_id $structure_id}}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {{activity_id $structure_id}}]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
