@@ -12,6 +12,19 @@ ad_page_contract {
     members_list:optional
 } 
 
+#check conditions and set the database
+set role_info [imsld::roles::get_role_info -role_id $role]
+set match_persons_p [lindex $role_info 3]
+
+set not_allowed [db_list other_subroles_members {}]
+
+if {[string eq "t" $match_persons_p] && [llength $not_allowed]} {
+
+} else {
+    set not_allowed [list 0 0]
+}
+
+
 if {![string eq $group_instance "0"] && [db_0or1row has_role_parent_p {}]} {
     if {![info exist members_list]} {
         set members_list [db_list get_members_list_2 {}]

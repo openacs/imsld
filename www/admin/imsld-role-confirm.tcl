@@ -44,7 +44,7 @@ if {![string eq "" $max_persons] && ([llength $members_list] > $max_persons)} {
 }
 
 #FIXME: falta comprobar match_persons_p
-if {![string eq "t" $match_persons_p]} {
+if {[string eq "t" $match_persons_p]} {
     #get not-allowed users
     set not_allowed [db_list other_subroles_members {}]
         
