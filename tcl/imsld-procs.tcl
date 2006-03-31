@@ -1300,7 +1300,6 @@ ad_proc -public imsld::process_service {
     returns a list of the associated resources referenced from the given service.
 } {
     set services_list [list]
-
     # get service info
     db_1row service_info {
         select serv.service_id,
@@ -1356,7 +1355,7 @@ ad_proc -public imsld::process_service {
             # FIX ME: when roles be supported, fix it so the mail is sent to the propper role
             set image_path [imsld::object_type_image_path -object_type $service_type]
             set services_list "<a href=\"[export_vars -base spam-recipients {referer one-community-admin}]\"  target=\"_blank\"><img src=\"$image_path\" width=\"16\" height=\"16\" border=\"0\" alt=\"Send-Mail service\"></a>"
-            set resource_item_list ""
+            set resource_item_list $service_item_id
         }
         
         default {
@@ -1598,14 +1597,12 @@ ad_proc -public imsld::process_environment {
         where environment_id = :environment_item_id
         and content_revision__is_live(service_id) = 't'
     }] {
-        set service_id [lindex $environment_services_list 0]
-        set service_item_id [lindex $environment_services_list 1]
-        set identifier [lindex $environment_services_list 2]
-        set service_type [lindex $environment_services_list 3]
+        set service_id [lindex $services_list 0]
+        set service_item_id [lindex $services_list 1]
+        set identifier [lindex $services_list 2]
+        set service_type [lindex $services_list 3]
         set environment_services_list [concat $environment_services_list \
-                                           [list [imsld::process_service -service_item_id $service_item_id -resource_mode $resource_mode]]]
-    }
-
+                                           [imsld::process_service -service_item_id $service_item_id -resource_mode $resource_mode]]
     set nested_environment_list [list]
     # environments
     foreach nested_environment_item_id [db_list nested_environment { *SQL* }] {
@@ -2748,7 +2745,6 @@ ad_proc -public imsld::process_learning_activity {
         #put in order the environments_id(s)
         set environments_ids [concat [lindex [lindex $environments_list 1] [expr [llength [lindex $environments_list 1] ] - 1 ]] \
                                      [lindex [lindex $environments_list 2] [expr [llength [lindex $environments_list 2] ] - 1 ]] ]
-
          return [list [lindex $prerequisites_list [expr [llength $prerequisites_list] - 1]] \
                       [lindex $objectives_list [expr [llength $objectives_list ] - 1]] \
                       $environments_ids \
@@ -3746,11 +3742,9 @@ ad_proc -public imsld::next_activity {
 ad_proc -public imsld::get_next_activity_list { 
     -imsld_item_id:required
     {-user_id ""}
-    {-community_id ""}
 } {
     @param imsld_item_id
     @option user_id default [ad_conn user_id]
-    @option community_id
     
     @return The list of next activity_ids of each role_part and play in the IMS-LD.
 } {
