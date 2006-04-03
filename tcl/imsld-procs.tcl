@@ -1603,6 +1603,7 @@ ad_proc -public imsld::process_environment {
         set service_type [lindex $services_list 3]
         set environment_services_list [concat $environment_services_list \
                                            [imsld::process_service -service_item_id $service_item_id -resource_mode $resource_mode]]
+    }
     set nested_environment_list [list]
     # environments
     foreach nested_environment_item_id [db_list nested_environment { *SQL* }] {
