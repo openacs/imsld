@@ -14,11 +14,14 @@ dom createDocument ul doc
 set dom_root [$doc documentElement]
 
 set environments_node_ul [$doc createElement ul]
+$environments_node_ul setAttribute class "mktree"
 set environments_node_li [$doc createElement li]
 set text [$doc createTextNode "Environments"]
 $environments_node_li appendChild $text
 set environments_node [$doc createElement ul]
 # FIX-ME: if the ul is empty, the browser shows the ul incorrectly   
+set text [$doc createTextNode ""]
+$environments_node appendChild $text
 
 set activity_item_id [content::revision::item_id -revision_id $activity_id]
 
