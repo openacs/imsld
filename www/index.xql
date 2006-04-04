@@ -5,7 +5,7 @@
 
 	<fullquery name="get_manifests">
 		<querytext>
-    select cr3.item_id as imsld_id,
+    select imsld.imsld_id,
     coalesce(imsld.title, imsld.identifier) as imsld_title
     from cr_items cr1, cr_items cr2, cr_items cr3, cr_items cr4,
     imsld_cp_manifests icm, imsld_cp_organizations ico, imsld_imsldsi imsld 
