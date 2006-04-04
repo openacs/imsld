@@ -37,10 +37,13 @@ ad_proc -public imsld::object_type_image_path {
                               -package_key "[imsld::package_key]"]
     switch $object_type {
         forums_forum {
-            set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/resources/forums.png"
+            set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/forums.png"
         }
         as_assessments {
             set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/assessment.png"
+        }
+        sessions {
+            set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/sessions.png"
         }
         send-mail {
             set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/send-mail.png"
@@ -428,11 +431,18 @@ ad_proc -public imsld::mark_role_part_finished {
             -type $type \
             -user_id $user_id \
             -code_call
+
+        if { [string eq $$type "learning"] } {
+            set resources_activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
+        } elseif { [string eq $$type "support"] } {
+            set resources_activities_list [imsld::process_support_activity -activity_item_id $activity_item_id -resource_mode "t"]
+        } else {
+            set resources_activities_list [imsld::process_activity_structure -structure_item_id $activity_item_id -resource_mode "t"]
+        }
+        #grant permissions for newly showed resources
+        imsld::grant_permissions -resources_activities_list $resources_activities_list -user_id $user_id
     }
 
-    set resources_activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
-    #grant permissions for newly showed resources
-    imsld::grant_permissions -resources_activities_list $resources_activities_list -user_id $user_id
 }
 
 ad_proc -public imsld::mark_act_finished { 
@@ -626,7 +636,6 @@ ad_proc -public imsld::item_revision_new {
     set item_id [expr { [string eq "" $item_id] ? [db_nextval "acs_object_id_seq"] : $item_id }]
 
     set item_name "${item_id}_content_type"
-    set title [expr { [string eq "" $title] ? $item_name : $title }]
     
     if { !$edit_p } {
         # create
@@ -1394,6 +1403,7 @@ ad_proc -public imsld::process_environment_as_ul {
     }
 
     set environment_node_li [$dom_doc createElement li]
+    $environment_node_li setAttribute class "liOpen"
     set text [$dom_doc createTextNode "$environment_title"]
     $environment_node_li appendChild $text
     set environment_node [$dom_doc createElement ul]
@@ -1406,7 +1416,7 @@ ad_proc -public imsld::process_environment_as_ul {
         select item_id as learning_object_item_id,
         learning_object_id,
         identifier,
-        title as lo_title
+        coalesce(title,identifier) as lo_title
         from imsld_learning_objectsi
         where environment_id = :environment_item_id
         and content_revision__is_live(learning_object_id) = 't'
@@ -2280,7 +2290,7 @@ ad_proc -public imsld::process_resource {
 
             }]
             set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
-            append files_urls "<a href=[export_vars -base imsld/imsld-finish-resource {file_url $file_url resource_item_id $resource_item_id}] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/file-storage.png\" alt=\"$file_name\" border=0></a> "
+            append files_urls "<a href=[export_vars -base imsld/imsld-finish-resource {file_url $file_url resource_item_id $resource_item_id}] target=\"_blank\"><img src=\"[imsld::object_type_image_path -object_type file-storage]\" alt=\"$file_name\" border=0></a> "
         }
         # get associated urls
         db_foreach associated_urls {
@@ -2291,7 +2301,7 @@ ad_proc -public imsld::process_resource {
             and ar.object_id_two = links.extlink_id
         } {
             
-            append files_urls "<a href=[export_vars -base imsld/imsld-finish-resource { {file_url "[export_vars -base $url]"} resource_item_id}] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/url.png\" border=0  alt=\"$url\"></a> "
+            append files_urls "<a href=[export_vars -base imsld/imsld-finish-resource { {file_url "[export_vars -base $url]"} resource_item_id}] target=\"_blank\"><img src=\"[imsld::object_type_image_path -object_type file-storage]\" border=0  alt=\"$url\"></a> "
         }
     }
     return $files_urls

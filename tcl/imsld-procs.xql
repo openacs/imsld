@@ -1464,7 +1464,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
         and im.imsld_id = ii.item_id
         and ii.imsld_id = :imsld_id
         and content_revision__is_live(rp.role_part_id) = 't'
-        order by rp.sort_order
+        order by ip.sort_order, ia.sort_order, rp.sort_order
         
 		</querytext>
 	</fullquery>
