@@ -89,10 +89,10 @@ text-decoration: none;
 
 @activities;noquote@
 
-<object data="index" type="text/html" id="object"></object>
-<!-- <iframe id="object"> -->
+<!-- <object data="index" type="text/html" id="object"></object> -->
+<iframe id="object" name="object"></iframe>
 
-<a href="#" onClick="objecturl('..')">hola</a>
+<!-- <a href="#" onClick="objecturl('..'); return false">hola</a> -->
 </body>
 <script type="text/javascript">
 function resizeobject() {
@@ -104,11 +104,19 @@ o.width = window.innerWidth - o.style.left - 30;
 window.onload = resizeobject;
 window.onresize = resizeobject;
 
-function objecturl(url1) {
-o = document.getElementById('object');
-o.data = url1;
+function objecturl(url) {
+var o = document.getElementById('object');
+o.src = url;
 }
 
+</script>
+
+<script type="text/javascript">
+var as = document.getElementsByTagName("a");
+for (var i = 0; i < as.length; i++) {
+  var a = as[i];
+  a.setAttribute('target', 'object');
+}
 </script>
 
 </html>

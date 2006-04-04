@@ -8,7 +8,7 @@
 <frameset cols="30%,*" border=0>
     <frameset rows="50%,*" border=0>
         <frame src="imsld-tree?imsld_id=@imsld_id@" name="toc">
-        <frame src="" name="info">
+        <frame src="" name="environment">
     </frameset>
     <frame src="" name="content" scrolling="no" frameborder=0>
 </frameset>

@@ -20,7 +20,7 @@ db_1row imslds_in_class {
     where imsld.imsld_id = :imsld_id
 } 
 
-set next_activity_id [imsld::get_next_activity_list -imsld_item_id $imsld_item_id -user_id $user_id -community_id $community_id]
+set next_activity_id [imsld::get_next_activity_list -imsld_item_id $imsld_item_id -user_id $user_id]
 
 dom createDocument ul doc
 set dom_root [$doc documentElement]

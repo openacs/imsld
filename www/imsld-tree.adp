@@ -22,4 +22,18 @@ margin: 0px;
 <body>
 @html_tree;noquote@
 </body>
+
+<script type="text/javascript">
+var as = document.getElementsByTagName("a");
+for (var i = 0; i < as.length; i++) {
+  var a = as[i];
+  for( var x = 0; x < a.attributes.length; x++ ) {
+    if( a.attributes[x].nodeName.toLowerCase() == 'href' ) {
+      var enviromenturl = a.attributes[x].nodeValue.replace(/activity-frame/, "environment-frame");
+      a.setAttribute('onClick',"parent.environment.location='" + enviromenturl + "'");
+    }
+  }
+}
+</script>
+
 </html>
