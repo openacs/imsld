@@ -1275,7 +1275,6 @@ ad_proc -public imsld::process_service_as_ul {
             # FIX ME: when roles be supported, fix it so the mail is sent to the propper role
             set resource_item_list ""
 
-            set send_mail_node [$dom_doc createElement li]
             set a_node [$dom_doc createElement a]
             $a_node setAttribute href "[export_vars -base spam-recipients {referer one-community-admin}]"
             set img_node [$dom_doc createElement img]
@@ -1285,8 +1284,7 @@ ad_proc -public imsld::process_service_as_ul {
             $img_node setAttribute heigth "16"
             $img_node setAttribute alt "[_ imsld.send-mail_service]"
             $a_node appendChild $img_node
-            $send_mail_node appendChild $a_node
-            $service_node appendChild $file_node
+            $service_node appendChild $a_node
         }
         
         default {
@@ -2140,7 +2138,6 @@ ad_proc -public imsld::process_resource_as_ul {
         }
 
         set file_url [acs_sc::invoke -contract FtsContentProvider -operation url -impl $object_type -call_args [list $acs_object_id]]
-        set file_node [$dom_doc createElement li]
         set a_node [$dom_doc createElement a]
         $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id}]"
         set img_node [$dom_doc createElement img]
@@ -2148,8 +2145,7 @@ ad_proc -public imsld::process_resource_as_ul {
         $img_node setAttribute border "0"
         $img_node setAttribute alt "$object_title"
         $a_node appendChild $img_node
-        $file_node appendChild $a_node
-        $dom_node appendChild $file_node
+        $dom_node appendChild $a_node
 
     } else {
         # get associated files
@@ -2182,7 +2178,6 @@ ad_proc -public imsld::process_resource_as_ul {
 
             }]
             set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
-            set file_node [$dom_doc createElement li]
             set a_node [$dom_doc createElement a]
             $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id}]"
             set img_node [$dom_doc createElement img]
@@ -2190,8 +2185,7 @@ ad_proc -public imsld::process_resource_as_ul {
             $img_node setAttribute border "0"
             $img_node setAttribute alt "$file_name"
             $a_node appendChild $img_node
-            $file_node appendChild $a_node
-            $dom_node appendChild $file_node
+            $dom_node appendChild $a_node
 
         }
         # get associated urls
@@ -2203,7 +2197,6 @@ ad_proc -public imsld::process_resource_as_ul {
             and ar.object_id_two = links.extlink_id
         } {
 
-            set file_node [$dom_doc createElement li]
             set a_node [$dom_doc createElement a]
             $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" { {file_url "[export_vars -base $url]"} resource_item_id}]"
             set img_node [$dom_doc createElement img]
@@ -2211,8 +2204,7 @@ ad_proc -public imsld::process_resource_as_ul {
             $img_node setAttribute border "0"
             $img_node setAttribute alt "$url"
             $a_node appendChild $img_node
-            $file_node appendChild $a_node
-            $dom_node appendChild $file_node
+            $dom_node appendChild $a_node
 
         }
     }
@@ -2428,13 +2420,12 @@ ad_proc -public imsld::process_imsld_as_ul {
     }
 
     # prerequisites
-    set prerequisites_tab_node [$dom_doc createElement li]
+    set prerequisites_node [$dom_doc createElement div]
+    $prerequisites_node setAttribute class "tabbertab"
+    set prerequisites_head_node [$dom_doc createElement h2]
     set text [$dom_doc createTextNode "[_ imsld.Prerequisites]"]
-    $prerequisites_tab_node appendChild $text
-    set prerequisites_node [$dom_doc createElement ul]
-    # FIX-ME: if the ul is empty, the browser show the ul incorrectly
-    set text [$dom_doc createTextNode ""]    
-    $prerequisites_node appendChild $text
+    $prerequisites_head_node appendChild $text
+    $prerequisites_node appendChild $prerequisites_head_node
     if { ![string eq "" $prerequisite_item_id] } {
         # add the prerequisite files as items of the list
 
@@ -2444,17 +2435,15 @@ ad_proc -public imsld::process_imsld_as_ul {
                                     -dom_doc $dom_doc]
 
     }
-    $prerequisites_tab_node appendChild $prerequisites_node
-    $dom_node appendChild $prerequisites_tab_node
+    $dom_node appendChild $prerequisites_node
 
     # learning objectives
-    set objectives_tab_node [$dom_doc createElement li]
+    set objectives_node [$dom_doc createElement div]
+    $objectives_node setAttribute class "tabbertab"
+    set objectives_head_node [$dom_doc createElement h2]
     set text [$dom_doc createTextNode "[_ imsld.Objectives]"]
-    $objectives_tab_node appendChild $text
-    set objectives_node [$dom_doc createElement ul]
-    # FIX-ME: if the ul is empty, the browser show the ul incorrectly
-    set text [$dom_doc createTextNode ""]    
-    $objectives_node appendChild $text
+    $objectives_head_node appendChild $text
+    $objectives_node appendChild $objectives_head_node
     if { ![string eq "" $learning_objective_item_id] } {
         # add the prerequisite files as items of the list
 
@@ -2464,8 +2453,7 @@ ad_proc -public imsld::process_imsld_as_ul {
                                  -dom_doc $dom_doc]
 
     }
-    $objectives_tab_node appendChild $objectives_node
-    $dom_node appendChild $objectives_tab_node
+    $dom_node appendChild $objectives_node
     
     if { [string eq $resource_mode "t"] } {
         return [concat $prerequisites_list $objectives_list]
@@ -2498,54 +2486,13 @@ ad_proc -public imsld::process_learning_activity_as_ul {
         and content_revision__is_live(activity_id) = 't'
     }
 
-    # prerequisites
-    set prerequisites_tab_node [$dom_doc createElement li]
-    set text [$dom_doc createTextNode "[_ imsld.Prerequisites]"]
-    $prerequisites_tab_node appendChild $text
-    set prerequisites_node [$dom_doc createElement ul]
-    # FIX-ME: if the ul is empty, the browser show the ul incorrectly
-    set text [$dom_doc createTextNode ""]    
-    $prerequisites_node appendChild $text
-    if { ![string eq "" $prerequisite_item_id] } {
-        # add the prerequisite files as items of the list
-
-        set prerequisites_list [imsld::process_prerequisite_as_ul -activity_item_id $activity_item_id \
-                                    -resource_mode $resource_mode \
-                                    -dom_node $prerequisites_node \
-                                    -dom_doc $dom_doc]
-
-    }
-    $prerequisites_tab_node appendChild $prerequisites_node
-    $dom_node appendChild $prerequisites_tab_node
-
-    # learning objectives
-    set objectives_tab_node [$dom_doc createElement li]
-    set text [$dom_doc createTextNode "[_ imsld.Objectives]"]
-    $objectives_tab_node appendChild $text
-    set objectives_node [$dom_doc createElement ul]
-    # FIX-ME: if the ul is empty, the browser show the ul incorrectly
-    set text [$dom_doc createTextNode ""]    
-    $objectives_node appendChild $text
-    if { ![string eq "" $learning_objective_item_id] } {
-        # add the prerequisite files as items of the list
-
-        set objectives_list [imsld::process_learning_objective_as_ul -activity_item_id $activity_item_id \
-                                 -resource_mode $resource_mode \
-                                 -dom_node $objectives_node \
-                                 -dom_doc $dom_doc]
-
-    }
-    $objectives_tab_node appendChild $objectives_node
-    $dom_node appendChild $objectives_tab_node
-
     # get the items associated with the activity
-    set description_tab_node [$dom_doc createElement li]
+    set description_node [$dom_doc createElement div]
+    $description_node setAttribute class "tabbertab"
+    set description_head_node [$dom_doc createElement h2]
     set text [$dom_doc createTextNode "[_ imsld.Description]"]
-    $description_tab_node appendChild $text
-    set description_node [$dom_doc createElement ul]
-    # FIX-ME: if the ul is empty, the browser show the ul incorrectly
-    set text [$dom_doc createTextNode ""]    
-    $description_node appendChild $text
+    $description_head_node appendChild $text
+    $description_node appendChild $description_head_node
     set linear_item_list [db_list item_linear_list {
         select ii.imsld_item_id
         from imsld_items ii, imsld_activity_descs lad, imsld_learning_activitiesi la,
@@ -2589,17 +2536,51 @@ ad_proc -public imsld::process_learning_activity_as_ul {
             }
         }
     }
-    $description_tab_node appendChild $description_node
-    $dom_node appendChild $description_tab_node
+    $dom_node appendChild $description_node
+
+    # prerequisites
+    set prerequisites_node [$dom_doc createElement div]
+    $prerequisites_node setAttribute class "tabbertab"
+    set prerequisites_head_node [$dom_doc createElement h2]
+    set text [$dom_doc createTextNode "[_ imsld.Prerequisites]"]
+    $prerequisites_head_node appendChild $text
+    $prerequisites_node appendChild $prerequisites_head_node
+    if { ![string eq "" $prerequisite_item_id] } {
+        # add the prerequisite files as items of the list
+
+        set prerequisites_list [imsld::process_prerequisite_as_ul -activity_item_id $activity_item_id \
+                                    -resource_mode $resource_mode \
+                                    -dom_node $prerequisites_node \
+                                    -dom_doc $dom_doc]
+
+    }
+    $dom_node appendChild $prerequisites_node
+
+    # learning objectives
+    set objectives_node [$dom_doc createElement div]
+    $objectives_node setAttribute class "tabbertab"
+    set objectives_head_node [$dom_doc createElement h2]
+    set text [$dom_doc createTextNode "[_ imsld.Objectives]"]
+    $objectives_head_node appendChild $text
+    $objectives_node appendChild $objectives_head_node
+    if { ![string eq "" $learning_objective_item_id] } {
+        # add the prerequisite files as items of the list
+
+        set objectives_list [imsld::process_learning_objective_as_ul -activity_item_id $activity_item_id \
+                                 -resource_mode $resource_mode \
+                                 -dom_node $objectives_node \
+                                 -dom_doc $dom_doc]
+
+    }
+    $dom_node appendChild $objectives_node
 
     # process feedback only if the activity is finished
-    set feedback_tab_node [$dom_doc createElement li]
+    set feedback_node [$dom_doc createElement div]
+    $feedback_node setAttribute class "tabbertab"
+    set feedback_head_node [$dom_doc createElement h2]
     set text [$dom_doc createTextNode "[_ imsld.Feedback]"]
-    $feedback_tab_node appendChild $text
-    set feedback_node [$dom_doc createElement ul]
-    # FIX-ME: if the ul is empty, the browser show the ul incorrectly
-    set text [$dom_doc createTextNode ""]    
-    $feedback_node appendChild $text
+    $feedback_head_node appendChild $text
+    $feedback_node appendChild $feedback_head_node
     if { [db_0or1row completed_activity {
         select 1
         from imsld_status_user
@@ -2614,8 +2595,7 @@ ad_proc -public imsld::process_learning_activity_as_ul {
                 -dom_node $feedback_node
         }
     }
-    $feedback_tab_node appendChild $feedback_node
-    $dom_node appendChild $feedback_tab_node
+    $dom_node appendChild $feedback_node
 
     if { [string eq "t" $resource_mode] } {
         # get environments
@@ -2788,13 +2768,12 @@ ad_proc -public imsld::process_support_activity_as_ul {
     }
 
     # get the items associated with the activity
-    set description_tab_node [$dom_doc createElement li]
+    set description_node [$dom_doc createElement div]
+    $description_node setAttribute class "tabbertab"
+    set description_head_node [$dom_doc createElement h2]
     set text [$dom_doc createTextNode "[_ imsld.Description]"]
-    $description_tab_node appendChild $text
-    set description_node [$dom_doc createElement ul]
-    # FIX-ME: if the ul is empty, the browser show the ul incorrectly
-    set text [$dom_doc createTextNode ""]    
-    $description_node appendChild $text
+    $description_head_node appendChild $text
+    $description_node appendChild $description_head_node
     set linear_item_list [db_list item_linear_list {
         select ii.imsld_item_id
         from imsld_items ii, imsld_activity_descs sad, imsld_support_activitiesi sa,
@@ -2837,17 +2816,15 @@ ad_proc -public imsld::process_support_activity_as_ul {
             }
         }
     }
-    $description_tab_node appendChild $description_node
-    $dom_node appendChild $description_tab_node
+    $dom_node appendChild $description_node
 
     # process feedback only if the activity is finished
-    set feedback_tab_node [$dom_doc createElement li]
+    set feedback_node [$dom_doc createElement div]
+    $feedback_node setAttribute class "tabbertab"
+    set feedback_head_node [$dom_doc createElement h2]
     set text [$dom_doc createTextNode "[_ imsld.Feedback]"]
-    $feedback_tab_node appendChild $text
-    set feedback_node [$dom_doc createElement ul]
-    # FIX-ME: if the ul is empty, the browser show the ul incorrectly
-    set text [$dom_doc createTextNode ""]    
-    $feedback_node appendChild $text
+    $feedback_head_node appendChild $text
+    $feedback_node appendChild $feedback_head_node
     if { [db_0or1row completed_activity {
         select 1
         from imsld_status_user
@@ -2862,8 +2839,7 @@ ad_proc -public imsld::process_support_activity_as_ul {
                 -dom_node $feedback_node
         }
     }
-    $feedback_tab_node appendChild $feedback_node
-    $dom_node appendChild $feedback_tab_node
+    $dom_node appendChild $feedback_node
 
     if { [string eq "t" $resource_mode] } {
         # get environments

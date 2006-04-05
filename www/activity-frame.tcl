@@ -10,9 +10,9 @@ ad_page_contract {
 
 set user_id [ad_conn user_id]
 
-dom createDocument ul doc
+dom createDocument div doc
 set dom_root [$doc documentElement]
-$dom_root setAttribute class "nav"
+$dom_root setAttribute class "tabber"
 
 set activity_item_id [content::revision::item_id -revision_id $activity_id]
 imsld::process_activity_as_ul -activity_item_id $activity_item_id -dom_doc $doc -dom_node $dom_root

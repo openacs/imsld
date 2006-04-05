@@ -3,84 +3,20 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
+<script type="text/javascript" src="/resources/imsld/tabber.js"></script>
+<link rel="stylesheet" href="/resources/imsld/example.css" TYPE="text/css" MEDIA="screen">
+<link rel="stylesheet" href="/resources/imsld/example-print.css" TYPE="text/css" MEDIA="print">
+
+<script type="text/javascript">
+
+/* Optional: Temporarily hide the "tabber" class so it does not "flash"
+   on the page as plain HTML. After tabber runs, the class is changed
+   to "tabberlive" and it will appear. */
+
+document.write('<style type="text/css">.tabber{display:none;}<\/style>');
+</script>
+
 <style type="text/css">
-
-/*Nav bar styles*/
-
-ul.nav,
-.nav ul{
-margin: 0;
-padding: 0;
-cursor: default;
-list-style-type: none;
-display: inline;
-}
-
-ul.nav{
-display: table;
-}
-
-ul.block{
-width: 100%;
-table-layout: fixed;
-}
-
-ul.nav>li{
-display: table-cell;
-position: relative;
-padding: 2px 6px;
-}
-/*
-ul.nav>li:hover{
-padding-right: 1px;
-}*/
-
-ul.nav li>ul{
-display: none;
-position: absolute;
-max-width: 40ex;
-margin-left: -6px;
-margin-top: 2px;
-}
-
-ul.nav li:hover>ul{
-display : block;
-}
-
-.nav ul li a{
-display: block;
-padding: 2px 10px;
-}
-
-/*Menu styles*/
-
-ul.nav,
-.nav ul,
-.nav ul li a{
-background-color: #fff;
-color: #369;
-}
-
-ul.nav li:hover,
-.nav ul li a:hover{
-background-color: #369;
-color: #fff;
-}
-
-ul.nav li:active,
-.nav ul li a:active{
-background-color: #036;
-color: #fff;
-}
-
-ul.nav,
-.nav ul{
-border: 1px solid #369;
-}
-
-.nav a{
-text-decoration: none;
-}
 
 </style>
 
@@ -101,7 +37,7 @@ o = document.getElementById('object');
 o.height = window.innerHeight - o.style.top - 50;
 o.width = window.innerWidth - o.style.left - 30;
 }
-window.onload = resizeobject;
+resizeobject();
 window.onresize = resizeobject;
 
 function objecturl(url) {
@@ -117,6 +53,7 @@ for (var i = 0; i < as.length; i++) {
   var a = as[i];
   a.setAttribute('target', 'object');
 }
+document.getElementById('object').src = as[0].getAttribute('href');
 </script>
 
 </html>
