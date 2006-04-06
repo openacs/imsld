@@ -15,7 +15,7 @@ set dom_root [$doc documentElement]
 
 #set environments_node_ul [$doc createElement ul]
 set environments_node_li [$doc createElement li]
-set text [$doc createTextNode "Environments"]
+set text [$doc createTextNode "[_ imsld.Context_info]"]
 $environments_node_li appendChild $text
 set environments_node [$doc createElement ul]
 $environments_node setAttribute class "mktree"

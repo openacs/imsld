@@ -13,6 +13,7 @@
   <msg key="Component_Identifier">Component Identifier</msg>
   <msg key="Conference_Type">Conference Type</msg>
   <msg key="Confirm_New_IMS-LD">Confirm: New IMS-LD</msg>
+  <msg key="Context_info">Context info</msg>
   <msg key="Create_New">Create New?</msg>
   <msg key="Creating_new_IMS-LD">Creating new IMS-LD...</msg>
   <msg key="Data_Type">Data Type</msg>
@@ -231,6 +232,7 @@
   <msg key="Manager_Identifier">Manager Identifier</msg>
   <msg key="Manifest_Identifier">Manifest Identifier</msg>
   <msg key="Match_Persons">Match Persons?</msg>
+  <msg key="Material">Material</msg>
   <msg key="Max_Persons">Max Persons</msg>
   <msg key="Method_Identifier">Method Identifier</msg>
   <msg key="Min_Persons">Min Persons</msg>

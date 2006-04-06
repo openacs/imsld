@@ -2490,7 +2490,7 @@ ad_proc -public imsld::process_learning_activity_as_ul {
     set description_node [$dom_doc createElement div]
     $description_node setAttribute class "tabbertab"
     set description_head_node [$dom_doc createElement h2]
-    set text [$dom_doc createTextNode "[_ imsld.Description]"]
+    set text [$dom_doc createTextNode "[_ imsld.Material]"]
     $description_head_node appendChild $text
     $description_node appendChild $description_head_node
     set linear_item_list [db_list item_linear_list {
@@ -2771,7 +2771,7 @@ ad_proc -public imsld::process_support_activity_as_ul {
     set description_node [$dom_doc createElement div]
     $description_node setAttribute class "tabbertab"
     set description_head_node [$dom_doc createElement h2]
-    set text [$dom_doc createTextNode "[_ imsld.Description]"]
+    set text [$dom_doc createTextNode "[_ imsld.Material]"]
     $description_head_node appendChild $text
     $description_node appendChild $description_head_node
     set linear_item_list [db_list item_linear_list {
