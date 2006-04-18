@@ -3123,7 +3123,6 @@ ad_proc -public imsld::generate_structure_activities_list {
 
                     set a_node [$dom_doc createElement a]
                     $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
-                    $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "(finish)"]
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
@@ -3157,7 +3156,6 @@ ad_proc -public imsld::generate_structure_activities_list {
 
                     set a_node [$dom_doc createElement a]
                     $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
-                    $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "(finish)"]
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
@@ -3249,7 +3247,6 @@ ad_proc -public imsld::generate_activities_tree {
 
                     set a_node [$dom_doc createElement a]
                     $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
-                    $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "(finish)"]
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
@@ -3278,7 +3275,6 @@ ad_proc -public imsld::generate_activities_tree {
 
                     set a_node [$dom_doc createElement a]
                     $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
-                    $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "(finish)"]
                     $a_node appendChild $text
                     $activity_node appendChild $a_node
