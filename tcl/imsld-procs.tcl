@@ -636,6 +636,7 @@ ad_proc -public imsld::item_revision_new {
     set item_id [expr { [string eq "" $item_id] ? [db_nextval "acs_object_id_seq"] : $item_id }]
 
     set item_name "${item_id}_content_type"
+#    set title [expr { [string eq "" $title] ? $item_name : $title }]
     
     if { !$edit_p } {
         # create
@@ -1229,19 +1230,15 @@ ad_proc -public imsld::process_service_as_ul {
         and content_revision__is_live(serv.service_id) = 't'
     }
 
-    set service_node_li [$dom_doc createElement li]
-    set text [$dom_doc createTextNode "$service_title"]
-    $service_node_li appendChild $text
-    set service_node [$dom_doc createElement ul]
-
     switch $service_type {
         conference {
             db_1row get_conference_info {
                 select conf.conference_id,
                 conf.conference_type,
                 conf.imsld_item_id as imsld_item_item_id,
-                cr.live_revision as imsld_item_id
-                from imsld_conference_services conf, cr_items cr
+                cr.live_revision as imsld_item_id, 
+                conf.title as conf_title
+                from imsld_conference_servicesi conf, cr_items cr
                 where conf.service_id = :service_item_id
                 and cr.item_id = conf.imsld_item_id
                 and content_revision__is_live(cr.live_revision) = 't'
@@ -1262,9 +1259,17 @@ ad_proc -public imsld::process_service_as_ul {
                 if {[string eq "t" $resource_mode]} {
                     lappend resource_item_list $resource_item_id
                 }
-                imsld::process_resource -resource_item_id $resource_item_id \
-                    -dom_node $service_node \
+                imsld::process_resource_as_ul -resource_item_id $resource_item_id \
+                    -dom_node $dom_node \
                     -dom_doc $dom_doc
+
+                # replace the image with the conference name
+                set img_nodes [$dom_node selectNodes {.//img}]
+                foreach img_node $img_nodes {
+                    set parent_node [$img_node parentNode]
+                    set conf_title [$dom_doc createTextNode "$conf_title"]
+                    $parent_node replaceChild $conf_title $img_node 
+                }
 
             } if_no_rows {
                 ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
@@ -1294,9 +1299,6 @@ ad_proc -public imsld::process_service_as_ul {
     }
     if {[string eq "t" $resource_mode]} {
         return [list $services_list $resource_item_list]
-    } else {
-        $service_node_li appendChild $service_node
-        $dom_node appendChild $service_node_li
     }
 }
 
@@ -1489,11 +1491,11 @@ ad_proc -public imsld::process_environment_as_ul {
         where environment_id = :environment_item_id
         and content_revision__is_live(service_id) = 't'
     }] {
-        set service_id [lindex $environment_services_list 0]
-        set service_item_id [lindex $environment_services_list 1]
-        set identifier [lindex $environment_services_list 2]
-        set service_type [lindex $environment_services_list 3]
-        set service_title [lindex $environment_services_list 4]
+        set service_id [lindex $services_list 0]
+        set service_item_id [lindex $services_list 1]
+        set identifier [lindex $services_list 2]
+        set service_type [lindex $services_list 3]
+        set service_title [lindex $services_list 4]
         set environment_services_list [concat $environment_services_list \
                                            [list [imsld::process_service_as_ul -service_item_id $service_item_id \
                                                       -resource_mode $resource_mode \
@@ -2807,7 +2809,7 @@ ad_proc -public imsld::process_support_activity_as_ul {
                 lappend sa_resource_item_list $resource_item_id
             }
             
-            imsld::process_resource -resource_item_id $resource_item_id \
+            imsld::process_resource_as_ul -resource_item_id $resource_item_id \
                 -dom_doc $dom_doc \
                 -dom_node $description_node
 
