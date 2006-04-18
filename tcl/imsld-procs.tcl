@@ -697,7 +697,6 @@ ad_proc -public imsld::finish_component_element {
         # get the url to parse it and get the info
         set url [ns_conn url]
         regexp {finish-component-element-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([a-z]+).imsld$} $url match imsld_id play_id act_id role_part_id element_id type
-        regsub {/finish-component-element.*} $url "" return_url 
     }
     # now that we have the necessary info, mark the finished element completed and return
     db_dml insert_element_entry { *SQL* }
@@ -898,7 +897,11 @@ ad_proc -public imsld::finish_component_element {
         }
     }
     if { !$code_call_p } {
-        ad_returnredirect "${return_url}"
+        set community_id [dotlrn_community::get_community_id]
+        set imsld_package_id [site_node_apm_integration::get_child_package_id \
+                                  -package_id [dotlrn_community::get_package_id $community_id] \
+                                  -package_key "[imsld::package_key]"]
+        ad_returnredirect "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/imsld-tree" -url { imsld_id }]"
     }
 }
 
