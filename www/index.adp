@@ -2,4 +2,4 @@
   <property name="title">@page_title;noquote@</property>
   <property name="context">@context;noquote@</property>
 
-<blockquote><listtemplate name="imslds"></listtemplate></blockquote>
+<include src="../../imsld/lib/imsld-chunk" community_id=@community_id@ orderby=@orderby@>

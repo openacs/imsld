@@ -2039,7 +2039,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
                  cr_items cr,
                  cr_items cr2,
                  imsld_activity_structuresi iasi 
-            where iasi.structureid=:activity_id
+            where iasi.structure_id=:activity_id
                  and iasi.item_id=cr.item_id 
                  and cr2.parent_id=cr.parent_id 
                  and cr2.content_type='imsld_imsld' 

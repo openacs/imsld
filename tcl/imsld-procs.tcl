@@ -1270,8 +1270,8 @@ ad_proc -public imsld::process_service_as_ul {
                 set img_nodes [$dom_node selectNodes {.//img}]
                 foreach img_node $img_nodes {
                     set parent_node [$img_node parentNode]
-                    set conf_title [$dom_doc createTextNode "$conf_title"]
-                    $parent_node replaceChild $conf_title $img_node 
+                    set conf_title_node [$dom_doc createTextNode "$conf_title"]
+                    $parent_node replaceChild $conf_title_node $img_node 
                 }
 
             } if_no_rows {
@@ -1282,17 +1282,21 @@ ad_proc -public imsld::process_service_as_ul {
         send-mail {
             # FIX ME: when roles be supported, fix it so the mail is sent to the propper role
             set resource_item_list ""
+            db_1row get_send_mail_info {
+                select sm.title as send_mail_title
+                from imsld_send_mail_servicesi sm
+                where sm.service_id = :service_item_id
+                and content_revision__is_live(sm.mail_id) = 't'
+            }
 
+            set send_mail_node_li [$dom_doc createElement li]
             set a_node [$dom_doc createElement a]
-            $a_node setAttribute href "[export_vars -base spam-recipients {referer one-community-admin}]"
-            set img_node [$dom_doc createElement img]
-            $img_node setAttribute src "[imsld::object_type_image_path -object_type $service_type]"
-            $img_node setAttribute border "0"
-            $img_node setAttribute width "16"
-            $img_node setAttribute heigth "16"
-            $img_node setAttribute alt "[_ imsld.send-mail_service]"
-            $a_node appendChild $img_node
-            $service_node appendChild $a_node
+            $a_node setAttribute href "[export_vars -base "[dotlrn_community::get_community_url [dotlrn_community::get_community_id]]spam-recipients" {referer one-community-admin}]"
+            set service_title [$dom_doc createTextNode "$send_mail_title"]
+            $a_node setAttribute target "content"
+            $a_node appendChild $service_title
+            $send_mail_node_li appendChild $a_node
+            $dom_node appendChild $send_mail_node_li
         }
         
         default {
@@ -1423,12 +1427,12 @@ ad_proc -public imsld::process_environment_as_ul {
         from imsld_learning_objectsi
         where environment_id = :environment_item_id
         and content_revision__is_live(learning_object_id) = 't'
+        order by creation_date
     }] {
         set learning_object_item_id [lindex $learning_objects_list 0]
         set learning_object_id [lindex $learning_objects_list 1]
         set identifier [lindex $learning_objects_list 2]
         set lo_title [lindex $learning_objects_list 3]
-
         # learning object item. get the files associated
         set linear_item_list [db_list_of_lists item_linear_list { 
             select ii.imsld_item_id
@@ -1462,14 +1466,15 @@ ad_proc -public imsld::process_environment_as_ul {
                 }
                 set one_learning_object_list [imsld::process_resource_as_ul -resource_item_id $resource_item_id \
                                                   -dom_node $environment_node \
-                                                  -dom_doc $dom_doc]
+                                                  -dom_doc $dom_doc \
+                                                  -li_mode]
 
                 # in order to behave like CopperCore, we decide to replace the images with the learning object title
                 set img_nodes [$environment_node selectNodes {.//img}]
                 foreach img_node $img_nodes {
                     set parent_node [$img_node parentNode]
-                    set lo_title [$dom_doc createTextNode "$lo_title"]
-                    $parent_node replaceChild $lo_title $img_node 
+                    set lo_title_node [$dom_doc createTextNode "$lo_title"]
+                    $parent_node replaceChild $lo_title_node $img_node 
                 }
                 if { ![string eq "" $one_learning_object_list] } {
                     if { [string eq "t" $resource_mode] } { 
@@ -1508,8 +1513,8 @@ ad_proc -public imsld::process_environment_as_ul {
         set img_nodes [$environment_node selectNodes {.//img}]
         foreach img_node $img_nodes {
             set parent_node [$img_node parentNode]
-            set lo_title [$dom_doc createTextNode "$service_title"]
-            $parent_node replaceChild $lo_title $img_node 
+            set lo_title_node [$dom_doc createTextNode "$service_title"]
+            $parent_node replaceChild $lo_title_node $img_node 
         }
     }
 
@@ -2097,7 +2102,8 @@ ad_proc -public imsld::process_resource_as_ul {
     -resource_item_id
     {-community_id ""}
     -dom_node 
-    -dom_doc     
+    -dom_doc
+    -li_mode:boolean
 } {
     @param resource_item_id
     @option community_id
@@ -2128,6 +2134,7 @@ ad_proc -public imsld::process_resource_as_ul {
     
     set files_node [$dom_doc createElement ul]
     if { ![string eq $resource_type "webcontent"] && ![string eq $acs_object_id ""] } {
+        # if the resource type is not webcontent or has an associated object_id (special cases)...
         if { [db_0or1row is_cr_item {
             select live_revision from cr_items where item_id = :acs_object_id
         }] } {
@@ -2150,10 +2157,16 @@ ad_proc -public imsld::process_resource_as_ul {
         $img_node setAttribute border "0"
         $img_node setAttribute alt "$object_title"
         $a_node appendChild $img_node
-        $dom_node appendChild $a_node
+        if { $li_mode_p } {
+            set file_node [$dom_doc createElement li]
+            $file_node appendChild $a_node
+            $dom_node appendChild $file_node
+        } else {
+            $dom_node appendChild $a_node
+        }
 
     } else {
-        # get associated files
+        # is webcontent, let's get the associated files
         foreach file_list [db_list_of_lists associated_files {
             select cpf.imsld_file_id,
             cpf.file_name,
@@ -2190,8 +2203,13 @@ ad_proc -public imsld::process_resource_as_ul {
             $img_node setAttribute border "0"
             $img_node setAttribute alt "$file_name"
             $a_node appendChild $img_node
-            $dom_node appendChild $a_node
-
+            if { $li_mode_p } {
+                set file_node [$dom_doc createElement li]
+                $file_node appendChild $a_node
+                $dom_node appendChild $file_node
+            } else {
+                $dom_node appendChild $a_node
+            }
         }
         # get associated urls
         db_foreach associated_urls {
@@ -2209,8 +2227,13 @@ ad_proc -public imsld::process_resource_as_ul {
             $img_node setAttribute border "0"
             $img_node setAttribute alt "$url"
             $a_node appendChild $img_node
-            $dom_node appendChild $a_node
-
+            if { $li_mode_p } {
+                set file_node [$dom_doc createElement li]
+                $file_node appendChild $a_node
+                $dom_node appendChild $file_node
+            } else {
+                $dom_node appendChild $a_node
+            }
         }
     }
 }
@@ -3986,11 +4009,11 @@ ad_proc -public imsld::get_activity_from_resource {
                 if { [string eq $rel_type_nested imsld_as_info_i_rel] } {
                     # get the activity_structure_id and return it
                     set activities_list [concat $activities_list [db_list_of_lists activity_structure_ref {
-                        select as.structure_id as activity_id
-                        as.item_id as activity_item_id,
+                        select structure_id as activity_id,
+                        item_id as activity_item_id,
                         'structure'
-                        from imsld_activity_structuresi as
-                        where as.item_id = :object_id_nested
+                        from imsld_activity_structuresi
+                        where item_id = :object_id_nested
                     }]]
                 }
                 if { [string eq $rel_type_nested imsld_l_object_item_rel] } {
@@ -4094,7 +4117,7 @@ ad_proc -public imsld::finish_resource {
                 set first_resources_item_list [imsld::process_support_activity -activity_item_id $activity_item_id -resource_mode "t"]
             }
             structure {
-                set first_resources_item_list [imsld::process_activity_structure -activity_item_id $activity_item_id -resource_mode "t"]
+                set first_resources_item_list [imsld::process_activity_structure -structure_item_id $activity_item_id -resource_mode "t"]
             }
         }
 
