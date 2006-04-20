@@ -89,7 +89,7 @@ if { [lindex $is_imsld_list 0] } {
         set staff [llength [$roles child all imsld:staff]]
         multirow append imsld_info "[_ imsld.Total_Roles]" [expr $learners + $staff]
         multirow append imsld_info "[_ imsld.Learners_Roles]" $learners
-        multirow append imsld_info "[_ imsld.Staff_Roels]" $staff
+        multirow append imsld_info "[_ imsld.Staff_Roles]" $staff
     }
 
     set activities [$components child all imsld:activities]
