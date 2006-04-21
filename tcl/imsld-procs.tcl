@@ -2564,7 +2564,7 @@ ad_proc -public imsld::process_learning_activity_as_ul {
             }
         }
     }
-    $dom_node appendChild $description_node
+    if { [llength $linear_item_list ] > 0 } { $dom_node appendChild $description_node }
 
     # prerequisites
     set prerequisites_node [$dom_doc createElement div]
@@ -2581,8 +2581,8 @@ ad_proc -public imsld::process_learning_activity_as_ul {
                                     -dom_node $prerequisites_node \
                                     -dom_doc $dom_doc]
 
+        $dom_node appendChild $prerequisites_node
     }
-    $dom_node appendChild $prerequisites_node
 
     # learning objectives
     set objectives_node [$dom_doc createElement div]
@@ -2599,8 +2599,8 @@ ad_proc -public imsld::process_learning_activity_as_ul {
                                  -dom_node $objectives_node \
                                  -dom_doc $dom_doc]
 
+        $dom_node appendChild $objectives_node
     }
-    $dom_node appendChild $objectives_node
 
     # process feedback only if the activity is finished
     set feedback_node [$dom_doc createElement div]
@@ -2621,9 +2621,9 @@ ad_proc -public imsld::process_learning_activity_as_ul {
             imsld::process_feedback_as_ul -on_completion_item_id $on_completion_item_id \
                 -dom_doc $dom_doc \
                 -dom_node $feedback_node
+            $dom_node appendChild $feedback_node
         }
     }
-    $dom_node appendChild $feedback_node
 
     if { [string eq "t" $resource_mode] } {
         # get environments
@@ -2844,7 +2844,7 @@ ad_proc -public imsld::process_support_activity_as_ul {
             }
         }
     }
-    $dom_node appendChild $description_node
+    if { [llength $linear_item_list ] > 0 } { $dom_node appendChild $description_node }
 
     # process feedback only if the activity is finished
     set feedback_node [$dom_doc createElement div]
@@ -2865,9 +2865,9 @@ ad_proc -public imsld::process_support_activity_as_ul {
             imsld::process_feedback_as_ul -on_completion_item_id $on_completion_item_id \
                 -dom_doc $dom_doc \
                 -dom_node $feedback_node
+            $dom_node appendChild $feedback_node
         }
     }
-    $dom_node appendChild $feedback_node
 
     if { [string eq "t" $resource_mode] } {
         # get environments
