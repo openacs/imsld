@@ -3149,11 +3149,16 @@ ad_proc -public imsld::generate_structure_activities_list {
                     set text [$dom_doc createTextNode " "]
                     $activity_node appendChild $text
 
-                    set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
-                    set text [$dom_doc createTextNode "(finish)"]
-                    $a_node appendChild $text
-                    $activity_node appendChild $a_node
+                    if { !$completed_p } {
+                        set a_node [$dom_doc createElement a]
+                        $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
+                        set text [$dom_doc createTextNode "\u2610"]
+                        $a_node appendChild $text
+                        $activity_node appendChild $a_node
+                    } else {
+                        set text [$dom_doc createTextNode "\u2611"]
+                        $activity_node appendChild $text
+                    }
 
                     set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
                 }
@@ -3181,12 +3186,17 @@ ad_proc -public imsld::generate_structure_activities_list {
 
                     set text [$dom_doc createTextNode " "]
                     $activity_node appendChild $text
-
-                    set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
-                    set text [$dom_doc createTextNode "(finish)"]
-                    $a_node appendChild $text
-                    $activity_node appendChild $a_node
+                    
+                    if { !$completed_p } {
+                        set a_node [$dom_doc createElement a]
+                        $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
+                        set text [$dom_doc createTextNode "\u2610"]
+                        $a_node appendChild $text
+                        $activity_node appendChild $a_node
+                    } else {
+                        set text [$dom_doc createTextNode "\u2611"]
+                        $activity_node appendChild $text
+                    }
 
                     set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
                 }
@@ -3272,12 +3282,17 @@ ad_proc -public imsld::generate_activities_tree {
 
                     set text [$dom_doc createTextNode " "]
                     $activity_node appendChild $text
-
-                    set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
-                    set text [$dom_doc createTextNode "(finish)"]
-                    $a_node appendChild $text
-                    $activity_node appendChild $a_node
+                        
+                    if { !$completed_p } {
+                        set a_node [$dom_doc createElement a]
+                        $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
+                        set text [$dom_doc createTextNode "\u2610"]
+                        $a_node appendChild $text
+                        $activity_node appendChild $a_node
+                    } else {
+                        set text [$dom_doc createTextNode "\u2611"]
+                        $activity_node appendChild $text
+                    }
 
                     $dom_node appendChild $activity_node
                 }
@@ -3300,12 +3315,17 @@ ad_proc -public imsld::generate_activities_tree {
 
                     set text [$dom_doc createTextNode " "]
                     $activity_node appendChild $text
-
-                    set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
-                    set text [$dom_doc createTextNode "(finish)"]
-                    $a_node appendChild $text
-                    $activity_node appendChild $a_node
+                    
+                    if { !$completed_p } {
+                        set a_node [$dom_doc createElement a]
+                        $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
+                        set text [$dom_doc createTextNode "\u2610"]
+                        $a_node appendChild $text
+                        $activity_node appendChild $a_node
+                    } else {
+                        set text [$dom_doc createTextNode "\u2611"]
+                        $activity_node appendChild $text
+                    }
 
                     $dom_node appendChild $activity_node
                 }
