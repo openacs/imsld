@@ -184,17 +184,17 @@ ad_proc -public imsld::parse::expand_file {
             # Therefore it if it is 1, then it concluded successfully
             # but with warnings, so we switch it back to 0
             
-            if { $error_p == 0 } {
-                set error_p 1
+            if { $error_p == 1 } {
+                set error_p 0
             }
         }
         default {
-            set error_p 0
+            set error_p 1
             set errmsg "[_ imsld.lt_Could_not_determine_w]"
         }
     }
     
-    if { !$error_p } {
+    if { $error_p } {
         ns_log Notice "IMSLD::imsld::parse::expand_file: extract type $type failed $errmsg"
         imsld::parse::remove_dir -dir $tmp_dir
         return -code error "IMSLD::imsld::parse::expand_file: extract type $type failed $errmsg"
