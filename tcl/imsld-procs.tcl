@@ -3283,7 +3283,7 @@ ad_proc -public imsld::generate_activities_tree {
                     set text [$dom_doc createTextNode " "]
                     $activity_node appendChild $text
                         
-                    if { !$completed_p } {
+                    if { !$completed_activity_p } {
                         set a_node [$dom_doc createElement a]
                         $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
                         set text [$dom_doc createTextNode "\u2610"]
@@ -3316,7 +3316,7 @@ ad_proc -public imsld::generate_activities_tree {
                     set text [$dom_doc createTextNode " "]
                     $activity_node appendChild $text
                     
-                    if { !$completed_p } {
+                    if { !$completed_activity_p } {
                         set a_node [$dom_doc createElement a]
                         $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
                         set text [$dom_doc createTextNode "\u2610"]
