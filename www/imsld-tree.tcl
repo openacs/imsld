@@ -25,6 +25,7 @@ set next_activity_id [imsld::get_next_activity_list -imsld_item_id $imsld_item_i
 dom createDocument ul doc
 set dom_root [$doc documentElement]
 $dom_root setAttribute class "mktree"
+$dom_root setAttribute style "white-space: nowrap;"
 
 set imsld_title_node [$doc createElement li]
 $imsld_title_node setAttribute class "liOpen"

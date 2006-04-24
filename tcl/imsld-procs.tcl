@@ -3150,14 +3150,17 @@ ad_proc -public imsld::generate_structure_activities_list {
                     $activity_node appendChild $text
 
                     if { !$completed_p } {
-                        set a_node [$dom_doc createElement a]
-                        $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
-                        set text [$dom_doc createTextNode "\u2610"]
-                        $a_node appendChild $text
-                        $activity_node appendChild $a_node
+                        set input_node [$dom_doc createElement input]
+                        $input_node setAttribute type "checkbox"
+                        $input_node setAttribute style "vertical-align: bottom;"
+                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld\""
+                        $activity_node appendChild $input_node
                     } else {
-                        set text [$dom_doc createTextNode "\u2611"]
-                        $activity_node appendChild $text
+                        set input_node [$dom_doc createElement input]
+                        $input_node setAttribute type "checkbox"
+                        $input_node setAttribute checked "true"
+                        $input_node setAttribute disabled "true"
+                        $activity_node appendChild $input_node
                     }
 
                     set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
@@ -3188,14 +3191,17 @@ ad_proc -public imsld::generate_structure_activities_list {
                     $activity_node appendChild $text
                     
                     if { !$completed_p } {
-                        set a_node [$dom_doc createElement a]
-                        $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
-                        set text [$dom_doc createTextNode "\u2610"]
-                        $a_node appendChild $text
-                        $activity_node appendChild $a_node
+                        set input_node [$dom_doc createElement input]
+                        $input_node setAttribute type "checkbox"
+                        $input_node setAttribute style "vertical-align: bottom;"
+                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld\""
+                        $activity_node appendChild $input_node
                     } else {
-                        set text [$dom_doc createTextNode "\u2611"]
-                        $activity_node appendChild $text
+                        set input_node [$dom_doc createElement input]
+                        $input_node setAttribute type "checkbox"
+                        $input_node setAttribute checked "true"
+                        $input_node setAttribute disabled "true"
+                        $activity_node appendChild $input_node
                     }
 
                     set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
@@ -3283,15 +3289,18 @@ ad_proc -public imsld::generate_activities_tree {
                     set text [$dom_doc createTextNode " "]
                     $activity_node appendChild $text
                         
-                    if { !$completed_activity_p } {
-                        set a_node [$dom_doc createElement a]
-                        $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
-                        set text [$dom_doc createTextNode "\u2610"]
-                        $a_node appendChild $text
-                        $activity_node appendChild $a_node
+                    if { !$completed_p } {
+                        set input_node [$dom_doc createElement input]
+                        $input_node setAttribute type "checkbox"
+                        $input_node setAttribute style "vertical-align: bottom;"
+                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld\""
+                        $activity_node appendChild $input_node
                     } else {
-                        set text [$dom_doc createTextNode "\u2611"]
-                        $activity_node appendChild $text
+                        set input_node [$dom_doc createElement input]
+                        $input_node setAttribute type "checkbox"
+                        $input_node setAttribute checked "true"
+                        $input_node setAttribute disabled "true"
+                        $activity_node appendChild $input_node
                     }
 
                     $dom_node appendChild $activity_node
@@ -3316,15 +3325,18 @@ ad_proc -public imsld::generate_activities_tree {
                     set text [$dom_doc createTextNode " "]
                     $activity_node appendChild $text
                     
-                    if { !$completed_activity_p } {
-                        set a_node [$dom_doc createElement a]
-                        $a_node setAttribute href "finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
-                        set text [$dom_doc createTextNode "\u2610"]
-                        $a_node appendChild $text
-                        $activity_node appendChild $a_node
+                    if { !$completed_p } {
+                        set input_node [$dom_doc createElement input]
+                        $input_node setAttribute type "checkbox"
+                        $input_node setAttribute style "vertical-align: bottom;"
+                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld\""
+                        $activity_node appendChild $input_node
                     } else {
-                        set text [$dom_doc createTextNode "\u2611"]
-                        $activity_node appendChild $text
+                        set input_node [$dom_doc createElement input]
+                        $input_node setAttribute type "checkbox"
+                        $input_node setAttribute checked "true"
+                        $input_node setAttribute disabled "true"
+                        $activity_node appendChild $input_node
                     }
 
                     $dom_node appendChild $activity_node
