@@ -3289,7 +3289,7 @@ ad_proc -public imsld::generate_activities_tree {
                     set text [$dom_doc createTextNode " "]
                     $activity_node appendChild $text
                         
-                    if { !$completed_p } {
+                    if { !$completed_activity_p } {
                         set input_node [$dom_doc createElement input]
                         $input_node setAttribute type "checkbox"
                         $input_node setAttribute style "vertical-align: bottom;"
@@ -3325,7 +3325,7 @@ ad_proc -public imsld::generate_activities_tree {
                     set text [$dom_doc createTextNode " "]
                     $activity_node appendChild $text
                     
-                    if { !$completed_p } {
+                    if { !$completed_activity_p } {
                         set input_node [$dom_doc createElement input]
                         $input_node setAttribute type "checkbox"
                         $input_node setAttribute style "vertical-align: bottom;"
