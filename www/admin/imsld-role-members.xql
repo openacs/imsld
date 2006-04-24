@@ -22,9 +22,12 @@
     <fullquery name="get_not_members_list">
 		<querytext>
         select aua.user_id
-        from acs_users_all aua
-        where user_id > 0
-              and not (user_id in ([join $members_list ","]))
+        from acs_users_all aua,
+             dotlrn_member_rels_approved dmra
+        where aua.user_id > 0
+              and not (aua.user_id in ([join $members_list ","]))
+              and aua.user_id=dmra.user_id
+              and dmra.community_id=:community_id
 		</querytext>
 	</fullquery>  
 

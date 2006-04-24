@@ -54,11 +54,11 @@ if {[string eq "t" $match_persons_p]} {
         foreach role_notallowed $not_allowed {
             lappend not_allowed_name [acs_user::get_element -user_id $role_notallowed -element name]
         }
-        ns_log Notice "nombres: $not_allowed_name"
+
         set parent_role [imsld::roles::get_parent_role -role_id $role]
         set parent_role_name [imsld::roles::get_roles_names -roles_list [list [list $parent_role 0]]]
 
-        ns_log Notice "padre $parent_role_name"
+
         
         set mensaje "<p>Members $not_allowed_name are already members of other subroles of role $parent_role_name.</p>
                      <p>Current UoL does not allow to include them in more than one subroles of the role.</p>
