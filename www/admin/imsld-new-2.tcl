@@ -51,6 +51,15 @@ imsld::parse::remove_dir -dir $tmp_dir
 
 set warnings "[lindex $manifest_list 1]"
 
+# get imsld_id 
+set imsld_id [db_list get_imslds_from_manifest {}]
+
+# NOTE: by now we create one default run for each new ims-ld
+ns_write "[_ imsld.Creating_default_Run]"
+set run_id [imsld::instance::instantiate_imsld -imsld_id $imsld_id -community_id $community_id]
+ns_write "[_ imsld.nbspnbspnbspdone]"
+ns_sleep 2
+
 if { ![string eq "" $warnings] } {
     ns_write "[_ imsld.lt_br__Warnings_ul_warni]"
     ns_sleep 5
@@ -58,8 +67,7 @@ if { ![string eq "" $warnings] } {
 
 ns_write "</blockquote>"
 
-#get imslds ang jump to admin members page
-set imsld_id [db_list get_imslds_from_manifest {}]
-ad_progress_bar_end -url [export_vars -base imsld-admin-roles {imsld_id}]
+# go to the roles admin page...
+ad_progress_bar_end -url [export_vars -base imsld-admin-roles {run_id}]
 
 

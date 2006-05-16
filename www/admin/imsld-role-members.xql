@@ -23,11 +23,13 @@
 		<querytext>
         select aua.user_id
         from acs_users_all aua,
-             dotlrn_member_rels_approved dmra
+             acs_rels ar,
+             imsld_run_users_group_ext r_map
         where aua.user_id > 0
-              and not (aua.user_id in ([join $members_list ","]))
-              and aua.user_id=dmra.user_id
-              and dmra.community_id=:community_id
+              and aua.user_id not in ([join $members_list ","])
+              and aua.user_id=ar.object_id_two
+              and ar.object_id_one = r_map.group_id
+              and r_map.run_id = :run_id
 		</querytext>
 	</fullquery>  
 

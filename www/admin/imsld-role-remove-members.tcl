@@ -11,7 +11,7 @@ ad_page_contract {
     group_instance
     role
     imsld_id
- 
+    run_id
 } 
 #only set required variables
    set temp_list [list]
@@ -22,7 +22,7 @@ ad_page_contract {
             lappend temp_list $member
         }
    }
-   ad_returnredirect [export_vars -base imsld-admin-roles {imsld_id role group_instance {members_list $temp_list}}]
+   ad_returnredirect [export_vars -base imsld-admin-roles {imsld_id run_id role group_instance {members_list $temp_list}}]
 
 
    

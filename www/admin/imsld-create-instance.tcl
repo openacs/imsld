@@ -9,13 +9,14 @@ ad_page_contract {
     {user_id:multiple "0"}
     role
     imsld_id
+    run_id
     parent_group_id:optional
 }
 
 db_1row get_imsld_role_info {}
 set number_of_groups [llength [db_list get_related_groups {}]]
 
-set return_url [export_vars -base imsld-admin-roles {{role $role} {imsld_id $imsld_id} }]
+set return_url [export_vars -base imsld-admin-roles {{role $role} {imsld_id $imsld_id} {run_id $run_id}}]
 
 if { !([string eq $number_of_groups "0"] || [string eq $create_new_p  "t"] ) } {
 
@@ -27,10 +28,10 @@ if { !([string eq $number_of_groups "0"] || [string eq $create_new_p  "t"] ) } {
 
 if {[info exist parent_group_id] } {
     set new_instance [imsld::roles::create_instance -role_id $role -parent_group_id $parent_group_id]
-    ad_returnredirect [export_vars -base imsld-admin-roles {{role $role} {imsld_id $imsld_id} {group_instance $new_instance}}]
+    ad_returnredirect [export_vars -base imsld-admin-roles {{role $role} {imsld_id $imsld_id} {run_id $run_id} {group_instance $new_instance}}]
 } elseif { ![db_0or1row has_role_parent_p {}] } {
     set new_instance [imsld::roles::create_instance -role_id $role]
-    ad_returnredirect [export_vars -base imsld-admin-roles {{role $role} {imsld_id $imsld_id} {group_instance $new_instance}}]
+    ad_returnredirect [export_vars -base imsld-admin-roles {{role $role} {imsld_id $imsld_id} {run_id $run_id} {group_instance $new_instance}}]
 } else {
     set flag on
     template::list::create \
@@ -43,7 +44,7 @@ if {[info exist parent_group_id] } {
             }
         }
     db_multirow -extend {link_to} possible_parents get_possible_parents_list {} {
-        set link_to [export_vars -base imsld-create-instance {role imsld_id {parent_group_id $parent_id}}]
+        set link_to [export_vars -base imsld-create-instance {role imsld_id run_id {parent_group_id $parent_id}}]
     }
 }
 

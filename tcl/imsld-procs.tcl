@@ -174,6 +174,7 @@ ad_proc -public imsld::sweep_expired_activities {
                 and app.member_state = 'approved'
             } {
                 imsld::mark_method_finished -imsld_id $imsld_id \
+                    -run_id $run_id \
                     -method_id $method_id \
                     -user_id $user_id
             }
@@ -215,6 +216,7 @@ ad_proc -public imsld::sweep_expired_activities {
                 and app.member_state = 'approved'
             } {
                 imsld::mark_play_finished -imsld_id $imsld_id \
+                    -run_id $run_id \
                     -play_id $play_id \
                     -user_id $user_id
             }
@@ -259,6 +261,7 @@ ad_proc -public imsld::sweep_expired_activities {
                 and app.member_state = 'approved'
             } {
                 imsld::mark_act_finished -imsld_id $imsld_id \
+                    -run_id $run_id \
                     -play_id $play_id \
                     -act_id $act_id \
                     -user_id $user_id
@@ -313,6 +316,7 @@ ad_proc -public imsld::sweep_expired_activities {
                     and app.member_state = 'approved'
                 } {
                     imsld::finish_component_element -imsld_id $imsld_id \
+                        -run_id $run_id \
                         -play_id $play_id \
                         -act_id $act_id \
                         -role_part_id $role_part_id \
@@ -371,6 +375,7 @@ ad_proc -public imsld::sweep_expired_activities {
                     and app.member_state = 'approved'
                 } {
                     imsld::finish_component_element -imsld_id $imsld_id \
+                        -run_id $run_id \
                         -play_id $play_id \
                         -act_id $act_id \
                         -role_part_id $role_part_id \
@@ -387,6 +392,7 @@ ad_proc -public imsld::sweep_expired_activities {
 ad_proc -public imsld::mark_role_part_finished { 
     -role_part_id:required
     -imsld_id:required
+    -run_id:required
     -play_id:required
     -act_id:required
     {-user_id ""}
@@ -394,7 +400,7 @@ ad_proc -public imsld::mark_role_part_finished {
     mark the role_part as finished, as well as all the referenced activities
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
-    if { [imsld::role_part_finished_p -role_part_id $role_part_id -user_id $user_id] } {
+    if { [imsld::role_part_finished_p -run_id $run_id -role_part_id $role_part_id -user_id $user_id] } {
         return
     }
     db_1row role_part_info {
@@ -424,6 +430,7 @@ ad_proc -public imsld::mark_role_part_finished {
 
     if { ![string eq $type "none"] } {
         imsld::finish_component_element -imsld_id $imsld_id \
+            -run_id $run_id \
             -play_id $play_id \
             -act_id $act_id \
             -role_part_id $role_part_id \
@@ -448,13 +455,14 @@ ad_proc -public imsld::mark_role_part_finished {
 ad_proc -public imsld::mark_act_finished { 
     -act_id:required
     -imsld_id:required
+    -run_id:required
     -play_id:required
     {-user_id ""}
 } { 
     mark the act as finished, as well as all the referenced role_parts
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
-    if { [imsld::act_finished_p -act_id $act_id -user_id $user_id] } {
+    if { [imsld::act_finished_p -run_id $run_id -act_id $act_id -user_id $user_id] } {
         return
     }
     db_1row act_info {
@@ -477,6 +485,7 @@ ad_proc -public imsld::mark_act_finished {
             -act_id $act_id \
             -play_id $play_id \
             -imsld_id $imsld_id \
+            -run_id $run_id \
             -user_id $user_id
     }
 }
@@ -484,12 +493,13 @@ ad_proc -public imsld::mark_act_finished {
 ad_proc -public imsld::mark_play_finished { 
     -play_id:required
     -imsld_id:required
+    -run_id:required
     {-user_id ""}
 } { 
     mark the play as finished. In this case there's only need to mark the play finished and not doing anything with the referenced acts, role_parts, etc.
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
-    if { [imsld::play_finished_p -play_id $play_id -user_id $user_id] } {
+    if { [imsld::play_finished_p -run_id $run_id -play_id $play_id -user_id $user_id] } {
         return
     }
     db_dml insert_play { *SQL* }
@@ -504,18 +514,20 @@ ad_proc -public imsld::mark_play_finished {
         imsld::mark_act_finished -act_id $act_id \
             -play_id $play_id \
             -imsld_id $imsld_id \
+            -run_id $run_id \
             -user_id $user_id
     }
 }
 
 ad_proc -public imsld::mark_imsld_finished { 
     -imsld_id:required
+    -run_id:required
     {-user_id ""}
 } { 
     mark the unit of learning as finished
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
-    if { [imsld::imsld_finished_p -imsld_id $imsld_id -user_id $user_id] } {
+    if { [imsld::imsld_finished_p -imsld_id $imsld_id -run_id $run_id -user_id $user_id] } {
         return
     }
     db_dml insert_uol { *SQL* }
@@ -530,19 +542,21 @@ ad_proc -public imsld::mark_imsld_finished {
         set play_id [lindex $referenced_play 0]
         imsld::mark_play_finished -play_id $play_id \
             -imsld_id $imsld_id \
+            -run_id $run_id \
             -user_id $user_id
     }
 }
 
 ad_proc -public imsld::mark_method_finished { 
     -imsld_id:required
+    -run_id:required
     -method_id:required
     {-user_id ""}
 } { 
     mark the method as finished
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
-    if { [imsld::method_finished_p -method_id $method_id -user_id $user_id] } {
+    if { [imsld::method_finished_p -run_id $run_id -method_id $method_id -user_id $user_id] } {
         return
     }
     db_dml insert_method { *SQL* }
@@ -556,6 +570,7 @@ ad_proc -public imsld::mark_method_finished {
         set play_id [lindex $referenced_play 0]
         imsld::mark_play_finished -play_id $play_id \
             -imsld_id $imsld_id \
+            -run_id $run_id \
             -user_id $user_id
     }
 }
@@ -671,6 +686,7 @@ ad_proc -public imsld::item_revision_new {
 
 ad_proc -public imsld::finish_component_element {
     -imsld_id
+    -run_id
     {-play_id ""}
     {-act_id ""}
     {-role_part_id ""}
@@ -679,7 +695,8 @@ ad_proc -public imsld::finish_component_element {
     -code_call:boolean
     {-user_id ""}
 } {
-    @option imsld_id
+    @param imsld_id
+    @param run_id
     @option play_id
     @option act_id
     @option role_part_id
@@ -696,7 +713,7 @@ ad_proc -public imsld::finish_component_element {
     if { !$code_call_p } {
         # get the url to parse it and get the info
         set url [ns_conn url]
-        regexp {finish-component-element-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([a-z]+).imsld$} $url match imsld_id play_id act_id role_part_id element_id type
+        regexp {finish-component-element-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([a-z]+).imsld$} $url match imsld_id run_id play_id act_id role_part_id element_id type
     }
     # now that we have the necessary info, mark the finished element completed and return
     db_dml insert_element_entry { *SQL* }
@@ -756,6 +773,7 @@ ad_proc -public imsld::finish_component_element {
             # if { $scturcture_finished_p || (![string eq $number_to_select ""] && ($total_completed >= $number_to_select)) } {}
             if { $scturcture_finished_p } {
                 imsld::finish_component_element -imsld_id $imsld_id \
+                    -run_id $run_id \
                     -role_part_id $role_part_id \
                     -element_id $structure_id \
                     -type structure \
@@ -771,9 +789,10 @@ ad_proc -public imsld::finish_component_element {
     # 2. let's see if the finished role_part triggers the ending of the act which references it.
     # 3. let's see if the finished act triggers the ending the play which references it
     # 4. let's see if the finished play triggers the ending of the method which references it.
-    if { [imsld::role_part_finished_p -role_part_id $role_part_id -user_id $user_id] && ![db_0or1row already_marked_p { *SQL* }] } { 
+    if { [imsld::role_part_finished_p -run_id $run_id -role_part_id $role_part_id -user_id $user_id] && ![db_0or1row already_marked_p { *SQL* }] } { 
         # case number 1
         imsld::finish_component_element -imsld_id $imsld_id \
+            -run_id $run_id \
             -play_id $play_id \
             -act_id $act_id \
             -role_part_id $role_part_id \
@@ -812,7 +831,7 @@ ad_proc -public imsld::finish_component_element {
             and ar.rel_type = 'imsld_act_rp_completed_rel'
             and content_revision__is_live(rp.role_part_id) = 't'
         } {
-            if { ![imsld::role_part_finished_p -role_part_id $role_part_id -user_id $user_id] } {
+            if { ![imsld::role_part_finished_p -run_id $run_id -role_part_id $role_part_id -user_id $user_id] } {
                 set completed_act_p 0
             }
         } if_no_rows {
@@ -827,7 +846,7 @@ ad_proc -public imsld::finish_component_element {
                 where irp.act_id = :act_item_id
                 and content_revision__is_live(irp.role_part_id) = 't'
             } {
-                if { ![imsld::role_part_finished_p -role_part_id $role_part_id -user_id $user_id] } {
+                if { ![imsld::role_part_finished_p -run_id $run_id -role_part_id $role_part_id -user_id $user_id] } {
                     set completed_act_p 0
                 }
             }
@@ -838,6 +857,7 @@ ad_proc -public imsld::finish_component_element {
             imsld::mark_act_finished -act_id $act_id \
                 -play_id $play_id \
                 -imsld_id $imsld_id \
+                -run_id $run_id \
                 -user_id $user_id
             
             set completed_play_p 1
@@ -848,7 +868,7 @@ ad_proc -public imsld::finish_component_element {
                 and ip.item_id = ia.play_id
                 and content_revision__is_live(ia.act_id) = 't'
             } {
-                if { ![imsld::act_finished_p -act_id $act_id -user_id $user_id] } {
+                if { ![imsld::act_finished_p -run_id $run_id -act_id $act_id -user_id $user_id] } {
                     set completed_play_p 0
                 }
             }
@@ -856,6 +876,7 @@ ad_proc -public imsld::finish_component_element {
                 # case number 3
                 imsld::mark_play_finished -play_id $play_id \
                     -imsld_id $imsld_id \
+                    -run_id $run_id \
                     -user_id $user_id 
                 
                 set completed_unit_of_learning_p 1 
@@ -868,7 +889,7 @@ ad_proc -public imsld::finish_component_element {
                     and ar.rel_type = 'imsld_mp_completed_rel'
                     and content_revision__is_live(ip.play_id) = 't'
                 } {
-                    if { ![imsld::play_finished_p -play_id $play_id -user_id $user_id] } {
+                    if { ![imsld::play_finished_p -run_id $run_id -play_id $play_id -user_id $user_id] } {
                         set completed_unit_of_learning_p 0
                     }
                 } if_no_rows {
@@ -883,7 +904,7 @@ ad_proc -public imsld::finish_component_element {
                         where ip.method_id = :method_item_id
                         and content_revision__is_live(ip.play_id) = 't'
                     } {
-                        if { ![imsld::play_finished_p -play_id $play_id -user_id $user_id] } {
+                        if { ![imsld::play_finished_p -run_id $run_id -play_id $play_id -user_id $user_id] } {
                             set completed_unit_of_learning_p 0
                         }
                     }
@@ -891,7 +912,7 @@ ad_proc -public imsld::finish_component_element {
                         
                 if { $completed_unit_of_learning_p } {
                     # case number 4
-                    imsld::mark_imsld_finished -imsld_id $imsld_id -user_id $user_id
+                    imsld::mark_imsld_finished -imsld_id $imsld_id -run_id $run_id -user_id $user_id
                 }
             }
         }
@@ -901,7 +922,7 @@ ad_proc -public imsld::finish_component_element {
         set imsld_package_id [site_node_apm_integration::get_child_package_id \
                                   -package_id [dotlrn_community::get_package_id $community_id] \
                                   -package_key "[imsld::package_key]"]
-        ad_returnredirect "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/imsld-tree" -url { imsld_id }]"
+        ad_returnredirect "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/imsld-tree" -url { run_id }]"
     }
 }
 
@@ -909,6 +930,7 @@ ad_proc -public imsld::structure_next_activity {
     -activity_structure_id:required
     {-environment_list ""}
     -imsld_id
+    -run_id
     -role_part_id
     {-structures_info ""}
 } { 
@@ -921,10 +943,14 @@ ad_proc -public imsld::structure_next_activity {
     # mark structure started
     if { ![db_0or1row already_marked {
         select 1 from imsld_status_user
-        where imsld_id = :imsld_id and user_id = :user_id and related_id = :activity_structure_id and status = 'started'
+        where run_id = :run_id 
+        and user_id = :user_id 
+        and related_id = :activity_structure_id 
+        and status = 'started'
     }] } {
         db_dml mark_structure_started {
             insert into imsld_status_user (imsld_id,
+                                           run_id,
                                            role_part_id,
                                            related_id,
                                            user_id,
@@ -933,13 +959,14 @@ ad_proc -public imsld::structure_next_activity {
                                            status) 
             (
              select :imsld_id,
+             :run_id,
              :role_part_id,
              :activity_structure_id,
              :user_id,
              'structure',
              now(),
              'started'
-             where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :activity_structure_id and status = 'started')
+             where not exists (select 1 from imsld_status_user where run_id = :run_id and user_id = :user_id and related_id = :activity_structure_id and status = 'started')
              )
         }
     
@@ -1011,7 +1038,7 @@ ad_proc -public imsld::structure_next_activity {
     } 
 
     if { [string eq $next_activity_type structure] } {
-        set next_activity_list [imsld::structure_next_activity -activity_structure_id $next_activity_id -environment_list $environment_list -imsld_id $imsld_id -role_part_id $role_part_id -structures_info $structures_info]
+        set next_activity_list [imsld::structure_next_activity -activity_structure_id $next_activity_id -environment_list $environment_list -imsld_id $imsld_id -run_id $run_id -role_part_id $role_part_id -structures_info $structures_info]
         set next_activity_id [lindex $next_activity_list 0]
         set next_activity_type [lindex $next_activity_list 1]
         set environment_list [concat $environment_list [lindex $next_activity_list 2]]
@@ -1022,9 +1049,11 @@ ad_proc -public imsld::structure_next_activity {
 
 ad_proc -public imsld::structure_finished_p { 
     -structure_id:required
+    -run_id
     {-user_id ""}
 } { 
     @param structure_id
+    @param run_id
     @option user_id
     
     @return 0 if the any activity referenced from the activity structure hasn't been finished. 1 otherwise
@@ -1049,7 +1078,10 @@ ad_proc -public imsld::structure_finished_p {
                 # is the activity finished ?
                 if { ![db_0or1row completed_p {
                     select 1 from imsld_status_user 
-                    where related_id = content_item__get_live_revision(:object_id_two) and user_id = :user_id and status = 'finished'
+                    where related_id = content_item__get_live_revision(:object_id_two) 
+                    and user_id = :user_id 
+                    and status = 'finished'
+                    and run_id = :run_id
                 }] } {
                     set all_completed 0
                 }
@@ -1065,11 +1097,14 @@ ad_proc -public imsld::structure_finished_p {
                 # is the activity finished ?
                 if { ![db_0or1row completed_p {
                     select 1 from imsld_status_user 
-                    where related_id = :structure_id and user_id = :user_id and status = 'finished'
+                    where related_id = :structure_id 
+                    and user_id = :user_id 
+                    and status = 'finished'
+                    and run_id = :run_id
                 }] } {
                     set all_completed 0
                 }
-                if { ![imsld::structure_finished_p -structure_id $structure_id -user_id $user_id] } {
+                if { ![imsld::structure_finished_p -run_id $run_id -structure_id $structure_id -user_id $user_id] } {
                     set all_completed 0
                 }
             }
@@ -1080,9 +1115,12 @@ ad_proc -public imsld::structure_finished_p {
 
 ad_proc -public imsld::role_part_finished_p { 
     -role_part_id:required
+    -run_id:required
     {-user_id ""}
 } { 
     @param role_part_id Role Part identifier
+    @param run_id
+    @option user_id
     
     @return 0 if the role part hasn't been finished. 1 otherwise
 } {
@@ -1114,6 +1152,7 @@ ad_proc -public imsld::role_part_finished_p {
                 select count(*) from imsld_status_user
                 where completed_id = content_item__get_live_revision(:learning_activity_id)
                 and user_id = :user_id
+                and run_id = :run_id
             }] } {
                 return 1
             }
@@ -1123,6 +1162,7 @@ ad_proc -public imsld::role_part_finished_p {
                 select count(*) from imsld_status_user
                 where completed_id = content_item__get_live_revision(:support_activity_id)
                 and user_id = :user_id
+                and run_id = :run_id
             }] } {
                 return 1
             }
@@ -1133,7 +1173,7 @@ ad_proc -public imsld::role_part_finished_p {
                 from imsld_activity_structuresi
                 where item_id = :activity_structure_id
             }
-            return [imsld::structure_finished_p -structure_id $structure_id -user_id $user_id]
+            return [imsld::structure_finished_p -run_id $run_id -structure_id $structure_id -user_id $user_id]
         }
         none {
             return 1
@@ -1144,9 +1184,12 @@ ad_proc -public imsld::role_part_finished_p {
 
 ad_proc -public imsld::act_finished_p { 
     -act_id:required
+    -run_id:required
     {-user_id ""}
 } { 
     @param act_id
+    @param run_id
+    @oprion user_id
     
     @return 0 if the at hasn't been finished. 1 otherwise
 } {
@@ -1156,9 +1199,12 @@ ad_proc -public imsld::act_finished_p {
 
 ad_proc -public imsld::play_finished_p { 
     -play_id:required
+    -run_id:required
     {-user_id ""}
 } { 
     @param play_id
+    @param run_id
+    @option user_id
     
     @return 0 if the play hasn't been finished. 1 otherwise
 } {
@@ -1168,14 +1214,18 @@ ad_proc -public imsld::play_finished_p {
         from imsld_status_user
         where completed_id = :play_id
         and user_id = :user_id
+        and run_id = :run_id
     }]
 } 
 
 ad_proc -public imsld::method_finished_p { 
     -method_id:required
+    -run_id:required
     {-user_id ""}
 } { 
     @param method_id
+    @param run_id
+    @oprion user_id
     
     @return 0 if the method hasn't been finished. 1 otherwise
 } {
@@ -1185,14 +1235,18 @@ ad_proc -public imsld::method_finished_p {
         from imsld_status_user
         where completed_id = :method_id
         and user_id = :user_id
+        and run_id = :run_id
     }]
 } 
 
 ad_proc -public imsld::imsld_finished_p { 
     -imsld_id:required
+    -run_id:required
     {-user_id ""}
 } { 
     @param imsld_id
+    @param run_id
+    @option user_id
     
     @return 0 if the imsld hasn't been finished. 1 otherwise
 } {
@@ -1202,16 +1256,40 @@ ad_proc -public imsld::imsld_finished_p {
         from imsld_status_user
         where completed_id = :imsld_id
         and user_id = :user_id
+        and run_id = :run_id
     }]
 } 
 
+ad_proc -public imsld::class_visible_p { 
+    -run_id:required
+    -owner_id:required
+    -class_name:required
+} { 
+    @param run_id
+    @param owner_id
+    @param class_name
+
+    @return 1 if the class of the owner_id is currently visible in the run, 0 otherwise.
+} {
+    return [expr ![db_0or1row class_visible_p {
+        select 1
+        from imsld_attribute_instances
+        where run_id = :run_id
+        and type = 'class'
+        and name = :class_name
+        and is_visible_p = 'f'
+    }]]
+}
+
 ad_proc -public imsld::process_service_as_ul {
     -service_item_id:required
+    -run_id:required
     {-resource_mode "f"}
     -dom_node
     -dom_doc
 } { 
     @param service_item_id
+    @param run_id
     @option resource_mode
     @param dom_node
     @param dom_doc
@@ -1221,16 +1299,17 @@ ad_proc -public imsld::process_service_as_ul {
     set services_list [list]
 
     # get service info
-    db_1row service_info {
+    if { ![db_0or1row service_info {
         select serv.service_id,
         serv.identifier,
-        serv.class,
-        serv.is_visible_p,
         serv.service_type,
         serv.title as service_title
-        from imsld_servicesi serv 
+        from imsld_servicesi serv
         where serv.item_id = :service_item_id
         and content_revision__is_live(serv.service_id) = 't'
+    }] } {
+        # not visible, return
+        return
     }
 
     switch $service_type {
@@ -1263,6 +1342,7 @@ ad_proc -public imsld::process_service_as_ul {
                     lappend resource_item_list $resource_item_id
                 }
                 imsld::process_resource_as_ul -resource_item_id $resource_item_id \
+                    -run_id $run_id \
                     -dom_node $dom_node \
                     -dom_doc $dom_doc
 
@@ -1375,7 +1455,7 @@ ad_proc -public imsld::process_service {
         }
         
         default {
-            ad_return_error "send-mail serivce not implemented yet" "Sorry, that service type ($service_type) hasn't been implemented yet. But be patience, we are working on it =)"
+            ad_return_error "[_ imsld.lt_Service_type_service_]" "[_ imsld.lt_Sorry_that_service_ty]"
             ad_script_abort
         }
     }
@@ -1389,11 +1469,13 @@ ad_proc -public imsld::process_service {
 
 ad_proc -public imsld::process_environment_as_ul {
     -environment_item_id:required
+    -run_id:required
     {-resource_mode "f"}
     -dom_node:required
     -dom_doc:required
 } { 
     @param environment_item_id
+    @param run_id
     @option resource_mode
     @param dom_node
     @param dom_doc
@@ -1423,16 +1505,25 @@ ad_proc -public imsld::process_environment_as_ul {
         select item_id as learning_object_item_id,
         learning_object_id,
         identifier,
-        coalesce(title,identifier) as lo_title
-        from imsld_learning_objectsi
+        coalesce(title,identifier) as lo_title,
+        class
+        from imsld_learning_objectsi, imsld_attribute_instances attr
         where environment_id = :environment_item_id
         and content_revision__is_live(learning_object_id) = 't'
+        and attr.owner_id = learning_object_id
+        and attr.run_id = :run_id
+        and attr.type = 'isvisible'
+        and attr.is_visible_p = 't'
         order by creation_date
     }] {
         set learning_object_item_id [lindex $learning_objects_list 0]
         set learning_object_id [lindex $learning_objects_list 1]
         set identifier [lindex $learning_objects_list 2]
         set lo_title [lindex $learning_objects_list 3]
+        set class_name [lindex $learning_objects_list 4]
+        if { ![imsld::class_visible_p -run_id $run_id -owner_id $learning_object_id -class_name $class_name] } {
+            continue
+        }
         # learning object item. get the files associated
         set linear_item_list [db_list_of_lists item_linear_list { 
             select ii.imsld_item_id
@@ -1448,7 +1539,7 @@ ad_proc -public imsld::process_environment_as_ul {
                 select cpr.resource_id,
                 cr2.item_id as resource_item_id,
                 cpr.type as resource_type
-                from imsld_cp_resources cpr, imsld_items ii,
+                from imsld_cp_resources cpr, imsld_items ii, imsld_attribute_instances attr,
                 acs_rels ar, cr_items cr1, cr_items cr2
                 where ar.object_id_one = cr1.item_id
                 and ar.object_id_two = cr2.item_id
@@ -1457,6 +1548,10 @@ ad_proc -public imsld::process_environment_as_ul {
                 and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      or ii.imsld_item_id = :imsld_item_id)
+                and attr.owner_id = ii.imsld_item_id
+                and attr.run_id = :run_id
+                and attr.type = 'isvisible'
+                and attr.is_visible_p = 't'
             }] {
                 set resource_id [lindex $environments_list 0]
                 set resource_item_id [lindex $environments_list 1]
@@ -1465,6 +1560,7 @@ ad_proc -public imsld::process_environment_as_ul {
                     lappend resource_item_list $resource_item_id
                 }
                 set one_learning_object_list [imsld::process_resource_as_ul -resource_item_id $resource_item_id \
+                                                  -run_id $run_id \
                                                   -dom_node $environment_node \
                                                   -dom_doc $dom_doc \
                                                   -li_mode]
@@ -1494,18 +1590,29 @@ ad_proc -public imsld::process_environment_as_ul {
         item_id as service_item_id,
         identifier,
         service_type,
-        title as service_title
-        from imsld_servicesi
+        title as service_title,
+        class
+        from imsld_servicesi, imsld_attribute_instances attr
         where environment_id = :environment_item_id
         and content_revision__is_live(service_id) = 't'
+        and attr.owner_id = service_id
+        and attr.run_id = :run_id
+        and attr.type = 'isvisible'
+        and attr.is_visible_p = 't'
     }] {
         set service_id [lindex $services_list 0]
         set service_item_id [lindex $services_list 1]
         set identifier [lindex $services_list 2]
         set service_type [lindex $services_list 3]
         set service_title [lindex $services_list 4]
+        set class_name [lindex $services_list 5]
+        if { ![imsld::class_visible_p -run_id $run_id -owner_id $service_id -class_name $class_name] } {
+            continue
+        }
+
         set environment_services_list [concat $environment_services_list \
                                            [list [imsld::process_service_as_ul -service_item_id $service_item_id \
+                                                      -run_id $run_id \
                                                       -resource_mode $resource_mode \
                                                       -dom_node $environment_node \
                                                       -dom_doc $dom_doc]]]
@@ -1527,6 +1634,7 @@ ad_proc -public imsld::process_environment_as_ul {
         and ar.rel_type = 'imsld_env_env_rel'
     }] {
         set one_nested_environment_list [imsld::process_environment_as_ul -environment_item_id $nested_environment_item_id \
+                                             -run_id $run_id \
                                             -resource_mode $resource_mode \
                                             -dom_node $environment_node \
                                             -dom_doc $dom_doc]
@@ -1638,12 +1746,14 @@ ad_proc -public imsld::process_environment {
 }
 
 ad_proc -public imsld::process_learning_objective_as_ul {
+    -run_id:required
     {-imsld_item_id ""}
     {-activity_item_id ""}
     {-resource_mode "f"}
     -dom_node
     -dom_doc
 } {
+    @param run_id
     @option imsld_item_id
     @option activity_item_id
     @option resource_mode
@@ -1696,7 +1806,7 @@ ad_proc -public imsld::process_learning_objective_as_ul {
             select cpr.resource_id,
             cpr.item_id as resource_item_id,
             cpr.type as resource_type
-            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii, imsld_attribute_instances attr,
             acs_rels ar
             where ar.object_id_one = ii.item_id
             and ar.object_id_two = cpr.item_id
@@ -1704,12 +1814,17 @@ ad_proc -public imsld::process_learning_objective_as_ul {
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
+            and attr.owner_id = ii.imsld_item_id
+            and attr.run_id = :run_id
+            and attr.type = 'isvisible'
+            and attr.is_visible_p = 't'
         } {
             if { [string eq "t" $resource_mode] } {
                 lappend resource_item_list $resource_item_id
             }
             # add the associated files as items of the html list
             imsld::process_resource_as_ul -resource_item_id $resource_item_id \
+                -run_id $run_id \
                 -dom_doc $dom_doc \
                 -dom_node $dom_node
         } if_no_rows {
@@ -1815,12 +1930,14 @@ ad_proc -public imsld::process_learning_objective {
 }
 
 ad_proc -public imsld::process_prerequisite_as_ul {
+    -run_id:required
     {-imsld_item_id ""}
     {-activity_item_id ""}
     {-resource_mode "f"}
     -dom_node
     -dom_doc
 } {
+    @param run_id
     @option imsld_item_id
     @option activity_item_id
     @option resource_mode
@@ -1873,7 +1990,7 @@ ad_proc -public imsld::process_prerequisite_as_ul {
             select cpr.resource_id,
             cpr.item_id as resource_item_id,
             cpr.type as resource_type
-            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii, imsld_attribute_instances attr,
             acs_rels ar
             where ar.object_id_one = ii.item_id
             and ar.object_id_two = cpr.item_id
@@ -1881,12 +1998,17 @@ ad_proc -public imsld::process_prerequisite_as_ul {
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
+            and attr.owner_id = ii.imsld_item_id
+            and attr.run_id = :run_id
+            and attr.type = 'isvisible'
+            and attr.is_visible_p = 't'
         } { 
             if { [string eq "t" $resource_mode] } { 
                 lappend resource_item_list $resource_item_id
             }
             # add the associated files as items of the html list
             set one_prerequisite_ul [imsld::process_resource_as_ul -resource_item_id $resource_item_id \
+                                         -run_id $run_id \
                                          -dom_doc $dom_doc \
                                          -dom_node $dom_node]
         } if_no_rows {
@@ -1991,10 +2113,12 @@ ad_proc -public imsld::process_prerequisite {
 }
 
 ad_proc -public imsld::process_feedback_as_ul {
+    -run_id:required
     {-on_completion_item_id ""}
     -dom_node
     -dom_doc
 } {
+    @param run_id
     @option on_completion_item_id
     @param dom_node
     @param dom_doc
@@ -2024,7 +2148,7 @@ ad_proc -public imsld::process_feedback_as_ul {
             select cpr.resource_id,
             cpr.item_id as resource_item_id,
             cpr.type as resource_type
-            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii, imsld_attribute_instances attr,
             acs_rels ar
             where ar.object_id_one = ii.item_id
             and ar.object_id_two = cpr.item_id
@@ -2032,8 +2156,13 @@ ad_proc -public imsld::process_feedback_as_ul {
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
+            and attr.owner_id = ii.imsld_item_id
+            and attr.run_id = :run_id
+            and attr.type = 'isvisible'
+            and attr.is_visible_p = 't'
         } {
             imsld::process_resource_as_ul -resource_item_id $resource_item_id \
+                -run_id $run_id \
                 -dom_node $dom_node \
                 -dom_doc $dom_doc
         }
@@ -2100,12 +2229,14 @@ ad_proc -public imsld::process_feedback {
 
 ad_proc -public imsld::process_resource_as_ul { 
     -resource_item_id
+    -run_id
     {-community_id ""}
     -dom_node 
     -dom_doc
     -li_mode:boolean
 } {
     @param resource_item_id
+    @param run_id
     @option community_id
     @param dom_node
     @param dom_doc
@@ -2151,7 +2282,7 @@ ad_proc -public imsld::process_resource_as_ul {
 
         set file_url [acs_sc::invoke -contract FtsContentProvider -operation url -impl $object_type -call_args [list $acs_object_id]]
         set a_node [$dom_doc createElement a]
-        $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id}]"
+        $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
         set img_node [$dom_doc createElement img]
         $img_node setAttribute src "[imsld::object_type_image_path -object_type $object_type]"
         $img_node setAttribute border "0"
@@ -2197,7 +2328,7 @@ ad_proc -public imsld::process_resource_as_ul {
             }]
             set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
             set a_node [$dom_doc createElement a]
-            $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id}]"
+            $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
             set img_node [$dom_doc createElement img]
             $img_node setAttribute src "[imsld::object_type_image_path -object_type file-storage]"
             $img_node setAttribute border "0"
@@ -2221,7 +2352,7 @@ ad_proc -public imsld::process_resource_as_ul {
         } {
 
             set a_node [$dom_doc createElement a]
-            $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" { {file_url "[export_vars -base $url]"} resource_item_id}]"
+            $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" { {file_url "[export_vars -base $url]"} resource_item_id run_id}]"
             set img_node [$dom_doc createElement img]
             $img_node setAttribute src "[imsld::object_type_image_path -object_type url]"
             $img_node setAttribute border "0"
@@ -2329,11 +2460,13 @@ ad_proc -public imsld::process_resource {
 
 ad_proc -public imsld::process_activity_as_ul { 
     -activity_item_id:required
+    -run_id:required
     -dom_node:required
     -dom_doc
     {-resource_mode "f"}
 } {
     @param activity_item_id
+    @param run_id
     @option resource_mode default f
     @param dom_node
     @param dom_doc
@@ -2353,6 +2486,7 @@ ad_proc -public imsld::process_activity_as_ul {
         select 1 from imsld_learning_activitiesi where item_id = :activity_item_id
     }] } {
         imsld::process_learning_activity_as_ul -activity_item_id $activity_item_id \
+            -run_id $run_id \
             -resource_mode $resource_mode \
             -dom_node $dom_node \
             -dom_doc $dom_doc
@@ -2360,6 +2494,7 @@ ad_proc -public imsld::process_activity_as_ul {
         select 1 from imsld_support_activitiesi where item_id = :activity_item_id
     }] } {
         imsld::process_support_activity_as_ul -activity_item_id $activity_item_id \
+            -run_id $run_id \
             -resource_mode $resource_mode \
             -dom_node $dom_node \
             -dom_doc $dom_doc
@@ -2368,6 +2503,7 @@ ad_proc -public imsld::process_activity_as_ul {
         select 1 from imsld_activity_structuresi where item_id = :activity_item_id
     }] } {
         imsld::process_activity_structure_as_ul -structure_item_id $activity_item_id \
+            -run_id $run_id \
             -resource_mode $resource_mode \
             -dom_node $dom_node \
             -dom_doc $dom_doc
@@ -2378,11 +2514,13 @@ ad_proc -public imsld::process_activity_as_ul {
 
 ad_proc -public imsld::process_activity_environments_as_ul {
     -activity_item_id:required
+    -run_id:required
     {-resource_mode "f"}
     -dom_node
     -dom_doc
 } {
     @param activity_item_id
+    @param run_id
     @param rel_type
     @option resource_mode default f
     @param dom_node
@@ -2422,6 +2560,7 @@ ad_proc -public imsld::process_activity_environments_as_ul {
     }]
     foreach environment_item_id $associated_environments_list {
         imsld::process_environment_as_ul -environment_item_id $environment_item_id \
+            -run_id $run_id \
             -dom_node $dom_node \
             -dom_doc $dom_doc
     }
@@ -2429,11 +2568,13 @@ ad_proc -public imsld::process_activity_environments_as_ul {
 
 ad_proc -public imsld::process_imsld_as_ul {
     -imsld_item_id:required
+    -run_id:required
     {-resource_mode "f"}
     -dom_node
     -dom_doc
 } {
     @param imsld_item_id
+    @param run_id
     @option resource_mode default f
     
     @return The html list (using tdom) of the resources associated to the given imsld_id (objectives and prerequisites).
@@ -2458,6 +2599,7 @@ ad_proc -public imsld::process_imsld_as_ul {
         # add the prerequisite files as items of the list
 
         set prerequisites_list [imsld::process_prerequisite_as_ul -imsld_item_id $imsld_item_id \
+                                    -run_id $run_id \
                                     -resource_mode $resource_mode \
                                     -dom_node $prerequisites_node \
                                     -dom_doc $dom_doc]
@@ -2476,6 +2618,7 @@ ad_proc -public imsld::process_imsld_as_ul {
         # add the prerequisite files as items of the list
 
         set objectives_list [imsld::process_learning_objective_as_ul -imsld_item_id $imsld_item_id \
+                                 -run_id $run_id \
                                  -resource_mode $resource_mode \
                                  -dom_node $objectives_node \
                                  -dom_doc $dom_doc]
@@ -2490,11 +2633,13 @@ ad_proc -public imsld::process_imsld_as_ul {
 
 ad_proc -public imsld::process_learning_activity_as_ul { 
     -activity_item_id:required
+    -run_id:required
     {-resource_mode "f"}
     -dom_node
     -dom_doc
 } {
     @param activity_item_id
+    @param run_id
     @option resource_mode default f
     @param dom_node
     @param dom_doc
@@ -2503,15 +2648,22 @@ ad_proc -public imsld::process_learning_activity_as_ul {
     @return The list (activity_name, list of associated urls, using tdom) of the activity in the IMS-LD.
 } {
     set user_id [ad_conn user_id]
-    db_1row activity_info {
+    if { ![db_0or1row activity_info {
         select on_completion_id as on_completion_item_id,
         prerequisite_id as prerequisite_item_id,
         learning_objective_id as learning_objective_item_id,
         activity_id,
         title as activity_title
-        from imsld_learning_activitiesi
+        from imsld_learning_activitiesi, imsld_attribute_instances attr
         where item_id = :activity_item_id
         and content_revision__is_live(activity_id) = 't'
+        and attr.owner_id = activity_id
+        and attr.run_id = :run_id
+        and attr.type = 'isvisible'
+        and attr.is_visible_p = 't'
+    }] } {
+        # is visible is false, do not show anything
+        return
     }
 
     # get the items associated with the activity
@@ -2539,7 +2691,7 @@ ad_proc -public imsld::process_learning_activity_as_ul {
             select cpr.resource_id,
             cpr.item_id as resource_item_id,
             cpr.type as resource_type
-            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii, imsld_attribute_instances attr,
             acs_rels ar
             where ar.object_id_one = ii.item_id
             and ar.object_id_two = cpr.item_id
@@ -2547,6 +2699,10 @@ ad_proc -public imsld::process_learning_activity_as_ul {
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
+            and attr.owner_id = ii.imsld_item_id
+            and attr.run_id = :run_id
+            and attr.type = 'isvisible'
+            and attr.is_visible_p = 't'
         }] {
             set resource_id [lindex $la_items_list 0]
             set resource_item_id [lindex $la_items_list 1]
@@ -2556,6 +2712,7 @@ ad_proc -public imsld::process_learning_activity_as_ul {
             }
             
             imsld::process_resource_as_ul -resource_item_id $resource_item_id \
+                -run_id $run_id \
                 -dom_doc $dom_doc \
                 -dom_node $description_node
 
@@ -2577,6 +2734,7 @@ ad_proc -public imsld::process_learning_activity_as_ul {
         # add the prerequisite files as items of the list
 
         set prerequisites_list [imsld::process_prerequisite_as_ul -activity_item_id $activity_item_id \
+                                    -run_id $run_id \
                                     -resource_mode $resource_mode \
                                     -dom_node $prerequisites_node \
                                     -dom_doc $dom_doc]
@@ -2595,6 +2753,7 @@ ad_proc -public imsld::process_learning_activity_as_ul {
         # add the prerequisite files as items of the list
 
         set objectives_list [imsld::process_learning_objective_as_ul -activity_item_id $activity_item_id \
+                                 -run_id $run_id \
                                  -resource_mode $resource_mode \
                                  -dom_node $objectives_node \
                                  -dom_doc $dom_doc]
@@ -2614,11 +2773,13 @@ ad_proc -public imsld::process_learning_activity_as_ul {
         from imsld_status_user
         where user_id = :user_id
         and related_id = :activity_id
+        and run_id = :run_id
     }] } {
         if { ![string eq "" $on_completion_item_id] } {
             # the feedback is not processed to ckeck if all the activity resources have been finished
             # so we don't need to store the result
             imsld::process_feedback_as_ul -on_completion_item_id $on_completion_item_id \
+                -run_id $run_id \
                 -dom_doc $dom_doc \
                 -dom_node $feedback_node
             $dom_node appendChild $feedback_node
@@ -2638,9 +2799,9 @@ ad_proc -public imsld::process_learning_activity_as_ul {
         foreach environment_item_id $associated_environments_list {
             if { [llength $environments_list] } {
                 set environments_list [concat [list $environments_list] \
-                                           [list [imsld::process_environment_as_ul -environment_item_id $environment_item_id -resource_mode $resource_mode]]]
+                                           [list [imsld::process_environment_as_ul -environment_item_id $environment_item_id -resource_mode $resource_mode -run_id $run_id]]]
             } else {
-                set environments_list [imsld::process_environment_as_ul -environment_item_id $environment_item_id -resource_mode $resource_mode]
+                set environments_list [imsld::process_environment_as_ul -environment_item_id $environment_item_id -resource_mode $resource_mode -run_id $run_id]
             }
         }
         
@@ -2776,23 +2937,33 @@ ad_proc -public imsld::process_learning_activity {
 
 ad_proc -public imsld::process_support_activity_as_ul { 
     -activity_item_id:required
+    -run_id:required
     {-resource_mode "f"}
     -dom_node
     -dom_doc
 } {
     @param activity_item_id
+    @param run_id
     @option resource_mode
     @param dom_node
     @param dom_doc
 
     @return The list of items (resources, feedback, environments, using tdom) associated with the support activity
 } {
-    db_1row activity_info {
+    if { ![db_0or1row activity_info {
         select on_completion_id as on_completion_item_id,
-        activity_id
-        from imsld_support_activitiesi
+        activity_id,
+        attr.is_visible_p
+        from imsld_support_activitiesi, imsld_attribute_instances attr
         where item_id = :activity_item_id
         and content_revision__is_live(activity_id) = 't'
+        and attr.owner_id = activity_id
+        and attr.run_id = :run_id
+        and attr.type = 'isvisible'
+        and attr.is_visible_p = 't'
+    }] } {
+        # is visible is false do not show anything
+        return
     }
 
     # get the items associated with the activity
@@ -2819,7 +2990,7 @@ ad_proc -public imsld::process_support_activity_as_ul {
             select cpr.resource_id,
             cpr.item_id as resource_item_id,
             cpr.type as resource_type
-            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii, imsld_attribute_instances attr,
             acs_rels ar
             where ar.object_id_one = ii.item_id
             and ar.object_id_two = cpr.item_id
@@ -2827,6 +2998,10 @@ ad_proc -public imsld::process_support_activity_as_ul {
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
+            and attr.owner_id = ii.imsld_item_id
+            and attr.run_id = :run_id
+            and attr.type = 'isvisible'
+            and attr.is_visible_p = 't'
         }] {
             set resource_id [lindex $sa_items_list 0]
             set resource_item_id [lindex $sa_items_list 1]
@@ -2836,6 +3011,7 @@ ad_proc -public imsld::process_support_activity_as_ul {
             }
             
             imsld::process_resource_as_ul -resource_item_id $resource_item_id \
+                -run_id $run_id \
                 -dom_doc $dom_doc \
                 -dom_node $description_node
 
@@ -2858,11 +3034,13 @@ ad_proc -public imsld::process_support_activity_as_ul {
         from imsld_status_user
         where user_id = :user_id
         and related_id = :activity_id
+        and run_id = :run_id
     }] } {
         if { ![string eq "" $on_completion_item_id] } {
             # the feedback is not processed to ckeck if all the activity resources have been finished
             # so we don't need to store the result
             imsld::process_feedback_as_ul -on_completion_item_id $on_completion_item_id \
+                -run_id $run_id \
                 -dom_doc $dom_doc \
                 -dom_node $feedback_node
             $dom_node appendChild $feedback_node
@@ -2882,9 +3060,9 @@ ad_proc -public imsld::process_support_activity_as_ul {
         foreach environment_item_id $associated_environments_list {
             if { [llength $environments_list] } {
                 set environments_list [concat [list $environments_list] \
-                                           [list [imsld::process_environment_as_ul -environment_item_id $environment_item_id -resource_mode $resource_mode]]]
+                                           [list [imsld::process_environment_as_ul -environment_item_id $environment_item_id -run_id $run_id -resource_mode $resource_mode]]]
             } else {
-                set environments_list [imsld::process_environment_as_ul -environment_item_id $environment_item_id -resource_mode $resource_mode]
+                set environments_list [imsld::process_environment_as_ul -environment_item_id $environment_item_id -run_id $run_id -resource_mode $resource_mode]
             }
         }
 
@@ -3003,11 +3181,13 @@ ad_proc -public imsld::process_support_activity {
 
 ad_proc -public imsld::process_activity_structure_as_ul {
     -structure_item_id:required
+    -run_id:required
     {-resource_mode "f"}
     -dom_node
     -dom_doc
 } {
     @param structure_item_id
+    @param run_id
     @option resource_mode
     @param dom_node
     @param dom_doc
@@ -3038,7 +3218,7 @@ ad_proc -public imsld::process_activity_structure_as_ul {
             select cpr.resource_id,
             cpr.item_id as resource_item_id,
             cpr.type as resource_type
-            from imsld_cp_resourcesi cpr, imsld_itemsi ii,
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii, imsld_attribute_instances attr,
             acs_rels ar
             where ar.object_id_one = ii.item_id
             and ar.object_id_two = cpr.item_id
@@ -3046,6 +3226,10 @@ ad_proc -public imsld::process_activity_structure_as_ul {
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
+            and attr.owner_id = ii.imsld_item_id
+            and attr.run_id = :run_id
+            and attr.type = 'isvisible'
+            and attr.is_visible_p = 't'
         }] {
             set resource_id [lindex $la_items_list 0]
             set resource_item_id [lindex $la_items_list 1]
@@ -3055,6 +3239,7 @@ ad_proc -public imsld::process_activity_structure_as_ul {
             }
             
             imsld::process_resource_as_ul -resource_item_id $resource_item_id \
+                -run_id $run_id \
                 -dom_doc $dom_doc \
                 -dom_node $info_node
         }
@@ -3095,6 +3280,7 @@ ad_proc -public imsld::process_activity_structure {
 
 ad_proc -public imsld::generate_structure_activities_list {
     -imsld_id
+    -run_id
     -structure_item_id
     -user_id
     -role_part_id
@@ -3105,6 +3291,7 @@ ad_proc -public imsld::generate_structure_activities_list {
     -dom_doc
 } {
     @param imsld_id
+    @param run_id
     @param structure_item_id
     @param user_id
     @param role_part_id
@@ -3140,7 +3327,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     $activity_node setAttribute class "liOpen"
 
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id}]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -3153,7 +3340,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                         set input_node [$dom_doc createElement input]
                         $input_node setAttribute type "checkbox"
                         $input_node setAttribute style "vertical-align: bottom;"
-                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld\""
+                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld\""
                         $activity_node appendChild $input_node
                     } else {
                         set input_node [$dom_doc createElement input]
@@ -3181,7 +3368,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     set activity_node [$dom_doc createElement li]
                     $activity_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id}]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -3194,7 +3381,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                         set input_node [$dom_doc createElement input]
                         $input_node setAttribute type "checkbox"
                         $input_node setAttribute style "vertical-align: bottom;"
-                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld\""
+                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld\""
                         $activity_node appendChild $input_node
                     } else {
                         set input_node [$dom_doc createElement input]
@@ -3222,13 +3409,14 @@ ad_proc -public imsld::generate_structure_activities_list {
                     set structure_node [$dom_doc createElement li]
                     $structure_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {{activity_id $structure_id}}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {{activity_id $structure_id} run_id}]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
                     $structure_node appendChild $a_node
 
                     set nested_activities_list [imsld::generate_structure_activities_list -imsld_id $imsld_id \
+                                                    -run_id $run_id \
                                                     -structure_item_id $structure_item_id \
                                                     -user_id $user_id \
                                                     -next_activity_id_list $next_activity_id_list \
@@ -3251,17 +3439,22 @@ ad_proc -public imsld::generate_structure_activities_list {
 }
 
 ad_proc -public imsld::generate_activities_tree {
-    -imsld_id:required
+    -run_id:required
     -user_id
     {-next_activity_id_list ""}
     -dom_node
     -dom_doc
 } {
-    @param imsld_id
+    @param run_id
     @param user_id
 
     @return A list of lists of the activities 
 } {
+    db_1row imsld_info {
+        select imsld_id 
+        from imsld_runs
+        where run_id = :run_id
+    }
     # start with the role parts
     foreach role_part_list [db_list_of_lists referenced_role_parts { *SQL* }] {
         set type [lindex $role_part_list 0]
@@ -3274,13 +3467,16 @@ ad_proc -public imsld::generate_activities_tree {
                 # add the learning activity to the tree
                 db_1row get_learning_activity_info { *SQL* }
                 set completed_activity_p [db_0or1row already_completed {
-                    select 1 from imsld_status_user where related_id = :activity_id and user_id = :user_id
+                    select 1 from imsld_status_user 
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and run_id = :run_id
                 }]
                 if { $completed_activity_p || [lsearch -exact $next_activity_id_list $activity_id] != -1 && ([string eq $complete_act_id ""] || [string eq $is_visible_p "t"])  } {
                     set activity_node [$dom_doc createElement li]
                     $activity_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id}]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -3293,7 +3489,7 @@ ad_proc -public imsld::generate_activities_tree {
                         set input_node [$dom_doc createElement input]
                         $input_node setAttribute type "checkbox"
                         $input_node setAttribute style "vertical-align: bottom;"
-                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld\""
+                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld\""
                         $activity_node appendChild $input_node
                     } else {
                         set input_node [$dom_doc createElement input]
@@ -3310,13 +3506,16 @@ ad_proc -public imsld::generate_activities_tree {
                 # add the support activity to the tree
                 db_1row get_support_activity_info { *SQL* }
                 set completed_activity_p [db_0or1row already_completed {
-                    select 1 from imsld_status_user where related_id = :activity_id and user_id = :user_id
+                    select 1 from imsld_status_user 
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and run_id = :run_id
                 }]
                 if { $completed_activity_p || [lsearch -exact $next_activity_id_list $activity_id] != -1 && ([string eq $complete_act_id ""] || [string eq $is_visible_p "t"])  } {
                     set activity_node [$dom_doc createElement li]
                     $activity_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id}]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -3329,7 +3528,7 @@ ad_proc -public imsld::generate_activities_tree {
                         set input_node [$dom_doc createElement input]
                         $input_node setAttribute type "checkbox"
                         $input_node setAttribute style "vertical-align: bottom;"
-                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld\""
+                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld\""
                         $activity_node appendChild $input_node
                     } else {
                         set input_node [$dom_doc createElement input]
@@ -3359,12 +3558,13 @@ ad_proc -public imsld::generate_activities_tree {
                     set structure_node [$dom_doc createElement li]
                     $structure_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {{activity_id $structure_id}}]"
+                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {{activity_id $structure_id} run_id}]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
                     $structure_node appendChild $a_node
                     set nested_list [imsld::generate_structure_activities_list -imsld_id $imsld_id \
+                                         -run_id $run_id \
                                          -structure_item_id $structure_item_id \
                                          -user_id $user_id \
                                          -next_activity_id_list $next_activity_id_list \
@@ -3382,421 +3582,22 @@ ad_proc -public imsld::generate_activities_tree {
     }
 }
 
-ad_proc -public imsld::next_activity { 
-    -imsld_item_id:required
-    {-user_id ""}
-    {-community_id ""}
-    -return_url
-    imsld_multirow
-} {
-    @param imsld_item_id
-    @option user_id default [ad_conn user_id]
-    @option community_id
-    @param return_url url to return in the action links
-    
-    @return The list (activity_name, list of associated urls) of the next activity for the user in the IMS-LD.
-} {
-    template::multirow create imsld_multirow prerequisites  \
-        objectives  \
-        environments  \
-        activities  \
-        feedbacks  \
-        status
-        
-    # environments
-    set environments_titles ""
-    set environments_files ""
-
-    # variable which controls the number of tabs for the activity structures
-    set tab_structures 1
-    
-    db_1row get_ismld_info {
-        select imsld_id
-        from imsld_imsldsi
-        where item_id = :imsld_item_id
-        and content_revision__is_live(imsld_id) = 't'
-    }
-    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
-       
-    # global prerequisites and learning objectives
-    set prerequisites_list_temp [imsld::process_prerequisite -imsld_item_id $imsld_item_id -resource_mode "t"]
-    set prerequisites_list [list [lindex $prerequisites_list_temp 0] [lindex $prerequisites_list_temp 1]]
-    set prerequisites_list_ids [lindex $prerequisites_list_temp 2]
-    
-    set prerequisites ""
-    if { [llength $prerequisites_list] } {
-        set prerequisites "[lindex $prerequisites_list 0]" 
-        append prerequisites "[join [lindex $prerequisites_list 1] " "]"
-    }
-    
-    set objectives_list_temp [imsld::process_learning_objective -imsld_item_id $imsld_item_id -resource_mode "t"]
-    set objectives_list [list [lindex $objectives_list_temp 0] [lindex $objectives_list_temp 1]]
-    set objectives_list_ids [lindex $objectives_list_temp 2]
-    
-    set objectives ""
-    if { [llength $objectives_list] } {
-        set objectives "[lindex $objectives_list 0]"
-        append objectives "[join [lindex $objectives_list 1] " "]"
-    }
-    if { [string length "${prerequisites}${objectives}"] } {
-        template::multirow append imsld_multirow $prerequisites $objectives {} {} {} {}
-        imsld::grant_permissions -resources_activities_list [join [list $prerequisites_list_ids $objectives_list_ids]] -user_id $user_id
-    }
-    
-    if { ![db_string get_last_entry { *SQL* }] } {
-        # special case: the user has no entry, the ims-ld hasn't started yet for that user
-        set first_p 1
-        db_1row get_first_role_part { *SQL* }
-    } else {
-        # get the completed activities in order to display them
-        # save the last one (the last role_part_id of THE LAST completed activity) because we will use it latter
-
-        # JOPEZ: needed to split the db_foreach from the body because of db pools
-        foreach marked_activity [db_list_of_lists marked_activity { *SQL* }] {
-            set related_id [lindex $marked_activity 0]
-            set role_part_id [lindex $marked_activity 1]
-            set type [lindex $marked_activity 2]
-            set sort_order [lindex $marked_activity 3]
-            set act_id [lindex $marked_activity 4]
-            set status [lindex $marked_activity 5]
-            # environments
-            set environment_list [list]
-            set environments ""
-            switch $type {
-                learning {
-                    if { [string eq $status "finished"] } {
-                        db_1row get_learning_activity_info {
-                            select coalesce(title,identifier) as activity_title,
-                            item_id as activity_item_id
-                            from imsld_learning_activitiesi
-                            where activity_id = :completed_id
-                        }
-                        set activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id]
-                        
-                        set prerequisites ""
-                        if { [llength [lindex $activities_list 0]] } {
-                            set prerequisites "[lindex [lindex $activities_list 0] 0] <br/>"
-                            append prerequisites "[join [lindex [lindex $activities_list 0] 1] " "]"
-                        }
-                        set objectives ""
-                        if { [llength [lindex $activities_list 1]] } {
-                            set objectives "[lindex [lindex $activities_list 1] 0] <br/>"
-                            append objectives "[join [lindex [lindex $activities_list 1] 1] " "]"
-                        }
-                        if { [llength [lindex $activities_list 2]] } {
-                            set environments "[lindex [lindex $activities_list 2] 0] <br/>"
-                            append environments "[join [lindex [lindex $activities_list 2] 1] " "] "
-                            append environments "[join [lindex [lindex $activities_list 2] 2] " "] "
-                            append environments "[join [lindex [lindex $activities_list 2] 3] " "]"
-                        }
-                        
-                        set activities "<div style=\"padding-left:[expr ${tab_structures}*15]px\">$activity_title <br /> [join [lindex $activities_list 3] " "]"
-                        
-                        set feedbacks ""
-                        if { [llength [lindex $activities_list 4]] } {
-                            set feedbacks "[lindex [lindex $activities_list 4] 0] <br/>"
-                            append feedbacks "[join [lindex [lindex $activities_list 4] 1] " "]"
-                        }
-                        
-                        set resources_activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
-                        foreach resource_activity [join $resources_activities_list] {
-                            
-                            
-                            #assessment must have an extra feedback item
-                            if {[db_0or1row is_assessment {} ] } {
-                                db_1row get_as_site_node {} 
-                                set as_feedback_url "[site_node::get_url -node_id $node_id][export_vars -base sessions {assessment_id $assessment_id}]"
-                                set as_feedback_link "<a href=[export_vars -base $as_feedback_url] target=\"_blank\"><img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/sessions.png\" border=0  alt=\"$as_feedback_url\"></a>"
-                                append feedbacks $as_feedback_link
-                            } 
-                        }
-                    
-                        template::multirow append imsld_multirow $prerequisites \
-                            $objectives \
-                            $environments \
-                            $activities \
-                            $feedbacks \
-                            "<img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/completed.png\">"
-                    }
-                }
-                support {
-                    if { [string eq $status "finished"] } {
-                        db_1row get_support_activity_info_from_isa {
-                            select coalesce(title,identifier) as activity_title,
-                            item_id as activity_item_id
-                            from imsld_support_activitiesi
-                            where activity_id = :completed_id
-                        }
-                        set activities_list [imsld::process_support_activity -activity_item_id $activity_item_id]
-                        
-                        if { [llength [lindex $activities_list 0]] } {
-                            set environments "[lindex [lindex $activities_list 0] 0] <br/>"
-                            append environments "[join [lindex [lindex $activities_list 0] 1] " "] "
-                            append environments "[join [lindex [lindex $activities_list 0] 2] " "] "
-                            append environments "[join [lindex [lindex $activities_list 0] 3] " "] "
-                        }
-                        
-                        set activities "<div style=\"padding-left:[expr ${tab_structures}*15]px\">$activity_title <br /> [join [lindex $activities_list 1] " "]"
-                        
-                        set feedbacks ""
-                        if { [llength [lindex $activities_list 2]] } {
-                            set feedbacks "[lindex [lindex $activities_list 2] 0] <br/>"
-                            append feedbacks "[join [lindex [lindex $activities_list 2] 1] " "]"
-                        }
-                        template::multirow append imsld_multirow {} \
-                            {} \
-                            $environments \
-                            $activities \
-                            $feedbacks \
-                            "<img src=\"[lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0][imsld::package_key]/resources/completed.png\">"                            
-                    }
-                }
-                structure {
-                    db_1row get_support_activity_info_from_ias {
-                        select coalesce(title,identifier) as activity_title,
-                        item_id as structure_item_id
-                        from imsld_activity_structuresi
-                        where structure_id = :completed_id
-                    }
-                    set structure_envs [imsld::process_activity_structure -structure_item_id $structure_item_id]
-                    set environments ""
-                    if { [llength $structure_envs] } {
-                        append environments "[lindex $structure_envs 0] <br/>"
-                    }
-                    append environments "[join [lindex $structure_envs 1] " "] "
-                    append environments "[join [lindex $structure_envs 2] " "] "
-                    append environments "[join [lindex $structure_envs 3] " "]<br/>"
-                    
-                    if { [string eq $status "started"] } {
-                        set structure_title "<div style=\"padding-left:[expr ${tab_structures}*15]px\"><span style=\"color: green; font-size: larger; font-weight: bold\">[string repeat "(" $tab_structures]</span>$activity_title</div>"
-                        set stat ""
-                        incr tab_structures
-                    } else {
-                        incr tab_structures -1
-                        set structure_title "<div style=\"padding-left:[expr ${tab_structures}*15]px\">$activity_title<span style=\"color: green; font-size: larger; font-weight: bold\">[string repeat ")" $tab_structures]</span></div>"
-                    }
-                    template::multirow append imsld_multirow {} {} $environments $structure_title {} {}
-                }
-            }
-        }
-
-        # the last completed is now stored in completed_id, let's find out the next role_part_id that the user has to work on.
-        # Procedure (knowing that the info of the last role_part are stored in the last iteration vars):
-        # 0. check if all the activities referenced by the current role_part_id are finished
-        # 0.1 if all of them are not finished yet, skip this section and preserve the last role_part_id, otherwise, continue
-        # 1. get the next role_part from imsld_role_parts according to sort_number, first 
-        #    search in the current act_id, then in the current play_id, then in the next play_id and so on...
-        # 1.1 if there are no more role_parts then this is the last one
-        # 1.2 if we find a "next role_part", it will be treated latter, we just have to set the next role_part_id var
-
-        if { [imsld::role_part_finished_p -role_part_id $role_part_id -user_id $user_id] } {
-            # search in the current act_id
-            if { ![db_0or1row search_current_act {
-                select role_part_id
-                from imsld_role_parts
-                where sort_order = :sort_order + 1
-                and act_id = :act_id
-            }] } {
-                # get current act_id's sort_order and search in the next act in the current play_id
-                db_1row get_current_play_id {
-                    select ip.item_id as play_item_id,
-                    ip.play_id,
-                    ia.sort_order as act_sort_order
-                    from imsld_playsi ip, imsld_acts ia, cr_items cr
-                    where ip.item_id = ia.play_id
-                    and ia.act_id = cr.live_revision
-                    and cr.item_id = :act_id
-                }
-                if { ![db_0or1row search_current_play {
-                    select rp.role_part_id
-                    from imsld_role_parts rp, imsld_actsi ia
-                    where ia.play_id = :play_item_id
-                    and ia.sort_order = :act_sort_order + 1
-                    and rp.act_id = ia.item_id
-                    and content_revision__is_live(rp.role_part_id) = 't'
-                    and content_revision__is_live(ia.act_id) = 't'
-                    and rp.sort_order = (select min(irp2.sort_order) from imsld_role_parts irp2 where irp2.act_id = rp.act_id)
-                }] } {
-                    # get the current play_id's sort_order and sarch in the next play in the current method_id
-                    db_1row get_current_method {
-                        select im.item_id as method_item_id,
-                        ip.sort_order as play_sort_order
-                        from imsld_methodsi im, imsld_plays ip
-                        where im.item_id = ip.method_id
-                        and ip.play_id = :play_id
-                    }
-                    if { ![db_0or1row search_current_method {
-                        select rp.role_part_id
-                        from imsld_role_parts rp, imsld_actsi ia, imsld_playsi ip
-                        where ip.method_id = :method_item_id
-                        and ia.play_id = ip.item_id
-                        and rp.act_id = ia.item_id
-                        and ip.sort_order = :play_sort_order + 1
-                        and content_revision__is_live(rp.role_part_id) = 't'
-                        and content_revision__is_live(ia.act_id) = 't'
-                        and content_revision__is_live(ip.play_id) = 't'
-                        and ia.sort_order = (select min(ia2.sort_order) from imsld_acts ia2 where ia2.play_id = ip.item_id)
-                        and rp.sort_order = (select min(irp2.sort_order) from imsld_role_parts irp2 where irp2.act_id = ia.item_id)
-                    }] } {
-                        # there is no more to search, we reached the end of the unit of learning
-                        template::multirow append imsld_multirow {} {} {} {} {} "[_ imsld.lt_Learning_Unit_finishe]"
-                        return [template::multirow size imsld_multirow]
-                    }
-                }
-            }
-        }
-    }
-
-    # find the next activity referenced by the role_part
-    # (learning_activity, support_activity, activity_structure)  
-    # 1. if it is a learning or support activity, no problem, find the associated files and return the lists
-    # 2. if it is an activity structure we have verify which activities are already completed and return the next
-    #    activity in the activity structure, handling the case when the next activity is also an activity structure
-
-    db_1row get_role_part_activity { *SQL* }
-
-    # environments
-    set environment_list [list]
-    # get the environments associated to the role_part
-    if { ![string eq "" $rp_environment_item_id] } {
-        set environment_list [concat [list $environment_list] [imsld::process_environment -environment_item_id $rp_environment_item_id]]
-    }
-    
-    # activity structure
-    if { [string eq $activity_type structure] } {
-
-        # activity structure. we have to look for the next learning or support activity
-        set activity_list [imsld::structure_next_activity -activity_structure_id $activity_id -imsld_id $imsld_id -role_part_id $role_part_id -environment_list $environment_list]
-        set activity_id [lindex $activity_list 0]
-        set activity_type [lindex $activity_list 1]
-        if { [llength $environment_list] } {
-            set environment_list [concat [list $environment_list] [lindex $activity_list 2]]
-        } else {
-            set environment_list [lindex $activity_list 2]
-        }
-        # flush the structures names in the path of the next activity
-        set structures_info [lindex $activity_list 3]
-        foreach marked_structure $structures_info {
-            # environments
-            set structure_name [lindex $marked_structure 0]
-            set structure_item_id [lindex $marked_structure 1]
-            set structure_envs [imsld::process_activity_structure -structure_item_id $structure_item_id]
-            set environments ""
-            if { [llength $structure_envs] } {
-                append environments "[lindex $structure_envs 0] <br/>"
-            }
-            append environments "[join [lindex $structure_envs 1] " "] "
-            append environments "[join [lindex $structure_envs 2] " "] "
-            append environments "[join [lindex $structure_envs 3] " "]<br/>"
-
-            template::multirow append imsld_multirow {} \
-                {} \
-                $environments \
-                "<div style=\"padding-left:[expr ${tab_structures}*15]px\"><span style=\"color: green; font-size: larger; font-weight: bold\">[string repeat ( $tab_structures]</span>$structure_name</div>" \
-                {} \
-                {}
-            incr tab_structures
-        }
-    }
-
-    set environments ""
-    
-    if { [llength $environment_list] } {
-        foreach environment $environment_list {
-            append environments "[lindex $environment 0] <br/>"
-            append environments "[join [lindex $environment 1] " "] "
-            append environments "[join [lindex $environment 2] " "] "
-            append environments "[join [lindex $environment 3] " "]<br/>"
-        }
-    }
-    # learning activity
-    if { [string eq $activity_type learning] } {
-        db_1row learning_activity { *SQL* }
-        set activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id]
-
-        set resources_activities_list [imsld::process_learning_activity -activity_item_id $activity_item_id -resource_mode "t"]
-
-        #grant permissions for newly appeared resources
-        imsld::grant_permissions -resources_activities_list $resources_activities_list -user_id $user_id
-
-        set prerequisites ""
-        if { [llength [lindex $activities_list 0]] } {
-            set prerequisites "[lindex [lindex $activities_list 0] 0] <br/>"
-            append prerequisites "[join [lindex [lindex $activities_list 0] 1] " "]"
-        }
-        set objectives ""
-        if { [llength [lindex $activities_list 1]] } {
-            set objectives "[lindex [lindex $activities_list 1] 0] <br/>"
-            append objectives "[join [lindex [lindex $activities_list 1] 1] " "]"
-        }
-        if { [llength [lindex $activities_list 2]] } {
-            set environments "[lindex [lindex $activities_list 2] 0] <br/>"
-            append environments "[join [lindex [lindex $activities_list 2] 1] " "] "
-            append environments "[join [lindex [lindex $activities_list 2] 2] " "] "
-            append environments "[join [lindex [lindex $activities_list 2] 3] " "]"
-        }
-        set files ""
-        set activities "<div style=\"padding-left:[expr ${tab_structures}*15]px\">$activity_title <br /> [join [lindex $activities_list 3] " "]"
-        if { ![llength [lindex $activities_list 3]] } {
-            set status "<a href=finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld>finish</a>"
-        } else {
-            set status ""
-        }
-
-        template::multirow append imsld_multirow $prerequisites \
-            $objectives \
-            $environments \
-            $activities \
-            {} \
-            $status
-    }
-
-    # support activity
-    if { [string eq $activity_type support] } {
-        db_1row support_activity { *SQL* }
-        set activities_list [imsld::process_support_activity -activity_item_id $activity_item_id]
-        
-        if { [llength [lindex $activities_list 0]] } {
-            set environments "[lindex [lindex $activities_list 0] 0]<br/>"
-            append environments "[join [lindex [lindex $activities_list 0] 1] " "] "
-            append environments "[join [lindex [lindex $activities_list 0] 2] " "] "
-            append environments "[join [lindex [lindex $activities_list 0] 3] " "]"
-            regsub -all {<li>[ ]*</li>} $environments "" environments
-        }
-
-        set activities "<div style=\"padding-left:[expr ${tab_structures}*15]px\">$activity_title <br /> [join [lindex $activities_list 1] " "]"
-        if { ![llength [lindex $activities_list 1]] } {
-            set status "<a href=finish-component-element-${imsld_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld>finish</a>"
-        } else {
-            set status ""
-        }
-
-        template::multirow append imsld_multirow {} \
-            {} \
-            $environments \
-            $activities \
-            {} \
-            $status
-    }
-    # first parameter: activity name
-    return [template::multirow size imsld_multirow]
-}
-
 ad_proc -public imsld::get_next_activity_list { 
-    -imsld_item_id:required
+    -run_id:required
     {-user_id ""}
 } {
     @param imsld_item_id
+    @param run_id
     @option user_id default [ad_conn user_id]
     
     @return The list of next activity_ids of each role_part and play in the IMS-LD.
 } {
     # get the imsld info
     db_1row get_ismld_info {
-        select imsld_id
-        from imsld_imsldsi
-        where item_id = :imsld_item_id
-        and content_revision__is_live(imsld_id) = 't'
+        select ii.imsld_id, ii.item_id as imsld_item_id
+        from imsld_imsldsi ii, imsld_runs run
+        where ii.imsld_id = run.imsld_id
+        and run.run_id = :run_id
     }
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     set next_act_item_id_list [list]
@@ -3822,6 +3623,7 @@ ad_proc -public imsld::get_next_activity_list {
             stat.act_id
             from imsld_status_user stat
             where stat.user_id = :user_id
+            and run_id = :run_id
             and stat.play_id = :play_id
             and stat.type in ('learning','support','structure')
             order by stat.status_date desc
@@ -3836,7 +3638,7 @@ ad_proc -public imsld::get_next_activity_list {
             }]
             continue
         }
-        if { ![imsld::act_finished_p -act_id $act_id -user_id $user_id] } {
+        if { ![imsld::act_finished_p -run_id $run_id -act_id $act_id -user_id $user_id] } {
             # if the act hasn't been completed, this is the next act of the play
             lappend next_act_item_id_list [content::revision::item_id -revision_id $act_id]
             continue
@@ -3900,7 +3702,7 @@ ad_proc -public imsld::get_next_activity_list {
             # activity structure
             if { [string eq $activity_type structure] } {
                 # activity structure. we have to look for the next learning or support activity
-                set activity_list [imsld::structure_next_activity -activity_structure_id $next_activity_id -imsld_id $imsld_id -role_part_id $role_part_id]
+                set activity_list [imsld::structure_next_activity -activity_structure_id $next_activity_id -imsld_id $imsld_id -run_id $run_id -role_part_id $role_part_id]
                 set next_activity_id [lindex $activity_list 0]
             }
             lappend next_activity_id_list $next_activity_id
@@ -4111,6 +3913,7 @@ ad_proc -public imsld::get_resource_from_object {
 
 ad_proc -public imsld::finish_resource {
     -resource_id
+    -run_id
 } {
     <p>Tag a resource as finished into an activity. Return true if success, false otherwise</p>
 
@@ -4168,6 +3971,7 @@ ad_proc -public imsld::finish_resource {
                     where icr.item_id = :res_id
                     and icr.resource_id = stat.completed_id
                     and user_id = :user_id
+                    and run_id = :run_id
                 }] } {
                     # if the resource is not in the imsld_status_user, then the resource is not finished
                     set all_finished_p 0
@@ -4180,6 +3984,7 @@ ad_proc -public imsld::finish_resource {
         if { $all_finished_p && ![db_0or1row already_finished { *SQL* }] } {
             foreach role_part_id $role_part_id_list {
                 imsld::finish_component_element -imsld_id $imsld_id  \
+                    -run_id $run_id \
                     -role_part_id $role_part_id \
                     -element_id $activity_id \
                     -type $activity_type\
@@ -4217,4 +4022,4 @@ ad_proc -public imsld::grant_permissions {
    }
 }
 ad_register_proc GET /finish-component-element* imsld::finish_component_element
-ad_register_proc POST /finish-component-element* imsld::finish_component_element
+ad_register_proc POST /finish-component-elementx* imsld::finish_component_element

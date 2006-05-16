@@ -23,8 +23,8 @@ ad_proc -public imsld::apm_callback::after_install {
 
     imsld::install::create_group_types
 
-    # create default relationships with non IMSLD objects
-    imsld::install::init_rels2
+    # create default relationships with non IMS-LD objects
+    imsld::install::init_ext_rels
 
     return 1
 }
@@ -35,6 +35,7 @@ ad_proc -public imsld::apm_callback::before_uninstall {
 } { 
     # clean rels
     imsld::uninstall::delete_rels
+    imsld::uninstall::delete_ext_rels
 
     # clean the cr
     imsld::uninstall::empty_content_repository

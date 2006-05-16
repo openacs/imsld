@@ -339,23 +339,29 @@ ad_proc -public imsld::install::init_content_repository {
 
     ### IMS-LD Production and Delivery
 
-    # properties instances
-    content::type::new -content_type imsld_property_instance -supertype content_revision -pretty_name "#imsld.Property_Instance#" -pretty_plural "#imsld.Property_Instances#" -table_name imsld_property_instances -id_column instance_id
+#     # properties instances
+#     content::type::new -content_type imsld_property_instance -supertype content_revision -pretty_name "#imsld.Property_Instance#" -pretty_plural "#imsld.Property_Instances#" -table_name imsld_property_instances -id_column instance_id
 
-    content::type::attribute::new -content_type imsld_property_instance -attribute_name property_id -datatype number -pretty_name "#imsld.Property_Identifier# " -column_spec "integer"
-    content::type::attribute::new -content_type imsld_property_instance -attribute_name party_id -datatype number -pretty_name "#imsld.Party_Identifier#" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_property_instance -attribute_name value -datatype string -pretty_name "#imsld.Value#" -column_spec "varchar(4000)"
+#     content::type::attribute::new -content_type imsld_property_instance -attribute_name property_id -datatype number -pretty_name "#imsld.Property_Identifier# " -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_property_instance -attribute_name party_id -datatype number -pretty_name "#imsld.Party_Identifier#" -column_spec "integer"
+#     content::type::attribute::new -content_type imsld_property_instance -attribute_name value -datatype string -pretty_name "#imsld.Value#" -column_spec "varchar(4000)"
 
 }
+
 ad_proc -public imsld::install::create_group_types {  
 } { 
-    create groups needed to manage imsld-roles
+    create groups needed to manage imsld functionallity
 } { 
-    group_type::new -group_type imsld_role_group  -supertype group  "Role defined by IMS-LD" "Roles defined by IMS-LD"
-   
+    group_type::new -group_type imsld_role_group -supertype group  "Role defined by IMS-LD" "Roles defined by IMS-LD"
+
+    # the table name for the new group is badly taken from the group_type, that's why we named it imsld_run_users_group
+    group_type::new -group_type imsld_run_users_group -supertype group  "IMS-LD Run Group" "IMS-LD Run Groups"
+    attribute::add -min_n_values 0 -max_n_values 0 imsld_run_users_group integer "run_id" "Run ids"
+    # FIX ME (there is no way to add attributes to the rels without creating the whole plsql code)
+    package_recreate_hierarchy imsld_run_users_group
 }
 
-ad_proc -public imsld::install::init_rels2 {  
+ad_proc -public imsld::install::init_ext_rels {  
 } { 
     create default rels between imsld items and acs objects
 } { 
@@ -363,6 +369,11 @@ ad_proc -public imsld::install::init_rels2 {
      rel_types::new imsld_role_group_rel "ims-ld role - imsld_role_group" "ims-ld roles - imsld_role_groups"  \
         content_item 0 {} \
         imsld_role_group 0 {}
+
+    # ims-ld run - oacs users
+     rel_types::new imsld_run_users_group_rel "ims_ld_run_group - acs_users" "ims_ld_run_group - acs_users"  \
+        imsld_run_users_group 0 {} \
+        party 0 {}
    
 }
 
@@ -553,6 +564,14 @@ ad_proc -public imsld::uninstall::delete_rels {
     imsld::rel_type_delete -rel_type imsld_on_comp_change_pv_rel
 }
 
+ad_proc -public imsld::uninstall::delete_ext_rels {  
+} { 
+    Delete default rels between imsld and non IMS-LD objects
+} { 
+    imsld::rel_type_delete -rel_type imsld_role_group_rel
+    imsld::rel_type_delete -rel_type imsld_res_files_rel
+}
+
 ad_proc -public imsld::uninstall::empty_content_repository {  
 } { 
     Deletes content types and attributes
@@ -605,11 +624,6 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     # when condition true
     content::type::attribute::delete -content_type imsld_when_condition_true -attribute_name role_id
     content::type::attribute::delete -content_type imsld_when_condition_true -attribute_name expression_id
-
-    # exressions, conditions and calculate
-    content::type::attribute::delete -content_type imsld_expression -attribute_name imsld_id
-    content::type::attribute::delete -content_type imsld_expression -attribute_name xml_piece
-    
 
 #     # conditions 
 #     content::type::attribute::delete -content_type imsld_condition -attribute_name method_id
@@ -813,6 +827,14 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_cp_file -attribute_name path_to_file
     content::type::attribute::delete -content_type imsld_cp_file -attribute_name file_name
     content::type::attribute::delete -content_type imsld_cp_file -attribute_name href
+
+    ### IMS-LD Production and Delivery
+
+    # imsld runs attributes
+    foreach attribute_list [package_object_attribute_list imsld_run] {
+        set attribute_id [lindex $attribute_list 0]
+        attribute::delete $attribute_id
+    }
 
     ### Content Types
 

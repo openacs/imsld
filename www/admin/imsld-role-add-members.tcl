@@ -11,6 +11,7 @@ ad_page_contract {
     group_instance
     role
     imsld_id
+    run_id
 } 
 
 #only set required variables
@@ -22,7 +23,7 @@ ad_page_contract {
 
         }
    }
-   ad_returnredirect [export_vars -base imsld-admin-roles {imsld_id role group_instance members_list}]
+   ad_returnredirect [export_vars -base imsld-admin-roles {imsld_id run_id role group_instance members_list}]
 
 
    

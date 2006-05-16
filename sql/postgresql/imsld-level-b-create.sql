@@ -6,28 +6,28 @@
 --
 
 create table imsld_properties (
-    property_id         integer  
-                        constraint imsld_pro_id_fk
-                        references cr_revisions  
-                        on delete cascade
-                        constraint imsld_pro_id_pk
-                        primary key, 
-    component_id        integer
-                        constraint imsld_pro_comp_fk
-                        references cr_items     --imsld_components
-                        not null,
-    identifier          varchar(100)
-                        not null,
-    type                varchar(20)
-                        check (type in ('loc','locpers','locrole','globpers','global')),
-    datatype            varchar(20)
-                        check (datatype in ('boolean','integer','real','string','file','uri','datetime','duration','text','other')),
-    initial_value       varchar(4000),
-    role_id             integer
-                        constraint imsld_pro_rid_fk
-                        references cr_items,    --imsld_roles
-    existing_href       varchar(2000),
-    uri                 varchar(2000)
+    property_id             integer  
+                            constraint imsld_pro_id_fk
+                            references cr_revisions  
+                            on delete cascade
+                            constraint imsld_pro_id_pk
+                            primary key, 
+    component_id            integer
+                            constraint imsld_pro_comp_fk
+                            references cr_items     --imsld_components
+                            not null,
+    identifier              varchar(100)
+                            not null,
+    type                    varchar(20)
+                            check (type in ('loc','locpers','locrole','globpers','global')),
+    datatype                varchar(20)
+                            check (datatype in ('boolean','integer','real','string','file','uri','datetime','duration','text','other')),
+    initial_value           varchar(4000),
+    role_id                 integer
+                            constraint imsld_pro_rid_fk
+                            references cr_items,    --imsld_roles
+    existing_href           varchar(2000),          --the href of the existing properties 
+    uri                     varchar(2000)           --for global_definition elements: the uri
 );
 
 create index imsld_prop_comp_idx on imsld_properties(component_id);
@@ -35,7 +35,7 @@ create index imsld_prop_comp_idx on imsld_properties(component_id);
 comment on table imsld_properties is '
 Properties are introduced in the level B of the IMS-LD spec, and are stored in this table (the definition, because the instantiantion for each user/role is stored in the imsld_property_instanced table).
 
-The global definitions of the globpers and global property types are stored in the same row of the table (in this case the existing_href field is not null)';
+The global definitions of the globpers and global property types are stored in this table also, because they share all but one fields.';
 
 create table imsld_property_groups (
     property_group_id   integer  
@@ -295,11 +295,5 @@ The expression is parsed and evaluated when the imsmanifest is uploaded and each
 --comment on table imsld_then_model is '
 --Then model used as the ''body'' of the then and else elements of the if statement (conditions table).
 --This then model consists in three types: show, hide (elements refered by ref_id and ref_type -- to know what table are we refering to) or change property value, with the respective reference to the property and value to be changed.';
-
-
-
-
-
-
 
 

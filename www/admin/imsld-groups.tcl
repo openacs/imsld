@@ -7,6 +7,7 @@ ad_page_contract {
     @creation-date Mar 2006
 } {
     imsld_id
+    run_id
     {group_instance 0}
     role:optional
 }
@@ -15,7 +16,7 @@ set lista_aux [lindex [db_list_of_lists get_groups_list {}] 0]
 lappend lista $lista_aux
 
 
-    set actions [list "Create new" [export_vars -base imsld-create-instance {imsld_id role}] "Create a new group"]
+set actions [list "Create new" [export_vars -base imsld-create-instance {imsld_id run_id role lista}] "Create a new group"]
 
 template::list::create \
     -name role_groups \
@@ -35,10 +36,9 @@ template::list::create \
 
 
 db_multirow -extend { manage_roles delete } role_groups get_groups_list {} {
-    set manage_roles [export_vars -base imsld-admin-roles {imsld_id role {group_instance $group_id}}]
-    set delete "<a href=\"[export_vars -base "imsld-delete-instance" { imsld_id role group_id }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Delete\"></a>"
+    set manage_roles [export_vars -base imsld-admin-roles {imsld_id run_id role {group_instance $group_id}}]
+    set delete "<a href=\"[export_vars -base "imsld-delete-instance" { imsld_id run_id role group_id }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Delete\"></a>"
    
 }
-
 
 

@@ -6,6 +6,7 @@ ad_page_contract {
     @creation-date 2006-03-03
 } -query {
     activity_id:integer,notnull
+    run_id:integer,notnull
 }
 
 set user_id [ad_conn user_id]
@@ -19,6 +20,8 @@ set text [$doc createTextNode "[_ imsld.Context_info]"]
 $environments_node_li appendChild $text
 set environments_node [$doc createElement ul]
 $environments_node setAttribute class "mktree"
+$environments_node setAttribute style "white-space: nowrap;"
+
 # FIX-ME: if the ul is empty, the browser shows the ul incorrectly   
 set text [$doc createTextNode ""]
 $environments_node appendChild $text
@@ -26,8 +29,9 @@ $environments_node appendChild $text
 set activity_item_id [content::revision::item_id -revision_id $activity_id]
 
 imsld::process_activity_environments_as_ul -activity_item_id $activity_item_id \
-                                    -dom_node $environments_node \
-                                    -dom_doc $doc
+    -run_id $run_id \
+    -dom_node $environments_node \
+    -dom_doc $doc
 
 $dom_root appendChild $environments_node_li
 

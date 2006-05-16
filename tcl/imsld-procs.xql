@@ -193,6 +193,7 @@
 	<fullquery name="imsld::mark_role_part_finished.insert_role_part">
 		<querytext>
         insert into imsld_status_user (imsld_id,
+                                       run_id,
                                        play_id,
                                        act_id,
                                        related_id,
@@ -202,6 +203,7 @@
                                        status) 
         (
          select :imsld_id,
+         :run_id,
          :play_id,
          :act_id,
          :role_part_id,
@@ -209,7 +211,7 @@
          'act',
          now(),
          'finished'
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :role_part_id and status = 'finished')
+         where not exists (select 1 from imsld_status_user where run_id = :run_id and user_id = :user_id and related_id = :role_part_id and status = 'finished')
          )
     
 		</querytext>
@@ -276,6 +278,7 @@
 	<fullquery name="imsld::mark_act_finished.insert_act">
 		<querytext>
         insert into imsld_status_user (imsld_id,
+                                       run_id,
                                        play_id,
                                        related_id,
                                        user_id,
@@ -284,13 +287,14 @@
                                        status) 
         (
          select :imsld_id,
+         :run_id,
          :play_id,
          :act_id,
          :user_id,
          'act',
          now(),
          'finished'
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :act_id and status = 'finished')
+         where not exists (select 1 from imsld_status_user where run_id = :run_id and user_id = :user_id and related_id = :act_id and status = 'finished')
          )
     
 		</querytext>
@@ -312,6 +316,7 @@
 	<fullquery name="imsld::mark_play_finished.insert_play">
 		<querytext>
         insert into imsld_status_user (imsld_id,
+                                       run_id,
                                        related_id,
                                        user_id,
                                        type,
@@ -319,12 +324,13 @@
                                        status) 
         (
          select :imsld_id,
+         :run_id,
          :play_id,
          :user_id,
          'play',
          now(),
          'finished'
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :play_id and status = 'finished')
+         where not exists (select 1 from imsld_status_user where run_id = :run_id and user_id = :user_id and related_id = :play_id and status = 'finished')
          )
     
 		</querytext>
@@ -346,6 +352,7 @@
 	<fullquery name="imsld::mark_imsld_finished.insert_uol">
 		<querytext>
         insert into imsld_status_user (imsld_id,
+                                       run_id,
                                        related_id,
                                        user_id,
                                        type,
@@ -353,12 +360,13 @@
                                        status) 
         (
          select :imsld_id,
+         :run_id,
          :imsld_id,
          :user_id,
          'play',
          now(),
          'finished'
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :imsld_id and status = 'finished')
+         where not exists (select 1 from imsld_status_user where run_id = :run_id and user_id = :user_id and related_id = :imsld_id and status = 'finished')
          )
     
 		</querytext>
@@ -380,6 +388,7 @@
 	<fullquery name="imsld::mark_method_finished.insert_method">
 		<querytext>
         insert into imsld_status_user (imsld_id,
+                                       run_id,
                                        related_id,
                                        user_id,
                                        type,
@@ -387,12 +396,13 @@
                                        status) 
         (
          select :imsld_id,
+         :run_id,
          :method_id,
          :user_id,
          'method',
          now(),
          'finished'
-         where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :method_id and status = 'finished')
+         where not exists (select 1 from imsld_status_user where run_id = :run_id and user_id = :user_id and related_id = :method_id and status = 'finished')
          )
     
 		</querytext>
@@ -466,6 +476,7 @@
 		<querytext>
                 insert into imsld_status_user (
                                                 imsld_id,
+                                                run_id,
                                                 play_id,
                                                 act_id,
                                                 role_part_id,
@@ -477,6 +488,7 @@
                                                )
                                                (
                                        select :imsld_id,
+                                       :run_id,
                                        :play_id,
                                        :act_id,
                                        :role_part_id,
@@ -485,7 +497,7 @@
                                        :type,
                                        now(),
                                        'finished'
-                                       where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :element_id and status = 'finished')
+                                       where not exists (select 1 from imsld_status_user where run_id = :run_id and user_id = :user_id and related_id = :element_id and status = 'finished')
                                        )
     
 		</querytext>
@@ -523,6 +535,7 @@
                     where related_id = :activity_id
                     and user_id = :user_id
                     and status = 'finished'
+                    and run_id = :run_id
                 
 		</querytext>
 	</fullquery>
@@ -530,7 +543,11 @@
 
 	<fullquery name="imsld::finish_component_element.already_marked_p">
 		<querytext>
-select 1 from imsld_status_user where related_id = :role_part_id and user_id = :user_id and status = 'finished'
+        select 1 from imsld_status_user 
+        where related_id = :role_part_id 
+        and user_id = :user_id 
+        and status = 'finished'
+        and run_id = :run_id
 		</querytext>
 	</fullquery>
 
@@ -652,6 +669,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
                     where related_id = :learning_activity_id
                     and user_id = :user_id
                     and status = 'finished'
+                    and run_id = :run_id
                 
 		</querytext>
 	</fullquery>
@@ -674,7 +692,8 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
                     from imsld_status_user
                     where related_id = :support_activity_id
                     and user_id = :user_id
-                    and status = 'finished'                
+                    and status = 'finished'
+                    and run_id = :run_id                
 		</querytext>
 	</fullquery>
 
@@ -700,6 +719,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
                     where related_id = :structure_id
                     and user_id = :user_id
                     and status = 'finished'
+                    and run_id = :run_id
 		</querytext>
 	</fullquery>
 
@@ -711,6 +731,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
         where related_id = :role_part_id
         and user_id = :user_id
         and status = 'finished'
+        and run_id = :run_id
 		</querytext>
 	</fullquery>
 
@@ -742,6 +763,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
                 where related_id = content_item__get_live_revision(:learning_activity_id)
                 and user_id = :user_id
                 and status = 'finished'
+                and run_id = :run_id
 		</querytext>
 	</fullquery>
 
@@ -752,6 +774,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
                 where related_id = content_item__get_live_revision(:support_activity_id)
                 and user_id = :user_id
                 and status = 'finished'
+                and run_id = :run_id
 		</querytext>
 	</fullquery>
 
@@ -762,6 +785,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
                 where related_id = content_item__get_live_revision(:activity_structure_id)
                 and user_id = :user_id
                 and status = 'finished'
+                and run_id = :run_id
 		</querytext>
 	</fullquery>
 
@@ -773,6 +797,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
         where related_id = :act_id
         and user_id = :user_id
         and status = 'finished'
+        and run_id = :run_id
 		</querytext>
 	</fullquery>
 
@@ -784,6 +809,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
         where related_id = :play_id
         and user_id = :user_id
         and status = 'finished'
+        and run_id = :run_id
 		</querytext>
 	</fullquery>
 
@@ -795,6 +821,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
         where related_id = :method_id
         and user_id = :user_id
         and status = 'finished'
+        and run_id = :run_id
 		</querytext>
 	</fullquery>
 
@@ -806,6 +833,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
         where related_id = :imsld_id
         and user_id = :user_id
         and status = 'finished'
+        and run_id = :run_id
 		</querytext>
 	</fullquery>
 
@@ -1397,7 +1425,10 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 		<querytext>
 
                     select 1 from imsld_status_user 
-                    where related_id = :activity_id and user_id = :user_id and status = 'finished'
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and status = 'finished'
+                    and run_id = :run_id
                 
 		</querytext>
 	</fullquery>
@@ -1435,7 +1466,10 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 		<querytext>
 
                     select 1 from imsld_status_user
-                    where related_id = :structure_id and user_id = :user_id and status = 'started'
+                    where related_id = :structure_id 
+                    and user_id = :user_id 
+                    and status = 'started'
+                    and run_id = :run_id
                 
 		</querytext>
 	</fullquery>
@@ -1456,7 +1490,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
         rp.role_part_id,
         ia.act_id,
         ip.play_id
-        from imsld_role_partsi rp, imsld_actsi ia, imsld_playsi ip, imsld_imsldsi ii,
+        from imsld_role_partsi rp, imsld_actsi ia, imsld_playsi ip, imsld_imsldsi ii, imsld_attribute_instances attr,
         imsld_methodsi im
         where  rp.act_id = ia.item_id
         and ia.play_id = ip.item_id
@@ -1464,6 +1498,10 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
         and im.imsld_id = ii.item_id
         and ii.imsld_id = :imsld_id
         and content_revision__is_live(rp.role_part_id) = 't'
+        and attr.owner_id = ip.play_id
+        and attr.run_id = :run_id
+        and attr.type = 'isvisible'
+        and attr.is_visible_p = 't'
         order by ip.sort_order, ia.sort_order, rp.sort_order
         
 		</querytext>
@@ -1514,7 +1552,10 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 		<querytext>
 
                     select 1 from imsld_status_user
-                    where related_id = :activity_id and user_id = :user_id and status = 'started'
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and status = 'started'
+                    and run_id = :run_id
                     
 		</querytext>
 	</fullquery>
@@ -1557,7 +1598,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
         select count(*)
         from imsld_status_user
         where user_id = :user_id
-        and imsld_id = :imsld_id
+        and run_id = :run_id
         and type in ('learning','support','structure')
 		</querytext>
 	</fullquery>
@@ -1593,7 +1634,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
             rp.act_id,
             stat.status
             from imsld_status_user stat, imsld_role_parts rp
-            where stat.imsld_id = :imsld_id
+            where stat.run_id = :run_id
             and stat.user_id = :user_id
             and stat.role_part_id = rp.role_part_id
             and stat.type in ('learning','support','structure')
@@ -1767,6 +1808,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
         where related_id = :activity_id
         and user_id = :user_id
         and status = 'finished'
+        and run_id = :run_id
 		</querytext>
 	</fullquery>
 
@@ -2061,6 +2103,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
 		<querytext>
                 insert into imsld_status_user (
                                                 imsld_id,
+                                                run_id,
                                                 related_id,
                                                 user_id,
                                                 type,
@@ -2069,12 +2112,13 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
                                                )
                                                (
                                                 select :imsld_id,
+                                                :run_id,
                                                 :resource_id,
                                                 :user_id,
                                                 'resource',
                                                 now(),
                                                 'finished'
-                                                where not exists (select 1 from imsld_status_user where imsld_id = :imsld_id and user_id = :user_id and related_id = :resource_id and status = 'finished')
+                                                where not exists (select 1 from imsld_status_user where run_id = :run_id and user_id = :user_id and related_id = :resource_id and status = 'finished')
                                                )
             
 		</querytext>
@@ -2089,12 +2133,17 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
                     and icr.resource_id = stat.related_id
                     and user_id = :user_id
                     and status = 'finished'
+                    and run_id = :run_id
 		</querytext>
 	</fullquery>
 
 	<fullquery name="imsld::finish_resource.already_finished">
 		<querytext>
-            select 1 from imsld_status_user where related_id = :activity_id and user_id = :user_id and status = 'finished'
+            select 1 from imsld_status_user 
+            where related_id = :activity_id 
+            and user_id = :user_id 
+            and status = 'finished'
+            and run_id = :run_id
 		</querytext>
 	</fullquery>
 
@@ -2105,6 +2154,7 @@ select 1 from imsld_status_user where related_id = :role_part_id and user_id = :
                 from imsld_status_user
                 where related_id = :resource_id
                 and status = 'finished'
+                and run_id = :run_id
 		</querytext>
 	</fullquery>
 

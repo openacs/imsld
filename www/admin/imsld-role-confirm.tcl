@@ -10,6 +10,7 @@ ad_page_contract {
     group_instance
     role
     imsld_id
+    run_id
 } 
 
 #check conditions and set the database
@@ -19,8 +20,8 @@ set max_persons [lindex $role_info 0]
 set min_persons [lindex $role_info 1]
 set match_persons_p [lindex $role_info 3]
 
-set return_url [export_vars -base imsld-admin-roles {role imsld_id group_instance members_list}]
-set return_url2 [export_vars -base imsld-admin-roles {role imsld_id group_instance}]
+set return_url [export_vars -base imsld-admin-roles {role imsld_id run_id group_instance members_list}]
+set return_url2 [export_vars -base imsld-admin-roles {role imsld_id run_id group_instance}]
 
 
 if {![string eq "-1" [lsearch $members_list 0]] } {

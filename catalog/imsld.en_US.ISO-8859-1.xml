@@ -5,6 +5,7 @@
   <msg key="Act_Identifier">Act Identifier</msg>
   <msg key="Activity_Structures">Activity Structures</msg>
   <msg key="Acts_in_play_count">Acts in play %count%</msg>
+  <msg key="Admin_IMS_LD">Admin IMS LD</msg>
   <msg key="Caluclate_Identifier">Caluclate Identifier</msg>
   <msg key="Calulate_Identifier">Calulate Identifier</msg>
   <msg key="Class">Class</msg>
@@ -15,9 +16,14 @@
   <msg key="Confirm_New_IMS-LD">Confirm: New IMS-LD</msg>
   <msg key="Context_info">Context info</msg>
   <msg key="Create_New">Create New?</msg>
+  <msg key="create_new_run">create new run</msg>
+  <msg key="Creating_default_Run">Creating default Run...</msg>
   <msg key="Creating_new_IMS-LD">Creating new IMS-LD...</msg>
+  <msg key="Creation_Date">Creation Date</msg>
   <msg key="Data_Type">Data Type</msg>
   <msg key="Delete_IMS_LD">Delete IMS LD</msg>
+  <msg key="Delete_Run">Delete Run</msg>
+  <msg key="Deleted">Deleted</msg>
   <msg key="Description">Description</msg>
   <msg key="Else_Identifier">Else Identifier</msg>
   <msg key="Error_parsing_file">Error parsing file</msg>
@@ -81,7 +87,8 @@
   <msg key="IMS-LD_Time_Limits">IMS-LD Time Limits</msg>
   <msg key="IMS-LD_ZIP_File">IMS-LD ZIP File</msg>
   <msg key="IMS-LDs">IMS-LDs</msg>
-  <msg key="IMS_LD_Name">IMS LD Name</msg>
+  <msg key="IMS-LDs_1">IMS Learning Designs</msg>
+  <msg key="IMS_LD_Name">Unit of Learning Name</msg>
   <msg key="Information">Information</msg>
   <msg key="Initial_Value">Initial Value</msg>
   <msg key="Is_shared">Is shared?</msg>
@@ -108,6 +115,7 @@
   <msg key="lt_Environment_Identifie">Environment Identifier</msg>
   <msg key="lt_Error_creating_folder">Error creating folder</msg>
   <msg key="lt_Error_deleting_IMS_LD">Error deleting IMS LD</msg>
+  <msg key="lt_Error_deleting_Run_ru">Error deleting Run %run_id%</msg>
   <msg key="lt_Error_parsing_manifes">Error parsing manifest.</msg>
   <msg key="lt_Expression_Identifier">Expression Identifier</msg>
   <msg key="lt_Expression_One_Identi">Expression One Identifier</msg>
@@ -188,6 +196,8 @@
   <msg key="lt_Referenced_support_ac_4">Referenced support activity (%support_activity_ref_ref%) in role part %identifie% does not exist.</msg>
   <msg key="lt_Referenced_support_ac_5">Referenced support activity %support_activity_ref_ref% in role part %identifier% is actually an activity structure.</msg>
   <msg key="lt_Referenced_support_ac_6">Referenced support activity %support_activity_ref% in role part %identifier% is actually a learning activity.</msg>
+  <msg key="lt_Service_type_service_">Service type %service_type% not implemented</msg>
+  <msg key="lt_Sorry_that_service_ty">Sorry, that service type (%service_type%) hasn't been implemented yet.</msg>
   <msg key="lt_Support_Activity_Iden">Support Activity Identifier</msg>
   <msg key="lt_The_file_filex_href_w">The file %filex_href% was not created, it wasn't found in the manifest</msg>
   <msg key="lt_The_referenced_play_i">The referenced play in 'when play completed' in the method does not exist</msg>
@@ -213,6 +223,7 @@
   <msg key="lt_There_was_an_error_cr">There was an error creating the folder. Aborting.</msg>
   <msg key="lt_There_was_an_error_cr_1">There was an error creating the tmp_dir to unzip the file.</msg>
   <msg key="lt_There_was_an_error_de">There was an error deleting the IMS LD $imsld_id. This is the error: &lt;pre&gt;%errmsg%&lt;/pre&gt;</msg>
+  <msg key="lt_There_was_an_error_de_1">There was an error deleting the Run %run_id%. This is what the database said: &lt;pre&gt; %errmsg%&lt;/pre&gt;</msg>
   <msg key="lt_There_was_an_error_ge">There was an error generating the tmp_dir to unzip the file.</msg>
   <msg key="lt_There_was_an_error_pa">There was an error parsing the manifest. Please correct it and try again. &lt;br /&gt;&lt;code&gt;%errmsg%&lt;/code&gt;</msg>
   <msg key="lt_There_was_an_error_tr">There was an error trying to delete the dir %dir%.</msg>
@@ -228,7 +239,8 @@
   <msg key="lt_When_Last_Act_Complet">When Last Act Completed?</msg>
   <msg key="lt_When_Property_Value_i">When Property Value is Set Identifier</msg>
   <msg key="Mail_Data">Mail Data</msg>
-  <msg key="Make_it_live">Make it live</msg>
+  <msg key="Make_it_live">(make it live)</msg>
+  <msg key="Manage_Members">Manage Members</msg>
   <msg key="Manager_Identifier">Manager Identifier</msg>
   <msg key="Manifest_Identifier">Manifest Identifier</msg>
   <msg key="Match_Persons">Match Persons?</msg>
@@ -236,6 +248,7 @@
   <msg key="Max_Persons">Max Persons</msg>
   <msg key="Method_Identifier">Method Identifier</msg>
   <msg key="Min_Persons">Min Persons</msg>
+  <msg key="nbspnbspnbspdone">&amp;nbsp;&amp;nbsp;&amp;nbsp;done</msg>
   <msg key="New_IMS-LD">New IMS-LD</msg>
   <msg key="No">information found in the imsmanifest.xml file. Nothing to do.</msg>
   <msg key="No_IMS_LD">No IMS LD</msg>
@@ -262,6 +275,8 @@
   <msg key="Restriction_Type">Restriction Type</msg>
   <msg key="Role_Identifier">Role Identifier</msg>
   <msg key="Role_Type">Role Type</msg>
+  <msg key="Run_IMS-LD_Name">Run (IMS-LD) Name</msg>
+  <msg key="Runs">Runs</msg>
   <msg key="Self">Self</msg>
   <msg key="send-mail_service">send-mail service</msg>
   <msg key="Sendmail_Identifier">Sendmail Identifier</msg>

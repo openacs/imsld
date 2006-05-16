@@ -9,10 +9,11 @@ ad_page_contract {
     role
     imsld_id
     group_id
+    run_id
 }
 
 
 db_1row get_rel_id {}
 relation_remove $rel_id
 imsld::roles::delete_instance -group_id $group_id
-ad_returnredirect [export_vars -base imsld-admin-roles {{role $role} {imsld_id $imsld_id} {group_instance 0}}]
+ad_returnredirect [export_vars -base imsld-admin-roles {{role $role} {imsld_id $imsld_id} {group_instance 0} {run_id $run_id}}]

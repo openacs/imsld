@@ -9,6 +9,7 @@ ad_page_contract {
     role:optional
     {group_instance 0}
     imsld_id
+    run_id
     members_list:optional
 } 
 
@@ -62,12 +63,12 @@ if {![db_0or1row get_group_name {}]} {
     set create_instance_url imsld-create-instance 
     set bulk_actions "{Create new instance} $create_instance_url {Create a new instance of a role}"
     set bulk_actions_not "{Create new instance} $create_instance_url {Create a new instance of a role}"
-    set bulk_action_export_vars "{imsld_id} {role}"
+    set bulk_action_export_vars "{imsld_id} {role} {run_id}"
 } else {
     set bulk_actions "{<------} {imsld-role-remove-members} {Remove selected members from the group}"
     set bulk_actions_not "{------->} {imsld-role-add-members} {Add selected members to the group}"
                      
-    set bulk_action_export_vars "{group_instance} {role} {imsld_id} {members_list}"
+    set bulk_action_export_vars "{group_instance} {role} {imsld_id} {run_id} {members_list}"
 }
 
 
@@ -109,4 +110,4 @@ template::list::create \
 db_multirow asign_members get_users_list {}
 db_multirow asign_not_members get_not_users_list {}
 
-ad_form -name confirm -action imsld-role-confirm -export {imsld_id role group_instance members_list}
+ad_form -name confirm -action imsld-role-confirm -export {imsld_id run_id role group_instance members_list}

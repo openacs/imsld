@@ -4,6 +4,7 @@ ad_page_contract {
 } {
     file_url
     resource_item_id
+    run_id
 }
 
 # fedback nor assessment has to be marked as finished
@@ -17,7 +18,7 @@ if { [db_0or1row not_fedbk_nor_assmnt {
     and icr.type != 'imsqti_xmlv1p0'
     limit 1
 }] } {
-    imsld::finish_resource -resource_id $resource_id
+    imsld::finish_resource -resource_id $resource_id -run_id $run_id
 }
 
 ad_returnredirect $file_url

@@ -8,7 +8,7 @@ ad_page_contract {
     @creation-date 2006-03-21
     @cvs-id $Id$
 } {
-    imsld_id:integer,notnull
+    run_id:integer,notnull
 } -properties {
 } -validate {
 } -errors {

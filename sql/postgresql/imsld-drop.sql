@@ -13,4 +13,6 @@
 
 \i imsld-production-delivery-drop.sql
 
+\i imsld-production-delivery-package-drop.sql
+
 \i imsld-level-b-drop.sql
