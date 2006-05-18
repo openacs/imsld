@@ -591,12 +591,15 @@
 
 	<fullquery name="imsld::finish_component_element.directly_referenced_role_part">
 		<querytext>
-                select irp.role_part_id
-                from imsld_role_parts irp
-                where irp.act_id = :act_item_id
-                and content_revision__is_live(irp.role_part_id) = 't'
-            
-		</querytext>
+
+            select irp.role_part_id 
+            from imsld_role_parts irp,
+                 imsld_rolesi iri 
+            where content_revision__is_live(irp.role_part_id)='t' 
+                  and irp.act_id=:act_item_id 
+                  and irp.role_id=iri.item_id 
+                  and iri.role_id in ([join $user_roles_list ","])
+	</querytext>
 	</fullquery>
 
 
@@ -848,7 +851,6 @@
         from imsld_servicesi serv 
         where serv.item_id = :service_item_id
         and content_revision__is_live(serv.service_id) = 't'
-    
 		</querytext>
 	</fullquery>
 
@@ -885,6 +887,32 @@
 		</querytext>
 	</fullquery>
 
+    <fullquery name="imsld::process_service_as_ul.get_sendmail_id">
+		<querytext>
+          select mail_id as sendmail_id 
+          from imsld_send_mail_servicesi isms
+          where isms.service_id=:service_item_id
+       		</querytext>
+	</fullquery>
+
+    
+    <fullquery name="imsld::process_service.get_sendmail_id">
+		<querytext>
+          select mail_id as sendmail_id 
+          from imsld_send_mail_servicesi isms
+          where isms.service_id=:service_item_id
+       		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::process_service.get_sendmail_destination_role">
+		<querytext>
+          select role_id as role_destination_ref 
+          from imsld_send_mail_servicesi isms, 
+               imsld_send_mail_data ismd 
+          where isms.service_id=:service_item_id
+                and isms.item_id=ismd.send_mail_id
+       		</querytext>
+	</fullquery>
 
 	<fullquery name="imsld::process_environment.environment_info">
 		<querytext>
@@ -1491,12 +1519,14 @@
         ia.act_id,
         ip.play_id
         from imsld_role_partsi rp, imsld_actsi ia, imsld_playsi ip, imsld_imsldsi ii, imsld_attribute_instances attr,
-        imsld_methodsi im
+        imsld_methodsi im,imsld_rolesi iri
         where  rp.act_id = ia.item_id
         and ia.play_id = ip.item_id
         and ip.method_id = im.item_id
         and im.imsld_id = ii.item_id
         and ii.imsld_id = :imsld_id
+        and rp.role_id = iri.item_id
+        and iri.role_id in ([join $user_roles_list ","])
         and content_revision__is_live(rp.role_part_id) = 't'
         and attr.owner_id = ip.play_id
         and attr.run_id = :run_id

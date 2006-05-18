@@ -11,6 +11,20 @@ ad_page_contract {
 
 set user_id [ad_conn user_id]
 
+set supported_roles [db_list supported_roles_list { select iri.role_id 
+                                             from imsld_rolesi iri, 
+                                             acs_rels ar,  
+                                             imsld_support_activitiesi isai 
+                                             where iri.item_id=ar.object_id_two 
+                                             and ar.rel_type='imsld_sa_role_rel' 
+                                             and ar.object_id_one=isai.item_id 
+                                             and isai.activity_id =:activity_id }]
+
+if {[llength $supported_roles]} {
+    set flag 1 
+}
+        
+                                             
 dom createDocument div doc
 set dom_root [$doc documentElement]
 $dom_root setAttribute class "tabber"

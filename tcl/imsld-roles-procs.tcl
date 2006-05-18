@@ -36,7 +36,10 @@ ad_proc -public imsld::roles::create_instance {
 #map group with his parent (composition_rel)
     if {[info exist parent_group_id] } {
         relation_add composition_rel $parent_group_id $group_id
-    }
+    } 
+#map group with the community or class
+    set club_id [dotlrn_community::get_community_id]
+    relation_add imsld_roleinstance_club_rel $group_id $club_id 
 
 #check for subroles
     set subroles_list [imsld::roles::get_subroles -role_id $role_id]
@@ -137,20 +140,128 @@ ad_proc -private imsld::roles::get_role_info {
 
 ad_proc -private imsld::roles::get_role_instances {
     -role_id
+    -community_id
 } {
     @param roles_list the list of roles to get the name
 } {
-    db_1row get_related_groups {}
+    if {[info exist community_id]} {
+        set groups [db_list get_community_related_groups {}]
+    } else {
+        set groups [db_list get_related_groups {}]
+    }
     return $groups 
+}
+
+ad_proc -private imsld::roles::get_parent_role_instance {
+    -group_id
+    -root_parent:boolean
+} {
+    @param group_id the role instance to get the parent from
+} {
+    if {[db_0or1row get_parent_role_instance {}]} {
+        if {$root_parent} {
+            set group_id $parent_group_id
+            while {[db_0or1row get_parent_role_instance {}]} {
+               set group_id $parent_group_id
+            }
+            return $parent_group_id
+        } else {
+            return $parent_group_id
+        }
+    } else {
+        return 0
+    }
 }
 
 ad_proc -private imsld::roles::get_parent_role {
     -role_id
+    -root_parent:boolean
 } {
     @param roles_list the list of roles to get the name
 } {
-    db_1row get_parent_role {}
-    return $parent_role
+    set role $role_id
+    if {[db_0or1row get_parent_role {}]} {
+        if {$root_parent} {
+            set role $parent_role
+            while {[db_0or1row get_parent_role {}]} {
+               set role $parent_role 
+            }
+            return $parent_role
+        } else {
+            return $parent_role
+        }
+    } else {
+        return 0
+    }
+}
+
+ad_proc -private imsld::roles::get_mail_recipients {
+    -role_destination_ref
+    -role_source_id
+} {
+    Get the list of recipients of a send-mail service. Its called from a user belonging to a role into an specific imsld run and must get a list of users from the destination role.
+} {
+
+#FIX ME: when runs are supported, here may be included
+    
+#find relationship between source and destination.
+#    set root_source_parent_role [imsld::roles::get_parent_role -role_id $role_source_id -root_parent]
+    set root_destination_parent_role [imsld::roles::get_parent_role -role_id $role_destination_ref]
+
+    set community_id [dotlrn_community::get_community_id]
+    set list_of_groups [imsld::roles::get_role_instances -role_id $role_destination_ref -community_id $community_id]
+#    if { $root_source_parent_role == $root_destination_parent_role } {
+       #get community_id
+#        set group_id 
+#
+#       }
+    set users_list [list]
+    foreach group $list_of_groups {
+        lappend users_list [group::get_members -group_id $group]
+    }
+    return $users_list
+}
+ad_proc -public imsld::roles::get_user_roles {
+    -user_id
+    -imsld_id 
+} {
+    Returns a list with all the roles_id from which the user are member. If imsld_id is given, restrict the list to the roles of the imsld.
+} {
+    set roles_list [db_list get_user_roles_list {}]
+
+    if {[info exist imsld_id]} {
+        set new_roles_list [list]
+        foreach role $roles_list {
+            set role_imsld_id [imsld::roles::get_imsld_from_role -role_id $role]
+            if { $role_imsld_id == $imsld_id } {
+                lappend new_roles_list $role
+            }
+        }
+        set roles_list $new_roles_list
+    }
+    return $roles_list
+}
+
+ad_proc -public imsld::roles::get_imsld_from_role {
+    -role_id
+} {
+    get the imsld_id of the given role
+} {
+    return [db_string get_imsld {}]
+}
+
+ad_proc -public imsld::roles::get_role_instances {
+    -role_id
+    -community_id
+} {
+    get all the instances of a given role. If community_id is given, restrict the output to the groups of this community
+} {
+    set groups_list [db_list get_list_of_groups {}]
+#
+#    if {[info exist community_id]} {
+#         set groups_list [db_list get_list_of_community_groups ""]
+#    }
+    return $groups_list
 }
 
 

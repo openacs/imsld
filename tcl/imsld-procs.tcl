@@ -822,6 +822,7 @@ ad_proc -public imsld::finish_component_element {
 
         set completed_act_p 1 
         set rel_defined_p 0
+        set user_roles_list [imsld::roles::get_user_roles -user_id $user_id -imsld_id $imsld_id]
         db_foreach referenced_role_part {
             select ar.object_id_two as role_part_item_id,
             rp.role_part_id
@@ -1360,7 +1361,7 @@ ad_proc -public imsld::process_service_as_ul {
         }
 
         send-mail {
-            # FIX ME: when roles be supported, fix it so the mail is sent to the propper role
+            # FIX ME: when roles are supported, fix it so the mail is sent to the propper role
             set resource_item_list ""
             db_1row get_send_mail_info {
                 select sm.title as send_mail_title
@@ -1369,9 +1370,12 @@ ad_proc -public imsld::process_service_as_ul {
                 and content_revision__is_live(sm.mail_id) = 't'
             }
 
+
+            db_1row get_sendmail_id {}
             set send_mail_node_li [$dom_doc createElement li]
             set a_node [$dom_doc createElement a]
-            $a_node setAttribute href "[export_vars -base "[dotlrn_community::get_community_url [dotlrn_community::get_community_id]]spam-recipients" {referer one-community-admin}]"
+            
+            $a_node setAttribute href "[export_vars -base "[dotlrn_community::get_community_url [dotlrn_community::get_community_id]]imsld/imsld-sendmail" {{send_mail_id $sendmail_id}}]"
             set service_title [$dom_doc createTextNode "$send_mail_title"]
             $a_node setAttribute target "content"
             $a_node appendChild $service_title
@@ -1448,9 +1452,10 @@ ad_proc -public imsld::process_service {
         }
 
         send-mail {
-            # FIX ME: when roles be supported, fix it so the mail is sent to the propper role
+
+            db_1row get_sendmail_id {}
             set image_path [imsld::object_type_image_path -object_type $service_type]
-            set services_list "<a href=\"[export_vars -base spam-recipients {referer one-community-admin}]\"  target=\"_blank\"><img src=\"$image_path\" width=\"16\" height=\"16\" border=\"0\" alt=\"Send-Mail service\"></a>"
+            set services_list "<a href=\"[export_vars -base imsld/imsld-sendmail {{send_mail_id $sendmail_id}}]\"  target=\"_blank\"><img src=\"$image_path\" width=\"16\" height=\"16\" border=\"0\" alt=\"Send-Mail service\"></a>"
             set resource_item_list $service_item_id
         }
         
@@ -1605,6 +1610,7 @@ ad_proc -public imsld::process_environment_as_ul {
         set identifier [lindex $services_list 2]
         set service_type [lindex $services_list 3]
         set service_title [lindex $services_list 4]
+
         set class_name [lindex $services_list 5]
         if { ![imsld::class_visible_p -run_id $run_id -owner_id $service_id -class_name $class_name] } {
             continue
@@ -2950,6 +2956,8 @@ ad_proc -public imsld::process_support_activity_as_ul {
 
     @return The list of items (resources, feedback, environments, using tdom) associated with the support activity
 } {
+
+    set user_id [ad_conn user_id]
     if { ![db_0or1row activity_info {
         select on_completion_id as on_completion_item_id,
         activity_id,
@@ -3091,7 +3099,6 @@ ad_proc -public imsld::process_support_activity {
         where item_id = :activity_item_id
         and content_revision__is_live(activity_id) = 't'
     }
-
     # get environments
     set environments_list [list]
     set associated_environments_list [db_list sa_associated_environments {
@@ -3456,6 +3463,8 @@ ad_proc -public imsld::generate_activities_tree {
         where run_id = :run_id
     }
     # start with the role parts
+    set user_roles_list [imsld::roles::get_user_roles -user_id $user_id -imsld_id $imsld_id]
+
     foreach role_part_list [db_list_of_lists referenced_role_parts { *SQL* }] {
         set type [lindex $role_part_list 0]
         set activity_id [lindex $role_part_list 1]
@@ -3660,6 +3669,7 @@ ad_proc -public imsld::get_next_activity_list {
         }
     }
 
+
     # 1. for each act in the next_act_id_list
     # 1.2. for each role_part in the act
     # 1.2.1 find the next activity referenced by the role_part
@@ -3668,14 +3678,18 @@ ad_proc -public imsld::get_next_activity_list {
     # 2.2.1.2 if it is an activity structure we have verify which activities are already completed and return the next
     #         activity in the activity structure, handling the case when the next activity is also an activity structure
 
+    set user_roles_list [imsld::roles::get_user_roles -user_id $user_id -imsld_id $imsld_id]
     set next_activity_id_list [list]
     foreach act_item_id $next_act_item_id_list {
-        foreach role_part_id [db_list act_role_parts {
-            select role_part_id
-            from imsld_role_parts
-            where act_id = :act_item_id
-            and content_revision__is_live(role_part_id) = 't'
-        }] {
+        foreach role_part_id [db_list act_role_parts "
+            select irp.role_part_id 
+                   from imsld_role_parts irp,
+                   imsld_rolesi iri 
+            where content_revision__is_live(irp.role_part_id)='t' 
+                  and irp.act_id=:act_item_id 
+                  and irp.role_id=iri.item_id 
+                  and iri.role_id in ([join $user_roles_list ","])
+        "] {
             db_1row get_role_part_activity {
                 select case
                 when learning_activity_id is not null

@@ -4,6 +4,7 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 
 <script type="text/javascript" src="/resources/imsld/tabber.js"></script>
+<script type="text/javascript" src="/resources/imsld/dynamicselect.js"></script>
 <link rel="stylesheet" href="/resources/imsld/example.css" TYPE="text/css" MEDIA="screen">
 <link rel="stylesheet" href="/resources/imsld/example-print.css" TYPE="text/css" MEDIA="print">
 
@@ -23,8 +24,11 @@ document.write('<style type="text/css">.tabber{display:none;}<\/style>');
 </head>
 <body>
 
-@activities;noquote@
+<if @flag@ not nil>
+   <include src="support-activity-roles" supported_roles="@supported_roles@">
+</if>
 
+@activities;noquote@
 <!-- <object data="index" type="text/html" id="object"></object> -->
 <iframe id="object" name="object"></iframe>
 
@@ -55,5 +59,11 @@ for (var i = 0; i < as.length; i++) {
 }
 document.getElementById('object').src = as[0].getAttribute('href');
 </script>
+
+<if @flag@ not nil>
+    <script type="text/javascript">
+                dynamicSelect("supported-roles", "user-roles");
+    </script>
+</if>
 
 </html>
