@@ -1347,7 +1347,6 @@ ad_proc -public imsld::parse::parse_and_create_learning_objective {
     set learning_objective_items [$learning_objective_node child all imsld:item]
     if { [llength $learning_objective_items] } {
         foreach imsld_item $learning_objective_items {
-            
             set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                -manifest_id $manifest_id \
                                -item_node $imsld_item \
@@ -1506,9 +1505,8 @@ ad_proc -public imsld::parse::parse_and_create_learning_object {
                                 -parent_id $parent_id]
 
     # learning object: imsld_items
-    set learning_object_item [$learning_object_node child all imsld:item]
-    if { [llength $learning_object_item] } {
-        imsld::parse::validate_multiplicity -tree $learning_object_node -multiplicity 1 -element_name item(learning-object) -equal
+    set learning_object_items [$learning_object_node child all imsld:item]
+    foreach learning_object_item $learning_object_items {
         set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                            -manifest_id $manifest_id \
                            -item_node $learning_object_item \

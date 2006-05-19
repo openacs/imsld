@@ -1384,7 +1384,7 @@ ad_proc -public imsld::process_service_as_ul {
         }
         
         default {
-            ad_return_error "send-mail serivce not implemented yet" "Sorry, that service type ($service_type) hasn't been implemented yet. But be patience, we are working on it =)"
+            ad_return_error "the service type $service_type is not implemented... yet" "Sorry, that service type ($service_type) hasn't been implemented yet. But be patience, we are working on it =)"
             ad_script_abort
         }
     }
@@ -2956,7 +2956,6 @@ ad_proc -public imsld::process_support_activity_as_ul {
 
     @return The list of items (resources, feedback, environments, using tdom) associated with the support activity
 } {
-
     set user_id [ad_conn user_id]
     if { ![db_0or1row activity_info {
         select on_completion_id as on_completion_item_id,
