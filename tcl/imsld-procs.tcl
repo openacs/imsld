@@ -822,7 +822,8 @@ ad_proc -public imsld::finish_component_element {
 
         set completed_act_p 1 
         set rel_defined_p 0
-        set user_roles_list [imsld::roles::get_user_roles -user_id $user_id -imsld_id $imsld_id]
+
+    set user_roles_list [imsld::roles::get_user_roles -user_id $user_id -run_id $run_id]
         db_foreach referenced_role_part {
             select ar.object_id_two as role_part_item_id,
             rp.role_part_id
@@ -1375,7 +1376,7 @@ ad_proc -public imsld::process_service_as_ul {
             set send_mail_node_li [$dom_doc createElement li]
             set a_node [$dom_doc createElement a]
             
-            $a_node setAttribute href "[export_vars -base "[dotlrn_community::get_community_url [dotlrn_community::get_community_id]]imsld/imsld-sendmail" {{send_mail_id $sendmail_id}}]"
+            $a_node setAttribute href "[export_vars -base "[dotlrn_community::get_community_url [dotlrn_community::get_community_id]]imsld/imsld-sendmail" {{send_mail_id $sendmail_id} {run_id $run_id}}]"
             set service_title [$dom_doc createTextNode "$send_mail_title"]
             $a_node setAttribute target "content"
             $a_node appendChild $service_title
@@ -3462,8 +3463,8 @@ ad_proc -public imsld::generate_activities_tree {
         where run_id = :run_id
     }
     # start with the role parts
-    set user_roles_list [imsld::roles::get_user_roles -user_id $user_id -imsld_id $imsld_id]
 
+    set user_roles_list [imsld::roles::get_user_roles -user_id $user_id -run_id $run_id]
     foreach role_part_list [db_list_of_lists referenced_role_parts { *SQL* }] {
         set type [lindex $role_part_list 0]
         set activity_id [lindex $role_part_list 1]
@@ -3677,7 +3678,8 @@ ad_proc -public imsld::get_next_activity_list {
     # 2.2.1.2 if it is an activity structure we have verify which activities are already completed and return the next
     #         activity in the activity structure, handling the case when the next activity is also an activity structure
 
-    set user_roles_list [imsld::roles::get_user_roles -user_id $user_id -imsld_id $imsld_id]
+
+    set user_roles_list [imsld::roles::get_user_roles -user_id $user_id -run_id $run_id]
     set next_activity_id_list [list]
     foreach act_item_id $next_act_item_id_list {
         foreach role_part_id [db_list act_role_parts "

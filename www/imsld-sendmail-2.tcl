@@ -2,9 +2,10 @@ ad_page_contract {
 } {
     recipients
     role_recipient
+    run_id
 }
 
-set users_list [imsld::roles::get_mail_recipients -role_destination_ref $role_recipient]
+set users_list [imsld::roles::get_mail_recipients -role_destination_ref $role_recipient -run_id $run_id]
 set users_list [lindex $users_list 0]
 
 if {[string eq $recipients all-in-role]} {

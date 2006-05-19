@@ -25,7 +25,7 @@ document.write('<style type="text/css">.tabber{display:none;}<\/style>');
 <body>
 
 <if @flag@ not nil>
-   <include src="support-activity-roles" supported_roles="@supported_roles@">
+   <include src="support-activity-roles" supported_roles="@supported_roles@" run_id="@run_id@">
 </if>
 
 @activities;noquote@

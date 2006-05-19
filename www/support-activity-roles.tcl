@@ -12,7 +12,7 @@ set community_id [dotlrn_community::get_community_id]
 set supported_role_instances [list]
 
 foreach role $supported_roles {
-    set supported_instances_temp [imsld::roles::get_role_instances -role_id $role -community_id $community_id]
+    set supported_instances_temp [imsld::roles::get_role_instances -role_id $role -run_id $run_id]
         lappend supported_role_instances $supported_instances_temp
 }
 

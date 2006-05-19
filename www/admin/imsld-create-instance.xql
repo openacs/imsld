@@ -24,11 +24,17 @@
                g.group_id as parent_id
         from groups g,
              imsld_rolesi iri,
-             acs_rels ar 
+             acs_rels ar,
+             acs_rels ar2,
+             imsld_run_users_group_ext iruge
         where iri.role_id=:role
               and ar.object_id_one=iri.parent_role_id 
               and ar.rel_type='imsld_role_group_rel' 
               and g.group_id=ar.object_id_two
+              and ar2.rel_type='imsld_roleinstance_run_rel'
+              and ar2.object_id_one=g.group_id
+              and ar2.object_id_two=iruge.group_id
+              and iruge.run_id=:run_id
         </querytext>
 	</fullquery>
 

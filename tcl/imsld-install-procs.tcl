@@ -369,11 +369,11 @@ ad_proc -public imsld::install::init_ext_rels {
      rel_types::new imsld_role_group_rel "ims-ld role - imsld_role_group" "ims-ld roles - imsld_role_groups"  \
         content_item 0 {} \
         imsld_role_group 0 {}
-
-
-     rel_types::new imsld_roleinstance_club_rel "imsld role instance - dotlrn club" "imsld role groups - dotlrn clubs"  \
+     
+    # ims-ld role instance - ims-ld run
+     rel_types::new imsld_roleinstance_run_rel "imsld role instance - imsld run" "imsld role instances - ims_ld_run_groups"  \
         imsld_role_group 0 {} \
-        dotlrn_club 0 {} 
+        imsld_run_users_group 0 {} 
 
 
     # ims-ld run - oacs users

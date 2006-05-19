@@ -1,6 +1,15 @@
 <?xml version="1.0"?>
 <queryset>
-	<fullquery name="imsld::roles::create_instance.get_role_name">
+	<fullquery name="imsld::roles::create_instance.get_group_from_run">
+		<querytext>
+        select group_id as run_group_id  
+        from imsld_run_users_group_ext 
+        where run_id=:run_id
+		</querytext>
+	</fullquery>
+
+
+<fullquery name="imsld::roles::create_instance.get_role_name">
 		<querytext>
         select role_type,item_id as role_item_id  
         from imsld_rolesi 
@@ -121,12 +130,14 @@
         select ar.object_id_two
         from acs_rels ar,
              acs_rels ar2,
-             imsld_rolesi iri
+             imsld_rolesi iri,
+             imsld_run_users_group_ext iruge
         where ar.object_id_one=iri.item_id
               and ar.rel_type='imsld_role_group_rel'
               and ar.object_id_two=ar2.object_id_one
-              and ar2.rel_type='imsld_roleinstance_club_rel'
-              and ar2.object_id_two=:community_id
+              and ar2.rel_type='imsld_roleinstance_run_rel'
+              and ar2.object_id_two=iruge.group_id
+              and iruge.run_id=:run_id
               and iri.role_id=:role_id
 		</querytext>
 	</fullquery>
@@ -164,28 +175,44 @@
 
 	<fullquery name="imsld::roles::get_user_roles.get_user_roles_list">
 		<querytext>
-        select ir.role_id 
-        from imsld_rolesi ir,
-             group_member_map gmm, 
-             acs_objects ao,
-             acs_rels ar 
-        where ao.object_id = gmm.group_id 
-              and ao.object_type = 'imsld_role_group' 
-              and ar.object_id_two = gmm.group_id 
-              and ir.item_id = ar.object_id_one
-              and gmm.member_id = :user_id
+ select iri.role_id 
+ from imsld_rolesi iri,
+      group_member_map gmm,
+      acs_objects ao,
+      acs_rels ar,
+      acs_rels ar2 ,
+      imsld_run_users_group_ext iruge 
+ where ao.object_id=gmm.group_id 
+       and ao.object_type='imsld_role_group' 
+       and ar.object_id_one=gmm.group_id 
+       and ar.rel_type='imsld_roleinstance_run_rel' 
+       and gmm.member_id=:user_id 
+       and iruge.group_id=ar.object_id_two 
+       and iruge.run_id=:run_id
+       and ar2.object_id_two=gmm.group_id 
+       and ar2.rel_type='imsld_role_group_rel' 
+       and ar2.object_id_one=iri.item_id
+        
         </querytext>
 	</fullquery>
 
-	<fullquery name="imsld::roles::get_imsld_from_role.get_imsld">
+    <fullquery name="imsld::roles::get_user_roles.get_raw_user_roles_list">
 		<querytext>
-        select iii.imsld_id
-        from imsld_imsldsi iii,
-             imsld_roles ir,
-             imsld_componentsi ici
-        where iii.item_id = ici.imsld_id
-              and ici.item_id = ir.component_id
-              and ir.role_id = :role_id
+ select iri.role_id 
+ from imsld_rolesi iri,
+      group_member_map gmm,
+      acs_objects ao,
+      acs_rels ar,
+      acs_rels ar2 
+ where ao.object_id=gmm.group_id 
+       and ao.object_type='imsld_role_group' 
+       and ar.object_id_one=gmm.group_id 
+       and ar.rel_type='imsld_roleinstance_run_rel' 
+       and gmm.member_id=:user_id 
+       and ar2.object_id_two=gmm.group_id 
+       and ar2.rel_type='imsld_role_group_rel' 
+       and ar2.object_id_one=iri.item_id
+
         </querytext>
 	</fullquery>
 
