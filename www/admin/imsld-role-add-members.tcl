@@ -24,7 +24,3 @@ ad_page_contract {
         }
    }
    ad_returnredirect [export_vars -base imsld-admin-roles {imsld_id run_id role group_instance members_list}]
-
-
-   
-

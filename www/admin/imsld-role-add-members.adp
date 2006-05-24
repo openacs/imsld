@@ -1,4 +1,4 @@
 <master>
 
 @user_id@
-@lista@
+@members_list@
