@@ -27,8 +27,8 @@ ad_proc -public -callback imsld::finish_object -impl ld_resource {
     @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
 } {
 
-    if {[db_0or1row belongs_to_imsld {} ] } {
-        set resource_id [imsld::get_resource_from_object -object_id $object_id]
-        imsld::finish_resource -resource_id $resource_id
-    }
+#     if {[db_0or1row belongs_to_imsld {} ] } {
+#         set resource_id [imsld::get_resource_from_object -object_id $object_id]
+#         imsld::finish_resource -resource_id $resource_id
+#     }
 } 
