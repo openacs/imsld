@@ -6,9 +6,10 @@
 	<fullquery name="imsld::community_id_from_manifest_id.get_community_id">
 		<querytext>
         select dc.community_id
-        from imsld_cp_manifestsi im, acs_objects ao, dotlrn_communities dc
-        where im.object_package_id = ao.package_id
-        and ao.context_id = dc.package_id
+        from imsld_cp_manifestsi im, dotlrn_communities dc, acs_objects ao, acs_objects ao2
+        where im.item_id = ao.object_id 
+        and ao.context_id = ao2.object_id
+        and ao2.context_id = dc.package_id
         and im.manifest_id = :manifest_id
     
 		</querytext>
@@ -19,17 +20,20 @@
 		<querytext>
         select icm.manifest_id,
         ii.imsld_id,
-        im.method_id, 
+        im.method_id,
+        ir.run_id,
         ca.time_in_seconds,
-        icm.creation_date
+        ao.creation_date
         from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
-        imsld_imsldsi ii, imsld_methodsi im, imsld_complete_actsi ca
+        imsld_imsldsi ii, imsld_methodsi im, imsld_complete_actsi ca, imsld_runs ir, acs_objects ao
         where im.imsld_id = ii.item_id
+        and ii.imsld_id = ir.imsld_id
         and ii.organization_id = ico.item_id
         and ico.manifest_id = icm.item_id
         and im.complete_act_id = ca.item_id
         and ca.time_in_seconds is not null
-        and content_revision__is_live(im.method_id) = 't'
+        and ao.object_id = ir.run_id
+        and content_revision__is_live(ii.imsld_id) = 't'
     
 		</querytext>
 	</fullquery>
@@ -44,13 +48,16 @@
 	</fullquery>
 
 
-	<fullquery name="imsld::sweep_expired_activities.user_in_class">
+	<fullquery name="imsld::sweep_expired_activities.user_in_run">
 		<querytext>
-                select app.user_id
-                from dotlrn_member_rels_approved app
-                where app.community_id = :community_id
-                and app.member_state = 'approved'
-            
+        select u.user_id
+        from users u,
+             acs_rels ar,
+             imsld_run_users_group_ext r_map
+        where u.user_id > 0
+              and u.user_id=ar.object_id_two
+              and ar.object_id_one = r_map.group_id
+              and r_map.run_id = :run_id
 		</querytext>
 	</fullquery>
 
@@ -61,24 +68,23 @@
         ii.imsld_id,
         ip.play_id,
         ca.time_in_seconds,
-        icm.creation_date
+        ao.creation_date,
+        ir.run_id
         from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
         imsld_imsldsi ii, imsld_methodsi im, imsld_plays ip,
-        imsld_complete_actsi ca
+        imsld_complete_actsi ca, imsld_runs ir, acs_objects ao
         where ip.method_id = im.item_id
         and im.imsld_id = ii.item_id
         and ii.organization_id = ico.item_id
         and ico.manifest_id = icm.item_id
         and ip.complete_act_id = ca.item_id
         and ca.time_in_seconds is not null
-        and content_revision__is_live(ip.play_id) = 't'
-    
+        and ao.object_id = ir.run_id
+        and content_revision__is_live(ii.imsld_id) = 't'
+        and ii.imsld_id = ir.imsld_id    
+
 		</querytext>
 	</fullquery>
-
-
-
-
 
 	<fullquery name="imsld::sweep_expired_activities.possible_expired_acts">
 		<querytext>
@@ -87,10 +93,11 @@
         ip.play_id,
         ia.act_id,
         ca.time_in_seconds,
-        icm.creation_date
+        icm.creation_date,
+        ir.run_id
         from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
         imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, imsld_acts ia,
-        imsld_complete_actsi ca
+        imsld_complete_actsi ca, imsld_runs ir, acs_objects ao
         where ia.play_id = ip.item_id
         and ip.method_id = im.item_id
         and im.imsld_id = ii.item_id
@@ -98,14 +105,12 @@
         and ico.manifest_id = icm.item_id
         and ia.complete_act_id = ca.item_id
         and ca.time_in_seconds is not null
-        and content_revision__is_live(ia.act_id) = 't'
-    
+        and ao.object_id = ir.run_id
+        and content_revision__is_live(ii.imsld_id) = 't'
+        and ii.imsld_id = ir.imsld_id    
+
 		</querytext>
 	</fullquery>
-
-
-
-
 
 	<fullquery name="imsld::sweep_expired_activities.referenced_sas">
 		<querytext>
@@ -121,25 +126,29 @@
 		</querytext>
 	</fullquery>
 
-	<fullquery name="imsld::sweep_expired_activities.get_sa_activity_info">
+	<fullquery name="imsld::sweep_expired_activities.sa_referencer">
 		<querytext>
             select icm.manifest_id,
+            irp.role_part_id,
             ii.imsld_id,
             ip.play_id,
             ia.act_id,
-            icm.creation_date
+            ao.creation_date,
+            ir.run_id
             from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
             imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
-            imsld_actsi ia, imsld_role_partsi irp
-            where irp.role_part_id = :role_part_id
+            imsld_actsi ia, imsld_role_partsi irp, imsld_runs ir, acs_objects ao
+            where irp.support_activity_id = :sa_item_id
             and irp.act_id = ia.item_id
             and ia.play_id = ip.item_id
             and ip.method_id = im.item_id
             and im.imsld_id = ii.item_id
             and ii.organization_id = ico.item_id
+            and ii.imsld_id = ir.imsld_id
+            and ao.object_id = ir.run_id
             and ico.manifest_id = icm.item_id
-            and content_revision__is_live(icm.manifest_id) = 't'
-    
+            and content_revision__is_live(ii.imsld_id) = 't'
+
 		</querytext>
 	</fullquery>
 
@@ -157,25 +166,30 @@
 		</querytext>
 	</fullquery>
 
-	<fullquery name="imsld::sweep_expired_activities.get_la_activity_info">
+	<fullquery name="imsld::sweep_expired_activities.la_referencer">
 		<querytext>
+
             select icm.manifest_id,
+            irp.role_part_id,
             ii.imsld_id,
             ip.play_id,
             ia.act_id,
-            icm.creation_date
+            ao.creation_date,
+            ir.run_id
             from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
             imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
-            imsld_actsi ia, imsld_role_partsi irp
+            imsld_actsi ia, imsld_role_partsi irp, imsld_runs ir, acs_objects ao
             where irp.role_part_id = :role_part_id
             and irp.act_id = ia.item_id
             and ia.play_id = ip.item_id
             and ip.method_id = im.item_id
             and im.imsld_id = ii.item_id
             and ii.organization_id = ico.item_id
+            and ii.imsld_id = ir.imsld_id
+            and ao.object_id = ir.run_id
             and ico.manifest_id = icm.item_id
-            and content_revision__is_live(icm.manifest_id) = 't'
-
+            and content_revision__is_live(ii.imsld_id) = 't'
+        
 		</querytext>
 	</fullquery>
 
@@ -841,37 +855,40 @@
 	</fullquery>
 
 
-	<fullquery name="imsld::process_service.service_info">
+	<fullquery name="imsld::process_service_as_ul.service_info">
 		<querytext>
+
         select serv.service_id,
         serv.identifier,
-        serv.class,
-        serv.is_visible_p,
-        serv.service_type
-        from imsld_servicesi serv 
+        serv.service_type,
+        serv.title as service_title
+        from imsld_servicesi serv
         where serv.item_id = :service_item_id
         and content_revision__is_live(serv.service_id) = 't'
-		</querytext>
+    		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_service.get_conference_info">
+	<fullquery name="imsld::process_service_as_ul.get_conference_info">
 		<querytext>
+
                 select conf.conference_id,
                 conf.conference_type,
                 conf.imsld_item_id as imsld_item_item_id,
-                cr.live_revision as imsld_item_id
-                from imsld_conference_services conf, cr_items cr
+                cr.live_revision as imsld_item_id, 
+                conf.title as conf_title
+                from imsld_conference_servicesi conf, cr_items cr
                 where conf.service_id = :service_item_id
                 and cr.item_id = conf.imsld_item_id
                 and content_revision__is_live(cr.live_revision) = 't'
-            
+                        
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_service.serv_associated_items">
+	<fullquery name="imsld::process_service_as_ul.serv_associated_items">
 		<querytext>
+
                 select cpr.resource_id,
                 cpr.item_id as resource_item_id,
                 cpr.type as resource_type
@@ -883,39 +900,24 @@
                 and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      or ii.imsld_item_id = :imsld_item_id)
+
+         </querytext>
+	</fullquery>
+
+    <fullquery name="imsld::process_service_as_ul.get_send_mail_info">
+		<querytext>
+
+                select sm.title as send_mail_title, sm.mail_id as sendmail_id
+                from imsld_send_mail_servicesi sm
+                where sm.service_id = :service_item_id
+                and content_revision__is_live(sm.mail_id) = 't'
             
-		</querytext>
+   		</querytext>
 	</fullquery>
-
-    <fullquery name="imsld::process_service_as_ul.get_sendmail_id">
-		<querytext>
-          select mail_id as sendmail_id 
-          from imsld_send_mail_servicesi isms
-          where isms.service_id=:service_item_id
-       		</querytext>
-	</fullquery>
-
     
-    <fullquery name="imsld::process_service.get_sendmail_id">
+	<fullquery name="imsld::process_environment_as_ul.environment_info">
 		<querytext>
-          select mail_id as sendmail_id 
-          from imsld_send_mail_servicesi isms
-          where isms.service_id=:service_item_id
-       		</querytext>
-	</fullquery>
 
-	<fullquery name="imsld::process_service.get_sendmail_destination_role">
-		<querytext>
-          select role_id as role_destination_ref 
-          from imsld_send_mail_servicesi isms, 
-               imsld_send_mail_data ismd 
-          where isms.service_id=:service_item_id
-                and isms.item_id=ismd.send_mail_id
-       		</querytext>
-	</fullquery>
-
-	<fullquery name="imsld::process_environment.environment_info">
-		<querytext>
         select env.title as environment_title,
         env.environment_id
         from imsld_environmentsi env
@@ -926,22 +928,30 @@
 	</fullquery>
 
 
-	<fullquery name="imsld::process_environment.get_learning_object_info">
+	<fullquery name="imsld::process_environment_as_ul.get_learning_object_info">
 		<querytext>
+
         select item_id as learning_object_item_id,
         learning_object_id,
-        identifier
-        from imsld_learning_objectsi
+        identifier,
+        coalesce(title,identifier) as lo_title,
+        class
+        from imsld_learning_objectsi, imsld_attribute_instances attr
         where environment_id = :environment_item_id
         and content_revision__is_live(learning_object_id) = 't'
-    
+        and attr.owner_id = learning_object_id
+        and attr.run_id = :run_id
+        and attr.type = 'isvisible'
+        and attr.is_visible_p = 't'
+        order by creation_date
+        
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_environment.item_linear_list">
+	<fullquery name="imsld::process_environment_as_ul.item_linear_list">
 		<querytext>
-            
+ 
             select ii.imsld_item_id
             from imsld_items ii,
             cr_items cr,
@@ -954,53 +964,67 @@
 	</fullquery>
 
 
-	<fullquery name="imsld::process_environment.env_nested_associated_items">
+	<fullquery name="imsld::process_environment_as_ul.env_nested_associated_items">
 		<querytext>
-        select cpr.resource_id,
-        cr2.item_id as resource_item_id,
-        cpr.type as resource_type
-        from imsld_cp_resources cpr, imsld_items ii,
-        acs_rels ar, cr_items cr1, cr_items cr2
-        where ar.object_id_one = cr1.item_id
-        and ar.object_id_two = cr2.item_id
-        and cr1.live_revision = ii.imsld_item_id
-        and cr2.live_revision = cpr.resource_id 
+
+
+                select cpr.resource_id,
+                cr2.item_id as resource_item_id,
+                cpr.type as resource_type
+                from imsld_cp_resources cpr, imsld_items ii, imsld_attribute_instances attr,
+                acs_rels ar, cr_items cr1, cr_items cr2
+                where ar.object_id_one = cr1.item_id
+                and ar.object_id_two = cr2.item_id
+                and cr1.live_revision = ii.imsld_item_id
+                and cr2.live_revision = cpr.resource_id 
                 and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      or ii.imsld_item_id = :imsld_item_id)
+                and attr.owner_id = ii.imsld_item_id
+                and attr.run_id = :run_id
+                and attr.type = 'isvisible'
+                and attr.is_visible_p = 't'
                         
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_environment.get_service_info">
+	<fullquery name="imsld::process_environment_as_ul.get_service_info">
 		<querytext>
+
         select service_id,
         item_id as service_item_id,
         identifier,
-        service_type
-        from imsld_servicesi
+        service_type,
+        title as service_title,
+        class
+        from imsld_servicesi, imsld_attribute_instances attr
         where environment_id = :environment_item_id
         and content_revision__is_live(service_id) = 't'
-    
+        and attr.owner_id = service_id
+        and attr.run_id = :run_id
+        and attr.type = 'isvisible'
+        and attr.is_visible_p = 't'
+        
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_environment.nested_environment">
+	<fullquery name="imsld::process_environment_as_ul.nested_environment">
 		<querytext>
+
         select ar.object_id_two as nested_environment_item_id
         from acs_rels ar
         where ar.object_id_one = :environment_item_id
         and ar.rel_type = 'imsld_env_env_rel'
-    
+        
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_learning_objective.get_lo_id_from_iii">
+	<fullquery name="imsld::process_learning_objective_as_ul.lo_id_from_imsld_item_id">
 		<querytext>
- 
+
             select learning_objective_id as learning_objective_item_id
             from imsld_imsldsi
             where item_id = :imsld_item_id
@@ -1010,89 +1034,96 @@
 	</fullquery>
 
 
-	<fullquery name="imsld::process_learning_objective.get_lo_id_from_aii">
+	<fullquery name="imsld::process_learning_objective_as_ul.lo_id_from_activity_item_id">
 		<querytext>
- 
+  
             select learning_objective_id as learning_objective_item_id
             from imsld_learning_activitiesi
             where item_id = :activity_item_id
             and content_revision__is_live(activity_id) = 't'
-        
+
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_learning_objective.objective_info">
+	<fullquery name="imsld::process_learning_objective_as_ul.objective_info">
 		<querytext>
-        select coalesce(lo.pretty_title, '') as objective_title,
+
+        select lo.pretty_title as objective_title,
         lo.learning_objective_id
         from imsld_learning_objectivesi lo
         where lo.item_id = :learning_objective_item_id
         and content_revision__is_live(lo.learning_objective_id) = 't'
-    
-		</querytext>
+
+   		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_learning_objective.item_linear_list">
+	<fullquery name="imsld::process_learning_objective_as_ul.item_linear_list">
 		<querytext>
+
         select ii.imsld_item_id
         from imsld_items ii,
         cr_items cr, acs_rels ar
         where ar.object_id_one = :learning_objective_item_id
         and ar.object_id_two = cr.item_id
         and cr.live_revision = ii.imsld_item_id
-    
+        
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_learning_objective.lo_nested_associated_items">
+	<fullquery name="imsld::process_learning_objective_as_ul.lo_nested_associated_items">
 		<querytext>
-        select cpr.resource_id,
-        cr2.item_id as resource_item_id,
-        cpr.type as resource_type
-        from imsld_cp_resources cpr, imsld_items ii,
-        acs_rels ar, cr_items cr1, cr_items cr2
-        where ar.object_id_one = cr1.item_id
-        and ar.object_id_two = cr2.item_id
-        and cr1.live_revision = ii.imsld_item_id
-        and cr2.live_revision = cpr.resource_id 
+
+            select cpr.resource_id,
+            cpr.item_id as resource_item_id,
+            cpr.type as resource_type
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii, imsld_attribute_instances attr,
+            acs_rels ar
+            where ar.object_id_one = ii.item_id
+            and ar.object_id_two = cpr.item_id
+            and content_revision__is_live(cpr.resource_id) = 't'
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
-        
+            and attr.owner_id = ii.imsld_item_id
+            and attr.run_id = :run_id
+            and attr.type = 'isvisible'
+            and attr.is_visible_p = 't'
+                
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_prerequisite.get_lo_id_from_iii">
+	<fullquery name="imsld::process_prerequisite_as_ul.lo_id_from_imsld_item_id">
 		<querytext>
  
-            select prerequisite_id as prerequisite_item_id
+             select prerequisite_id as prerequisite_item_id
             from imsld_imsldsi
             where item_id = :imsld_item_id
             and content_revision__is_live(imsld_id) = 't'
-        
+                
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_prerequisite.get_lo_id_from_aii">
+	<fullquery name="imsld::process_prerequisite_as_ul.lo_id_from_activity_item_id">
 		<querytext>
- 
+
             select prerequisite_id as prerequisite_item_id
             from imsld_learning_activitiesi
             where item_id = :activity_item_id
             and content_revision__is_live(activity_id) = 't'
-        
+                
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_prerequisite.prerequisite_info">
+	<fullquery name="imsld::process_prerequisite_as_ul.prerequisite_info">
 		<querytext>
-        select pre.pretty_title as prerequisite_title,
+
+        select coalesce(pre.pretty_title, '') as prerequisite_title,
         pre.prerequisite_id
         from imsld_prerequisitesi pre
         where pre.item_id = :prerequisite_item_id
@@ -1102,51 +1133,58 @@
 	</fullquery>
 
 
-	<fullquery name="imsld::process_prerequisite.item_linear_list">
+	<fullquery name="imsld::process_prerequisite_as_ul.item_linear_list">
 		<querytext>
+
         select ii.imsld_item_id
         from imsld_items ii,
         cr_items cr, acs_rels ar
         where ar.object_id_one = :prerequisite_item_id
         and ar.object_id_two = cr.item_id
         and cr.live_revision = ii.imsld_item_id
-    
-		</querytext>
-	</fullquery>
-
-
-	<fullquery name="imsld::process_prerequisite.prereq_nested_associated_items">
-		<querytext>
-        select cpr.resource_id,
-        cr2.item_id as resource_item_id,
-        cpr.type as resource_type
-        from imsld_cp_resources cpr, imsld_items ii,
-        acs_rels ar, cr_items cr1, cr_items cr2
-        where ar.object_id_one = cr1.item_id
-        and ar.object_id_two = cr2.item_id
-        and cr1.live_revision = ii.imsld_item_id
-        and cr2.live_revision = cpr.resource_id 
-            and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
-                 and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
-                 or ii.imsld_item_id = :imsld_item_id)
         
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_feedback.feedback_info">
+	<fullquery name="imsld::process_prerequisite_as_ul.prereq_nested_associated_items">
 		<querytext>
-        select oc.feedback_title as feedback_title
-        from imsld_on_completioni oc
-        where oc.item_id = :on_completion_item_id
-        and content_revision__is_live(oc.on_completion_id) = 't'
-    
+
+            select cpr.resource_id,
+            cpr.item_id as resource_item_id,
+            cpr.type as resource_type
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii, imsld_attribute_instances attr,
+            acs_rels ar
+            where ar.object_id_one = ii.item_id
+            and ar.object_id_two = cpr.item_id
+            and content_revision__is_live(cpr.resource_id) = 't'
+            and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                 and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                 or ii.imsld_item_id = :imsld_item_id)
+            and attr.owner_id = ii.imsld_item_id
+            and attr.run_id = :run_id
+            and attr.type = 'isvisible'
+            and attr.is_visible_p = 't'
+                
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_feedback.item_linear_list">
+	<fullquery name="imsld::process_feedback_as_ul.feedback_info">
 		<querytext>
+
+        select coalesce(oc.feedback_title, oc.title) as feedback_title
+        from imsld_on_completioni oc
+        where oc.item_id = :on_completion_item_id
+        and content_revision__is_live(oc.on_completion_id) = 't'
+        
+		</querytext>
+	</fullquery>
+
+
+	<fullquery name="imsld::process_feedback_as_ul.item_linear_list">
+		<querytext>
+
         select ii.imsld_item_id
         from imsld_items ii,
         cr_items cr, acs_rels ar
@@ -1158,41 +1196,45 @@
 	</fullquery>
 
 
-	<fullquery name="imsld::process_feedback.feedback_nested_associated_items">
+	<fullquery name="imsld::process_feedback_as_ul.feedback_nested_associated_items">
 		<querytext>
-        select cpr.resource_id,
-        cr2.item_id as resource_item_id,
-        cpr.type as resource_type
-        from imsld_cp_resources cpr, imsld_items ii,
-        acs_rels ar, cr_items cr1, cr_items cr2
-        where ar.object_id_one = cr1.item_id
-        and ar.object_id_two = cr2.item_id
-        and cr1.live_revision = ii.imsld_item_id
-        and cr2.live_revision = cpr.resource_id 
+
+            select cpr.resource_id,
+            cpr.item_id as resource_item_id,
+            cpr.type as resource_type
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii, imsld_attribute_instances attr,
+            acs_rels ar
+            where ar.object_id_one = ii.item_id
+            and ar.object_id_two = cpr.item_id
+            and content_revision__is_live(cpr.resource_id) = 't'
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
-        
+            and attr.owner_id = ii.imsld_item_id
+            and attr.run_id = :run_id
+            and attr.type = 'isvisible'
+            and attr.is_visible_p = 't'
+                
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_resource.get_resource_info">
+	<fullquery name="imsld::process_resource_as_ul.get_resource_info">
 		<querytext>
-        select cpr.identifier,
-        cpr.type as resource_type,
-        cr.title as resource_title,
+
+        select identifier,
+        type as resource_type,
+        title as resource_title,
         acs_object_id
-        from imsld_cp_resources cpr, cr_revisions cr, cr_items cri
-        where cr.item_id = :resource_item_id
-        and cr.revision_id = cri.live_revision
-        and cr.revision_id = cpr.resource_id
+        from imsld_cp_resourcesi 
+        where item_id = :resource_item_id 
+        and content_revision__is_live(resource_id) = 't'
     
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_resource.is_cr_item">
+	<fullquery name="imsld::process_resource_as_ul.is_cr_item">
 		<querytext>
             select live_revision from cr_items where item_id = :acs_object_id
         
@@ -1200,7 +1242,7 @@
 	</fullquery>
 
 
-	<fullquery name="imsld::process_resource.get_cr_info">
+	<fullquery name="imsld::process_resource_as_ul.get_cr_info">
 		<querytext>
  
                 select acs_object__name(object_id) as object_title, object_type
@@ -1210,7 +1252,7 @@
 	</fullquery>
 
 
-	<fullquery name="imsld::process_resource.get_ao_info">
+	<fullquery name="imsld::process_resource_as_ul.get_ao_info">
 		<querytext>
  
                 select acs_object__name(object_id) as object_title, object_type
@@ -1220,31 +1262,35 @@
 	</fullquery>
 
 
-	<fullquery name="imsld::process_resource.associated_files">
+	<fullquery name="imsld::process_resource_as_ul.associated_files">
 		<querytext>
+
             select cpf.imsld_file_id,
             cpf.file_name,
-            cr.item_id, 
-            cr.parent_id
-            from imsld_cp_files cpf, cr_items cr,
-            acs_rels ar
+            cpf.item_id, 
+            cpf.parent_id
+            from imsld_cp_filesx cpf,
+            acs_rels ar, imsld_res_files_rels map
             where ar.object_id_one = :resource_item_id
-            and ar.object_id_two = cr.item_id
-            and cpf.imsld_file_id = cr.live_revision
-        
+            and ar.object_id_two = cpf.item_id
+            and ar.rel_id = map.rel_id
+            and content_revision__is_live(cpf.imsld_file_id) = 't'
+            and map.displayable_p = 't'
+                
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_resource.get_folder_path">
+	<fullquery name="imsld::process_resource_as_ul.get_folder_path">
 		<querytext>
  select content_item__get_path(:parent_id,:root_folder_id); 
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_resource.get_fs_file_url">
+	<fullquery name="imsld::process_resource_as_ul.get_fs_file_url">
 		<querytext>
+
                 select 
                 case 
                 when :folder_path is null
@@ -1253,162 +1299,233 @@
                 end as file_url
                 from fs_objects fs
                 where fs.live_revision = :imsld_file_id
-            
+
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_resource.associated_urls">
+	<fullquery name="imsld::process_resource_as_ul.associated_urls">
 		<querytext>
+
             select url
             from acs_rels ar,
-            cr_extlinks links
+            cr_extlinks links,
+            imsld_res_files_rels map
             where ar.object_id_one = :resource_item_id
             and ar.object_id_two = links.extlink_id
+            and ar.rel_id = map.rel_id
+            and map.displayable_p = 't'
         
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_learning_activity.activity_info">
+	<fullquery name="imsld::process_learning_activity_as_ul.activity_info">
 		<querytext>
+
         select on_completion_id as on_completion_item_id,
         prerequisite_id as prerequisite_item_id,
         learning_objective_id as learning_objective_item_id,
-        activity_id
-        from imsld_learning_activitiesi
+        activity_id,
+        title as activity_title
+        from imsld_learning_activitiesi, imsld_attribute_instances attr
         where item_id = :activity_item_id
         and content_revision__is_live(activity_id) = 't'
-    
+        and attr.owner_id = activity_id
+        and attr.run_id = :run_id
+        and attr.type = 'isvisible'
+        and attr.is_visible_p = 't'
+        
 		</querytext>
 	</fullquery>
 
-
-	<fullquery name="imsld::process_learning_activity.la_associated_environments">
+	<fullquery name="imsld::process_learning_activity_as_ul.item_linear_list">
 		<querytext>
-        select ar.object_id_two as environment_item_id
-        from acs_rels ar
-        where ar.object_id_one = :activity_item_id
-        and ar.rel_type = 'imsld_la_env_rel'
-        order by ar.object_id_two
-    
-		</querytext>
-	</fullquery>
 
-
-	<fullquery name="imsld::process_learning_activity.item_linear_list">
-		<querytext>
         select ii.imsld_item_id
-        from imsld_items ii, imsld_activity_descs lad, imsld_learning_activities la,
-        cr_items cr1, cr_items cr2, cr_items cr3,
+        from imsld_items ii, imsld_activity_descs lad, imsld_learning_activitiesi la,
+        cr_items cr1, cr_items cr2,
         acs_rels ar
-        where cr3.item_id = :activity_item_id
+        where la.item_id = :activity_item_id
         and la.activity_description_id = cr1.item_id
         and cr1.live_revision = lad.description_id
         and ar.object_id_one = la.activity_description_id
         and ar.object_id_two = cr2.item_id
         and cr2.live_revision = ii.imsld_item_id
-        and cr3.live_revision = la.activity_id
     
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_learning_activity.la_nested_associated_items">
+	<fullquery name="imsld::process_learning_activity_as_ul.la_nested_associated_items">
 		<querytext>
-        select cpr.resource_id,
-        cr2.item_id as resource_item_id,
-        cpr.type as resource_type
-        from imsld_cp_resources cpr, imsld_items ii,
-        acs_rels ar, cr_items cr1, cr_items cr2
-        where ar.object_id_one = cr1.item_id
-        and ar.object_id_two = cr2.item_id
-        and cr1.live_revision = ii.imsld_item_id
-        and cr2.live_revision = cpr.resource_id 
+
+            select cpr.resource_id,
+            cpr.item_id as resource_item_id,
+            cpr.type as resource_type
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii, imsld_attribute_instances attr,
+            acs_rels ar
+            where ar.object_id_one = ii.item_id
+            and ar.object_id_two = cpr.item_id
+            and content_revision__is_live(cpr.resource_id) = 't'
             and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                  or ii.imsld_item_id = :imsld_item_id)
+            and attr.owner_id = ii.imsld_item_id
+            and attr.run_id = :run_id
+            and attr.type = 'isvisible'
+            and attr.is_visible_p = 't'
+
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::process_learning_activity_as_ul.completed_activity">
+		<querytext>
+    
+        select 1
+        from imsld_status_user
+        where user_id = :user_id
+        and related_id = :activity_id
+        and run_id = :run_id
+
+   		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::process_learning_activity_as_ul.la_associated_environments">
+		<querytext>
+
+            select ar.object_id_two as environment_item_id
+            from acs_rels ar
+            where ar.object_id_one = :activity_item_id
+            and ar.rel_type = 'imsld_la_env_rel'
+            order by ar.object_id_two
+    
+		</querytext>
+	</fullquery>
+
+
+
+	<fullquery name="imsld::process_support_activity_as_ul.activity_info">
+		<querytext>
+
+        select on_completion_id as on_completion_item_id,
+        activity_id,
+        attr.is_visible_p
+        from imsld_support_activitiesi, imsld_attribute_instances attr
+        where item_id = :activity_item_id
+        and content_revision__is_live(activity_id) = 't'
+        and attr.owner_id = activity_id
+        and attr.run_id = :run_id
+        and attr.type = 'isvisible'
+        and attr.is_visible_p = 't'
         
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_support_activity.activity_info">
+	<fullquery name="imsld::process_support_activity_as_ul.item_linear_list">
 		<querytext>
-        select on_completion_id as on_completion_item_id,
-        activity_id
-        from imsld_support_activitiesi
-        where item_id = :activity_item_id
-        and content_revision__is_live(activity_id) = 't'
-    
-		</querytext>
-	</fullquery>
 
-
-	<fullquery name="imsld::process_support_activity.sa_associated_environments">
-		<querytext>
-        select ar.object_id_two as environment_item_id
-        from acs_rels ar
-        where ar.object_id_one = :activity_item_id
-        and ar.rel_type = 'imsld_sa_env_rel'
-        order by ar.object_id_two
-    
-		</querytext>
-	</fullquery>
-
-
-	<fullquery name="imsld::process_support_activity.item_linear_list">
-		<querytext>
         select ii.imsld_item_id
-        from imsld_items ii, imsld_activity_descs sad, imsld_support_activities sa,
-        cr_items cr1, cr_items cr2, cr_items cr3,
+        from imsld_items ii, imsld_activity_descs sad, imsld_support_activitiesi sa,
+        cr_items cr1, cr_items cr2,
         acs_rels ar
-        where cr3.item_id = :activity_item_id
+        where sa.item_id = :activity_item_id
         and sa.activity_description_id = cr1.item_id
         and cr1.live_revision = sad.description_id
         and ar.object_id_one = sa.activity_description_id
         and ar.object_id_two = cr2.item_id
         and cr2.live_revision = ii.imsld_item_id
-        and cr3.live_revision = sa.activity_id
-    
-		</querytext>
-	</fullquery>
-
-
-	<fullquery name="imsld::process_support_activity.sa_nested_associated_items">
-		<querytext>
-        select cpr.resource_id,
-        cr2.item_id as resource_item_id,
-        cpr.type as resource_type
-        from imsld_cp_resources cpr, imsld_items ii,
-        acs_rels ar, cr_items cr1, cr_items cr2
-        where ar.object_id_one = cr1.item_id
-        and ar.object_id_two = cr2.item_id
-        and cr1.live_revision = ii.imsld_item_id
-        and cr2.live_revision = cpr.resource_id 
-            and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
-                 and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
-                 or ii.imsld_item_id = :imsld_item_id)
         
 		</querytext>
 	</fullquery>
 
 
-	<fullquery name="imsld::process_activity_structure.sa_associated_environments">
+	<fullquery name="imsld::process_support_activity_as_ul.sa_nested_associated_items">
 		<querytext>
-    
-        select ar.object_id_two as environment_item_id
-        from acs_rels ar
-        where ar.object_id_one = :structure_item_id
-        and ar.rel_type = 'imsld_as_env_rel'
-        order by ar.object_id_two
-    
-    
+
+            select cpr.resource_id,
+            cpr.item_id as resource_item_id,
+            cpr.type as resource_type
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii, imsld_attribute_instances attr,
+            acs_rels ar
+            where ar.object_id_one = ii.item_id
+            and ar.object_id_two = cpr.item_id
+            and content_revision__is_live(cpr.resource_id) = 't'
+            and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                 and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                 or ii.imsld_item_id = :imsld_item_id)
+            and attr.owner_id = ii.imsld_item_id
+            and attr.run_id = :run_id
+            and attr.type = 'isvisible'
+            and attr.is_visible_p = 't'
+                
 		</querytext>
 	</fullquery>
 
-	<fullquery name="imsld::generate_structure_activities_list.structure_info">
+
+	<fullquery name="imsld::process_support_activity_as_ul.completed_activity">
 		<querytext>
+
+        select 1
+        from imsld_status_user
+        where user_id = :user_id
+        and related_id = :activity_id
+        and run_id = :run_id
+        
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::process_support_activity_as_ul.sa_associated_environments">
+		<querytext>
+
+            select ar.object_id_two as environment_item_id
+            from acs_rels ar
+            where ar.object_id_one = :activity_item_id
+            and ar.rel_type = 'imsld_sa_env_rel'
+            order by ar.object_id_two
+        
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::process_activity_structure_as_ul.item_linear_list">
+		<querytext>
+
+        select ii.imsld_item_id
+        from imsld_itemsi ii, acs_rels ar
+        where ar.object_id_one = :structure_item_id
+        and ar.rel_type = 'imsld_as_info_i_rel'
+        and ar.object_id_two = ii.item_id
+        and content_revision__is_live(ii.imsld_item_id) = 't'
+            
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::process_activity_structure_as_ul.as_nested_associated_items">
+		<querytext>
+
+
+            select cpr.resource_id,
+            cpr.item_id as resource_item_id,
+            cpr.type as resource_type
+            from imsld_cp_resourcesi cpr, imsld_itemsi ii, imsld_attribute_instances attr,
+            acs_rels ar
+            where ar.object_id_one = ii.item_id
+            and ar.object_id_two = cpr.item_id
+            and content_revision__is_live(cpr.resource_id) = 't'
+            and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                 and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                 or ii.imsld_item_id = :imsld_item_id)
+            and attr.owner_id = ii.imsld_item_id
+            and attr.run_id = :run_id
+            and attr.type = 'isvisible'
+            and attr.is_visible_p = 't'
+            
+		</querytext>
+	</fullquery>
+
+    <fullquery name="imsld::generate_structure_activities_list.structure_info">
+        <querytext>
     
 
         select structure_id,
@@ -1416,12 +1533,11 @@
         from imsld_activity_structuresi
         where item_id = :structure_item_id
         
-		</querytext>
-	</fullquery>
+        </querytext>
+    </fullquery>
 
 	<fullquery name="imsld::generate_structure_activities_list.struct_referenced_activities">
 		<querytext>
-
 
         select ar.object_id_two,
         ar.rel_type,

@@ -722,3 +722,14 @@ create table imsld_as_as_rels (
 comment on table imsld_as_as_rels is '
 This table stores the information of the relationship between the activity structures (between them).';
 
+create table imsld_res_files_rels (
+    rel_id      integer
+                constraint imsld_res_files_rels_fk
+                references acs_rels
+                constraint imsld_res_files_rels_pk
+                primary key
+);
+
+comment on table imsld_res_files_rels is '
+This table stores the relationships between resources and files.';
+

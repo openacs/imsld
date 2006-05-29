@@ -229,8 +229,9 @@ ad_proc -public imsld::roles::get_user_roles {
     -user_id
     -run_id 
 } {
-    Returns a list with all the roles_id from which the user are member. If imsld_id is given, restrict the list to the roles of the imsld.
+    Returns a list with all the roles_id from which the user are member. If run_id is given, restrict the list to the roles of the run.
 } {
+    set roles_list [list]
     if {[info exist run_id]} {
         set roles_list [db_list get_user_roles_list {}]
     } else {

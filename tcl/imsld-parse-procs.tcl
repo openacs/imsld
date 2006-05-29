@@ -594,13 +594,9 @@ ad_proc -public imsld::parse::parse_and_create_resource {
         if { ![llength $filex_list] } {
             set filex_list [$resource_node child all file]
         }
+        set found_id_in_list 0
         foreach filex $filex_list {
             set filex_href [imsld::parse::get_attribute -node $filex -attr_name href]
-            if { ![empty_string_p $resource_href] && [string eq $resource_href $filex_href] } {
-                # check if the referenced file in the resource exists
-                # if we finish with the files and the referenced one doesn't exist we raise an error
-                set found_p 1
-            }
             set filex_id [imsld::fs::file_new -href $filex_href \
                               -path_to_file $filex_href \
                               -type file \
@@ -608,19 +604,28 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             if { !$filex_id } {
                 # an error ocurred when creating the file
                 return [list 0 "[_ imsld.lt_The_file_filex_href_w]"]
-            } else {
-                permission::set_not_inherit -object_id $filex_id
-
-                set acs_object_id $filex_id 
-                set party_id [db_list get_allowed_parties {}]
-                foreach parti $party_id {
-                    permission::revoke -party_id $parti -object_id $filex_id -privilege "read"
-                }
-
-            
             }
+            if { ![empty_string_p $resource_href] && [string eq $resource_href $filex_href] } {
+                # check if the referenced file in the resource exists
+                # if we finish with the files and the referenced one doesn't exist we raise an error
+                set found_p 1
+                set extra_vars [util_list_to_ns_set [list displayable_p "t"]]
+            } elseif { [empty_string_p $resource_href] && [string eq $first_id_in_list 0] } {
+                set extra_vars [util_list_to_ns_set [list displayable_p "t"]]
+            } else {
+                set extra_vars [util_list_to_ns_set [list displayable_p "f"]]
+            }
+
+            permission::set_not_inherit -object_id $filex_id
+            
+            set acs_object_id $filex_id 
+            set party_id_list [db_list get_allowed_parties {}]
+            foreach party_id $party_id_list {
+                permission::revoke -party_id $party_id -object_id $filex_id -privilege "read"
+            }
+            
             # map resource with file
-            relation_add imsld_res_files_rel $resource_id $filex_id
+            relation_add -extra_vars $extra_vars imsld_res_files_rel $resource_id $filex_id
         }
         
         if { ![empty_string_p $resource_href] && !$found_p } {
@@ -628,7 +633,8 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             set link_id [content::extlink::new -url $resource_href \
                              -parent_id $parent_id]
             # map resource with file
-            relation_add imsld_res_files_rel $resource_id $link_id
+            set extra_vars [util_list_to_ns_set [list displayable_p "t"]]
+            relation_add -extra_vars $extra_vars imsld_res_files_rel $resource_id $link_id
         }
         
         set resource_dependencies [$resource_node child all imscp:dependency]

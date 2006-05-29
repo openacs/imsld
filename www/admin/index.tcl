@@ -104,7 +104,12 @@ template::list::create \
             label "[_ imsld.Run_IMS-LD_Name]"
             orderby_asc {imsld_title asc}
             orderby_desc {imsld_title desc}
-            display_template {<a href="${imsld_url}imsld-frameset?run_id=@imsld_runs.run_id@">@imsld_runs.imsld_title@</a>}
+            display_template {@imsld_runs.imsld_title@}
+        }
+        status {
+            label "[_ imsld.Status]"
+            orderby_asc {status asc}
+            orderby_desc {status desc}
         }
         creation_date {
             label "[_ imsld.Creation_Date]"

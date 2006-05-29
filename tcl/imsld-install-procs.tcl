@@ -395,9 +395,15 @@ ad_proc -public imsld::install::init_rels {
         content_item 0 {}
 
     # Resource - Files
-    rel_types::new imsld_res_files_rel "Resource - Files rel" "Resource - Files rels"  \
+    rel_types::new -table_name imsld_res_files_rels \
+        -create_table_p 0 \
+        imsld_res_files_rel \
+        "Resource - Files rel" "Resource - Files rels"  \
         content_item 0 {} \
         content_item 0 {}
+    attribute::add -min_n_values 0 -max_n_values 0 imsld_res_files_rel boolean "displayable_p" "Displayable?"
+    # FIX ME (there is no way to add attributes to the rels without creating the whole plsql code)
+    package_recreate_hierarchy imsld_res_files_rel
 
     # Prerequisites - IMS-LD Items
     rel_types::new imsld_preq_item_rel "Prerequisite - Imsld Item rel" "Prerequisite - Imsld Item rels"  \

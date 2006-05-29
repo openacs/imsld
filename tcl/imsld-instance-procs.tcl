@@ -23,8 +23,8 @@ ad_proc -public imsld::instance::instantiate_imsld {
     Instantiates an imsld, i.e. creates the run.
     If community_id is given, the run is created for that community (the users associated to the run are the users of the community) 
 } {
-    # 1. create the run
-    set run_id [package_exec_plsql -var_list [list [list run_id ""] [list imsld_id $imsld_id] [list status "active"]] imsld_run new]
+    # 1. create the run (status = 'waiting')
+    set run_id [package_exec_plsql -var_list [list [list run_id ""] [list imsld_id $imsld_id] [list status "waiting"]] imsld_run new]
 
     # 2. create the run group
     set group_run_id [package_instantiate_object -creation_user [ad_conn user_id]  -creation_ip [ad_conn peeraddr]  -package_name imsld_run_users_group -start_with "group"  -var_list [list [list group_id ""] [list group_name "IMS-LD Run Group ($run_id)"]  [list run_id $run_id]]  imsld_run_users_group]

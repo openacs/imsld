@@ -276,7 +276,7 @@
   <msg key="Role_Identifier">Role Identifier</msg>
   <msg key="Role_Type">Role Type</msg>
   <msg key="Run_IMS-LD_Name">Run (IMS-LD) Name</msg>
-  <msg key="Runs">Runs</msg>
+  <msg key="Runs">Runs (IMS-LD instances)</msg>
   <msg key="Self">Self</msg>
   <msg key="send-mail_service">send-mail service</msg>
   <msg key="Sendmail_Identifier">Sendmail Identifier</msg>
@@ -286,6 +286,7 @@
   <msg key="Sort">Sort</msg>
   <msg key="Sort_Order">Sort Order</msg>
   <msg key="Staff_Roles">Staff Roles</msg>
+  <msg key="Status">Status</msg>
   <msg key="Structure_Type">Structure Type</msg>
   <msg key="Support_Activities">Support Activities</msg>
   <msg key="Then_Identifier">Then Identifier</msg>
