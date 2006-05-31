@@ -137,7 +137,7 @@ set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
 
 db_multirow -extend { manage delete_template } imsld_runs get_runs { *SQL* } {
     
-    if { [string eq $status "deleted"] } {
+    if { [string eq $status "deleted"] || [string eq $status active]} {
         set delete_template "<span style=\"font-style: italic; color: red; font-size: 9pt;\">[_ imsld.Deleted]</span> <a href=[export_vars -base "index" { {set_run_id_live $run_id} }]>[_ imsld.Make_it_live]</a>"
         set manage ""
     } else {

@@ -1,6 +1,13 @@
 <master>
 
 
+<SCRIPT>
+    function confirmValue(myform){
+        myform.submit()
+    }
+</SCRIPT>
+
+
 <table border="0">
 <tr>
   <td>
@@ -12,10 +19,14 @@
     </if>  
   </td>
   </tr>
-  <tr>
+
     <if @group_instance@ not eq 0>
       <include src="imsld-role-members">
     </if> 
-</tr>
+
 </table>
+
+<SCRIPT>
+  document.forms['choose_role'].elements['formbutton:ok'].style.display="none"
+</SCRIPT>
 

@@ -15,6 +15,13 @@ ad_page_contract {
 
 #check conditions and set the database
 set role_info [imsld::roles::get_role_info -role_id $role]
+
+set max_persons [lindex $role_info 0]
+if {[string eq "" $max_persons]} {set max_persons "No restricition"}
+
+set min_persons [lindex $role_info 1]
+if {[string eq "" $min_persons]} {set min_persons "No restricition"}
+
 set match_persons_p [lindex $role_info 3]
 
 set not_allowed [db_list other_subroles_members {}]
@@ -25,6 +32,7 @@ if {[string eq "t" $match_persons_p] && [llength $not_allowed]} {
     set not_allowed [list 0 0]
 }
 
+set group_title [group::title  -group_id $group_instance]
 
 if {![string eq $group_instance "0"] && [db_0or1row has_role_parent_p {}]} {
     if {![info exist members_list]} {
@@ -110,4 +118,19 @@ template::list::create \
 db_multirow asign_members get_users_list {}
 db_multirow asign_not_members get_not_users_list {}
 
-ad_form -name confirm -action imsld-role-confirm -export {imsld_id run_id role group_instance members_list}
+ad_form -name confirm \
+        -form {
+            {submit:text(submit) {label "Confirm this changes"}}
+        } \
+        -action imsld-role-confirm \
+        -export {imsld_id run_id role group_instance members_list}
+
+ad_form -name finish_management \
+         -form {
+            {submit:text(submit) {label "Finish role management"}}
+        } \
+       -action imsld-finish \
+        -export {imsld_id run_id}
+
+
+
