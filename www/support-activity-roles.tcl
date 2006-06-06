@@ -38,6 +38,6 @@ foreach instances_group $supported_role_instances {
 }
 
 set lista [template::util::multirow_to_list supported_users_in_role]
-ns_log Notice "lista generada: $lista"
+
 
 

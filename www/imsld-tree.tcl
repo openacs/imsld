@@ -21,13 +21,37 @@ db_1row imslds_in_class {
     and run.run_id = :run_id
 } 
 
+set user_message ""
 set next_activity_id [imsld::get_next_activity_list -run_id $run_id -user_id $user_id]
+
+set remaining_activities [llength [join $next_activity_id]] 
+
+if {!$remaining_activities} {
+        set all_finished [imsld::run_finished_p -run_id $run_id]
+    if {$all_finished} {
+        db_dml stop_run { 
+            update imsld_runs 
+            set status='stopped' 
+            where run_id=:run_id
+        }
+    } else {
+         set user_message "Please wait for other users ..."
+    }
+}
+    set run_status [db_string get_run_status {
+        select status
+       from imsld_runs
+        where run_id=:run_id
+    }]
+
+    if {[string eq "stopped" $run_status]} {
+            set user_message "The course has been finished"
+    }
 
 dom createDocument ul doc
 set dom_root [$doc documentElement]
 $dom_root setAttribute class "mktree"
 $dom_root setAttribute style "white-space: nowrap;"
-
 set imsld_title_node [$doc createElement li]
 $imsld_title_node setAttribute class "liOpen"
 set text [$doc createTextNode "$imsld_title"] 

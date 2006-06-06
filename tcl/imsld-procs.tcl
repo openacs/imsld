@@ -1084,6 +1084,60 @@ ad_proc -public imsld::role_part_finished_p {
     return 0
 } 
 
+ad_proc -public imsld::run_finished_p { 
+    -run_id:required
+    {-user_id "" }
+} { 
+    @param run_id
+    @oprion user_id
+    
+    @return 0 if all the activities in the run hasn't been finished. 1 otherwise
+} {
+    #get users involved in test
+    if {![string eq "" $user_id]} {
+        set user_id [ad_conn user_id]
+    } else {
+        set user_id [db_list get_users_in_run {
+            select gmm.member_id 
+            from group_member_map gmm,
+                 imsld_run_users_group_ext iruge, 
+                 acs_rels ar1 
+            where iruge.run_id=:run_id
+                  and ar1.object_id_two=iruge.group_id 
+                  and ar1.object_id_one=gmm.group_id 
+            group by member_id
+        }]
+    }
+    #get acts in run
+    set acts_list [db_list get_acts_in_run {
+        select iai.act_id,
+               iai.item_id 
+        from imsld_runs ir, 
+             imsld_imsldsi iii,
+             imsld_methodsi imi,
+             imsld_playsi ipi,
+             imsld_actsi iai 
+        where ir.run_id=:run_id
+              and iii.imsld_id=ir.imsld_id 
+              and imi.imsld_id=iii.item_id 
+              and imi.item_id=ipi.method_id 
+              and iai.play_id=ipi.item_id
+    }]
+
+    set all_finished_p 1
+    foreach user $user_id {
+        foreach act $acts_list {
+            if {![imsld::act_finished_p -run_id $run_id -act_id $act -user_id $user]} {
+                set all_finished_p 0
+            }
+        }
+    }
+         
+    return $all_finished_p
+}
+
+
+
 ad_proc -public imsld::act_finished_p { 
     -act_id:required
     -run_id:required
@@ -2378,6 +2432,7 @@ ad_proc -public imsld::get_next_activity_list {
     
     @return The list of next activity_ids of each role_part and play in the IMS-LD.
 } {
+
     # get the imsld info
     db_1row get_ismld_info {
         select ii.imsld_id, ii.item_id as imsld_item_id
@@ -2425,7 +2480,6 @@ ad_proc -public imsld::get_next_activity_list {
             continue
         }
         if { ![imsld::act_finished_p -run_id $run_id -act_id $act_id -user_id $user_id] } {
-            # if the act hasn't been completed, this is the next act of the play
             lappend next_act_item_id_list [content::revision::item_id -revision_id $act_id]
             continue
         }
@@ -2442,7 +2496,32 @@ ad_proc -public imsld::get_next_activity_list {
             and ia.sort_order = :act_sort_order + 1
         }] } {
             # get the current play_id's sort_order and sarch in the next play in the current method_id
-            lappend next_act_item_id_list $act_item_id
+            set all_users_finished 1
+            #the act is only showed as next activity when all users in roles has finished the previous act
+            
+            if {[db_0or1row get_last_act { select ia2.act_id as last_act_id from imsld_actsi ia1, imsld_acts ia2 where ia1.item_id=:act_item_id and ia2.sort_order=(ia1.sort_order -1) and ia1.play_id=ia2.play_id}]
+                } {
+                #get list of involved roles
+                set roles_list [imsld::roles::get_list_of_roles -imsld_id $imsld_id]
+                    
+                #get list of involved users
+                set users_list [list]
+                foreach role $roles_list {
+                    set users_in_role [imsld::roles::get_users_in_role -role_id [lindex $role 0] -run_id $run_id]
+                    set users_list [concat $users_list $users_in_role]
+                }
+
+                #check if all has finished the act
+                foreach user $users_list {
+                    if {![imsld::act_finished_p -act_id $last_act_id -run_id $run_id -user_id $user]} {
+                        set all_users_finished 0
+                    }
+                }
+            }
+
+            if {$all_users_finished} {
+                lappend next_act_item_id_list $act_item_id
+            }
         }
     }
 
@@ -2500,7 +2579,6 @@ ad_proc -public imsld::get_next_activity_list {
             lappend next_activity_id_list $next_activity_id
         }
     }
-
     # return the next_activity_id_list
     return $next_activity_id_list
 }

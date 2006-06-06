@@ -20,7 +20,7 @@
         and imsld.organization_id = cr2.item_id
         and cr2.live_revision = ico.organization_id
         and cr3.live_revision = imsld.imsld_id
-        and run.status = 'active'
+        and ( run.status = 'active' or run.status = 'stopped')
         $orderby
 
 		</querytext>

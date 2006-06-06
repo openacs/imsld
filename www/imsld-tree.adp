@@ -22,6 +22,9 @@ margin: 0px;
 </head>
 <body>
 @html_tree;noquote@
+<if @user_message@ not nil>
+@user_message@
+</if>
 </body>
 
 <script type="text/javascript">
@@ -38,5 +41,4 @@ for (var i = 0; i < as.length; i++) {
   }
 }
 </script>
-
 </html>

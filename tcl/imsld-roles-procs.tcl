@@ -240,4 +240,48 @@ ad_proc -public imsld::roles::get_user_roles {
     return $roles_list
 }
 
+ad_proc -public imsld::roles::get_users_in_role {
+    -role_id:required
+    -run_id 
+} {
+    Returns a list with all the users in a role. If run_id is given, restrict the list to the roles of the run.
+} {
 
+   if {[info exist run_id]} {
+       set groups_list [db_list get_groups_in_run {
+            select ar1.object_id_two as groups  
+            from acs_rels ar1,
+                 acs_rels ar2,
+                 imsld_rolesi iri,
+                 imsld_run_users_group_ext iruge2 
+            where ar1.rel_type='imsld_role_group_rel' 
+                  and ar1.object_id_one=iri.item_id 
+                  and iri.role_id=:role_id
+                  and ar2.object_id_one=ar1.object_id_two 
+                  and ar2.rel_type='imsld_roleinstance_run_rel' 
+                  and ar2.object_id_two=iruge2.group_id 
+                  and iruge2.run_id=:run_id 
+       }]
+   } else {
+       set groups_list [db_list get_groups_in_role {
+           select ar.object_id_two 
+           from acs_rels ar, 
+                imsld_rolesi iri 
+            where ar.rel_type='imsld_role_group_rel' 
+                  and ar.object_id_one=iri.item_id 
+                  and iri.role_id=:role_id 
+       }]
+   }
+
+   set users_list [list]
+   foreach group $groups_list {
+        set users_in_group [db_list get_users_in_group {
+           select member_id 
+           from group_member_map 
+           where group_id=:group
+           group by member_id
+        }]
+        set users_list [concat $users_list $users_in_group]
+   }
+  return $users_list
+}
