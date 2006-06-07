@@ -120,21 +120,29 @@ ad_proc -public imsld::instance::instantiate_properties {
     }
 
     # 3. locrole-property: Instantiate the property for each role associated to the run
-#     db_foreach locrole_property {
-#         select property_id,
-#         identifier,
-#         datatype,
-#         initial_value
-#         from imsld_properties
-#         where component_id = :component_item_id
-#         and type = 'locrole'
-#     } {
-#         db_foreach roles_in_run {
-#             select role_id as party_id from roles where run_id = :run_id ????
-#         } { 
-#             set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list property_id $property_id] [list identifier $identifier] [list party_id $party_id] [list run_id $run_id] [list value $initial_value]] imsld_property_instance new]
-#         }
-#     }
+    db_foreach locrole_property {
+        select property_id,
+        identifier,
+        datatype,
+        initial_value
+        from imsld_properties
+        where component_id = :component_item_id
+        and type = 'locrole'
+    } {
+        db_foreach roles_instances_in_run {
+            select ar1.object_id_two as party_id
+            from acs_rels ar1, acs_rels ar2, acs_rels ar3,
+            public.imsld_run_users_group_ext run_group
+            where ar1.rel_type = 'imsld_role_group_rel'
+            and ar1.object_id_two = ar2.object_id_one
+            and ar2.rel_type = 'imsld_roleinstance_run_rel'
+            and ar2.object_id_two = ar3.object_id_one
+            and ar3.object_id_one = run_group.group_id
+            and run_group.run_id = :run_id
+        } { 
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list property_id $property_id] [list identifier $identifier] [list party_id $party_id] [list run_id $run_id] [list value $initial_value]] imsld_property_instance new]
+        }
+    }
 
     # 4. globpers-property: Special case. The table imsld_property_instances must hold only one entrance for these properties.
     #                       Besides, if existng href exists, the value of the property is taken from the URI. Otherwise, if

@@ -7,6 +7,12 @@ ad_page_contract {
     imsld_id
     run_id
 } 
+
+
+# instantiating properties and activity attributes for the run
+imsld::instance::instantiate_properties -run_id $run_id
+imsld::instance::instantiate_activity_attributes -run_id $run_id
+
 #ojo!!!! poner aquí tema de permisos!!!
 set conditions 1
 if {$conditions == 1} {
