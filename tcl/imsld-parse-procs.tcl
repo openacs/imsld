@@ -1747,8 +1747,8 @@ ad_proc -public imsld::parse::parse_and_create_service {
                 return $item_list
             }
 	
-	}
-
+        }
+        
         # create the conference service
         set conference_id [imsld::item_revision_new -attributes [list [list service_id $service_id] \
                                                                           [list manager_id $manager_id] \
@@ -1823,14 +1823,14 @@ ad_proc -public imsld::parse::parse_and_create_service {
             }
         }        
     }
-
+    
     # index service (not supported)
     set index_search [$service_node child all imsld:index-search]
     if { [llength $index_search] } {
         ns_log error "Index-search service not supported"
         return [list 0 "[_ imsld.lt_Index_search_service_]"]
     }
-
+    
     # monitor service (level b)
     set monitor_service [$service_node child all imsld:monitor]
     if { [llength $monitor_service] } {
@@ -1874,10 +1874,10 @@ ad_proc -public imsld::parse::parse_and_create_service {
         set imsld_item [$monitor_service child all imsld:item]
         imsld::parse::validate_multiplicity -tree $imsld_item -multiplicity 1 -element_name "imslditem(monitor service)" -equal
         set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
-                            -manifest_id $manifest_id \
-                            -item_node $imsld_item \
-                            -parent_id $parent_id \
-                            -tmp_dir $tmp_dir]
+                           -manifest_id $manifest_id \
+                           -item_node $imsld_item \
+                           -parent_id $parent_id \
+                           -tmp_dir $tmp_dir]
         
         set imsld_item_id [lindex $item_list 0]
         if { !$imsld_item_id } {
@@ -1886,7 +1886,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
         }
     
         # create the monitor service
-        set send_mail_id [imsld::item_revision_new -attributes [list [list service_id $service_id] \
+        set monitor_service_id [imsld::item_revision_new -attributes [list [list service_id $service_id] \
                                                                     [list role_id $role_id] \
                                                                     [list self_p $self_p] \
                                                                     [list imsld_item_id $imsld_item_id]] \
@@ -4260,3 +4260,4 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     }
     return [list $manifest_id "$warnings"]
 }
+

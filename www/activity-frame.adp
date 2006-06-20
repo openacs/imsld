@@ -24,15 +24,13 @@ document.write('<style type="text/css">.tabber{display:none;}<\/style>');
 </head>
 <body>
 
-<if @flag@ not nil>
+<if @roles_template_p@ not nil>
    <include src="support-activity-roles" supported_roles="@supported_roles@" run_id="@run_id@">
 </if>
 
 @activities;noquote@
-<!-- <object data="index" type="text/html" id="object"></object> -->
 <iframe id="object" name="object"></iframe>
 
-<!-- <a href="#" onClick="objecturl('..'); return false">hola</a> -->
 </body>
 <script type="text/javascript">
 function resizeobject() {
@@ -60,7 +58,7 @@ for (var i = 0; i < as.length; i++) {
 document.getElementById('object').src = as[0].getAttribute('href');
 </script>
 
-<if @flag@ not nil>
+<if @roles_template_p@ not nil>
     <script type="text/javascript">
                 dynamicSelect("supported-roles", "user-roles");
     </script>

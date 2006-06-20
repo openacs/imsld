@@ -3,6 +3,7 @@
 
   <msg key="_Component">Component Identifier</msg>
   <msg key="Act_Identifier">Act Identifier</msg>
+  <msg key="active">active</msg>
   <msg key="Activity_Structures">Activity Structures</msg>
   <msg key="Acts_in_play_count">Acts in play %count%</msg>
   <msg key="Admin_IMS_LD">Admin IMS LD</msg>
@@ -173,6 +174,7 @@
   <msg key="lt_Parent_Manifest_Ident">Parent Manifest Identifier</msg>
   <msg key="lt_Parent_Role_Identifie">Parent Role Identifier</msg>
   <msg key="lt_Please_confirm_the_in">Please, confirm the information you are uploading</msg>
+  <msg key="lt_Please_submit_a_value">Please submit a value</msg>
   <msg key="lt_Referenced_activity_s">Referenced activity structure %ref% does not exist</msg>
   <msg key="lt_Referenced_activity_s_1">Referenced activity structure (%activity_structure_ref_ref%) in role part %identifier% does not exist.</msg>
   <msg key="lt_Referenced_activity_s_2">Referenced activity structure %activity_structure_ref_ref% in role part %identifier% is actually an support activity.</msg>
@@ -248,10 +250,12 @@
   <msg key="Max_Persons">Max Persons</msg>
   <msg key="Method_Identifier">Method Identifier</msg>
   <msg key="Min_Persons">Min Persons</msg>
+  <msg key="Monitoring">User</msg>
   <msg key="nbspnbspnbspdone">&amp;nbsp;&amp;nbsp;&amp;nbsp;done</msg>
   <msg key="New_IMS-LD">New IMS-LD</msg>
   <msg key="No">information found in the imsmanifest.xml file. Nothing to do.</msg>
   <msg key="No_IMS_LD">No IMS LD</msg>
+  <msg key="None">None</msg>
   <msg key="Not_defined">Not defined</msg>
   <msg key="Number_of_IMD_LDs">Number of IMD LDs</msg>
   <msg key="Number_to_Select">Number to Select</msg>
@@ -277,6 +281,7 @@
   <msg key="Role_Type">Role Type</msg>
   <msg key="Run_IMS-LD_Name">Run (IMS-LD) Name</msg>
   <msg key="Runs">Runs (IMS-LD instances)</msg>
+  <msg key="Select">select user...</msg>
   <msg key="Self">Self</msg>
   <msg key="send-mail_service">send-mail service</msg>
   <msg key="Sendmail_Identifier">Sendmail Identifier</msg>
@@ -287,6 +292,7 @@
   <msg key="Sort_Order">Sort Order</msg>
   <msg key="Staff_Roles">Staff Roles</msg>
   <msg key="Status">Status</msg>
+  <msg key="stopped">stopped</msg>
   <msg key="Structure_Type">Structure Type</msg>
   <msg key="Support_Activities">Support Activities</msg>
   <msg key="Then_Identifier">Then Identifier</msg>
@@ -304,6 +310,7 @@
   <msg key="User_Choice">User Choice?</msg>
   <msg key="Value">Value</msg>
   <msg key="Version">Version</msg>
+  <msg key="waiting">waiting</msg>
   <msg key="When_Condition_True">When Condition True</msg>
   <msg key="With_Control">With Control</msg>
   <msg key="XML_Piece">XML Piece</msg>

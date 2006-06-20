@@ -930,10 +930,12 @@ ad_proc -public imsld::structure_next_activity {
                 }
             }
             imsld_as_env_rel {
+                dom createDocument foo foo_doc
+                set foo_node [$foo_doc documentElement]
                 if { [llength $environment_list] } {
-                    set environment_list [concat [list $environment_list] [list [imsld::process_environment -environment_item_id $object_id_two]]]
+                    set environment_list [concat [list $environment_list] [list [imsld::process_environment_as_ul -environment_item_id $object_id_two -run_id $run_id -dom_doc $foo_doc -dom_node $foo_node]]]
                 } else {
-                    set environment_list [imsld::process_environment -environment_item_id $object_id_two]
+                    set environment_list [imsld::process_environment_as_ul -environment_item_id $object_id_two -run_id $run_id -dom_doc $foo_doc -dom_node $foo_node]
                 }
             }
         }
@@ -1286,7 +1288,7 @@ ad_proc -public imsld::process_service_as_ul {
         }
 
         send-mail {
-            # FIX ME: when roles are supported, fix it so the mail is sent to the propper role
+            # FIX ME: when roles are supported, fix this so the mail is sent to the propper role
             set resource_item_list [list]
             db_1row get_send_mail_info { *SQL* }
 
@@ -1301,6 +1303,21 @@ ad_proc -public imsld::process_service_as_ul {
             $dom_node appendChild $send_mail_node_li
         }
         
+        monitor {
+            set resource_item_list [list]
+            db_1row monitor_service_info { *SQL* }
+
+            set monitor_node_li [$dom_doc createElement li]
+            set a_node [$dom_doc createElement a]
+            
+            $a_node setAttribute href "[export_vars -base "[dotlrn_community::get_community_url [dotlrn_community::get_community_id]]imsld/monitor-frame" { monitor_id run_id }]"
+            set service_title [$dom_doc createTextNode "$monitor_service_title"]
+            $a_node setAttribute target "content"
+            $a_node appendChild $service_title
+            $monitor_node_li appendChild $a_node
+            $dom_node appendChild $monitor_node_li
+        }
+
         default {
             ad_return_error "the service type $service_type is not implemented... yet" "Sorry, that service type ($service_type) hasn't been implemented yet. But be patience, we are working on it =)"
             ad_script_abort
@@ -1605,7 +1622,6 @@ ad_proc -public imsld::process_resource_as_ul {
         } else {
             db_1row get_ao_info { *SQL* } 
         }
-
         set file_url [acs_sc::invoke -contract FtsContentProvider -operation url -impl $object_type -call_args [list $acs_object_id]]
         set a_node [$dom_doc createElement a]
         $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
@@ -1620,6 +1636,32 @@ ad_proc -public imsld::process_resource_as_ul {
             $dom_node appendChild $file_node
         } else {
             $dom_node appendChild $a_node
+        }
+
+    } elseif { [string eq $resource_type "imsldcontent"] } {
+        foreach file_list [db_list_of_lists associated_files { *SQL* }] {
+            set imsld_file_id [lindex $file_list 0]
+            set file_name [lindex $file_list 1]
+            set item_id [lindex $file_list 2]
+            set parent_id [lindex $file_list 3]
+            # get the fs file path
+            set folder_path [db_exec_plsql get_folder_path { *SQL* }]
+            set fs_file_url [db_1row get_fs_file_url { *SQL* }]
+            set file_url "imsld-content-serve"
+            set a_node [$dom_doc createElement a]
+            $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id resource_id $resource_id}]"
+            set img_node [$dom_doc createElement img]
+            $img_node setAttribute src "[imsld::object_type_image_path -object_type file-storage]"
+            $img_node setAttribute border "0"
+            $img_node setAttribute alt "$file_name"
+            $a_node appendChild $img_node
+            if { $li_mode_p } {
+                set file_node [$dom_doc createElement li]
+                $file_node appendChild $a_node
+                $dom_node appendChild $file_node
+            } else {
+                $dom_node appendChild $a_node
+            }
         }
 
     } else {

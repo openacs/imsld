@@ -914,6 +914,44 @@
             
    		</querytext>
 	</fullquery>
+
+	<fullquery name="imsld::process_service_as_ul.monitor_service_info">
+		<querytext>
+
+                select ims.title as monitor_service_title,
+                ims.monitor_id,
+                ims.item_id as monitor_item_id,
+                ims.self_p,
+                ims.role_id,
+                cr.live_revision as imsld_item_id
+                from imsld_monitor_servicesi ims, cr_items cr
+                where ims.service_id = :service_item_id
+                and cr.item_id = ims.imsld_item_id
+                and content_revision__is_live(cr.live_revision) = 't'
+                        
+		</querytext>
+	</fullquery>
+
+
+	<fullquery name="imsld::process_service_as_ul.monitor_associated_item">
+		<querytext>
+
+                select cpr.resource_id,
+                cpr.item_id as resource_item_id,
+                cpr.type as resource_type
+                from imsld_cp_resourcesi cpr, imsld_itemsi ii,
+                acs_rels ar, imsld_res_files_rels map
+                where ar.object_id_one = ii.item_id
+                and ar.object_id_two = cpr.item_id
+                and content_revision__is_live(cpr.resource_id) = 't'
+                and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                     and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                     or ii.imsld_item_id = :imsld_item_id)
+                and ar.rel_id = map.rel_id
+                and map.displayable_p = 't'
+
+         </querytext>
+	</fullquery>
     
 	<fullquery name="imsld::process_environment_as_ul.environment_info">
 		<querytext>

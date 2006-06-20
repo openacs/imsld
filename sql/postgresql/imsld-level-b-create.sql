@@ -69,7 +69,7 @@ create table imsld_restrictions (
                         references cr_items     --imsld_properties
                         not null,
     restriction_type    varchar(20)
-                        check (restriction_type in ('length','minlength','maxlength','enumeration','maxinclusive','mininclusive','maxexclusive','minexclusive','totaldigits','fractiondigits')),
+                        check (restriction_type in ('length','minlength','maxlength','enumeration','maxinclusive','mininclusive','maxexclusive','minexclusive','totaldigits','fractiondigits','whitespace','pattern')),
     value               varchar(4000)
 );
 

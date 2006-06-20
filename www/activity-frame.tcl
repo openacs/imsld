@@ -21,7 +21,7 @@ set supported_roles [db_list supported_roles_list { select iri.role_id
                                              and isai.activity_id =:activity_id }]
 
 if {[llength $supported_roles]} {
-    set flag 1 
+    set roles_template_p 1 
 }
         
                                              

@@ -86,7 +86,7 @@ create table imsld_property_instances (
     identifier      varchar(100)                -- the same identifier that the corresponding propert (cache)
                     not null,                   
     party_id        integer
-                    references parties,         -- for the property of type loc, locpers, locrole orpst globpers
+                    references parties,         -- for the property of type loc, locpers, locrole or globpers
     run_id          integer
                     constraint imsld_pin_rn_fk  
                     references imsld_runs,

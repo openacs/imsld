@@ -1,4 +1,4 @@
-# packages/lorsm/www/delivery/index.tcl
+# packages/imsld/www/imsld-frameset.tcl
 
 ad_page_contract {
     

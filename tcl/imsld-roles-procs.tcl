@@ -156,6 +156,32 @@ ad_proc -private imsld::roles::get_role_instances {
     return $groups 
 }
 
+ad_proc -private imsld::roles::get_user_role_instance {
+    -role_id:required
+    -run_id:required
+    {-user_id ""}
+} {
+    @return the role_instance_id for that role_id which the user belongs to. 0 if the user doesn't belong to any role instance
+} {
+    if { [string eq $user_id ""] } {
+        set user_id [ad_conn user_id]
+    }
+    
+    set found_p 0
+    foreach role_instance_id [imsld::roles::get_role_instances -role_id $role_id -run_id $run_id] {
+        if { [group::member_p -user_id $user_id -group_id $role_instance_id] } {
+            set found_p 1
+            break
+        }
+    }
+
+    if { !$found_p } {
+        return 0
+    }
+
+    return $role_instance_id
+}
+
 ad_proc -private imsld::roles::get_parent_role_instance {
     -group_id
     -root_parent:boolean

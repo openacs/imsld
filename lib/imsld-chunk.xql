@@ -8,7 +8,8 @@
 
         select run.run_id,
         coalesce(imsld.title, imsld.identifier) as imsld_title,
-	    to_char(ao.creation_date,'MM/DD/YYYY HH24:MI') as creation_date
+	    to_char(ao.creation_date,'MM/DD/YYYY HH24:MI') as creation_date,
+        run.status
         from cr_items cr1, cr_items cr2, cr_items cr3, cr_items cr4, acs_objects ao,
         imsld_runs run, imsld_cp_manifests icm, imsld_cp_organizations ico, imsld_imsldsi imsld 
         where run.imsld_id = imsld.imsld_id

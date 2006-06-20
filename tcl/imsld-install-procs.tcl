@@ -345,7 +345,6 @@ ad_proc -public imsld::install::init_content_repository {
 #     content::type::attribute::new -content_type imsld_property_instance -attribute_name property_id -datatype number -pretty_name "#imsld.Property_Identifier# " -column_spec "integer"
 #     content::type::attribute::new -content_type imsld_property_instance -attribute_name party_id -datatype number -pretty_name "#imsld.Party_Identifier#" -column_spec "integer"
 #     content::type::attribute::new -content_type imsld_property_instance -attribute_name value -datatype string -pretty_name "#imsld.Value#" -column_spec "varchar(4000)"
-
 }
 
 ad_proc -public imsld::install::create_group_types {  
@@ -380,8 +379,6 @@ ad_proc -public imsld::install::init_ext_rels {
      rel_types::new imsld_run_users_group_rel "ims_ld_run_group - acs_users" "ims_ld_run_group - acs_users"  \
         imsld_run_users_group 0 {} \
         party 0 {}
-   
-
 }
 
 ad_proc -public imsld::install::init_rels {  
@@ -848,7 +845,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
         set attribute_id [lindex $attribute_list 0]
         attribute::delete $attribute_id
     }
-
+    
     ### Content Types
 
     ### IMS-LD Level B
