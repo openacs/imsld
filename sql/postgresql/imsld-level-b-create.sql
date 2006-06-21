@@ -90,9 +90,7 @@ create table imsld_properties_values (
                         references cr_items     --imsld_properties
                         not null,
     langstring          varchar(400),
-    calculate_id        integer
-                        constraint imsld_propv_calc_fk
-                        references cr_items,    --imsld_expressions
+    expression_xml      text,                   --calcualte, which is actually an expression
     property_value_ref  integer
                         constraint imsld_prop_ref_fk
                         references cr_items     --imsld_properties_values

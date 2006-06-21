@@ -2086,36 +2086,18 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
         set calculate [$property_value_node child all imsld:calculate]
         if { [llength $calculate] } {
             imsld::parse::validate_multiplicity -tree $calculate -multiplicity 1 -element_name calculate(property-value) -equal
-            set calculate_list [imsld::parse::parse_and_create_calculate -calculate_node $calculate \
-                                    -manifest_id $manifest_id \
-                                    -parent_id $parent_id \
-                                    -manifest $manifest]
-            set calcualte_id [lindex $calculate_list 0]
-            if { !$calculate_id } {
-                # return the error
-                return $calculate_list
-            }
-        } 
 
-        # Expression
-        set expression [$property_value_node child all imsld:expression]
-        if { [llength $expression] } {
-            imsld::parse::validate_multiplicity -tree $expression -multiplicity 1 -element_name expression(property-value) -equal
-            set expression_list [imsld::parse::parse_and_create_expression -expression_node $expression \
-                                     -manifest_id $manifest_id \
-                                     -parent_id $parent_id \
-                                     -manifest $manifest]
-            set expression_id [lindex $expression_list 0]
-            if { !$expression_id } {
-                # return the error
-                return $expression_list
-            }
-        } 
+            # Expression
+            set expression [$calculate child all imsld:expression]
+            if { [llength $expression] } {
+                imsld::parse::validate_multiplicity -tree $expression -multiplicity 1 -element_name expression(property-value) -equal
+            } 
+        }
     }
 
     set property_value_id [imsld::item_revision_new -attributes [list [list property_id $property_id] \
                                                                      [list langstring $langstring] \
-                                                                     [list calculate_id $calculate_id] \
+                                                                     [list expression_xml [$expression asXML]] \
                                                                      [list property_value_ref $property_id]] \
                                -content_type imsld_property_value \
                                -parent_id $parent_id]
@@ -3238,18 +3220,9 @@ ad_proc -public imsld::parse::parse_and_create_act {
             }
             set expression [$when_condition_true child all imsld:expression]
             imsld::parse::validate_multiplicity -tree $expression -multiplicity 1 -element_name expression(when-condition-true) -equal
-            set expression_list [imsld::parse::parse_and_create_expression -expression_node $expression \
-                                     -manifest_id $manifest_id \
-                                     -parent_id $parent_id \
-                                     -manifest $manifest]
-            set expression_id [lindex $expression_list 0]
-            if { !$expression_id } {
-                # error ocurred, return the list with the explanation
-                return $expression_list
-            }
             
             set when_condition_true_id [imsld::item_revision_new -attributes [list [list role_id $role_id] \
-                                                                                  [list expression_id $expression_id]] \
+                                                                                  [list expression_xml [$expression asXML]]] \
                                             -content_type imsld_when_condition_true \
                                             -parent_id $parent_id \
                                             -title $title]
@@ -3587,37 +3560,6 @@ ad_proc -public imsld::parse::parse_and_create_condition {
     return $condition_id
 }
 
-ad_proc -public imsld::parse::parse_and_create_then_model { 
-    -method_id
-    -then_model_node
-    -manifest
-    -manifest_id
-    -parent_id
-} {
-    Parse a then model and stores all the information in the database.
-
-    Returns a list with the then_model_id (item_id) if there were no errors, or 0 and an explanation messge if there was an error.
-    
-    @param imsld_id IMS-LD identifier which this play belongs to
-    @param then_model_node The then model node to be parsed 
-    @param manifest Manifest tree
-    @param manifest_id Manifest ID or the manifest being parsed
-    @param parent_id Parent folder ID
-    @param sort_order 
-} {
-    set then_model [$then_model_node asXML]
-    set imsld_id [db_1row get_imsld_id {
-        select ii.item_id 
-        from imsld_imsldsi ii, imsld_organisationsi io
-        where ii.organization_id = io.item_id
-        and io.manifest_id = :manifest_id
-        and content_revision__is_live(ii.imsld_id) = 't'
-    }]
-    set then_model_id [imsld::item_revision_new -attributes [list [list imsld_id $imsld_id] \
-                                                                [list xml_piece $then_model]] \
-                          -content_type imsld_expression \
-                          -parent_id $parent_id]
-    return $then_model_id
 }
 
 ad_proc -public imsld::parse::parse_and_create_calculate { 
@@ -3648,169 +3590,6 @@ ad_proc -public imsld::parse::parse_and_create_calculate {
                           -content_type imsld_expression \
                           -parent_id $parent_id]
     return $calculate_id
-}
-
-ad_proc -public imsld::parse::parse_and_create_expression { 
-    -expression_node
-    -method_id
-    -manifest
-    -manifest_id
-    -parent_id
-} {
-    Parse an expression and stores all the information in the database.
-
-    Returns a list with the new expression_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
-    @param expression_node expression node to parse
-    @param method_id method identifier which "owns" the expression (in the manifest)
-    @param manifest Manifest tree
-    @param manifest_id Manifest ID or the manifest being parsed
-    @param parent_id Parent folder ID
-} {
-#     set expressions_count 0
-#     set expression_type ""
-#     # is-member-of-role
-#     set is_member_of_role [$expression_node child all imsld:is-member-of-role]
-#     if { [llength $is_member_of_role] } {
-#         imsld::parse::validate_multiplicity -tree $is_member_of_role -multiplicity 1 -element_name is-member-of-role(expression) -equal
-#         incr expressions_count
-#         set expression_type is_member_of 
-#         set role_ref [string tolower [imsld::parse::get_attribute -node $is_member_of_role -attr_name ref]]
-#         if { ![db_0or1row get_role_id {
-#             select item_id as role_id 
-#             from imsld_rolesi ir, imsld_methodsi im, imsld_components ic 
-#             where im.imsld_id = ic.imsld_id
-#             and im.item_id = :method_id
-#             and ir.component_id = ic.item_id
-#             and ir.identifier = :role_ref 
-#             and content_revision__is_live(ir.role_id) = 't' 
-#         }] } {
-#             # there is no role with that identifier, return the error
-#             return [list 0 "[_ imsld.lt_There_is_no_role_with_8]]"]
-#         }
-#     }
-
-#     # is
-#     set is [$expression_node child all imsld:is]
-#     if { [llength $is] } {
-#         imsld::parse::validate_multiplicity -tree $is -multiplicity 1 -element_name is(expression) -equal
-#         incr expressions_count
-#         set expression_type is
-#         set calculate_list [imsld::parse::parse_and_create_calculate -calculate_node $is !!!!]
-#         set calculate_id [lindex $calculate_list 0]
-#         if { ![$calculate_id] } {
-#             # error ocurred, return the list with the explanation
-#             return $calculate_list
-#         }
-#     }
-
-#     # is-not
-#     set is_not [$expression_node child all imsld:is-not]
-#     if { [llength $is_not] } {
-#         imsld::parse::validate_multiplicity -tree $is_not -multiplicity 1 -element_name is-not(expression) -equal
-#         incr expressions_count
-#         set expression_type is-not
-#         set calculate_list [imsld::parse::parse_and_create_calculate -calculate_node $is_not !!!!]
-#         set calcualte_id [lindex $calculate_list 0]
-#         if { ![$calculate_id] } {
-#             # error ocurred, return the list with the explanation
-#             return $calculate_list
-#         }
-#     }
-
-#     # and
-#     set and [$expression_node child all imsld:and]
-#     if { [llength $and] } {
-#         imsld::parse::validate_multiplicity -tree $and -multiplicity 1 -element_name and(expression) -equal
-#         set expressions [$and childNodes]
-#         imsld::parse::validate_multiplicity -tree $expressions -multiplicity 2 -element_name and-expressions(expression) -equal
-#         set expression_type and 
-#         incr expressions_count
-#         set expression_one [$and firstChild]
-#         set expression_one_list [imsld::parse::parse_and_crate_expression -expression_node $expression_one !!!]
-#         set exp_one_id [lindex $expression_one_list 0]
-#         if { !$exp_one_id } {
-#             # error ocurred, return the list with the explanation
-#             return $expression_one_list
-#         }
-#         set expression_two [$and lastChild]
-#         set expression_two_list [imsld::parse::parse_and_crate_expression -expression_node $expression_two !!!]
-#         set exp_two_id [lindex $expression_one_list 0]
-#         if { !$exp_two_id } {
-#             # error ocurred, return the list with the explanation
-#             return $expression_two_list
-#         }
-#     }
-
-#     # or
-#     set or [$expression_node child all imsld:or]
-#     if { [llength $or] } {
-#         imsld::parse::validate_multiplicity -tree $or -multiplicity 1 -element_name or(expression) -equal
-#         set expressions [$or childNodes]
-#         imsld::parse::validate_multiplicity -tree $expressions -multiplicity 2 -element_name or-expressions(expression) -equal
-#         set expression_type or 
-#         incr expressions_count
-#         set expression_one [$or firstChild]
-#         set expression_one_list [imsld::parse::parse_and_crate_expression -expression_node $expression_one !!!]
-#         set exp_one_id [lindex $expression_one_list 0]
-#         if { !$exp_one_id } {
-#             # error ocurred, return the list with the explanation
-#             return $expression_one_list
-#         }
-#         set expression_two [$or lastChild]
-#         set expression_two_list [imsld::parse::parse_and_crate_expression -expression_node $expression_two !!!]
-#         set exp_two_id [lindex $expression_one_list 0]
-#         if { !$exp_two_id } {
-#             # error ocurred, return the list with the explanation
-#             return $expression_two_list
-#         }
-#     }
-
-#     # sum
-#     set sum [$expression_node child all imsld:sum]
-#     if { [llength $sum] } {
-#         imsld::parse::validate_multiplicity -tree $sum -multiplicity 1 -element_name sum(expression) -equal
-#         set calulate [$sum childNodes]
-#         imsld::parse::validate_multiplicity -tree $sum -multiplicity 1 -element_name sum-caluclate(expression) -equal
-#         set expression_type sum
-#         incr expressions_count
-#         set calculate_list [imsld::parse::parse_and_create_calcuate -calculate_node !!!]
-#         set calculate_id [lindex $calculate_list 0]
-#         if { !$calculate_id } {
-#             # error ocurred, return the list with the explanation
-#             return $calculate_list
-#         }
-#     }
-
-#     # sum
-#     set sum [$expression_node child all imsld:sum]
-#     if { [llength $sum] } {
-#         imsld::parse::validate_multiplicity -tree $sum -multiplicity 1 -element_name sum(expression) -equal
-#         set calulate [$sum childNodes]
-#         imsld::parse::validate_multiplicity -tree $sum -multiplicity 1 -element_name sum-caluclate(expression) -equal
-#         set expression_type sum
-#         incr expressions_count
-#         set calculate_list [imsld::parse::parse_and_create_calcuate -calculate_node !!!]
-#         set calculate_id [lindex $calculate_list 0]
-#         if { !$calculate_id } {
-#             # error ocurred, return the list with the explanation
-#             return $calculate_list
-#         }
-#     }
-
-    set expression [$expression_node asXML]
-    set imsld_id [db_1row get_imsld_id {
-        select ii.item_id 
-        from imsld_imsldsi ii, imsld_organisationsi io
-        where ii.organization_id = io.item_id
-        and io.manifest_id = :manifest_id
-        and content_revision__is_live(ii.imsld_id) = 't'
-    }]
-    set expression_id [imsld::item_revision_new -attributes [list [list imsld_id $imsld_id] \
-                                                                [list xml_piece $expression]] \
-                          -content_type imsld_expression \
-                          -parent_id $parent_id]
-    return $expression_id
 }
 
 ad_proc -public imsld::parse::parse_and_create_imsld_manifest { 
