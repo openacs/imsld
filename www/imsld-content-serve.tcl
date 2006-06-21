@@ -1,4 +1,11 @@
+# packages/imsld/www/imsld-content-serve.tcl
+
 ad_page_contract {
+    Process an imsldcontent resource, changing the view and set properties tags with their respective HTML
+
+    @creation-date Jun 2006
+    @author jopez@inv.it.uc3m.s
+    @cvs-id $Id$
 } {
     run_id:integer,notnull
     {owner_user_id:integer ""}
