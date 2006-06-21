@@ -141,14 +141,10 @@ create table imsld_when_condition_true (
                             constraint imsld_then_ref_fk
                             references cr_items     --imsld_roles
                             not null,
-    expression_id           integer
-                            constraint imsld_then_cpv_fk
-                            references cr_items     --imsld_properties_values
-                            not null
+    expression_xml          text
 );
 
 create index imsld_when_role_idx on imsld_when_condition_true(role_id);
-create index imsld_when_exp_idx on imsld_when_condition_true(expression_id);
 
 comment on table imsld_when_condition_true is '
 Simple expression for a condition. This condition applies to all the individual users mentioned in the containing role-ref. When the contained expression is true for all users in the specified roles, this condition is true.';
@@ -163,8 +159,6 @@ alter table imsld_complete_acts add column when_condition_true_id integer constr
 
 alter table imsld_services drop constraint imsld_serv_type_ck;
 alter table imsld_services add constraint imsld_serv_type_ck check (service_type in ('send-mail','conference','monitor'));
-
-
 
 create table imsld_conditions (
     condition_id    integer 

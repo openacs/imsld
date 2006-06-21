@@ -300,51 +300,13 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::new -content_type imsld_when_condition_true -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_When_Condition#" -pretty_plural "#imsld.lt_IMS-LD_When_Condition_1#" -table_name imsld_when_condition_true -id_column when_condition_true_id
 
     content::type::attribute::new -content_type imsld_when_condition_true -attribute_name role_id -datatype number -pretty_name "#imsld.Role_Identifier#" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_when_condition_true -attribute_name expression_id -datatype number -pretty_name "#imsld.lt_Expression_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_when_condition_true -attribute_name expression_xml -datatype string -pretty_name "#imsld.Expression#" -column_spec "varchar(4000)"
 
-    # expressions, conditions and calculate
-    content::type::new -content_type imsld_expression -supertype content_revision -pretty_name "#imsld.IMS-LD_Expression#" -pretty_plural "#imsld.IMS-LD_Expressions#" -table_name imsld_expressions -id_column expression_id
+    # conditions 
+    content::type::new -content_type imsld_condition -supertype content_revision -pretty_name "#imsld.IMS-LD_Condition#" -pretty_plural "#imsld.IMS-LD_Conditions#" -table_name imsld_conditions -id_column condition_id
 
-    content::type::attribute::new -content_type imsld_expression -attribute_name imsld_id -datatype number -pretty_name "#imsld.IMS-LD_Intifier#" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_expression -attribute_name xml_piece -datatype string -pretty_name "#imsld.XML_Piece#" -column_spec "text"
-
-#     # conditions 
-#     content::type::new -content_type imsld_condition -supertype content_revision -pretty_name "#imsld.IMS-LD_Condition#" -pretty_plural "#imsld.IMS-LD_Conditions#" -table_name imsld_conditions -id_column condition_id
-
-#     content::type::attribute::new -content_type imsld_condition -attribute_name method_id -datatype number -pretty_name "#imsld.Method_Identifier#" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_condition -attribute_name if_id -datatype number -pretty_name "#imsld.If_Identifier#" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_condition -attribute_name then_id -datatype number -pretty_name "#imsld.Then_Identifier#" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_condition -attribute_name else_id -datatype number -pretty_name "#imsld.Else_Identifier#" -column_spec "integer"
-
-#     # expressions
-#     content::type::new -content_type imsld_expression -supertype content_revision -pretty_name "#imsld.IMS-LD_Expression#" -pretty_plural "#imsld.IMS-LD_Expressions#" -table_name imsld_expressions -id_column expression_id
-
-#     content::type::attribute::new -content_type imsld_expression -attribute_name type -datatype string -pretty_name "#imsld.Type#" -column_spec "varchar(25)"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name role_id -datatype number -pretty_name "#imsld.Role_Identifier#" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name calculate_id -datatype number -pretty_name "#imsld.Caluclate_Identifier#" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name exp_one_id -datatype number -pretty_name "#imsld.lt_Expression_One_Identi#" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name exp_two_id -datatype number -pretty_name "#imsld.lt_Expression_Two_Identi#" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name property_id -datatype number -pretty_name "#imsld.Property_Identifier#" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name ref_type -datatype string -pretty_name "#imsld.Reference_Type#" -column_spec "varchar(20)"
-#     content::type::attribute::new -content_type imsld_expression -attribute_name ref_id -datatype number -pretty_name "#imsld.Reference_Identifier#" -column_spec "integer"
-
-#     # then model
-#     content::type::new -content_type imsld_then_model -supertype content_revision -pretty_name "#imsld.IMS-LD_Then_Model#" -pretty_plural "#imsld.IMS-LD_Then_Models#" -table_name imsld_then_model -id_column then_model_id
-
-#     content::type::attribute::new -content_type imsld_then_model -attribute_name type -datatype string -pretty_name "#imsld.Type#" -column_spec "varchar(20)"
-#     content::type::attribute::new -content_type imsld_then_model -attribute_name ref_type -datatype string -pretty_name "#imsld.Reference_Type#" -column_spec "varchar(20)"
-#     content::type::attribute::new -content_type imsld_then_model -attribute_name ref_id -datatype number -pretty_name "#imsld.Reference_Identifier#" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_then_model -attribute_name with_control_p -datatype string -pretty_name "#imsld.With_Control#" -column_spec "char(1)"
-#     content::type::attribute::new -content_type imsld_then_model -attribute_name change_prop_val_id -datatype number -pretty_name "#imsld.lt_Change_Property_Value#" -column_spec "integer"
-
-    ### IMS-LD Production and Delivery
-
-#     # properties instances
-#     content::type::new -content_type imsld_property_instance -supertype content_revision -pretty_name "#imsld.Property_Instance#" -pretty_plural "#imsld.Property_Instances#" -table_name imsld_property_instances -id_column instance_id
-
-#     content::type::attribute::new -content_type imsld_property_instance -attribute_name property_id -datatype number -pretty_name "#imsld.Property_Identifier# " -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_property_instance -attribute_name party_id -datatype number -pretty_name "#imsld.Party_Identifier#" -column_spec "integer"
-#     content::type::attribute::new -content_type imsld_property_instance -attribute_name value -datatype string -pretty_name "#imsld.Value#" -column_spec "varchar(4000)"
+    content::type::attribute::new -content_type imsld_condition -attribute_name method_id -datatype number -pretty_name "#imsld.Method_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_condition -attribute_name condition_xml -datatype string -pretty_name "#imsld.Condition#" -column_spec "varchar(4000)"
 }
 
 ad_proc -public imsld::install::create_group_types {  
@@ -633,30 +595,11 @@ ad_proc -public imsld::uninstall::empty_content_repository {
 
     # when condition true
     content::type::attribute::delete -content_type imsld_when_condition_true -attribute_name role_id
-    content::type::attribute::delete -content_type imsld_when_condition_true -attribute_name expression_id
+    content::type::attribute::delete -content_type imsld_when_condition_true -attribute_name expression_xml
 
-#     # conditions 
-#     content::type::attribute::delete -content_type imsld_condition -attribute_name method_id
-#     content::type::attribute::delete -content_type imsld_condition -attribute_name if_id
-#     content::type::attribute::delete -content_type imsld_condition -attribute_name then_id
-#     content::type::attribute::delete -content_type imsld_condition -attribute_name else_id
-
-#     # expressions
-#     content::type::attribute::delete -content_type imsld_expression -attribute_name type
-#     content::type::attribute::delete -content_type imsld_expression -attribute_name role_id
-#     content::type::attribute::delete -content_type imsld_expression -attribute_name calculate_id
-#     content::type::attribute::delete -content_type imsld_expression -attribute_name exp_one_id
-#     content::type::attribute::delete -content_type imsld_expression -attribute_name exp_two_id
-#     content::type::attribute::delete -content_type imsld_expression -attribute_name property_id
-#     content::type::attribute::delete -content_type imsld_expression -attribute_name ref_type
-#     content::type::attribute::delete -content_type imsld_expression -attribute_name ref_id
-    
-#     # then model
-#     content::type::attribute::delete -content_type imsld_then_model -attribute_name type
-#     content::type::attribute::delete -content_type imsld_then_model -attribute_name ref_type
-#     content::type::attribute::delete -content_type imsld_then_model -attribute_name ref_id
-#     content::type::attribute::delete -content_type imsld_then_model -attribute_name with_control_p
-#     content::type::attribute::delete -content_type imsld_then_model -attribute_name change_prop_val_id
+    # conditions 
+    content::type::attribute::delete -content_type imsld_condition -attribute_name method_id
+    content::type::attribute::delete -content_type imsld_condition -attribute_name condition_xml
 
     ### IMS-LD Production and Delivery
     content::type::attribute::delete -content_type imsld_property_instance -attribute_name property_id
@@ -855,10 +798,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::delete -content_type imsld_property_value -drop_table_p t 
     content::type::delete -content_type imsld_monitor_service -drop_table_p t 
     content::type::delete -content_type imsld_condition -drop_table_p t 
-    content::type::delete -content_type imsld_expression -drop_table_p t 
-    content::type::delete -content_type imsld_then_model -drop_table_p t 
     content::type::delete -content_type imsld_when_condition_true -drop_table_p t 
-    content::type::delete -content_type imsld_expression -drop_table_p t 
 
     ### IMS-LD Level A
     content::type::delete -content_type imsld_learning_object -drop_table_p t 

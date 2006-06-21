@@ -13,6 +13,7 @@
   <msg key="Complete_Act">Complete Act</msg>
   <msg key="Complete_Acts">Complete Acts</msg>
   <msg key="Component_Identifier">Component Identifier</msg>
+  <msg key="Condition">Condition</msg>
   <msg key="Conference_Type">Conference Type</msg>
   <msg key="Confirm_New_IMS-LD">Confirm: New IMS-LD</msg>
   <msg key="Context_info">Context info</msg>
@@ -29,6 +30,7 @@
   <msg key="Else_Identifier">Else Identifier</msg>
   <msg key="Error_parsing_file">Error parsing file</msg>
   <msg key="Existing_href">Existing href</msg>
+  <msg key="Expression">Expression</msg>
   <msg key="Feedbach_Title">Feedbach Title</msg>
   <msg key="Feedback">Feedback</msg>
   <msg key="File_name">File name</msg>

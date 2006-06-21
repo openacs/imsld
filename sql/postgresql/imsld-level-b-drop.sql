@@ -17,15 +17,8 @@ drop table imsld_monitor_services cascade;
 
 drop table imsld_when_condition_true cascade;
 
-drop table imsld_expressions cascade;
+drop table imsld_conditions cascade;
 
-
-
---drop table imsld_conditions cascade;
-
---drop table imsld_expressions cascade;
-
---drop table imsld_then_model cascade;
 
 
 
