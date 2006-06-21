@@ -11,6 +11,7 @@ ad_library {
 namespace eval imsld {}
 namespace eval imsld::parse {}
 
+
 ad_proc -public imsld::parse::find_manifest {
     -dir
     -file_name
@@ -79,6 +80,28 @@ ad_proc -public imsld::parse::convert_time_to_seconds {
     return $seconds
 }
 
+ad_proc -public imsld::parse::get_URI {
+    -type:required
+} {
+    Returns the URI corresponding to the indicated namespace in "type"
+} {
+   switch $type {
+        "imsld" {
+            set uri "http://www.imsglobal.org/xsd/imsld_v1p0"
+        } 
+        "imscp" {
+            set uri "http://www.imsglobal.org/xsd/imscp_v1p1"           
+        }
+        "imsmd" {
+            set uri "http://www.imsglobal.org/xsd/imsmd_v1p2"           
+        }
+        "xsi" {
+            set uri "http://www.w3.org/2001/XMLSchema-instance"           
+        }
+   }
+   return $uri
+}
+
 ad_proc -public imsld::parse::is_imsld {
     -tree:required
 } {
@@ -88,24 +111,27 @@ ad_proc -public imsld::parse::is_imsld {
 
     @param tree XML tree to analyze.
 } {
-    
-    # Check the manifest attribute
-    set man_attribute [$tree hasAttribute xmlns:imsld]
 
-    # Check manifest organizations
-    set organizations [$tree child all imscp:organizations]
-    if { ![llength $organizations] } {
-        set organizations [$tree child all organizations]
-    }
-    imsld::parse::validate_multiplicity -tree $organizations -multiplicity 1 -element_name organizations -equal
+#Check the base URI
 
-    set imsld [$organizations child all imsld:learning-design]
-    if { ![llength $imsld] } {
-        set imsld [$organizations child all learning-design]
+if { ![string eq [$tree namespaceURI] [imsld::parse::get_URI -type "imscp"] ]} {
+        return -code error "IMSLD:imsld::parse::is_imsld: <#_ manifest namespace is not imscp#>"
     }
-    imsld::parse::validate_multiplicity -tree $imsld -multiplicity 1 -element_name IMD-LD -equal
-        
-    # After validating the cases above, we can say that this seems a well formed IMS LD
+# Check organizations
+    set organizations [ $tree selectNodes { *[local-name()='organizations'] } ] 
+    if { ![string eq [$organizations namespaceURI] [imsld::parse::get_URI -type "imscp"] ] } {
+        return -code error "IMSLD:imsld::parse::is_imsld: <#_ organizations tag not found in imsmanifest.xml#>"
+    }
+        imsld::parse::validate_multiplicity -tree $organizations -multiplicity 1 -element_name organizations -equal
+
+# Check learning-design tag 
+     set ld_tag [ $organizations selectNodes { *[local-name()='learning-design'] } ]
+     if { ! [string eq [$ld_tag namespaceURI] [imsld::parse::get_URI -type "imsld"] ] } {
+        return -code error "IMSLD:imsld::parse::is_imsld: <#_ learning-desing tag not found in imsmanifest.xml#>"
+    }
+    imsld::parse::validate_multiplicity -tree $ld_tag -multiplicity 1 -element_name IMD-LD -equal
+
+# After validating the cases above, we can say that this seems a well formed IMS LD
     return [list 1 {}]
 }
 
@@ -212,13 +238,15 @@ ad_proc -public imsld::parse::get_title {
     @option prefix Prefix for the "title"
     
 } {
-    set prefix [expr { [string eq "" $prefix] ? "" : "${prefix}:" }]
-    set titles_list [$node child all ${prefix}title]
-    if { [llength $titles_list] } {
-        imsld::parse::validate_multiplicity -tree $titles_list -multiplicity 1 -element_name title -equal
-        return [imsld::parse::get_element_text -node $titles_list]
-    } else {
-        return ""
+    set titles_list [$node selectNodes {*[local-name()='title']}]
+    if { [llength $titles_list] == 1} {
+        set name_space [$titles_list namespaceURI]
+        if { [string eq [imsld::parse::get_URI -type "imsld"] $name_space] } {
+            imsld::parse::validate_multiplicity -tree $titles_list -multiplicity 1 -element_name title -equal
+            return [imsld::parse::get_element_text -node $titles_list]
+        } else {
+            return ""
+        } 
     }
 }
 
@@ -3495,15 +3523,16 @@ ad_proc -public imsld::parse::parse_and_create_play {
     return $play_id
 }
 
-ad_proc -public imsld::parse::parse_and_create_condition { 
+ad_proc -public imsld::parse::parse_and_create_if_then_else { 
     -condition_node
     -manifest
     -manifest_id
     -parent_id
+    -method_id
 } {
     Parse a condition and stores all the information in the database.
 
-    Returns a list with the condition_id (item_id) if there were no errors, or 0 and an explanation messge if there was an error.
+    Returns the if_then_else_id (item_id) if there were no errors, or 0 and an explanation messge if there was an error.
     
     @param imsld_id IMS-LD identifier which this play belongs to
     @param condition_node The condition node to be parsed 
@@ -3511,53 +3540,28 @@ ad_proc -public imsld::parse::parse_and_create_condition {
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
 } {
-#     set title [imsld::parse::get_title -node $condition_node -prefix imsld]
-#     set if_node [$condition_node child all imsld:if]
-#     imsld::parse::validate_multiplicity -tree $if_node -multiplicity 1 -element_name "if (condition)" -equal
-#     set if_list [imsld::parse::parse_and_create_expression !!!]
-#     set if_id [lindex $if_list 0]
-#     if { !$if_id } {
-#         # an error ocurred
-#         return $if_list
-#     }
-#     set then_node [$condition_node child all imsld:then]
-#     imsld::parse::validate_multiplicity -tree $then_node -multiplicity 1 -element_name "the (condition)" -equal
-#     set then_list [imsld::parse::parse_and_create_then_model !!!]
-#     set then_id [lindex $if_list 0]
-#     if { !$then_id } {
-#         # an error ocurred
-#         return $then_list
-#     }
-#     set else_node [$condition_node child all imsld:else]
-#     if { [llength $else_node] } {
-#         imsld::parse::validate_multiplicity -tree $if_node -multiplicity 1 -element_name "else (condition)" -equal
-#         set else_list [imsld::parse::parse_and_create_then_model !!!]
-#         set else_id [lindex $if_list 0]
-#         if { !$else_id } {
-#             # an error ocurred
-#             return $else_list
-#         }
-#     }
-#     set condition_id [imsld::item_revision_new -attributes [list [list method_id $method_id] \
-#                                                                 [list if_id $if_id] \
-#                                                                 [list then_id $then_id] \
-#                                                                 [list else_id $else_id]] \
-#                           -content_type imsld_condition \
-#                           -title $title \
-#                           -parent_id $parent_id]
-    set condition [$condition_node asXML]
-    set imsld_id [db_1row get_imsld_id {
-        select ii.item_id 
-        from imsld_imsldsi ii, imsld_organisationsi io
-        where ii.organization_id = io.item_id
-        and io.manifest_id = :manifest_id
-        and content_revision__is_live(ii.imsld_id) = 't'
-    }]
-    set condition_id [imsld::item_revision_new -attributes [list [list imsld_id $imsld_id] \
-                                                                [list xml_piece $condition]] \
-                          -content_type imsld_expression \
-                          -parent_id $parent_id]
-    return $condition_id
+
+    set then_node [$condition_node selectNodes { following-sibling::*[local-name()='then' and position()=1] } ]
+    if { [llength $then_node] != 1 } {
+        return 0
+    }
+    
+    set else_node [$condition_node selectNodes { following-sibling::*[local-name()='else' and position()=2] } ]
+    if { [llength $else_node] == 1 } {
+        set xml_piece "\<condition\>[$condition_node asXML][$then_node asXML][$else_node asXML]\<\/condition\>"
+    } elseif { [llength $else_node] == 0 } {
+        set xml_piece "\<condition\>[$condition_node asXML][$then_node asXML]\<\/condition\>"       
+    } else {
+        return 0
+    }
+    
+    
+    set if_then_else_id [imsld::item_revision_new -attributes [list [list method_id $method_id] \
+                                                              [list condition_xml $xml_piece]] \
+                                                  -content_type imsld_condition \
+                                                  -parent_id $parent_id]
+    return $if_then_else_id
+   
 }
 
 }
@@ -3991,17 +3995,18 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     }
     
     # Method: Conditions
-    set conditions [$method child all imsld:condition]
-    foreach condition $conditions {
-        set condition_list [imsld::parse::parse_and_create_condition -condition_node $condition \
-                                 -manifest_id $manifest_id \
-                                 -parent_id $parent_id \
-                                 -manifest $manifest]
-        if { ![lindex $condition_list 0] } {
-            # error. return the list
-            return $condition_list
-        }
+    set conditions [$method child all imsld:conditions]
+    set imsld_ifs_list [$conditions selectNodes { *[local-name()='if'] } ]
+ 
+    foreach imsld_if $imsld_ifs_list {
+       set if_then_else_list [list]
+       lappend $if_then_else_list [imsld::parse::parse_and_create_if_then_else -condition_node $imsld_if \
+                                                                               -manifest_id $manifest_id \
+                                                                               -parent_id $cr_folder_id \
+                                                                               -manifest $manifest \
+                                                                               -method_id $method_id ]
     }
+        
 
     # Resources
     # look for the resource in the manifest and add it to the CR
