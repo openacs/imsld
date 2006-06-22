@@ -115,7 +115,7 @@ ad_proc -public imsld::parse::is_imsld {
 #Check the base URI
 
 if { ![string eq [$tree namespaceURI] [imsld::parse::get_URI -type "imscp"] ]} {
-        return -code error "IMSLD:imsld::parse::is_imsld: <#_ manifest namespace is not imscp#>"
+        Return -code error "IMSLD:imsld::parse::is_imsld: <#_ manifest namespace is not imscp#>"
     }
 # Check organizations
     set organizations [ $tree selectNodes { *[local-name()='organizations'] } ] 
@@ -618,10 +618,9 @@ ad_proc -public imsld::parse::parse_and_create_resource {
                              -parent_id $parent_id]
         
         set found_p 0
-        set filex_list [$resource_node child all imscp:file]
-        if { ![llength $filex_list] } {
-            set filex_list [$resource_node child all file]
-        }
+        
+        set filex_list [$resource_node selectNodes {*[local-name()='file']}]
+        
         set found_id_in_list 0
         foreach filex $filex_list {
             set filex_href [imsld::parse::get_attribute -node $filex -attr_name href]
@@ -665,20 +664,18 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             relation_add -extra_vars $extra_vars imsld_res_files_rel $resource_id $link_id
         }
         
-        set resource_dependencies [$resource_node child all imscp:dependency]
-        if { ![llength $resource_dependencies] } {
-            set resource_dependencies [$resource_node child all dependency]
-        }
+
+        set resource_dependencies [$resource_node selectNodes {*[local-name()='dependency']}]
+
+        
         foreach dependency $resource_dependencies {
             set dependency_identifierref [imsld::parse::get_attribute -node $dependency -attr_name identifierref]
             set dependency_id [imsld::cp::dependency_new -resource_id $resource_id \
                                    -identifierref $dependency \
                                    -parent_id $parent_id]
             # look for the resource in the manifest and add it to the CR
-            set resources [$manifest child all imscp:resources]
-            if { ![llength $resources] } {
-                set resources [$manifest child all resources]
-            }
+
+            set resources [$manifest selectNodes {*[local-name()='resources'] }]
             
             # there must be at least one reource for the learning objective
             imsld::parse::validate_multiplicity -tree $resources -multiplicity 0 -element_name "resources (dependency)" -greather_than
@@ -740,10 +737,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
 
     if { ![empty_string_p $item_identifierref] } {
         # look for the resource in the manifest and add it to the CR
-        set resources [$manifest child all imscp:resources]
-        if { ![llength $resources] } {
-            set resources [$manifest child all resources]
-        }
+        set resources [$manifest selectNodes {*[local-name()='resources']}]
         
         # there must be at least one reource for the learning objective
         imsld::parse::validate_multiplicity -tree $resources -multiplicity 1 -element_name "resources (referenced from item $item_identifier)" -greather_than
@@ -767,7 +761,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
     }
     
     # nested or sub items
-    set nested_item_list [$item_node child all imsld:item]
+    set nested_item_list [$item_node selectNodes {*[local-name()='itme'] } ]
     if { [llength $nested_item_list] } {
         foreach nested_item $nested_item_list {
             set nested_item_list [imsld::parse::parse_and_create_item -manifest $manifest \
@@ -859,10 +853,11 @@ ad_proc -public imsld::parse::parse_and_create_role {
                      -parent_id $parent_id]
     
     # continue with the role information and nested roles
-    set role_information [$roles_node child all imsld:information]
+                    
+    set role_information [$roles_node selectNodes {*[local-name()='information'] } ]
     if { [llength $role_information] } {
         # parse the item, create it and map it to the role
-        set information_item [$role_information child all imsld:item]
+        set information_item [$role_information selectNodes {*[local-name()='item'] } ]
         if { ![llength $information_item] } {
             return [list 0 "[_ imsld.lt_Information_given_but]"]
         }
@@ -883,7 +878,7 @@ ad_proc -public imsld::parse::parse_and_create_role {
     }
     
     # nested roles
-    set nested_roles [$roles_node child all "imsld:${role_type}"]
+    set nested_roles [$roles_node selectNodes "*\[local-name()=${role_type}\]"]
     if { [llength $nested_roles] } {
         foreach nested_role $nested_roles {
             set role_list [imsld::parse::parse_and_create_role -role_type $role_type \
@@ -967,10 +962,10 @@ ad_proc -public imsld::parse::parse_and_create_global_def {
     
     set uri [imsld::parse::get_attribute -node $global_def_node -attr_name uri]
     set title [imsld::parse::get_title -node $global_def_node -prefix imsld]
-    set datatype [$global_def_node child all imsld:datatype] 
+    set datatype [$global_def_node selectNodes "*\[local-name()='datatype'\]" ] 
     imsld::parse::validate_multiplicity -tree $global_def_node -multiplicity 1 -element_name "global-definition datatype" -equal
     set datatype [string tolower [imsld::parse::get_attribute -node $global_def_node -attr_name datatype]]
-    set initial_value [$global_def_node child all imsld:initial-value] 
+    set initial_value [$global_def_node selectNodes "*\[local-name()='initial-value'\]"] 
     imsld::parse::validate_multiplicity -tree $initial_value -multiplicity 1 -element_name "global-definition initial-value" -lower_than
     if { [llength $initial_value] } {
         set initial_value [imsld::parse::get_element_text -node $initial_value]
@@ -989,7 +984,7 @@ ad_proc -public imsld::parse::parse_and_create_global_def {
                             -title $title \
                             -parent_id $parent_id]
 
-    set restrictions [$global_def_node child all imsld:restriction]
+    set restrictions [$global_def_node selectNodes "*\[local-name()='restriction'\]"]
     foreach restriction $restrictions {
         set restriction_list [imsld::parse::parse_and_create_restriction -manifest $manifest \
                                   -property_id $globpers_property_id \
@@ -1037,7 +1032,7 @@ ad_proc -public imsld::parse::parse_and_create_property_group {
                                -title $title \
                                -parent_id $parent_id]
 
-    set property_refs [$property_group_node child all imsld:property-ref]
+    set property_refs [$property_group_node selectNodes "*\[local-name()='property-ref'\]"]
     foreach property $property_refs {
         set ref [string tolower [imsld::parse::get_attribute -node $property -attr_name ref]]
         if { ![db_0or1row get_property_id {
@@ -1053,7 +1048,7 @@ ad_proc -public imsld::parse::parse_and_create_property_group {
         relation_add imsld_gprop_prop_rel $property_group_id $property_item_id
     }
 
-    set property_group_refs [$property_group_node child all imsld:property-group-ref]
+    set property_group_refs [$property_group_node selectNodes "*\[local-name()='property-group-ref'\]"]
     foreach property_group $property_group_refs {
         set ref [string tolower [imsld::parse::get_attribute -node $property_group -attr_name ref]]
         if { ![db_0or1row get_group_property_id {
@@ -1064,11 +1059,10 @@ ad_proc -public imsld::parse::parse_and_create_property_group {
             and component_id = :component_id
         }] } {
             # there is no propety group with that identifier. search in the rest of non-created property-groups
-            set organizations [$manifest child all imscp:organizations]
-            if { ![llength $organizations] } {
-                set organizations [$manifest child all organizations]
-            }                    
-            set property_groups [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:property] child all imsld:property-group]
+            set organizations [$manifest selectNodes "*\[local-name()='organizations'\]"]
+
+            set property_groups [$organizations selectNodes {*[local-name()='learning-design']/*[local-name()='components']/*[local-name()='porperties']/*[local-name()='property-group' ] } ]
+#                set property_groups [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:property] child all imsld:property-group]
             
             set found_p 0
             foreach referenced_property_group $property_groups {
@@ -1132,14 +1126,14 @@ ad_proc -public imsld::parse::parse_and_create_property {
     set property_group_id ""
 
     # loc properties
-    set loc_properties [$property_node child all imsld:loc-property]
+    set loc_properties [$property_node selectNodes "*\[local-name()='loc-property' \]"]
     foreach loc_property $loc_properties {
         set lp_title [imsld::parse::get_title -node $loc_property -prefix imsld]
         set lp_identifier [string tolower [imsld::parse::get_attribute -node $loc_property -attr_name identifier]]
-        set lp_datatype [$loc_property child all imsld:datatype] 
+        set lp_datatype [$loc_property selectNodes "*\[local-name()='datatype' \]"] 
         imsld::parse::validate_multiplicity -tree $lp_datatype -multiplicity 1 -element_name "loc-property datatype" -equal
         set lp_datatype [string tolower [imsld::parse::get_attribute -node $lp_datatype -attr_name datatype]]
-        set lp_initial_value [$loc_property child all imsld:initial-value] 
+        set lp_initial_value [$loc_property selectNodes "*\[local-name()='initial-value' \]"] 
         imsld::parse::validate_multiplicity -tree $lp_initial_value -multiplicity 1 -element_name "loc-property initial-value" -lower_than
         if { [llength $lp_initial_value] } {
             set lp_initial_value [imsld::parse::get_element_text -node $lp_initial_value]
@@ -1156,7 +1150,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
                                 -title $lp_title \
                                 -parent_id $parent_id]
 
-        set lp_restrictions [$loc_property child all imsld:restriction]
+        set lp_restrictions [$loc_property selectNodes "*\[local-name()='restriction' \]"]
         foreach lp_restriction $lp_restrictions {
             set restriction_list [imsld::parse::parse_and_create_restriction -manifest $manifest \
                                       -property_id $property_id \
@@ -1174,14 +1168,14 @@ ad_proc -public imsld::parse::parse_and_create_property {
     }
 
     # locpers properties
-    set locpers_properties [$property_node child all imsld:locpers-property]
+    set locpers_properties [$property_node selectNodes "*\[local-name()='locpers-property' \]"]
     foreach locpers_property $locpers_properties {
         set lpp_title [imsld::parse::get_title -node $locpers_property -prefix imsld]
         set lpp_identifier [string tolower [imsld::parse::get_attribute -node $locpers_property -attr_name identifier]]
-        set lpp_datatype [$locpers_property child all imsld:datatype] 
+        set lpp_datatype [$locpers_property selectNodes "*\[local-name()='datatype' \]"] 
         imsld::parse::validate_multiplicity -tree $lpp_datatype -multiplicity 1 -element_name "locpers-property datatype" -equal
         set lpp_datatype [string tolower [imsld::parse::get_attribute -node $lpp_datatype -attr_name datatype]]
-        set lpp_initial_value [$locpers_property child all imsld:initial-value] 
+        set lpp_initial_value [$locpers_property selectNodes "*\[local-name()='initial-value' \]"] 
         imsld::parse::validate_multiplicity -tree $lpp_initial_value -multiplicity 1 -element_name "locpers-property initial-value" -lower_than
         if { [llength $lpp_initial_value] } {
             set lpp_initial_value [imsld::parse::get_element_text -node $lpp_initial_value]
@@ -3542,21 +3536,26 @@ ad_proc -public imsld::parse::parse_and_create_if_then_else {
     @param parent_id Parent folder ID
 } {
 
+    set temporal_doc [dom createDocument condition]
+    set temporal_node [$temporal_doc documentElement]
+
+    set temporal_if [$condition_node cloneNode -deep]
+    $temporal_node appendChild $temporal_if    
+
     set then_node [$condition_node selectNodes { following-sibling::*[local-name()='then' and position()=1] } ]
     if { [llength $then_node] != 1 } {
         return 0
     }
-    
+    $temporal_node appendChild $then_node
+
     set else_node [$condition_node selectNodes { following-sibling::*[local-name()='else' and position()=2] } ]
     if { [llength $else_node] == 1 } {
-        set xml_piece "\<condition\>[$condition_node asXML][$then_node asXML][$else_node asXML]\<\/condition\>"
-    } elseif { [llength $else_node] == 0 } {
-        set xml_piece "\<condition\>[$condition_node asXML][$then_node asXML]\<\/condition\>"       
-    } else {
-        return 0
+        $temporal_node appendChild $else_node       
+    } elseif { [llength $else_node] > 1 } {
+        return 0        
     }
-    
-    
+    set xml_piece [$temporal_node asXML]
+
     set if_then_else_id [imsld::item_revision_new -attributes [list [list method_id $method_id] \
                                                               [list condition_xml $xml_piece]] \
                                                   -content_type imsld_condition \
@@ -3995,15 +3994,18 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     
     # Method: Conditions
     set conditions [$method child all imsld:conditions]
-    set imsld_ifs_list [$conditions selectNodes { *[local-name()='if'] } ]
- 
-    foreach imsld_if $imsld_ifs_list {
-       set if_then_else_list [list]
-       lappend $if_then_else_list [imsld::parse::parse_and_create_if_then_else -condition_node $imsld_if \
-                                                                               -manifest_id $manifest_id \
-                                                                               -parent_id $cr_folder_id \
-                                                                               -manifest $manifest \
-                                                                               -method_id $method_id ]
+    if {[llength $conditions]} {
+        set imsld_ifs_list [$conditions selectNodes { *[local-name()='if'] } ]
+     
+        foreach imsld_if $imsld_ifs_list {
+           set if_then_else_list [list]
+           lappend $if_then_else_list [imsld::parse::parse_and_create_if_then_else -condition_node $imsld_if \
+                                                                                   -manifest_id $manifest_id \
+                                                                                   -parent_id $cr_folder_id \
+                                                                                   -manifest $manifest \
+                                                                                   -method_id $method_id ]
+        }
+       
     }
         
 
