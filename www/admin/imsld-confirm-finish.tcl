@@ -13,10 +13,14 @@ ad_page_contract {
 imsld::instance::instantiate_properties -run_id $run_id
 imsld::instance::instantiate_activity_attributes -run_id $run_id
 
-#ojo!!!! poner aquí tema de permisos!!!
+# NOTE: we should verify the permissions here
 set conditions 1
 if {$conditions == 1} {
-    db_dml set_run_active { update imsld_runs set status='active' where run_id=:run_id and imsld_id=:imsld_id}
+    db_dml set_run_active { 
+        update imsld_runs set status = 'active',
+        status_date = now()
+        where run_id=:run_id and imsld_id=:imsld_id
+    }
 }
 
 ad_returnredirect ..

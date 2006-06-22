@@ -9,4 +9,28 @@
         </querytext>
 	</fullquery>
 
+    <fullquery name="imsld::runtime::time_uol_started.date_time">
+        <querytext>
+            select status_date
+            from imsld_runs
+            where run_id = :run_id
+            and status = 'started'
+        </querytext>
+	</fullquery>
+
+    <fullquery name="imsld::runtime::date_time_activity_started.date_time">
+        <querytext>
+            select status_date
+            from imsld_status_user
+            where run_id = :run_id
+            and user_id = :user_id
+            and status = 'started'
+        </querytext>
+	</fullquery>
+
+    <fullquery name="">
+        <querytext>
+        </querytext>
+	</fullquery>
+
 </queryset>

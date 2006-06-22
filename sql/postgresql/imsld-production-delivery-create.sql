@@ -8,17 +8,22 @@
 --
 
 create table imsld_runs (
-    run_id      integer
-                constraint imsld_run_fk
-                references acs_objects
-                on delete cascade
-                constraint imsld_run_pk
-                primary key,
-    imsld_id    integer
-                constraint imsld_run_imsld_id_fk
-                references imsld_imslds
-                not null,
-    status      varchar(15)
+    run_id          integer
+                    constraint imsld_run_fk
+                    references acs_objects
+                    on delete cascade
+                    constraint imsld_run_pk
+                    primary key,
+    imsld_id        integer
+                    constraint imsld_run_imsld_id_fk
+                    references imsld_imslds
+                    not null,
+    status          varchar(15),
+    creation_date   timestamptz
+                    not null,
+    status_date     timestamptz
+                    default current_timestamp
+                    not null
 );
 
 create index imsld_run_imsld_idx on imsld_runs(imsld_id);

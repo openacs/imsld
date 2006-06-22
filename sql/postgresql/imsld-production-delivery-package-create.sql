@@ -100,8 +100,8 @@ begin
         null
     );
 
-    insert into imsld_runs (run_id, imsld_id, status)
-    values (v_run_id, p_imsld_id, p_status);
+    insert into imsld_runs (run_id, imsld_id, status, creation_date, status_date)
+    values (v_run_id, p_imsld_id, p_status, now(), now());
 
    return v_run_id;
 end;

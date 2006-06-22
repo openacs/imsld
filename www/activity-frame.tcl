@@ -1,3 +1,5 @@
+# packages/imsld/www/activity-frameset.tcl
+
 ad_page_contract {
 
     This is the frame that contains the associated URLs of an activity
@@ -10,6 +12,40 @@ ad_page_contract {
 }
 
 set user_id [ad_conn user_id]
+db_1row context_info {
+    select r.imsld_id,
+    case
+    when exists (select 1 from imsld_learning_activities where activity_id = :activity_id)
+    then 'learning'
+    when exists (select 1 from imsld_support_activities where activity_id = :activity_id)
+    then 'support'
+    when exists (select 1 from imsld_activity_structures where structure_id = :activity_id)
+    then 'structure'
+    end as activity_type
+    from imsld_runs r
+    where run_id = :run_id
+}
+
+# make sure the activity is marked as started for this user
+db_dml mark_activity_started {
+    insert into imsld_status_user (imsld_id,
+                                   run_id,
+                                   related_id,
+                                   user_id,
+                                   type,
+                                   status_date,
+                                   status) 
+    (
+     select :imsld_id,
+     :run_id,
+     :activity_id,
+     :user_id,
+     :activity_type,
+     now(),
+     'started'
+     where not exists (select 1 from imsld_status_user where run_id = :run_id and user_id = :user_id and related_id = :activity_id and status = 'started')
+     )
+}
 
 set supported_roles [db_list supported_roles_list { select iri.role_id 
                                              from imsld_rolesi iri, 

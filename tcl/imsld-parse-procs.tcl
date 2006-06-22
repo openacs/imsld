@@ -2093,8 +2093,8 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
     }
 
     set langstring ""
-    set calculate_id ""
-    set expression_id ""
+    set calculate ""
+    set expression_xml ""
     
     # Property Value
     set property_value [$property_value_node child all imsld:property-value]
@@ -2120,12 +2120,13 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
             if { [llength $expression] } {
                 imsld::parse::validate_multiplicity -tree $expression -multiplicity 1 -element_name expression(property-value) -equal
             } 
+            set expression_xml [$expression asXML]
         }
     }
 
     set property_value_id [imsld::item_revision_new -attributes [list [list property_id $property_id] \
                                                                      [list langstring $langstring] \
-                                                                     [list expression_xml [$expression asXML]] \
+                                                                     [list expression_xml $expression_xml] \
                                                                      [list property_value_ref $property_id]] \
                                -content_type imsld_property_value \
                                -parent_id $parent_id]
@@ -3562,8 +3563,6 @@ ad_proc -public imsld::parse::parse_and_create_if_then_else {
                                                   -parent_id $parent_id]
     return $if_then_else_id
    
-}
-
 }
 
 ad_proc -public imsld::parse::parse_and_create_calculate { 
