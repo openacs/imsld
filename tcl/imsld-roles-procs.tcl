@@ -311,3 +311,29 @@ ad_proc -public imsld::roles::get_users_in_role {
    }
   return $users_list
 }
+
+
+ad_proc -public imsld::roles::get_role_id {
+    -ref:required
+    -run_id:requir:required
+} {
+    Returns the role_id which has a given ref in a run, 0 if no matches found.
+} {
+    if{[db_0or1row select_role_id {
+        select ar1.object_id_one as role_id
+        from imsld_rolesi iri, 
+             acs_rels ar1, 
+             acs_rels ar2 
+        where ar1.object_id_two=ar2.object_id_one 
+              and ar1.rel_type='imsld_role_group_rel' 
+              and ar2.rel_type='imsld_roleinstance_run_rel' 
+              and ar2.object_id_two=:run_id
+              and iri.item_id=ar1.object_id_one 
+              and iri.identifier=:ref
+        group by role_id;
+    }]} {
+        return $role_id
+    } else {
+        return 0
+    }
+}
