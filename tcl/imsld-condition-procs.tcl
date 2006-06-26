@@ -39,8 +39,13 @@ ad_proc -public imsld::condition::execute {
 ad_proc -public imsld::expression::eval {
     -run_id
     -expression
+    -user_id
 } {
 } {
+    if {![info exist user_id]} {
+        set user_id [ad_conn user_id]
+    }
+
     foreach expressionNode $expression {
         switch -- [$expressionNode localName] {
 	    {complete} {
@@ -56,18 +61,22 @@ ad_proc -public imsld::expression::eval {
 		return TODO
 		set activity_ref [$expressionNode getAttribute {ref}]
 		#set activity_id [] # need to get the activity_id from the activity_ref
-		return [imsld::runtime::date_time_activity_started -run_id $run_id -user_id [ad_conn user_id] -activity_id $activity_id]
+		return [imsld::runtime::date_time_activity_started -run_id $run_id -user_id $user_id -activity_id $activity_id]
 	    }
 	    {time-unit-of-learning-started} {
 	        return [imsld::runtime::time_uol_started -run_id $run_id]
 	    }
 	    {no-value} {
 	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
-	        set propertyvalue [imsld::runtime::property::property_value_get -run_id $run_id -user_id [ad_conn user_id] -identifier [$propertyref getAttribute {ref}]]
+	        set propertyvalue [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}]]
 	        return [empty_string_p $propertyvalue]
 	    }
 	    {users-in-role} {
 	        # TODO Investigate usage in an expression
+            set roleref_value [$expressionNode selectNodes {*[local-name()='role-ref']/@ref}]
+            set role_id [imsld::roles::get_role_id -ref $roleref_value -run_id $run_id]
+            set persons_in_role [imsld::roles::get_users_in_role -run_id $run_id -role_id $role_id]
+            
 	    }
 	    {less-than} {
 	        set childs [$expressionNode childNodes]
@@ -119,17 +128,17 @@ ad_proc -public imsld::expression::eval {
 	    }
 	    {is-not} {
 	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
-	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id [ad_conn user_id] -identifier [$propertyref getAttribute {ref}]]
+	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}]]
 	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] nodeValue]
 	        return [expr {$propertyvalue0 != $propertyvalue1}]
 	    }
 	    {is} {
 	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
-	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id [ad_conn user_id] -identifier [$propertyref getAttribute {ref}]]
+	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}]]
 	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] nodeValue]
 	        return [expr {$propertyvalue0 == $propertyvalue1}]
 	    }
-	    {is-member-of-role} {
+	    {is-member-of-role} {                                
 	    }
 	}
     }
