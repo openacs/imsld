@@ -115,7 +115,7 @@ ad_proc -public imsld::parse::is_imsld {
 #Check the base URI
 
 if { ![string eq [$tree namespaceURI] [imsld::parse::get_URI -type "imscp"] ]} {
-        Return -code error "IMSLD:imsld::parse::is_imsld: <#_ manifest namespace is not imscp#>"
+        return -code error "IMSLD:imsld::parse::is_imsld: <#_ manifest namespace is not imscp#>"
     }
 # Check organizations
     set organizations [ $tree selectNodes { *[local-name()='organizations'] } ] 
@@ -761,7 +761,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
     }
     
     # nested or sub items
-    set nested_item_list [$item_node selectNodes {*[local-name()='itme'] } ]
+    set nested_item_list [$item_node selectNodes {*[local-name()='item'] } ]
     if { [llength $nested_item_list] } {
         foreach nested_item $nested_item_list {
             set nested_item_list [imsld::parse::parse_and_create_item -manifest $manifest \
@@ -878,7 +878,7 @@ ad_proc -public imsld::parse::parse_and_create_role {
     }
     
     # nested roles
-    set nested_roles [$roles_node selectNodes "*\[local-name()=${role_type}\]"]
+    set nested_roles [$roles_node selectNodes "*\[local-name()=\"$role_type\"\]"]
     if { [llength $nested_roles] } {
         foreach nested_role $nested_roles {
             set role_list [imsld::parse::parse_and_create_role -role_type $role_type \
@@ -1192,7 +1192,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
                                  -title $lpp_title \
                                  -parent_id $parent_id]
         
-        set lpp_restrictions [$locpers_property child all imsld:restriction]
+        set lpp_restrictions [$locpers_property selectNodes "*\[local-name()='restriction'\]"]
         foreach lpp_restriction $lpp_restrictions {
             set restriction_list [imsld::parse::parse_and_create_restriction -manifest $manifest \
                                       -property_id $property_id \
@@ -1210,15 +1210,15 @@ ad_proc -public imsld::parse::parse_and_create_property {
     }
 
     # locrole properties
-    set locrole_properties [$property_node child all imsld:locrole-property]
+    set locrole_properties [$property_node selectNodes "*\[local-name()='locrole-property'\]"]
     foreach locrole_property $locrole_properties {
         set lrp_title [imsld::parse::get_title -node $locrole_property -prefix imsld]
         set lrp_identifier [string tolower [imsld::parse::get_attribute -node $locrole_property -attr_name identifier]]
-        set lrp_datatype [$locrole_property child all imsld:datatype] 
+        set lrp_datatype [$locrole_property selectNodes "*\[local-name()='datatype'\]"] 
         imsld::parse::validate_multiplicity -tree $lrp_datatype -multiplicity 1 -element_name "locrole-property datatype" -equal
         set lrp_datatype [string tolower [imsld::parse::get_attribute -node $lrp_datatype -attr_name datatype]]
 
-        set role_ref [$lrp_datatype child all imsld:role-ref]
+        set role_ref [$lrp_datatype selectNodes "*\[local-name()='role-ref'\]"]
         imsld::parse::validate_multiplicity -tree $lrp_datatype -multiplicity 1 -element_name "locrole-property role" -equal
         set ref [string tolower [imsld::parse::get_attribute -node $role_ref -attr_name ref]]
         if { ![db_0or1row get_role_id {
@@ -1232,7 +1232,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
             return [list 0 "[_ imsld.lt_There_is_no_role_with_6]"]
         }
 
-        set lrp_initial_value [$locrole_property child all imsld:initial-value] 
+        set lrp_initial_value [$locrole_property selectNodes "*\[local-name()='initial-value'\]"] 
         imsld::parse::validate_multiplicity -tree $lrp_initial_value -multiplicity 1 -element_name "locrole-property initial-value" -lower_than
         if { [llength $lrp_initial_value] } {
             set lrp_initial_value [imsld::parse::get_element_text -node $lrp_initial_value]
@@ -1250,7 +1250,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
                                  -title $lrp_title \
                                  -parent_id $parent_id]
         
-        set lrp_restrictions [$locrole_property child all imsld:restriction]
+        set lrp_restrictions [$locrole_property selectNodes "*\[local-name()='restriction'\]"]
         foreach lrp_restriction $lrp_restrictions {
             set restriction_list [imsld::parse::parse_and_create_restriction -manifest $manifest \
                                       -property_id $property_id \
@@ -1268,10 +1268,10 @@ ad_proc -public imsld::parse::parse_and_create_property {
     }
 
     # globpers properties
-    set globpers_properties [$property_node child all imsld:globpers-property]
+    set globpers_properties [$property_node selectNodes "*\[local-name()='globpers-property'\]"]
     foreach globpers_property $globpers_properties {
         set gp_identifier [string tolower [imsld::parse::get_attribute -node $globpers_property -attr_name identifier]]
-        set gp_existing [$globpers_property child all imsld:existing] 
+        set gp_existing [$globpers_property selectNodes "*\[local-name()='existing'\]"] 
         imsld::parse::validate_multiplicity -tree $gp_existing -multiplicity 1 -element_name "existing(globpers)" -lower_than
         if { [llength $gp_existing] } {
             set gp_existing_href [string tolower [imsld::parse::get_attribute -node $gp_exiting -attr_name href]]
@@ -1279,7 +1279,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
             set gp_existing_href ""
         }
 
-        set global_def [$globpers_property child all imsld:global-definition]
+        set global_def [$globpers_property selectNodes "*\[local-name()='global-definition'\]"]
         set global_def_list [imsld::parse::parse_and_create_global_def -type globpers \
                                  -identifier $gp_identifier \
                                  -existing_href $gp_existing_href \
@@ -1298,10 +1298,10 @@ ad_proc -public imsld::parse::parse_and_create_property {
     }
 
     # globp properties
-    set glob_properties [$property_node child all imsld:glob-property]
+    set glob_properties [$property_node selectNodes "*\[local-name()='glob-property'\]"]
     foreach glob_property $glob_properties {
         set g_identifier [string tolower [imsld::parse::get_attribute -node $glob_property -attr_name identifier]]
-        set g_existing [$glob_property child all imsld:existing] 
+        set g_existing [$glob_property selectNodes "*\[local-name()='existing'\]"] 
         imsld::parse::validate_multiplicity -tree $g_exiting -multiplicity 1 -element_name "existing(glob)" -lower_than
         if { [llength $g_existing] } {
             set g_existing_href [string tolower [imsld::parse::get_attribute -node $g_exiting -attr_name href]]
@@ -1309,7 +1309,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
             set g_existing_href ""
         }
 
-        set global_def [$glob_property child all imsld:global-definition]
+        set global_def [$glob_property selectNodes "*\[local-name()='global-definition'\]"]
         set global_def_list [imsld::parse::parse_and_create_global_def -type glob \
                                  -identifier $g_identifier \
                                  -existing_href $g_existing_href \
@@ -1327,7 +1327,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
     }
 
     # property groups
-    set property_groups [$property_node child all imsld:property-group]
+    set property_groups [$property_node selectNodes "*\[local-name()='property-group'\]"]
     foreach property_group $property_groups {
         set property_group_list [imsld::parse::parse_and_create_property_group -property_group_node $property_group \
                                      -component_id $component_id \
@@ -1372,7 +1372,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_objective {
                                    -attributes [list [list pretty_title $learning_objective_title]]]
                                                 
     # learning objective: imsld_items
-    set learning_objective_items [$learning_objective_node child all imsld:item]
+    set learning_objective_items [$learning_objective_node selectNodes "*\[local-name()='item'\]"]
     if { [llength $learning_objective_items] } {
         foreach imsld_item $learning_objective_items {
             set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
@@ -1420,7 +1420,7 @@ ad_proc -public imsld::parse::parse_and_create_prerequisite {
                              -attributes [list [list pretty_title $prerequisite_title]]]
     
     # prerequisite: imsld_items
-    set prerequisite_items [$prerequisite_node child all imsld:item]
+    set prerequisite_items [$prerequisite_node selectNodes "*\[local-name()='item'\]"]
     if { [llength $prerequisite_items] } {
         foreach imsld_item $prerequisite_items {
             
@@ -1470,7 +1470,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_description {
                                      -parent_id $parent_id]
     
     # activity description: imsld_items
-    set activity_description_items [$activity_description_node child all imsld:item]
+    set activity_description_items [$activity_description_node selectNodes "*\[local-name()='item'\]"]
     if { [llength $activity_description_items] } {
         foreach imsld_item $activity_description_items {
             
@@ -1533,7 +1533,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_object {
                                 -parent_id $parent_id]
 
     # learning object: imsld_items
-    set learning_object_items [$learning_object_node child all imsld:item]
+    set learning_object_items [$learning_object_node selectNodes "*\[local-name()='item'\]"]
     foreach learning_object_item $learning_object_items {
         set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                            -manifest_id $manifest_id \
@@ -1611,7 +1611,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
     }]
 
     # send mail
-    set send_mail [$service_node child all imsld:send-mail]
+    set send_mail [$service_node selectNodes "*\[local-name()='send-mail'\]"]
     if { [llength $send_mail] } {
         # it's a send mail service, get the info and create the service
         imsld::parse::validate_multiplicity -tree $send_mail -multiplicity 1 -element_name send-mail -equal
@@ -1636,10 +1636,10 @@ ad_proc -public imsld::parse::parse_and_create_service {
                               -content_type imsld_send_mail_service \
                               -title $title]
 
-        set email_data_list [$send_mail child all imsld:email-data]
+        set email_data_list [$send_mail selectNodes "*\[local-name()='email-data'\]"]
         imsld::parse::validate_multiplicity -tree $email_data_list -multiplicity 1 -element_name email-data -greather_than
         foreach email_data $email_data_list {
-            set role_ref [$email_data child all imsld:role-ref]
+            set role_ref [$email_data selectNodes "*\[local-name()='role-ref'\]"]
             imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name role-ref(email-data) -equal
             set ref [string tolower [imsld::parse::get_attribute -node $role_ref -attr_name ref]]
             if { ![db_0or1row get_role_id_from_ref {
@@ -1696,7 +1696,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
     }
 
     # conferences
-    set conference [$service_node child all imsld:conference]
+    set conference [$service_node selectNodes "*\[local-name()='conference'\]"]
     if { [llength $conference] } {
         # it's a conference service, get the info an create the service
         imsld::parse::validate_multiplicity -tree $conference -multiplicity 1 -element_name conference -equal
@@ -1704,7 +1704,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
         set title [imsld::parse::get_title -node $conference -prefix imsld]
         
         # manager
-        set manager [$conference child all imsld:manager]
+        set manager [$conference selectNodes "*\[local-name()='manager'\]"]
         set manager_id ""
         if { [llength $manager] } {
             imsld::parse::validate_multiplicity -tree $manager -multiplicity 1 -element_name conference-manager -equal
@@ -1755,7 +1755,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
 
         } else {
             # item
-            set conference_item [$conference child all imsld:item]
+            set conference_item [$conference selectNodes "*\[local-name()='item'\]"]
             imsld::parse::validate_multiplicity -tree $conference_item -multiplicity 1 -element_name conference-item -equal
             set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                -manifest_id $manifest_id \
@@ -1781,7 +1781,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
                                -title $title]
 
         # participants
-        set participant_list [$conference child all imsld:participant]
+        set participant_list [$conference selectNodes "*\[local-name()='participant'\]"]
         imsld::parse::validate_multiplicity -tree $participant_list -multiplicity 1 -element_name conference-participant -greather_than
         foreach participant $participant_list {
             set role_ref [string tolower [imsld::parse::get_attribute -node $participant -attr_name role-ref]]
@@ -1802,7 +1802,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
         }
 
         # observer
-        set observer_list [$conference child all imsld:observer]
+        set observer_list [$conference selectNodes "*\[local-name()='observer'\]"]
         if { [llength $observer_list] } {
             foreach observer $observer_list {
                 set role_ref [string tolower [imsld::parse::get_attribute -node $observer -attr_name role-ref]]
@@ -1824,7 +1824,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
         }
 
         # moderator
-        set moderator_list [$conference child all imsld:moderator]
+        set moderator_list [$conference selectNodes "*\[local-name()='moderator'\]"]
         if { [llength $moderator_list] } {
             foreach moderator $moderator_list {
                 set role_ref [string tolower [imsld::parse::get_attribute -node $moderator -attr_name role-ref]]
@@ -1847,14 +1847,14 @@ ad_proc -public imsld::parse::parse_and_create_service {
     }
     
     # index service (not supported)
-    set index_search [$service_node child all imsld:index-search]
+    set index_search [$service_node selectNodes "*\[local-name()='index-search'\]"]
     if { [llength $index_search] } {
         ns_log error "Index-search service not supported"
         return [list 0 "[_ imsld.lt_Index_search_service_]"]
     }
     
     # monitor service (level b)
-    set monitor_service [$service_node child all imsld:monitor]
+    set monitor_service [$service_node selectNodes "*\[local-name()='monitor'\]"]
     if { [llength $monitor_service] } {
         imsld::parse::validate_multiplicity -tree $monitor_service -multiplicity 1 -element_name monitor-service -equal
         set title [imsld::parse::get_title -node $monitor_service -prefix imsld]
@@ -1870,7 +1870,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
                             -parent_id $parent_id]
 
         # monitor: role-ref
-        set role_ref [$monitor_service child all imsld:role-ref]
+        set role_ref [$monitor_service selectNodes "*\[local-name()='role-ref'\]"]
         imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name role-ref -equal
         set ref [string tolower [imsld::parse::get_attribute -node $role_ref -attr_name ref]]
         if { ![db_0or1row get_role_id {
@@ -1885,15 +1885,15 @@ ad_proc -public imsld::parse::parse_and_create_service {
         }
         
         # monitor: self
-        set self [$monitor_service child all imsld:self]
-        if { [llength [$monitor_service child all imsld:self]] } {
+        set self [$monitor_service selectNodes "*\[local-name()='self'\]"]
+        if { [llength [$monitor_service selectNodes "*\[local-name()='self'\]"]] } {
             imsld::parse::validate_multiplicity -tree $self -multiplicity 1 -element_name self -equal
             set self_p t
         } else {
             set self_p f
         }
         
-        set imsld_item [$monitor_service child all imsld:item]
+        set imsld_item [$monitor_service selectNodes "*\[local-name()='item'\]"]
         imsld::parse::validate_multiplicity -tree $imsld_item -multiplicity 1 -element_name "imslditem(monitor service)" -equal
         set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                            -manifest_id $manifest_id \
@@ -1963,7 +1963,7 @@ ad_proc -public imsld::parse::parse_and_create_environment {
                             -parent_id $parent_id]
 
     # environment: learning object
-    set learning_objects [$environment_node child all imsld:learning-object]
+    set learning_objects [$environment_node selectNodes "*\[local-name()='learning-object'\]"]
     foreach learning_object $learning_objects {
         set learning_object_list [imsld::parse::parse_and_create_learning_object -learning_object_node $learning_object \
                                       -environment_id $environment_id \
@@ -1980,7 +1980,7 @@ ad_proc -public imsld::parse::parse_and_create_environment {
     }
 
     # environment: service
-    set services [$environment_node child all imsld:service]
+    set services [$environment_node selectNodes "*\[local-name()='service'\]"]
     foreach service $services {
         set service_list [imsld::parse::parse_and_create_service -service_node $service \
                               -environment_id $environment_id \
@@ -1995,7 +1995,7 @@ ad_proc -public imsld::parse::parse_and_create_environment {
     }
 
     # environment: environment ref
-    set environment_ref_list [$environment_node child all imsld:environment-ref]
+    set environment_ref_list [$environment_node selectNodes "*\[local-name()='environment-ref'\]"]
     if { [llength $environment_ref_list] } {
         foreach environment_ref $environment_ref_list {
             set ref [string tolower [imsld::parse::get_attribute -node $environment_ref -attr_name ref]]
@@ -2014,13 +2014,11 @@ ad_proc -public imsld::parse::parse_and_create_environment {
                 relation_add imsld_env_env_rel $environment_id $refrenced_env_id
             } else {
                 # case two, first verify that the referenced environment exists
-                set organizations [$manifest child all imscp:organizations]
-                if { ![llength $organizations] } {
-                    set organizations [$manifest child all organizations]
-                }                    
-                set environments [[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:environments]
+                set organizations [$manifest selectNodes "*\[local-name()=organizations\]"]
+                set environments [$organizations selectNodes {*[local-name()='learning-design']\*[local-name()='components']\*[local-name()='environments']}]
+#                set environments [[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:environments]
                 set found_p 0
-                foreach referenced_environment [$environments child all imsld:environment] {
+                foreach referenced_environment [$environments selectNodes "*\[local-name()='environment'\]"] {
                     set referenced_identifier [string tolower [imsld::parse::get_attribute -node $referenced_environment -attr_name identifier]]
                     if { [string eq $ref $referenced_identifier] } {
                         set found_p 1
@@ -2069,7 +2067,7 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
     @param parent_id Parent folder ID
 } {
     # Property Ref
-    set property_ref [$property_value_node child all imsld:property-ref]
+    set property_ref [$property_value_node selectNodes "*\[local-name()='property-ref'\]"]
     imsld::parse::validate_multiplicity -tree $property_ref -multiplicity 1 -element_name property-ref(property-value) -equal
     set ref [string tolower [imsld::parse::get_attribute -node $property_ref -attr_name ref]]
     if { ![db_0or1row get_property_id {
@@ -2091,12 +2089,12 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
     set expression_xml ""
     
     # Property Value
-    set property_value [$property_value_node child all imsld:property-value]
+    set property_value [$property_value_node selectNodes "*\[local-name()='property-value'\]"]
     if { [llength $property_value] } {
         imsld::parse::validate_multiplicity -tree $property_value -multiplicity 1 -element_name property-value(property-value) -equal
         
         # Langstring
-        set langstring [$property_value_node child all imsld:langstring]
+        set langstring [$property_value_node selectNodes "*\[local-name()='langstring'\]"]
         if { [llength $langstring] } {
             imsld::parse::validate_multiplicity -tree $langstring -multiplicity 1 -element_name langstring(property-value) -equal
             set langstring [imsld::parse::get_element_text -node $langstring]
@@ -2105,12 +2103,12 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
         } 
         
         # Calculate
-        set calculate [$property_value_node child all imsld:calculate]
+        set calculate [$property_value_node selectNodes "*\[local-name()='calculate'\]"]
         if { [llength $calculate] } {
             imsld::parse::validate_multiplicity -tree $calculate -multiplicity 1 -element_name calculate(property-value) -equal
 
             # Expression
-            set expression [$calculate child all imsld:expression]
+            set expression [$calculate selectNodes "*\[local-name()='expression'\]"]
             if { [llength $expression] } {
                 imsld::parse::validate_multiplicity -tree $expression -multiplicity 1 -element_name expression(property-value) -equal
             } 
@@ -2155,7 +2153,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     set title [imsld::parse::get_title -node $activity_node -prefix imsld]
     
     # Learning Activity: Learning Objectives (which are really an imsld_item that can have resource associated.)
-    set learning_objectives [$activity_node child all imsld:learning-objectives]
+    set learning_objectives [$activity_node selectNodes "*\[local-name()='learning-objectives'\]"]
     if { [llength $learning_objectives] } {
         imsld::parse::validate_multiplicity -tree $learning_objectives -multiplicity 1 -element_name learning-objectives(learning-activity) -equal
         set learning_objective_list [imsld::parse::parse_and_create_learning_objective -learning_objective_node $learning_objectives \
@@ -2174,7 +2172,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     }
     
     # Learning Activity: Prerequisites (which are really an imsld_item that can have resource associated.)
-    set prerequisites [$activity_node child all imsld:prerequisites] 
+    set prerequisites [$activity_node selectNodes "*\[local-name()='prerequisites'\]"] 
     if { [llength $prerequisites] } {
         imsld::parse::validate_multiplicity -tree $prerequisites -multiplicity 1 -element_name prerequisites(learning-activity) -equal
         set prerequisite_list [imsld::parse::parse_and_create_prerequisite -prerequisite_node $prerequisites \
@@ -2193,7 +2191,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     }
 
     # Learning Activity: Activity Description
-    set activity_description [$activity_node child all imsld:activity-description] 
+    set activity_description [$activity_node selectNodes "*\[local-name()='activity-description'\]"] 
     imsld::parse::validate_multiplicity -tree $activity_description -multiplicity 1 -element_name activity-description(learning-activity) -equal
     set title [expr { [string eq "" $title] ? "[imsld::parse::get_title -node $activity_description -prefix imsld]" : "$title" }]
     set activity_description_list [imsld::parse::parse_and_create_activity_description -activity_description_node $activity_description \
@@ -2214,7 +2212,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     # otherwise, the activity ends when "time-limit" is complete.
     # When this element does not occur, the activity is set to 'completed' by default.
     
-    set complete_activity [$activity_node child all imsld:complete-activity]
+    set complete_activity [$activity_node selectNodes "*\[local-name()='complete-activity'\]"]
     set user_choice_p f
     set complete_act_id ""
     set time_in_seconds ""
@@ -2223,7 +2221,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
         imsld::parse::validate_multiplicity -tree $complete_activity -multiplicity 1 -element_name complete-activity(learning-activity) -equal
         
         # Learning Activity: Complete Activity: User Choice
-        set user_choice [$complete_activity child all imsld:user-choice]
+        set user_choice [$complete_activity selectNodes "*\[local-name()='user-choice'\]"]
         if { [llength $user_choice] } {
             imsld::parse::validate_multiplicity -tree $user_choice -multiplicity 1 -element_name user-choice(learning-activity) -equal
             # that's it, the learner decides when the activity is completed
@@ -2231,7 +2229,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
         }
 
         # Learning Activity: Complete Activity: Time Limit
-        set time_limit [$complete_activity child all imsld:time-limit]
+        set time_limit [$complete_activity selectNodes "*\[local-name()='time-limit'\]"]
         if { [llength $time_limit] } {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(learning-activity) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
@@ -2239,7 +2237,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
         }
 
         # Learning Activity: Complete Activity: When Property Value is Set
-        set when_prop_value_is_set [$complete_activity child all imsld:when-property-value-is-set] 
+        set when_prop_value_is_set [$complete_activity selectNodes "*\[local-name()='when-property-value-is-set'\]"] 
         if { [llength $when_prop_value_is_set] } {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(learning-activity) -equal
             set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -property_value_node $when_prop_value_is_set \
@@ -2261,18 +2259,18 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     }
 
     # Learning Activity: On Completion
-    set on_completion [$activity_node child all imsld:on-completion]
+    set on_completion [$activity_node selectNodes "*\[local-name()='on-completion'\]"]
     set on_completion_id ""
     if { [llength $on_completion] } {
 
-        set feedback_desc [$on_completion child all imsld:feedback-description]
+        set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
         if { [llength $feedback_desc] } {
             imsld::parse::validate_multiplicity -tree $feedback_desc -multiplicity 1 -element_name feedback(learning-activity) -equal
             set feedback_title [imsld::parse::get_title -node $feedback_desc -prefix imsld]
             set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
                                       -content_type imsld_on_completion \
                                       -attributes [list [list feedback_title $feedback_title]]]
-            set feedback_items [$feedback_desc child all imsld:item]
+            set feedback_items [$feedback_desc selectNodes "*\[local-name()='item'\]"]
             foreach feedback_item $feedback_items {
                 set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                    -manifest_id $manifest_id \
@@ -2293,7 +2291,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
         }
 
         # Learning Activity: On Completion: Change Property Value
-        set change_property_value_list [$on_completion child all imsld:change-property-value] 
+        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
         foreach change_property_value $change_property_value_list {
             set change_prop_value_list [imsld::parse::parse_and_create_property_value -property_value_node $change_property_value \
                                             -manifest_id $manifest_id \
@@ -2323,7 +2321,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                                   -parent_id $parent_id]
     
     # Learning Activity: Environments
-    set environment_refs [$activity_node child all imsld:environment-ref]
+    set environment_refs [$activity_node selectNodes "*\[local-name()='environment-ref'\]"]
     if { [llength $environment_refs] } {
         foreach environment_ref_node $environment_refs {
             # the environments have been already parsed by now, 
@@ -2378,7 +2376,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     set title [imsld::parse::get_title -node $activity_node -prefix imsld]
 
     # Support Activity: Activity Description
-    set activity_description [$activity_node child all imsld:activity-description] 
+    set activity_description [$activity_node selectNodes "*\[local-name()='activity-description'\]"] 
     imsld::parse::validate_multiplicity -tree $activity_description -multiplicity 1 -element_name activity-description(support-activity) -equal
     set title [expr { [string eq "" $title] ? "[imsld::parse::get_title -node $activity_description -prefix imsld]" : "$title" }]
     set activity_description_list [imsld::parse::parse_and_create_activity_description -activity_description_node $activity_description \
@@ -2399,7 +2397,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     # otherwise, the activity ends when "time-limit" is complete.
     # When this element does not occur, the activity is set to 'completed' by default.
     
-    set complete_activity [$activity_node child all imsld:complete-activity]
+    set complete_activity [$activity_node selectNodes "*\[local-name()='complete-activity'\]"]
     set user_choice_p f
     set complete_act_id ""
     set time_in_seconds ""
@@ -2408,7 +2406,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
         imsld::parse::validate_multiplicity -tree $complete_activity -multiplicity 1 -element_name complete-activity(support-activity) -equal
         
         # Support Activity: Complete Activity: User Choice
-        set user_choice [$complete_activity child all imsld:user-choice]
+        set user_choice [$complete_activity selectNodes "*\[local-name()='user-choice'\]"]
         if { [llength $user_choice] } {
             imsld::parse::validate_multiplicity -tree $user_choice -multiplicity 1 -element_name user-choice(support-activity) -equal
             # that's it, the learner decides when the activity is completed
@@ -2416,7 +2414,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
         }
 
         # Support Activity: Complete Activity: Time Limit
-        set time_limit [$complete_activity child all imsld:time-limit]
+        set time_limit [$complete_activity selectNodes "*\[local-name()='time-limit'\]"]
         if { [llength $time_limit] } {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(support-activity) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
@@ -2424,7 +2422,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
         }
         
         # Support Activity: Complete Activity: When Property Value is Set
-        set when_prop_value_is_set [$complete_activity child all imsld:when-property-value-is-set] 
+        set when_prop_value_is_set [$complete_activity selectNodes "*\[local-name()='when-property-value-is-set'\]"] 
         if { [llength $when_prop_value_is_set] } {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(support-activity) -equal
             set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -property_value_node $when_prop_value_is_set \
@@ -2446,18 +2444,18 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     }
 
     # Support Activity: On completion
-    set on_completion [$activity_node child all imsld:on-completion]
+    set on_completion [$activity_node selectNodes "*\[local-name()='on-completion'\]"]
     set on_completion_id ""
     if { [llength $on_completion] } {
         imsld::parse::validate_multiplicity -tree $on_completion -multiplicity 1 -element_name on-completion(support-activity) -equal
-        set feedback_desc [$on_completion child all imsld:feedback-description]
+        set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
         if { [llength $feedback_desc] } {
             imsld::parse::validate_multiplicity -tree $feedback_desc -multiplicity 1 -element_name feedback(support-activity) -equal
             set feedback_title [imsld::parse::get_title -node $feedback_desc -prefix imsld]
             set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
                                       -content_type imsld_on_completion \
                                       -attributes [list [list feedback_title $feedback_title]]]
-            set feedback_items [$feedback_desc child all imsld:item]
+            set feedback_items [$feedback_desc selectNodes "*\[local-name()='item'\]"]
             foreach feedback_item $feedback_items {
                 set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                    -manifest_id $manifest_id \
@@ -2478,7 +2476,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
         }
         
         # Support Activity: On Completion: Change Property Value
-        set change_property_value_list [$on_completion child all imsld:change-property-value] 
+        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
         foreach change_property_value $change_property_value_list {
             set change_prop_value_list [imsld::parse::parse_and_create_property_value -property_value_node $change_property_value \
                                             -manifest_id $manifest_id \
@@ -2506,7 +2504,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                                  -parent_id $parent_id]
     
     # Support Activity: Role ref
-    set role_ref_list [$activity_node child all imsld:role-ref]
+    set role_ref_list [$activity_node selectNodes "*\[local-name()='role-ref'\]"]
     foreach role_ref $role_ref_list {
         set ref [string tolower [imsld::parse::get_attribute -node $role_ref -attr_name ref]]
         if { ![db_0or1row get_role_id {
@@ -2524,7 +2522,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     }
 
     # Support Activity: Environments
-    set environment_refs [$activity_node child all imsld:environment-ref]
+    set environment_refs [$activity_node selectNodes "*\[local-name()='environment-ref'\]"]
     if { [llength $environment_refs] } {
         foreach environment_ref_node $environment_refs {
             # the environments have been already parsed by now, 
@@ -2601,10 +2599,10 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                                    -parent_id $parent_id]
     
     # activity structure information
-    set structure_information [$activity_node child all imsld:information]
+    set structure_information [$activity_node selectNodes "*\[local-name()='information'\]"]
     if { [llength $structure_information] } {
         # parse the item, create it and map it to the activity structure
-        set information_item [$structure_information child all imsld:item]
+        set information_item [$structure_information selectNodes "*\[local-name()='item'\]"]
         if { ![llength $information_item] } {
             return [list 0 "[_ imsld.lt_Information_given_but_1]"]
         }
@@ -2629,7 +2627,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
     foreach node_ref [$activity_node childNodes] {
 
         # Activity Structure: Environments
-        set environment_refs [$activity_node child all imsld:environment-ref]
+        set environment_refs [$activity_node selectNodes "*\[local-name()='environment-ref'\]"]
         if { [string eq [$node_ref nodeName] imsld:environment-ref] } {
             # the environments have been already parsed by now, 
             # so the referenced environment has to be in the database.
@@ -2693,11 +2691,9 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                         incr sort_order
                     } else {
                         # search in the manifest ...
-                        set organizations [$manifest child all imscp:organizations]
-                        if { ![llength $organizations] } {
-                            set organizations [$manifest child all organizations]
-                        }                    
-                        set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
+                        set organizations [$manifest selectNodes {*[local-name()=organizations]}]
+                        set activity_structures [$organizations {*[local-name()='learning-design']\*[local-name()='components']\*[local-name()='activities']\*[local-name()='activity-structure']}]
+#                        set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
                         
                         set found_p 0
                         foreach referenced_activity_structure $activity_structures {
@@ -2800,11 +2796,9 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                         incr sort_order
                     } else {
                         # search in the manifest ...
-                        set organizations [$manifest child all imscp:organizations]
-                        if { ![llength $organizations] } {
-                            set organizations [$manifest child all organizations]
-                        }                    
-                        set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
+                        set organizations [$manifest selectNodes {*[local-name()='organizations']}]
+                        set activity_structures [$organizations selectNodes {*[local-name()='learning-design']\*[local-name()='components']\*[local-name()='activities']\*[local-name()='activity-structure']}]
+#                        set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
                         
                         set found_p 0
                         foreach referenced_activity_structure $activity_structures {
@@ -2890,11 +2884,9 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 incr sort_order
             } else {
                  # case two, first verify that the referenced activity structure exists
-                set organizations [$manifest child all imscp:organizations]
-                if { ![llength $organizations] } {
-                    set organizations [$manifest child all organizations]
-                }                    
-                set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
+                set organizations [$manifest selectNodes {*[local-name()='organizations']}]
+                set activity_structures [$organizations selectNodes {*\[local-name()='learning-design']\*[local-name()='components']\*[local-name()='activities']\*[local-name()='activity-structure']}]
+#                    set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
 
                 set found_p 0
                 foreach referenced_activity_structure $activity_structures {
@@ -2979,7 +2971,7 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
 
     # Role Part: Roles
     set role_id ""
-    set role_ref [$role_part_node child all imsld:role-ref]
+    set role_ref [$role_part_node selectNodes "*\[local-name()='role-ref'\]"]
     if { [llength $role_ref] } {
         imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name role-ref(role-part) -equal
         # the roles have already been parsed by now, so the referenced role has to be in the database.
@@ -3001,7 +2993,7 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
     set support_activity_id ""
     set activity_structure_id ""
 
-    set learning_activity_ref [$role_part_node child all imsld:learning-activity-ref]
+    set learning_activity_ref [$role_part_node selectNodes "*\[local-name()='learning-activity-ref'\]"]
     if { [llength $learning_activity_ref] } {
         imsld::parse::validate_multiplicity -tree $learning_activity_ref -multiplicity 1 -element_name learning-activity-ref(role-part) -equal
         # the learning activities have already been parsed by now, so the referenced learning activity has to be in the database.
@@ -3044,7 +3036,7 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
     }
 
     # Role Part: Support Activities
-    set support_activity_ref [$role_part_node child all imsld:support-activity-ref]
+    set support_activity_ref [$role_part_node selectNodes "*\[local-name()='support-activity-ref'\]"]
     if { [llength $support_activity_ref] } {
         imsld::parse::validate_multiplicity -tree $support_activity_ref -multiplicity 1 -element_name support-activity-ref(role-part) -equal
         # the support activities have already been parsed by now, so the referenced support activity has to be in the database.
@@ -3089,7 +3081,7 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
     # TO-DO: Role Part: Units of Learning
 
     # Role Part: Activity Structures
-    set activity_structure_ref [$role_part_node child all imsld:activity-structure-ref]
+    set activity_structure_ref [$role_part_node selectNodes "*\[local-name()='activity-structure-ref'\]"]
     if { [llength $activity_structure_ref] } {
         imsld::parse::validate_multiplicity -tree $activity_structure_ref -multiplicity 1 -element_name activity-structure-ref(role-part) -equal
         # the activity structures have already been parsed by now, so the referenced activity structure has to be in the database.
@@ -3132,7 +3124,7 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
     }
 
     # Role Part: Environments
-    set environment_ref [$role_part_node child all imsld:environment-ref]
+    set environment_ref [$role_part_node selectNodes "*\[local-name()='environment-ref'\]"]
     set environment_id ""
     if { [llength $environment_ref] } {
         imsld::parse::validate_multiplicity -tree $environment_ref -multiplicity 1 -element_name environment-ref(role-part) -equal
@@ -3195,7 +3187,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
     set title [imsld::parse::get_title -node $act_node -prefix imsld]
     
     # Act: Complete Act: Time Limit
-    set complete_act [$act_node child all imsld:complete-act]
+    set complete_act [$act_node selectNodes "*\[local-name()='complete-act'\]"]
     set complete_act_id ""
     set time_in_seconds ""
     set when_prop_value_is_set_id ""
@@ -3203,14 +3195,14 @@ ad_proc -public imsld::parse::parse_and_create_act {
     if { [llength $complete_act] } {
         imsld::parse::validate_multiplicity -tree $complete_act -multiplicity 1 -element_name complete-act -equal
         # Act: Complete Act: Time Limit
-        set time_limit [$complete_act child all imsld:time-limit]
+        set time_limit [$complete_act selectNodes "*\[local-name()='time-limit'\]"]
         if { [llength $time_limit] } {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(complete-act) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
             set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
         }
         # Act: Complete Act: When Property Value is Set
-        set when_prop_value_is_set [$complete_act child all imsld:when-property-value-is-set] 
+        set when_prop_value_is_set [$complete_act selectNodes "*\[local-name()='when-property-value-is-set'\]"] 
         if { [llength $when_prop_value_is_set] } {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(complete-act) -equal
             set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -property_value_node $when_prop_value_is_set \
@@ -3224,10 +3216,10 @@ ad_proc -public imsld::parse::parse_and_create_act {
             }
         }
         # Act: Complete Act: When Condition True
-        set when_condition_true [$complete_act child all imsld:when-condition-true] 
+        set when_condition_true [$complete_act selectNodes "*\[local-name()='when-condition-true'\]"] 
         if { [llength $when_condition_true] } {
             imsld::parse::validate_multiplicity -tree $when_condition_true -multiplicity 1 -element_name when-condition-true(complete-act) -equal
-            set role_ref [$when_condition_true child all imsld:role-ref]
+            set role_ref [$when_condition_true selectNodes "*\[local-name()='role-ref'\]"]
             imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name role-ref(when-condition-true) -equal
             # the roles have already been parsed by now, so the referenced role has to be in the database.
             # If not, return the error
@@ -3241,7 +3233,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
                 # error, referenced role does not exist
                 return [list 0 "[_ imsld.lt_Referenced_role_role_]"]
             }
-            set expression [$when_condition_true child all imsld:expression]
+            set expression [$when_condition_true selectNodes "*\[local-name()='expression'\]"]
             imsld::parse::validate_multiplicity -tree $expression -multiplicity 1 -element_name expression(when-condition-true) -equal
             
             set when_condition_true_id [imsld::item_revision_new -attributes [list [list role_id $role_id] \
@@ -3261,18 +3253,18 @@ ad_proc -public imsld::parse::parse_and_create_act {
     }
 
     # Act: On Completion
-    set on_completion [$act_node child all imsld:on-completion]
+    set on_completion [$act_node selectNodes "*\[local-name()='on-completion'\]"]
     set on_completion_id ""
     if { [llength $on_completion] } {
         imsld::parse::validate_multiplicity -tree $on_completion -multiplicity 1 -element_name on-completion(complete-act) -equal
-        set feedback_desc [$on_completion child all imsld:feedback-description]
+        set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
         if { [llength $feedback_desc] } {
             imsld::parse::validate_multiplicity -tree $feedback_desc -multiplicity 1 -element_name feedback(complete-act) -equal
             set feedback_title [imsld::parse::get_title -node $feedback_desc -prefix imsld]
             set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
                                       -content_type imsld_on_completion \
                                       -attributes [list [list feedback_title $feedback_title]]]
-            set feedback_items [$feedback_desc child all imsld:item]
+            set feedback_items [$feedback_desc selectNodes "*\[local-name()='item'\]"]
             foreach feedback_item $feedback_items {
                 set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                    -manifest_id $manifest_id \
@@ -3293,7 +3285,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
         }
         
         # Act: On Completion: Change Property Value
-        set change_property_value_list [$on_completion child all imsld:change-property-value] 
+        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
         foreach change_property_value $change_property_value_list {
             set change_prop_value_list [imsld::parse::parse_and_create_property_value -property_value_node $change_property_value \
                                             -manifest_id $manifest_id \
@@ -3318,7 +3310,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
                     -title $title]
     
     # Act: Role Parts
-    set role_parts [$act_node child all imsld:role-part]
+    set role_parts [$act_node selectNodes "*\[local-name()='role-part'\]"]
     imsld::parse::validate_multiplicity -tree $role_parts -multiplicity 1 -element_name role-parts -greather_than
     set count 1
     foreach role_part $role_parts {
@@ -3340,10 +3332,10 @@ ad_proc -public imsld::parse::parse_and_create_act {
     # Act: Complete Act: When role part comleted
     # The act is completed when the referenced role parts are completed
 
-    set complete_act [$act_node child all imsld:complete-act]
+    set complete_act [$act_node selectNodes "*\[local-name()='complete-act'\]"]
     if { [llength $complete_act] } {
         imsld::parse::validate_multiplicity -tree $complete_act -multiplicity 1 -element_name complete-act -equal
-        set when_rp_completed_list [$complete_act child all imsld:when-role-part-completed]
+        set when_rp_completed_list [$complete_act selectNodes "*\[local-name()='when-role-part-completed'\]"]
         foreach when_rp_completed $when_rp_completed_list {
             set ref [string tolower [imsld::parse::get_attribute -node $when_rp_completed -attr_name ref]]
             # verify that the referenced role part exists
@@ -3394,7 +3386,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
     set title [imsld::parse::get_title -node $play_node -prefix imsld]
     
     # Play: Complete Play
-    set complete_play [$play_node child all imsld:complete-play]
+    set complete_play [$play_node selectNodes "*\[local-name()='complete-play'\]"]
     set complete_act_id ""
     set time_in_seconds ""
     set when_last_act_completed_p f
@@ -3402,14 +3394,14 @@ ad_proc -public imsld::parse::parse_and_create_play {
     if { [llength $complete_play] } {
         imsld::parse::validate_multiplicity -tree $complete_play -multiplicity 1 -element_name complete-play -equal
         # Play: Complete Play: Time Limit
-        set time_limit [$complete_play child all imsld:time-limit]
+        set time_limit [$complete_play selectNodes "*\[local-name()='time-limit'\]"]
         if { [llength $time_limit] } {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(complete-play) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
             set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
         }
         # Play: Complete Play: When Property Value is Set
-        set when_prop_value_is_set [$complete_play child all imsld:when-property-value-is-set] 
+        set when_prop_value_is_set [$complete_play selectNodes "*\[local-name()='when-property-value-is-set'\]"] 
         if { [llength $when_prop_value_is_set] } {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(complete-play) -equal
             set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -property_value_node $when_prop_value_is_set \
@@ -3423,7 +3415,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
             }
         }
         # Play: Complete Play: When Last Act Completed
-        set when_last_act_completed [$complete_play child all imsld:when-last-act-completed]
+        set when_last_act_completed [$complete_play selectNodes "*\[local-name()='when-last-act-completed'\]"]
         if { [llength $when_last_act_completed] } {
             set when_last_act_completed_p t
         }
@@ -3435,18 +3427,18 @@ ad_proc -public imsld::parse::parse_and_create_play {
     }
 
     # Play: On Completion
-    set on_completion [$play_node child all imsld:on-completion]
+    set on_completion [$play_node selectNodes "*\[local-name()='on-completion'\]"]
     set on_completion_id ""
     if { [llength $on_completion] } {
         imsld::parse::validate_multiplicity -tree $on_completion -multiplicity 1 -element_name on-completion(complete-play) -equal
-        set feedback_desc [$on_completion child all imsld:feedback-description]
+        set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
         if { [llength $feedback_desc] } {
             imsld::parse::validate_multiplicity -tree $feedback_desc -multiplicity 1 -element_name feedback(complete-play) -equal
             set feedback_title [imsld::parse::get_title -node $feedback_desc -prefix imsld]
             set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
                                       -content_type imsld_on_completion \
                                       -attributes [list [list feedback_title $feedback_title]]]
-            set feedback_items [$feedback_desc child all imsld:item]
+            set feedback_items [$feedback_desc selectNodes "*\[local-name()='item'\]"]
             foreach feedback_item $feedback_items {
                 set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                    -manifest_id $manifest_id \
@@ -3467,7 +3459,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
         }
         
         # Play: On Completion: Change Property Value
-        set change_property_value_list [$on_completion child all imsld:change-property-value] 
+        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
         foreach change_property_value $change_property_value_list {
             set change_prop_value_list [imsld::parse::parse_and_create_property_value -property_value_node $change_property_value \
                                             -manifest_id $manifest_id \
@@ -3494,7 +3486,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
                      -parent_id $parent_id]
 
     # Play: Acts
-    set acts [$play_node child all imsld:act]
+    set acts [$play_node selectNodes "*\[local-name()='act'\]"]
     imsld::parse::validate_multiplicity -tree $acts -multiplicity 1 -element_name acts -greather_than
     set count 1
     foreach act $acts {
@@ -3645,18 +3637,14 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                          -parent_id $cr_folder_id]
 
     # organizaiton
-    set organizations [$manifest child all imscp:organizations]
-    if { ![llength $organizations] } {
-        set organizations [$manifest child all organizations]
-    }
+    set organizations [$manifest selectNodes {*[local-name()='organizations']}]
+
     imsld::parse::validate_multiplicity -tree $organizations -multiplicity 1 -element_name organizations -equal
     set organization_id [imsld::cp::organization_new -manifest_id $manifest_id -parent_id $cr_folder_id]
 
     # IMS-LD
-    set imsld [$organizations child all imsld:learning-design]
-    if { ![llength $imsld] } {
-        set imsld [$organizations child all learning-design]
-    }
+    set imsld [$organizations selectNodes "*\[local-name()='learning-design'\]"]
+
     imsld::parse::validate_multiplicity -tree $imsld -multiplicity 1 -element_name IMD-LD -equal
     set imsld_title [imsld::parse::get_title -node $imsld -prefix imsld]
     set imsld_identifier [string tolower [imsld::parse::get_attribute -node $imsld -attr_name identifier]]
@@ -3666,7 +3654,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     set imsld_sequence_p [imsld::parse::get_bool_attribute -node $imsld -attr_name sequence_used -default f]
 
     # IMS-LD: Learning Objectives (which are really an imsld_item that can have resource associated.)
-    set learning_objectives [$imsld child all imsld:learning-objectives]
+    set learning_objectives [$imsld selectNodes "*\[local-name()='learning-objectives'\]"]
     if { [llength $learning_objectives] } {
         imsld::parse::validate_multiplicity -tree $learning_objectives -multiplicity 1 -element_name learning-objectives(ims-ld) -equal
         set learning_objective_list [imsld::parse::parse_and_create_learning_objective -learning_objective_node $learning_objectives \
@@ -3685,7 +3673,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     }
 
     # IMS-LD: Prerequisites (which are really an imsld_item that can have resource associated.)
-    set prerequisites [$imsld child all imsld:prerequisites] 
+    set prerequisites [$imsld selectNodes "*\[local-name()='prerequisites'\]"] 
     if { [llength $prerequisites] } {
         imsld::parse::validate_multiplicity -tree $prerequisites -multiplicity 1 -element_name prerequisites(ims-ld) -equal
         set prerequisite_list [imsld::parse::parse_and_create_prerequisite -prerequisite_node $prerequisites \
@@ -3716,18 +3704,18 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                       -parent_id $cr_folder_id]
 
     # Components
-    set components [$imsld child all imsld:components]
+    set components [$imsld selectNodes "*\[local-name()='components'\]"]
     imsld::parse::validate_multiplicity -tree $components -multiplicity 1 -element_name components -equal
     set component_id [imsld::item_revision_new -attributes [list [list imsld_id $imsld_id]] \
                           -content_type imsld_component \
                           -parent_id $cr_folder_id]
 
     # Components: Roles
-    set roles [$components child all imsld:roles]
+    set roles [$components selectNodes "*\[local-name()='roles'\]"]
     imsld::parse::validate_multiplicity -tree $roles -multiplicity 1 -element_name roles -equal
 
     # Components: Roles: Learners    
-    set learner_list [$roles child all imsld:learner]
+    set learner_list [$roles selectNodes "*\[local-name()='learner'\]"]
     imsld::parse::validate_multiplicity -tree $learner_list -multiplicity 1 -element_name learners(roles) -greather_than
 
     foreach learner $learner_list {
@@ -3745,7 +3733,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     }
 
     # Components: Roles: Staff
-    set staff_list [$roles child all imsld:staff]
+    set staff_list [$roles selectNodes "*\[local-name()='staff'\]"]
     if { [llength $staff_list] } {
         foreach staff $staff_list {
             set staff_parse_list [imsld::parse::parse_and_create_role -role_type staff \
@@ -3763,7 +3751,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     }
 
     # Components: Properties
-    set properties [$components child all imsld:properties]
+    set properties [$components selectNodes "*\[local-name()='properties'\]"]
     if { [llength $properties] } {
         imsld::parse::validate_multiplicity -tree $properties -multiplicity 1 -element_name properties -equal
         foreach property $properties {
@@ -3780,10 +3768,10 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     # The environments are parsed now, and not the activities, because the activities may reference
     # the environments so they have to be in the database already.
 
-    set environment_component [$components child all imsld:environments]
+    set environment_component [$components selectNodes "*\[local-name()='environments'\]"]
     if { [llength $environment_component] } {
         imsld::parse::validate_multiplicity -tree $environment_component -multiplicity 1 -element_name environments -equal
-        set environments [$environment_component child all imsld:environment]
+        set environments [$environment_component selectNodes "*\[local-name()='environment'\]"]
         imsld::parse::validate_multiplicity -tree $environments -multiplicity 1 -element_name environments -greather_than
         foreach environment $environments {
             set environment_ref_list [imsld::parse::parse_and_create_environment -environment_node $environment \
@@ -3801,12 +3789,12 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     }
     
     # Componetns: Activities
-    set activities [$components child all imsld:activities]
+    set activities [$components selectNodes "*\[local-name()='activities'\]"]
     if { [llength $activities] } {
         imsld::parse::validate_multiplicity -tree $activities -multiplicity 1 -element_name components -equal
 
         # Componets: Activities: Learning Activities
-        set learning_activities [$activities child all imsld:learning-activity]
+        set learning_activities [$activities selectNodes "*\[local-name()='learning-activity'\]"]
         imsld::parse::validate_multiplicity -tree $learning_activities -multiplicity 1 -element_name learning-activities -greather_than
         
         foreach learning_activity $learning_activities {
@@ -3823,7 +3811,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         }
 
         # Componets: Activities: Support Activities
-        set support_activities [$activities child all imsld:support-activity]
+        set support_activities [$activities selectNodes "*\[local-name()='support-activity'\]"]
         
         foreach support_activity $support_activities {
             set support_activity_list [imsld::parse::parse_and_create_support_activity -component_id $component_id \
@@ -3839,7 +3827,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         }
 
         # Components: Activities: Activity Structures
-        set actvity_structures [$activities child all imsld:activity-structure]
+        set actvity_structures [$activities selectNodes "*\[local-name()='activity-structure'\]"]
         foreach activity_structure $actvity_structures {
             set activity_structure_list [imsld::parse::parse_and_create_activity_structure -component_id $component_id \
                                              -activity_node $activity_structure \
@@ -3855,11 +3843,11 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     }
 
     # Method
-    set method [$imsld child all imsld:method]
+    set method [$imsld selectNodes "*\[local-name()='method'\]"]
     imsld::parse::validate_multiplicity -tree $method -multiplicity 1 -element_name method -equal
 
     # Method: Complete Unit of Learning
-    set complete_unit_of_learning [$method child all imsld:complete-unit-of-learning]
+    set complete_unit_of_learning [$method selectNodes "*\[local-name()='complete-unit-of-learning'\]"]
     set complete_act_id ""
     set time_in_seconds ""
     set when_prop_value_is_set_id ""
@@ -3867,14 +3855,14 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         imsld::parse::validate_multiplicity -tree $complete_unit_of_learning -multiplicity 1 -element_name complete-unit-of-learning -equal
         
         # Method: Complete Unit of Learning: Time Limit
-        set time_limit [$complete_unit_of_learning child all imsld:time-limit]
+        set time_limit [$complete_unit_of_learning selectNodes "*\[local-name()='time-limit'\]"]
         if { [llength $time_limit] } {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(complete-unit-of-learning) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
             set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
         }
         # Method: Complete Unit of Learning: When Property Value is Set
-        set when_prop_value_is_set [$complete_unit_of_learning child all imsld:when-property-value-is-set] 
+        set when_prop_value_is_set [$complete_unit_of_learning selectNodes "*\[local-name()='when-property-value-is-set'\]"] 
         if { [llength $when_prop_value_is_set] } {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(complete-unit-of-learning) -equal
             set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -property_value_node $when_prop_value_is_set \
@@ -3895,18 +3883,18 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     }
 
     # Method: On Completion
-    set on_completion [$method child all imsld:on-completion]
+    set on_completion [$method selectNodes "*\[local-name()='on-completion'\]"]
     set on_completion_id ""
     if { [llength $on_completion] } {
         imsld::parse::validate_multiplicity -tree $on_completion -multiplicity 1 -element_name on-completion(method) -equal
-        set feedback_desc [$on_completion child all imsld:feedback-description]
+        set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
         if { [llength $feedback_desc] } {
             imsld::parse::validate_multiplicity -tree $feedback_desc -multiplicity 1 -element_name feedback(method) -equal
             set feedback_title [imsld::parse::get_title -node $feedback_desc -prefix imsld]
             set on_completion_id [imsld::item_revision_new -parent_id $cr_folder_id \
                                       -content_type imsld_on_completion \
                                       -attributes [list [list feedback_title $feedback_title]]]
-            set feedback_items [$feedback_desc child all imsld:item]
+            set feedback_items [$feedback_desc selectNodes "*\[local-name()='item'\]"]
             foreach feedback_item $feedback_items {
                 set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                    -manifest_id $manifest_id \
@@ -3927,7 +3915,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         }
         
         # Act: On Completion: Change Property Value
-        set change_property_value_list [$on_completion child all imsld:change-property-value] 
+        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
         foreach change_property_value $change_property_value_list {
             set change_prop_value_list [imsld::parse::parse_and_create_property_value -property_value_node $change_property_value \
                                             -manifest_id $manifest_id \
@@ -3950,7 +3938,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                         [list on_completion_id $on_completion_id]]]
 
     # Method: Plays
-    set plays [$method child all imsld:play]
+    set plays [$method selectNodes "*\[local-name()='play'\]"]
     imsld::parse::validate_multiplicity -tree $plays -multiplicity 1 -element_name plays -greather_than
     
     set count 1
@@ -3971,10 +3959,10 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
 
     # Method: Complete Method: When play comleted
     # The method is completed when the referenced plays are completed
-    set complete_play [$method child all imsld:complete-unit-of-learning]
+    set complete_play [$method selectNodes "*\[local-name()='complete-unit-of-learning'\]"]
     if { [llength $complete_play] } {
         imsld::parse::validate_multiplicity -tree $complete_play -multiplicity 1 -element_name complete-play -equal
-        set when_play_completed_list [$complete_play child all imsld:when-play-completed]
+        set when_play_completed_list [$complete_play selectNodes "*\[local-name()='when-play-completed'\]"]
         foreach when_play_completed $when_play_completed_list {
             set ref [string tolower [imsld::parse::get_attribute -node $when_play_completed -attr_name ref]]
             # verify that the referenced play exists
@@ -3993,7 +3981,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     }
     
     # Method: Conditions
-    set conditions [$method child all imsld:conditions]
+    set conditions [$method selectNodes "*\[local-name()='conditions'\]"]
     if {[llength $conditions]} {
         set imsld_ifs_list [$conditions selectNodes { *[local-name()='if'] } ]
      
@@ -4011,14 +3999,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
 
     # Resources
     # look for the resource in the manifest and add it to the CR
-    set manifest_resources_list [$manifest child all imscp:resources]
-    if { ![llength $manifest_resources_list] } {
-        set manifest_resources_list [$manifest child all resources]
-    }
-    set resources_list [$manifest_resources_list child all imscp:resource]
-    if { ![llength $resources_list] } {
-        set resources_list [$manifest_resources_list child all resource]
-    }
+    set manifest_resources_list [$manifest selectNodes {*[local-name()='resources']}]
+    set resources_list [$manifest_resources_list selectNodes {*[local-name()='resource']}]
 
     foreach resource_left $resources_list {
         set resource_identifier [string tolower [imsld::parse::get_attribute -node $resource_left -attr_name identifier]]
