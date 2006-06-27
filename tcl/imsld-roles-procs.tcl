@@ -315,7 +315,7 @@ ad_proc -public imsld::roles::get_users_in_role {
 
 ad_proc -public imsld::roles::get_role_id {
     -ref:required
-    -run_id:requir:required
+    -run_id:required
 } {
     Returns the role_id which has a given ref in a run, 0 if no matches found.
 } {

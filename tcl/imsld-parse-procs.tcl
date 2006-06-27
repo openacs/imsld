@@ -3540,7 +3540,7 @@ ad_proc -public imsld::parse::parse_and_create_if_then_else {
     }
     $temporal_node appendChild $then_node
 
-    set else_node [$condition_node selectNodes { following-sibling::*[local-name()='else' and position()=2] } ]
+    set else_node [$condition_node selectNodes { following-sibling::*[local-name()='else' and position()=1] } ]
     if { [llength $else_node] == 1 } {
         $temporal_node appendChild $else_node       
     } elseif { [llength $else_node] > 1 } {
