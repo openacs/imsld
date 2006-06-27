@@ -30,7 +30,12 @@ ad_proc -public imsld::condition::execute {
 	    }
 	} else {
 	    foreach elseNode $elseNodes {
-	        imsld::statement::execute -run_id $run_id -statement [$elseNode childNodes]
+            #an else node may contain an expression or another if_then_else
+            if { [string eq [ [$elseNode selectNodes {*[position()=1] } ] localName] "if" ] } {
+                imsld::condition::execute -run_id $run_id -condition $elseNode
+            } else {
+                imsld::statement::execute -run_id $run_id -statement [$elseNode childNodes]
+            }
 	    }
 	}
     }
@@ -138,7 +143,11 @@ ad_proc -public imsld::expression::eval {
 	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] nodeValue]
 	        return [expr {$propertyvalue0 == $propertyvalue1}]
 	    }
-	    {is-member-of-role} {                                
+	    {is-member-of-role} {
+            set roleref [$expressionNode getAttribute {ref}]
+            set role_id [imsld::roles::get_role_id -ref $roleref -run_id $run_id]
+            set users_list [imsld::roles::get_users_in_role -role_id $role_id -run_id $run_id]
+            return [ expr { [lsearch $users_list $user_id] > -1} ]
 	    }
 	}
     }
