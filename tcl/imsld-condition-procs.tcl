@@ -158,11 +158,19 @@ ad_proc -public imsld::statement::execute {
     -statement
 } {
 } {
+    if {![info exist user_id]} {
+	set user_id [ad_conn user_id] 
+    }
+
     foreach executeNode $statement {
-        switch -- [$executeNode nodeName] {
+        switch -- [$executeNode localName] {
             {show} {}
             {hide} {}
-            {change-property-value} {}
+            {change-property-value} {
+	        set propertyref [$executeNode selectNodes {*[local-name()='property-ref']}]
+	        set propertyvalue [[$executeNode selectNodes {*[local-name()='property-value']}] nodeValue]
+	        imsld::runtime::property::property_value_set -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}] -value $propertyvalue
+	    }
             {notification} {}
 	}
     }
