@@ -54,9 +54,116 @@ ad_proc -public imsld::expression::eval {
     foreach expressionNode $expression {
         switch -- [$expressionNode localName] {
 	    {complete} {
-	        foreach activityNode [$expressionNode childNodes] {
-	            # TODO
+
 		    return 1
+
+	        set activityNode [$expressionNode childNodes] 
+            switch -- [$activityNode localName] {
+            {learning-activity-ref} {
+                                     set la_ref [$activityNode getAttribute {ref}]
+                                     db_1row get_la_id {
+                                                    select ila.activity_id as la_id 
+                                                           iii.imsld_id as imsld_id
+                                                    from imsld_learning_activities ila, 
+                                                         imsld_imsldsi iii, 
+                                                         imsld_componentsi ici, 
+                                                         imsld_runs ir 
+                                                    where ir.run_id=:run_id and 
+                                                          ir.imsld_id=iii.imsld_id and 
+                                                          iii.item_id=ici.imsld_id and 
+                                                          ici.item_id=ila.component_id 
+                                                          and ila.identifier=:la_ref
+                                                      }
+                                    imsld::finish_component_element -imsld_id $imsld_id \
+                                                                    -run_id $run_id \
+                                                                    -element_id $la_id \
+                                                                    -type learning \
+                                                                    -user_id $user_id \
+                                                                    -code_call
+
+                                    }
+            {support-activity-ref} {
+                                   set sa_ref [$activityNode getAttribute {ref}]
+                                   db_1row get_sa_id {
+                                                     select isa.activity_id as sa_id 
+                                                            iii.imsld_id as imsld_id
+                                                            ir.run_id as run_id
+                                                     from imsld_support_activities isa, 
+                                                          imsld_imsldsi iii, 
+                                                          imsld_componentsi ici, 
+                                                          imsld_runs ir 
+                                                     where ir.run_id=:run_id and 
+                                                           ir.imsld_id=iii.imsld_id and 
+                                                           iii.item_id=ici.imsld_id and 
+                                                           ici.item_id=isa.component_id and 
+                                                           isa.identifier=:sa_ref 
+                                                     }
+                                     imsld::finish_component_element -imsld_id $imsld_id \
+                                                                    -run_id $run_id \
+                                                                    -element_id $sa_id \
+                                                                    -type support \
+                                                                    -user_id $user_id \
+                                                                    -code_call
+                                      
+                                   }
+            {unit-of-learning-href} {
+                                    #TODO 
+                                    }
+            {activity-structure-ref} {
+                                    se as_ref [$activityNode getAttribute {ref}]
+                                    db_1row get_as_id {
+                                                      select ias.structure_id as as_id
+                                                      from imsld_activity_structures ias, 
+                                                           imsld_componentsi ici, 
+                                                           imsld_imsldsi iii, 
+                                                           imsld_runs ir 
+                                                      where ir.run_id=:run_id and 
+                                                            ir.imsld_id=iii.imsld_id and 
+                                                            iii.item_id=ici.imsld_id and 
+                                                            ias.component_id=ici.item_id 
+                                                            ias.identifier=:as_ref
+                                                       }
+                                    #TODO meter la función finish
+                                     }
+            {act-ref} {
+                       set actref [$activityNode getAttribute {ref}]
+                       db_1row get_act_id {
+                                          select iai.act_id as act_id
+                                                 imi.imsld_id as imsld_id
+                                                 ipi.play_id as play_id
+                                          from imsld_acts iai, 
+                                               imsld_imsldsi iii, 
+                                               imsld_playsi ipi, 
+                                               imsld_methodsi imi, 
+                                               imsld_runs ir 
+                                          where ir.run_id=:run_id and 
+                                                ir.imsld_id=iii.imsld_id and 
+                                                iii.item_id=imi.imsld_id and 
+                                                imi.item_id=ipi.method_id and 
+                                                ipi.item_id=iai.play_id and
+                                                iai.identifier=:actref
+                                          }
+                      imsld:mark_act_finished -play_id $play_id -imsld_id $imsld_id \
+                                              -act_id $act_id -run_id $run_id -user_id $user_id
+                      }
+            {play-ref} {
+                       set playref [$activityNode getAttribute {ref}]
+                       db_1row get_play_id {
+                                           select ipi.play_id as play_id
+                                                  iii.imsld_id as imsld_id
+                                           from imsld_imsldsi iii, 
+                                                imsld_plays ipi, 
+                                                imsld_methodsi imi, 
+                                                imsld_runs ir 
+                                           where ir.run_id=:run_id and 
+                                                 ir.imsld_id=iii.imsld_id and 
+                                                 iii.item_id=imi.imsld_id and 
+                                                 imi.item_id=ipi.method_id and 
+                                                 ipi.identifier=:playref                
+                                            }
+                       imsld::mark_play_finished -play_id $play_id -imsld_id $imsld_id \
+                                                 -run_id $run_id  -user_id $user_id 
+                       }
 	        }
 	    }
 	    {not} { return [expr ![imsld::expression::eval -run_id $run_id -expression $expressionNode]] }
