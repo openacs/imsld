@@ -969,19 +969,19 @@
 	<fullquery name="imsld::process_environment_as_ul.get_learning_object_info">
 		<querytext>
 
-        select item_id as learning_object_item_id,
-        learning_object_id,
-        identifier,
-        coalesce(title,identifier) as lo_title,
-        class
-        from imsld_learning_objectsi, imsld_attribute_instances attr
-        where environment_id = :environment_item_id
-        and content_revision__is_live(learning_object_id) = 't'
-        and attr.owner_id = learning_object_id
+        select lo.item_id as learning_object_item_id,
+        lo.learning_object_id,
+        lo.identifier,
+        coalesce(lo.title,lo.identifier) as lo_title,
+        lo.class
+        from imsld_learning_objectsi lo, imsld_attribute_instances attr
+        where lo.environment_id = :environment_item_id
+        and content_revision__is_live(lo.learning_object_id) = 't'
+        and attr.owner_id = lo.learning_object_id
         and attr.run_id = :run_id
         and attr.type = 'isvisible'
         and attr.is_visible_p = 't'
-        order by creation_date
+        order by lo.creation_date
         
 		</querytext>
 	</fullquery>
@@ -1030,16 +1030,16 @@
 	<fullquery name="imsld::process_environment_as_ul.get_service_info">
 		<querytext>
 
-        select service_id,
-        item_id as service_item_id,
-        identifier,
-        service_type,
-        title as service_title,
-        class
-        from imsld_servicesi, imsld_attribute_instances attr
-        where environment_id = :environment_item_id
-        and content_revision__is_live(service_id) = 't'
-        and attr.owner_id = service_id
+        select ise.service_id,
+        ise.item_id as service_item_id,
+        ise.identifier,
+        ise.service_type,
+        ise.title as service_title,
+        ise.class
+        from imsld_servicesi ise, imsld_attribute_instances attr
+        where ise.environment_id = :environment_item_id
+        and content_revision__is_live(ise.service_id) = 't'
+        and attr.owner_id = ise.service_id
         and attr.run_id = :run_id
         and attr.type = 'isvisible'
         and attr.is_visible_p = 't'
@@ -1361,15 +1361,15 @@
 	<fullquery name="imsld::process_learning_activity_as_ul.activity_info">
 		<querytext>
 
-        select on_completion_id as on_completion_item_id,
-        prerequisite_id as prerequisite_item_id,
-        learning_objective_id as learning_objective_item_id,
-        activity_id,
-        title as activity_title
-        from imsld_learning_activitiesi, imsld_attribute_instances attr
-        where item_id = :activity_item_id
-        and content_revision__is_live(activity_id) = 't'
-        and attr.owner_id = activity_id
+        select la.on_completion_id as on_completion_item_id,
+        la.prerequisite_id as prerequisite_item_id,
+        la.learning_objective_id as learning_objective_item_id,
+        la.activity_id,
+        la.title as activity_title
+        from imsld_learning_activitiesi la, imsld_attribute_instances attr
+        where la.item_id = :activity_item_id
+        and content_revision__is_live(la.activity_id) = 't'
+        and attr.owner_id = la.activity_id
         and attr.run_id = :run_id
         and attr.type = 'isvisible'
         and attr.is_visible_p = 't'
@@ -1446,13 +1446,13 @@
 	<fullquery name="imsld::process_support_activity_as_ul.activity_info">
 		<querytext>
 
-        select on_completion_id as on_completion_item_id,
-        activity_id,
+        select isa.on_completion_id as on_completion_item_id,
+        isa.activity_id,
         attr.is_visible_p
-        from imsld_support_activitiesi, imsld_attribute_instances attr
-        where item_id = :activity_item_id
-        and content_revision__is_live(activity_id) = 't'
-        and attr.owner_id = activity_id
+        from imsld_support_activitiesi isa, imsld_attribute_instances attr
+        where isa.item_id = :activity_item_id
+        and content_revision__is_live(isa.activity_id) = 't'
+        and attr.owner_id = isa.activity_id
         and attr.run_id = :run_id
         and attr.type = 'isvisible'
         and attr.is_visible_p = 't'
