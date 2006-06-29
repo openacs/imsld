@@ -1050,6 +1050,7 @@ ad_proc -public imsld::role_part_finished_p {
         from imsld_role_parts
         where role_part_id = :role_part_id
     }
+    # check if the referenced activities have been finished
     switch $type {
         learning {
             if { [db_string completed_from_la {
@@ -1057,6 +1058,7 @@ ad_proc -public imsld::role_part_finished_p {
                 where completed_id = content_item__get_live_revision(:learning_activity_id)
                 and user_id = :user_id
                 and run_id = :run_id
+                and status = 'finished'
             }] } {
                 return 1
             }
@@ -1067,6 +1069,7 @@ ad_proc -public imsld::role_part_finished_p {
                 where completed_id = content_item__get_live_revision(:support_activity_id)
                 and user_id = :user_id
                 and run_id = :run_id
+                and status = 'finished'
             }] } {
                 return 1
             }
@@ -1173,6 +1176,7 @@ ad_proc -public imsld::play_finished_p {
         where completed_id = :play_id
         and user_id = :user_id
         and run_id = :run_id
+        and status = 'finished'
     }]
 } 
 
@@ -1194,6 +1198,7 @@ ad_proc -public imsld::method_finished_p {
         where completed_id = :method_id
         and user_id = :user_id
         and run_id = :run_id
+        and status = 'finished'
     }]
 } 
 
@@ -1215,6 +1220,7 @@ ad_proc -public imsld::imsld_finished_p {
         where completed_id = :imsld_id
         and user_id = :user_id
         and run_id = :run_id
+        and status = 'finished'
     }]
 } 
 
@@ -2353,6 +2359,7 @@ ad_proc -public imsld::generate_activities_tree {
                     where related_id = :activity_id 
                     and user_id = :user_id 
                     and run_id = :run_id
+                    and status = 'finished'
                 }]
                 if { $completed_activity_p || [lsearch -exact $next_activity_id_list $activity_id] != -1 && ([string eq $complete_act_id ""] || [string eq $is_visible_p "t"])  } {
                     set activity_node [$dom_doc createElement li]
@@ -2392,6 +2399,7 @@ ad_proc -public imsld::generate_activities_tree {
                     where related_id = :activity_id 
                     and user_id = :user_id 
                     and run_id = :run_id
+                    and status = 'finished'
                 }]
                 if { $completed_activity_p || [lsearch -exact $next_activity_id_list $activity_id] != -1 && ([string eq $complete_act_id ""] || [string eq $is_visible_p "t"])  } {
                     set activity_node [$dom_doc createElement li]
@@ -2887,6 +2895,7 @@ ad_proc -public imsld::finish_resource {
                     and icr.resource_id = stat.completed_id
                     and user_id = :user_id
                     and run_id = :run_id
+                    and status = 'finished'
                 }] } {
                     # if the resource is not in the imsld_status_user, then the resource is not finished
                     set all_finished_p 0
