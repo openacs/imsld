@@ -112,15 +112,18 @@ create table imsld_attribute_instances (
                     primary key,
     owner_id        integer
                     constraint imsld_atri_own_fk
-                    references cr_revisions,    -- learning or support acctivity, item, play, learning object or service
-    type            varchar(10)                 -- isvissible or class
+                    references cr_revisions,            -- learning or support acctivity, item, play, learning object or service
+    type            varchar(10)                         -- isvissible or class
                     check (type in ('isvisible','class')),
-    name            varchar(100),               -- for instance, for the class attribute we need to know the class name
+    identifier      varchar(100),                       -- class name or owner identifier
     run_id          integer
                     constraint imsld_pin_rn_fk  
                     references imsld_runs,
     is_visible_p    char(1)
-                    check (is_visible_p in ('t','f'))
+                    check (is_visible_p in ('t','f')),  -- title for the class
+    title           varchar(100),               
+    with_control_p  char(1) 
+                    check (with_control_p in ('t','f')) -- class attribute according to the spec
 );
 
 create index imsld_attri_own_idx on imsld_attribute_instances(owner_id);

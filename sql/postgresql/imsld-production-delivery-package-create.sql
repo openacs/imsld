@@ -161,23 +161,27 @@ begin
     return 0; 
 end;' language 'plpgsql';
 
-select define_function_args('imsld_attribute_instance__new','instance_id,owner_id,type,name,run_id,is_visible_p');
+select define_function_args('imsld_attribute_instance__new','instance_id,owner_id,type,identifier,run_id,is_visible_p,title,with_control_p');
 create or replace function imsld_attribute_instance__new (
     integer,        -- instance_id
     integer,        -- owner_id
     varchar,        -- type
-    varchar,        -- name
+    varchar,        -- identifier
     integer,        -- run_id
-    varchar         -- is_visible_p
+    varchar,        -- is_visible_p
+    varchar,        -- title
+    varchar         -- with_control_p
 )
 returns integer as '
 declare
     p_instance_id alias for $1; -- default null
     p_owner_id alias for $2;
     p_type alias for $3;
-    p_name alias for $4;
+    p_identifier alias for $4;
     p_run_id alias for $5;
     p_is_visible_p alias for $6;
+    p_title alias for $7;
+    p_with_control_p alias for $8;
 
     v_attribute_instance_id        integer;
 
@@ -186,8 +190,8 @@ begin
     select acs_object_id_seq.nextval
     into v_attribute_instance_id from dual;
 
-    insert into imsld_attribute_instances (instance_id, owner_id, type, name, run_id, is_visible_p)
-    values (v_attribute_instance_id, p_owner_id, p_type, p_name, p_run_id, p_is_visible_p);
+    insert into imsld_attribute_instances (instance_id, owner_id, type, identifier, run_id, is_visible_p, title, with_control_p)
+    values (v_attribute_instance_id, p_owner_id, p_type, p_identifier, p_run_id, p_is_visible_p, p_title, p_with_control_p);
 
     return v_attribute_instance_id;
 end;

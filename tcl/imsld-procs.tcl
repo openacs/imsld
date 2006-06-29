@@ -1234,7 +1234,7 @@ ad_proc -public imsld::class_visible_p {
         from imsld_attribute_instances
         where run_id = :run_id
         and type = 'class'
-        and name = :class_name
+        and identifier = :class_name
         and is_visible_p = 'f'
     }]]
 }

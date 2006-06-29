@@ -270,15 +270,95 @@ ad_proc -public imsld::statement::execute {
     }
 
     foreach executeNode $statement {
-        switch -- [$executeNode localName] {
-            {show} {}
-            {hide} {}
+        switch -- [$executeNode nodeName] {
+            {show} {
+                foreach refNodes [$executeNode childNodes] {
+                    switch -- [$refNodes localName] {
+                        {class} {
+                            set class [$refNodes getAttribute class ""]
+                            set title [$refNodes getAttribute title ""]
+                            set with_control_p [imsld::parse::get_bool_attribute -node $refNodes -attr_name with-control -default "f"]
+                            if { [string eq $class ""] } {
+                                
+                                # NOTE: according to the spec this attribute may be empty... what to do??
+                                ns_log notice "imsld::statement::execute: class ref is empty"
+                                continue
+                            }
+                            imsld::runtime::class::show_hide -class $class -run_id $run_id -title $title -with_control $with_control -action "show"
+                        }
+                        {environment-ref} {
+                            # the environments doesn't have any isvisible attribute, 
+                            # so we have to 'show' all the referenced elements
+                            imsld::runtime::environment::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show"
+                        }
+                        {activity-structure-ref} {
+                            imsld::runtime::activity_structure::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show"
+                        }
+                        {unit-of-learning-href} {
+                            # NOT IMPLEMENTED: noop
+                        }
+                        {item-ref} {
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show"
+                        }
+                        {learning-activity-ref} {
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show"
+                        }
+                        {support-activity-ref} {
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show"
+                        }
+                        {play-ref} {
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show"
+                        }
+                    }
+                }
+            }
+            {hide} {
+                foreach refNodes [$executeNode childNodes] {
+                    switch -- [$refNodes localName] {
+                        {class} {
+                            set class [$refNodes getAttribute class ""]
+                            set title [$refNodes getAttribute title ""]
+                            set with_control_p [imsld::parse::get_bool_attribute -node $refNodes -attr_name with-control -default "f"]
+                            if { [string eq $class ""] } {
+                                
+                                # NOTE: according to the spec this attribute may be empty... what to do??
+                                ns_log notice "imsld::statement::execute: class ref is empty"
+                                continue
+                            }
+                            imsld::runtime::class::show_hide -class $class -run_id $run_id -title $title -with_control $with_control -action "hide"
+                        }
+                        {environment-ref} {
+                            # the environments doesn't have any isvisible attribute, 
+                            # so we have to 'hide' all the referenced elements
+                            imsld::runtime::environment::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide"
+                        }
+                        {activity-structure-ref} {
+                            imsld::runtime::activity_structure::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide"
+                        }
+                        {unit-of-learning-href} {
+                            # NOT IMPLEMENTED: noop
+                        }
+                        {item-ref} {
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide"
+                        }
+                        {learning-activity-ref} {
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide"
+                        }
+                        {support-activity-ref} {
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide"
+                        }
+                        {play-ref} {
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide"
+                        }
+                    }
+                }
+            }
             {change-property-value} {
-	        set propertyref [$executeNode selectNodes {*[local-name()='property-ref']}]
-	        set propertyvalue [[$executeNode selectNodes {*[local-name()='property-value']}] nodeValue]
-	        imsld::runtime::property::property_value_set -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}] -value $propertyvalue
-	    }
-            {notification} {}
-	}
+                set propertyref [$executeNode selectNodes {*[local-name()='property-ref']}]
+                set propertyvalue [[$executeNode selectNodes {*[local-name()='property-value']}] nodeValue]
+                imsld::runtime::property::property_value_set -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}] -value $propertyvalue
+            }
+        }
+        {notification} {}
     }
 }

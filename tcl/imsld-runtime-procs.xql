@@ -28,8 +28,25 @@
         </querytext>
 	</fullquery>
 
-    <fullquery name="">
+    <fullquery name="imsld::runtime::calss::show_hide.set_class_shown">
         <querytext>
+            update imsld_attribute_instances
+            set is_visible_p = :is_visible_p,
+            with_control_p = :with_control_p,
+            title = :title
+            where run_id = :run_id
+              and identifier = :class
+              and type = 'class'
+        </querytext>
+	</fullquery>
+
+    <fullquery name="imsld::runtime::isvisible::show_hide.set_isvisible_shown">
+        <querytext>
+            update imsld_attribute_instances
+            set is_visible_p = is_visible_p
+            where run_id = :run_id
+              and identifier = :identifier
+              and type = 'isvisible'
         </querytext>
 	</fullquery>
 

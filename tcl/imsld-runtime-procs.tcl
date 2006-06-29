@@ -11,6 +11,10 @@ ad_library {
 namespace eval imsld {}
 namespace eval imsld::runtime {}
 namespace eval imsld::runtime::property {}
+namespace eval imsld::runtime::class {}
+namespace eval imsld::runtime::isvisible {}
+namespace eval imsld::runtime::activity_structure {}
+namespace eval imsld::runtime::environment {}
 
 ad_proc -public imsld::runtime::property::instance_value_set {
     -instance_id
@@ -164,5 +168,159 @@ ad_proc -public imsld::runtime::property::property_value_get {
     }
 }
 
+ad_proc -public imsld::runtime::class::show_hide {
+    -run_id
+    -class
+    -title
+    -with_control
+    -action:required
+} {
+    mark a class as showh or hidden. NOTE: not recursively
+} {
+    if { [string eq $action "show"] } {
+        set is_visible_p "t"
+    } else {
+        set is_visible_p "f"
+    }
 
+    db_dml set_class_shown_hidden { *SQL* }        
+}
+
+ad_proc -public imsld::runtime::isvisible::show_hide {
+    -run_id
+    -identifier
+    -action_required
+} {
+    mark a isvisible as showh. NOTE: not recursively
+} {
+    if { [string eq $action "show"] } {
+        set is_visible_p "t"
+    } else {
+        set is_visible_p "f"
+    }
+    db_dml set_class_shown_hidden { *SQL* }
+}
+
+ad_proc -public imsld::runtime::environment::show_hide {
+    -run_id
+    -identifier
+    -action
+} {
+    mark an environment as showh or hidden. NOTE: not recursively
+} {
+    # according to the spec, the environments doesn't have any isvisible attribute
+    # so we show the referenced learning objects and services
+
+    db_1row context_info {
+        select env.environment_id,
+        env.item_id as environment_item_id,
+        comp.component_id,
+        comp.item_id as component_item_id
+        from imsld_runs ir, imsld_componentsi comp, imsld_environmentsi env, imsld_imsldsi
+        where ir.run_id = :run_id
+        and ir.imsld_id = ii.imsld_id
+        and ii.item_id = comp.imsld_id
+        and env.identifier = :identifier
+        and env.component_id = comp.item_id
+    }
+    
+    # 1. show the learning objects
+    db_foreach learning_object {
+        select lo.learning_object_id,
+        lo.identifier as lo_identifier
+        from imsld_learning_objects lo, imsld_environmentsi env
+        where lo.environment_id = :environment_item_id
+    } {
+        imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $lo_identifier -action $action
+    }
+
+    # 2. show the services
+    db_foreach service {
+        select serv.service_id,
+        serv.identifier as serv_identifier
+        from imsld_services serv
+        where serv.environment_id = :environment_item_id
+    } {
+        imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $serv_identifier -action $action
+    }
+    
+}
+
+ad_proc -public imsld::runtime::activity_structure::show_hide {
+    -run_id
+    -identifier
+    -action
+} {
+    mark an activity structure as showh or hidden. NOTE: not recursively
+} {
+    # according to the spec, the activity structures doesn't have any isvisible attribute
+    # so we show the referenced activities, learning infos and environments
+
+    db_1row context_info {
+        select isa.structure_id,
+        isa.item as structure_item_id
+        from imsld_runs ir, imsld_componentsi comp, imsld_activity_structuresi isa, imsld_imsldsi
+        where ir.run_id = :run_id
+        and ir.imsld_id = ii.imsld_id
+        and ii.item_id = comp.imsld_id
+        and isa.identifier = :identifier
+        and isa.component_id = comp.item_id
+    }
+    
+    # 1. show the info
+    db_foreach information {
+        select ii.imsld_item_id,
+        ii.identifier as ii_identifier
+        from acs_rels ar, imsld_itemsi ii
+        where ar.object_id_one = :structure_item_id
+        and ar.object_id_two = ii.item_id
+    } {
+        imsld::runtime::isvisible::show -run_id $run_id -identifier $ii_identifier -action $action
+    }
+
+    # 2. show the learning activities
+    db_foreach learning_activity {
+        select la.item_id as activity_item_id,
+        la.identifier as la_identifier
+        from imsld_learning_activitiesi, acs_rels ar
+        where ar.object_id_one = :structure_item_id
+        and ar.object_id_two = la.item_id
+    } {
+        imsld::runtime::isvisible::show -run_id $run_id -identifier $la_identifier -action $action
+    }
+
+    # 3. show the support activities
+    db_foreach support_activity {
+        select sa.item_id as activity_item_id,
+        sa.identifier as sa_identifier
+        from imsld_support_activitiesi, acs_rels ar
+        where ar.object_id_one = :structure_item_id
+        and ar.object_id_two = sa.item_id
+    } {
+        imsld::runtime::isvisible::show -run_id $run_id -identifier $sa_identifier -action $action
+    }
+
+    # 4. show the activity structures
+    db_foreach structure {
+        select ias.item_id as structure_item_id,
+        ias.identifier as structure_identifier
+        from imsld_activity_structuresi, acs_rels ar
+        where ar.object_id_one = :structure_item_id
+        and ar.object_id_two = ias.item_id
+    } {
+        imsld::runtime::isvisible::show -run_id $run_id -identifier $structure_identifier -action $action
+    }
+
+    # 5. show the environments
+    db_foreach structure {
+        select env.item_id as env_item_id,
+        env.identifier as env_identifier
+        from imsld_environmentsi, acs_rels ar
+        where ar.object_id_one = :structure_item_id
+        and ar.object_id_two = env.item_id
+    } {
+        imsld::runtime::isvisible::show -run_id $run_id -identifier $structure_identifier -action $action
+    }
+    
+}
 

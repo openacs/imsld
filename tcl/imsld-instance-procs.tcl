@@ -172,7 +172,7 @@ ad_proc -public imsld::instance::instantiate_properties {
             where ar.object_id_one = :run_group_id
             and ar.rel_type = 'imsld_run_users_group_rel'
         } {
-            if { ![db_0or1row already_instantiated_p {
+            if { ![db_0or1row globpers_already_instantiated_p {
                 select 1 
                 from imsld_property_instances
                 where identifier = :identifier
@@ -203,7 +203,7 @@ ad_proc -public imsld::instance::instantiate_properties {
         where component_id = :component_item_id
         and type = 'global'
     } {
-        if { ![db_0or1row already_instantiated_p {
+        if { ![db_0or1row global_already_instantiated_p {
             select 1 
             from imsld_property_instances
             where identifier = :identifier
@@ -295,7 +295,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         and ir.component_id = :component_item_id
     }]]
 
-    # 1.1.4. learning objects
+    # 1.1.4. learning objects (environments)
     set linear_item_list [concat $linear_item_list [db_list item_in_lo {
         select ii.imsld_item_id
         from acs_rels ar, imsld_itemsi ii, imsld_learning_objectsi lo, imsld_environmentsi env
@@ -343,14 +343,14 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
                    and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                    or ii.imsld_item_id = :imsld_item_id)
         } {
-            if { ![db_0or1row already_instantiated_p {
+            if { ![db_0or1row info_as_already_instantiated_p {
                 select 1
                 from imsld_attribute_instances
                 where owner_id = :imsld_item_id
                 and run_id = :run_id
                 and type = 'isvisible'
             }] } {
-                set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $imsld_item_id] [list type "isvisible"] [list name ""] [list run_id $run_id] [list is_visible_p $is_visible_p]] imsld_attribute_instance new]
+                set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $imsld_item_id] [list type "isvisible"] [list identifier ""] [list run_id $run_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
             }
         }
     }
@@ -362,14 +362,14 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         from imsld_learning_activities la
         where la.component_id = :component_item_id
     } {
-        if { ![db_0or1row already_instantiated_p {
+        if { ![db_0or1row la_already_instantiated_p {
             select 1
             from imsld_attribute_instances
             where owner_id = :activity_id
             and run_id = :run_id
             and type = 'isvisible'
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $activity_id] [list type "isvisible"] [list name ""] [list run_id $run_id] [list is_visible_p $is_visible_p]] imsld_attribute_instance new]
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $activity_id] [list type "isvisible"] [list identifier ""] [list run_id $run_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
         }
     }
     
@@ -380,14 +380,14 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         from imsld_support_activities sa
         where sa.component_id = :component_item_id
     } {
-        if { ![db_0or1row already_instantiated_p {
+        if { ![db_0or1row sa_already_instantiated_p {
             select 1
             from imsld_attribute_instances
             where owner_id = :activity_id
             and run_id = :run_id
             and type = 'isvisible'
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $activity_id] [list type "isvisible"] [list name ""] [list run_id $run_id] [list is_visible_p $is_visible_p]] imsld_attribute_instance new]
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $activity_id] [list type "isvisible"] [list identifier ""] [list run_id $run_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
         }
     }
 
@@ -400,23 +400,23 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         where lo.environment_id = env.item_id
         and env.component_id = :component_item_id
     } {
-        if { ![db_0or1row already_instantiated_p {
+        if { ![db_0or1row lo_already_instantiated_p {
             select 1
             from imsld_attribute_instances
             where owner_id = :learning_object_id
             and run_id = :run_id
             and type = 'isvisible'
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $learning_object_id] [list type "isvisible"] [list name ""] [list run_id $run_id] [list is_visible_p $is_visible_p]] imsld_attribute_instance new]
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $learning_object_id] [list type "isvisible"] [list identifier ""] [list run_id $run_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
         }
-        if { ![string eq "" $class] && ![db_0or1row already_instantiated_p {
+        if { ![string eq "" $class] && ![db_0or1row lo_env_already_instantiated_p {
             select 1
             from imsld_attribute_instances
             where run_id = :run_id
             and type = 'class'
-            and name = :class
+            and identifier = :class
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list name $class] [list run_id $run_id] [list is_visible_p "t"]] imsld_attribute_instance new]
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
         }
     }
 
@@ -429,23 +429,23 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         where serv.environment_id = env.item_id
         and env.component_id = :component_item_id
     } {
-        if { ![db_0or1row already_instantiated_p {
+        if { ![db_0or1row serv_already_instantiated_p {
             select 1
             from imsld_attribute_instances
             where owner_id = :service_id
             and run_id = :run_id
             and type = 'isvisible'
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $service_id] [list type "isvisible"] [list name ""] [list run_id $run_id] [list is_visible_p $is_visible_p]] imsld_attribute_instance new]
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $service_id] [list type "isvisible"] [list identifier ""] [list run_id $run_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
         }
-        if { ![string eq "" $class] && ![db_0or1row already_instantiated_p {
+        if { ![string eq "" $class] && ![db_0or1row serv_env_already_instantiated_p {
             select 1
             from imsld_attribute_instances
             where run_id = :run_id
             and type = 'class'
-            and name = :class
+            and identifier = :class
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list name $class] [list run_id $run_id] [list is_visible_p "t"]] imsld_attribute_instance new]
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
         }
     }
 
@@ -457,14 +457,14 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         where play.method_id = im.item_id
         and im.imsld_id = :run_imsld_item_id
     } {
-        if { ![db_0or1row already_instantiated_p {
+        if { ![db_0or1row play_already_instantiated_p {
             select 1
             from imsld_attribute_instances
             where owner_id = :play_id
             and run_id = :run_id
             and type = 'isvisible'
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $play_id] [list type "isvisible"] [list name ""] [list run_id $run_id] [list is_visible_p $is_visible_p]] imsld_attribute_instance new]
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $play_id] [list type "isvisible"] [list identifier ""] [list run_id $run_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
         }
     }
 
