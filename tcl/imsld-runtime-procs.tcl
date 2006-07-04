@@ -30,6 +30,8 @@ ad_proc -public imsld::runtime::property::property_value_set {
     {-identifier ""}
     {-property_id ""}
 } {
+    Sets a property to the given value. If some restriction is violated returns 0 and an explanation.
+} {
     # context info
     db_1row context_info {
         select ic.item_id as component_item_id,
@@ -62,8 +64,79 @@ ad_proc -public imsld::runtime::property::property_value_set {
             where property_id = :property_id
         }
     }
+
+    # validate against restrictions
+    set enumeration_list [list]
+    db_foreach restriction {
+        select restriction_type,
+        value as restriction_value
+        from imsld_restrictions
+        where property_id = :property_id
+    } {
+        switch $restriction_type {
+            length {
+                if { [length $value] <> $restriction_value } {
+                    return [list 0 "<#_ The length must be %restriction_value% #>"]
+                }
+            }
+            minLength {
+                if { [length $value] < $restriction_value } {
+                    return [list 0 "<#_ The length must be greather than %restriction_value%  #>"]
+                }
+            }
+            maxLength {
+                if { [length $value] > $restriction_value } {
+                    return [list 0 "<#_ The length must be lower than %restriction_value% #>"]
+                }
+            }
+            enumeration {
+                lappend enumeration_list $restriction_value
+            }
+            maxInclusive {
+                if { $value > $restriction_value } {
+                    return [list 0 "<#_ The value must be lower than %restriction_value% (inclusive #>"]
+                }
+            }
+            minInclusive {
+                if {$value < $restriction_value } {
+                    return [list 0 "<#_ The value must be greather than %restriction_value% (inclusive) #>"]
+                }
+            }
+            maxExclusive {
+                if { $value >= $restriction_value } {
+                    return [list 0 "<#_ The value must be lower than %restriction_value% #>"]
+                }
+            }
+            minExclusive {
+                if { $value <= $restriction_value } { 
+                    return [list 0 "<#_ The value must be greather than %restriction_value% #>"]
+                }
+            }
+            totalDigits {
+                if { [expr int($value)] <> $restriction_value } {
+                    return [list 0 "<#_ The integer part can't have more than %restriction_value% digits #>"]
+                }
+            }
+            fractionDigits {
+                if { [expr [string length "$value"] - [string last "." "$value"] - 1] > $restriction_value } {
+                    return [list 0 "<#_ The decimal digits can't be more than %restriction_value% #>"]
+                }
+            }
+            pattern {
+                if { ![regexp "$restriction_value" $value] } {
+                    return [list 0 "<#_ The value (%value%) doesn't match with the expression %restriction_value% #>"]
+                }
+            }
+        }
+    }
+
+    if { [llength $enumeration_list] && [lsearch -exact $enumeration_list $value] == -1 } {
+        return [list 0 "<#_ The value %value% is not alowed  #>"]
+    }
+
     
     # instance info
+    set role_instance_id ""
     if { ![string eq $role_id ""] } {
         # find the role instance which the user belongs to
         set role_instance_id [imsld::roles::get_user_role_instance -run_id $run_id -role_id $role_id -user_id $user_id]

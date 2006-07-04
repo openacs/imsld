@@ -56,7 +56,8 @@ $dom_doc documentElement dom_root
 # 2. replace the view-property-group tags with the properties titles(optional) and value of all the referenced properties
 # 3. replace the set-property tags with input fields depending on the property type
 # 4. replace the set-groperty-group tags with one input field per each referenced property in the group 
-# 5. if there was at least one set-property* tag, add a submit button
+# 5. if there was at least one set-property* tag, add a submit button (FIX ME: currently for each set-property* a new form is added)
+# 6. for each class, check the visibility value in the database
 
 # 1. view-property nodes
 set view_property_nodes [$dom_root selectNodes {//*[local-name()='view-property']}]
@@ -249,7 +250,7 @@ foreach set_property_node $set_property_nodes {
 
     # get the restrictions and translate them to HTML
     # currently, in HTML we can only deal with the restriction types: length, 
-    # length, maxlength, enumeration and totaldigits. 
+    # maxlength, enumeration and totaldigits. 
     # the rest are checked after submission
     set restriction_nodes [list]
     set input_text_node ""
@@ -263,7 +264,6 @@ foreach set_property_node $set_property_nodes {
         switch $restriction_type {
             length -
             maxlength -
-            maxinclusive -
             totaldigits {
                 if { [string eq "" $input_text_node] } {
                     set input_text_node [$dom_doc createElement "input"]
@@ -285,25 +285,6 @@ foreach set_property_node $set_property_nodes {
                 }
                 $option_node appendChild [$dom_doc createTextNode "$restriction_value"]
                 $select_node appendChild $option_node
-            }
-            maxexclusive {
-                if { [string eq "" $input_text_node] } {
-                    set input_text_node [$dom_doc createElement "input"]
-                    $input_text_node setAttribute type "text"
-                    $input_text_node setAttribute name "instances_ids.$instance_id"
-                }
-                $input_text_node setAttribute maxlength [expr $restriction_value - 1]
-                $input_text_node setAttribute value "$value"
-            }
-            minlength {
-            }
-            mininclusive {
-            }
-            minexclusive {
-            }
-            pattern {
-            }
-            whitespace {
             }
         }
     } if_no_rows {
@@ -422,7 +403,7 @@ foreach set_property_group_node $set_property_group_nodes {
         set identifier [lindex $properties_in_group 5]
         # get the restrictions and translate them to HTML
         # currently, in HTML we can only deal with the restriction types: length, 
-        # length, maxlength, enumeration and totaldigits. 
+        # maxlength, enumeration and totaldigits. 
         # the rest are checked after submission
         set input_text_node ""
         set select_node ""
@@ -435,7 +416,6 @@ foreach set_property_group_node $set_property_group_nodes {
             switch $restriction_type {
                 length -
                 maxlength -
-                maxinclusive -
                 totaldigits {
                     if { [string eq "" $input_text_node] } {
                         set input_text_node [$dom_doc createElement "input"]
@@ -457,25 +437,6 @@ foreach set_property_group_node $set_property_group_nodes {
                     }
                     $option_node appendChild [$dom_doc createTextNode "$restriction_value"]
                     $select_node appendChild $option_node
-                }
-                maxexclusive {
-                    if { [string eq "" $input_text_node] } {
-                        set input_text_node [$dom_doc createElement "input"]
-                        $input_text_node setAttribute type "text"
-                        $input_text_node setAttribute name "instances_ids.$instance_id"
-                    }
-                    $input_text_node setAttribute maxlength [expr $restriction_value - 1]
-                    $input_text_node setAttribute value "$value"
-                }
-                minlength {
-                }
-                mininclusive {
-                }
-                minexclusive {
-                }
-                pattern {
-                }
-                whitespace {
                 }
             }
         } if_no_rows {
@@ -518,6 +479,35 @@ foreach set_property_group_node $set_property_group_nodes {
     $parent_node replaceChild $form_node $set_property_group_node
     # FIXME: tDOME apparently adds automathically  the attribute xmlns when replacing a node...
     $form_node removeAttribute xmlns
+}
+
+# 6. class nodes
+set class_nodes [$dom_root selectNodes {//*[@class]}]
+foreach class_node $class_nodes {
+    # get requested info
+    set class_name_list [split [string tolower [$class_node getAttribute class]] " "]
+
+    foreach class_name $class_name_list {
+        # get class info
+        if { [db_0or1row class_info {
+            select is_visible_p,
+            title,
+            with_control_p
+            from imsld_attribute_instances
+            where run_id = :run_id
+            and identifier = :class_name
+            and type = 'class'
+        }] } {
+            if { [string eq $is_visible_p "f"] } {
+                set style_value [$class_node getAttribute "style" ""]
+                if { ![string eq style_value ""] } {
+                    $class_node setAttribute "style" "display:none;"
+                } else {
+                    $class_node setAttribute "style" "${style_value}; display:none;"
+                }
+            }
+        }
+    }
 }
 
 ns_return 200 application/xml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>[$dom_root asXML]"
