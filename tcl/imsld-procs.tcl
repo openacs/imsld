@@ -300,10 +300,11 @@ ad_proc -public imsld::mark_role_part_finished {
     if { [imsld::role_part_finished_p -run_id $run_id -role_part_id $role_part_id -user_id $user_id] } {
         return
     }
-    db_1row role_part_info {
-        select item_id as role_part_item_id
-        from imsld_role_partsi
-        where role_part_id = :role_part_id
+    db_1row role_part_info { *SQL* }
+
+    # first, verify that the role part is marked as started
+    if { ![db_0or1row marked_as_started { *SQL* }] } {
+        db_dml mark_role_part_started { *SQL* }
     }
 
     db_dml insert_role_part { *SQL* }
@@ -614,6 +615,10 @@ ad_proc -public imsld::finish_component_element {
         # get the url to parse it and get the info
         set url [ns_conn url]
         regexp {finish-component-element-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([a-z]+).imsld$} $url match imsld_id run_id play_id act_id role_part_id element_id type
+    }
+    if { ![db_0or1row marked_as_started { *SQL* }] } {
+        # NOTE: this should not happen... UNLESS the activity is marked as finished automatically
+        db_dml mark_element_started { *SQL* }
     }
     # now that we have the necessary info, mark the finished element completed and return
     db_dml insert_element_entry { *SQL* }

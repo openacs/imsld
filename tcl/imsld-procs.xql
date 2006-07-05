@@ -203,6 +203,47 @@
 		</querytext>
 	</fullquery>
 
+	<fullquery name="imsld::mark_role_part_finished.marked_as_started">
+		<querytext>
+
+        select 1
+        from imsld_status_user
+        where run_id = :run_id
+        and user_id = :user_id
+        and status = 'started'
+        and act_id = :act_id
+        and related_id = :role_part_id
+            
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::mark_role_part_finished.mark_role_part_started">
+		<querytext>
+
+            insert into imsld_status_user (imsld_id,
+                                           run_id,
+                                           play_id,
+                                           act_id,
+                                           related_id,
+                                           user_id,
+                                           type,
+                                           status_date,
+                                           status) 
+            (
+             select :imsld_id,
+             :run_id,
+             :play_id,
+             :act_id,
+             :role_part_id,
+             :user_id,
+             'act',
+             now(),
+             'started'
+             where not exists (select 1 from imsld_status_user where run_id = :run_id and user_id = :user_id and related_id = :role_part_id and status = 'started')
+             )
+            
+		</querytext>
+	</fullquery>
 
 	<fullquery name="imsld::mark_role_part_finished.insert_role_part">
 		<querytext>
@@ -460,6 +501,55 @@
             acs_rel_type.drop_type( rel_type  => :rel_type,
                                     cascade_p => 't' );
             END;
+        
+		</querytext>
+	</fullquery>
+
+    <fullquery name="imsld::finish_component_element.marked_as_started">
+		<querytext>
+
+        select 1
+        from imsld_status_user
+        where run_id = :run_id
+        and user_id = :user_id
+        and status = 'started'
+        and related_id = :element_id
+        and imsld_id = :imsld_id
+        and play_id = :play_id
+        and role_part_id = :role_part_id
+                
+		</querytext>
+	</fullquery>
+
+    <fullquery name="imsld::finish_component_element.mark_element_started">
+		<querytext>
+
+
+            insert into imsld_status_user (
+                                           imsld_id,
+                                           run_id,
+                                           play_id,
+                                           act_id,
+                                           role_part_id,
+                                           related_id,
+                                           user_id,
+                                           type,
+                                           status_date,
+                                           status
+                                           )
+            (
+             select :imsld_id,
+             :run_id,
+             :play_id,
+             :act_id,
+             :role_part_id,
+             :element_id,
+             :user_id,
+             :type,
+             now(),
+             'started'
+             where not exists (select 1 from imsld_status_user where run_id = :run_id and user_id = :user_id and related_id = :element_id and status = 'started')
+             )
         
 		</querytext>
 	</fullquery>
