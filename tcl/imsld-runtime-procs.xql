@@ -28,7 +28,7 @@
         </querytext>
 	</fullquery>
 
-    <fullquery name="imsld::runtime::calss::show_hide.set_class_shown">
+    <fullquery name="imsld::runtime::class::show_hide.set_class_shown">
         <querytext>
             update imsld_attribute_instances
             set is_visible_p = :is_visible_p,
