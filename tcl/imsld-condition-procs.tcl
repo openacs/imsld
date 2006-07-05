@@ -11,17 +11,31 @@ namespace eval imsld::condition {}
 namespace eval imsld::expression {}
 namespace eval imsld::statement {}
 
+
+ad_proc -public imsld::condition::execute_all {
+    -run_id
+} {
+} {
+    set imsld_rev_id [db_string get_imsld_rev_id {SELECT imsld_id FROM imsld_runs WHERE run_id = :run_id}]
+    set imsld_id [db_string get_item_id {SELECT item_id FROM cr_revisions WHERE revision_id = :imsld_rev_id}]
+    set method_rev_id [db_string get_method_rev_id {SELECT method_id FROM imsld_methods WHERE imsld_id = :imsld_id}]
+    set method_id [db_string get_method_id {SELECT item_id FROM cr_revisions WHERE revision_id = :method_rev_id}]
+
+    db_foreach foreach_condition {SELECT condition_xml FROM imsld_conditions WHERE method_id = :method_id} {
+	dom parse $condition_xml document
+	$document documentElement condition
+	imsld::condition::execute -run_id $run_id -condition $condition
+    }
+}
+
 ad_proc -public imsld::condition::execute {
     -run_id
     -condition
 } {
 } {
-    dom parse $condition document
-    $document documentElement root
-
-    set ifNodes [$root selectNodes {*[local-name()='if']}]
-    set thenNodes [$root selectNodes {*[local-name()='then']}]
-    set elseNodes [$root selectNodes {*[local-name()='else']}]
+    set ifNodes [$condition selectNodes {*[local-name()='if']}]
+    set thenNodes [$condition selectNodes {*[local-name()='then']}]
+    set elseNodes [$condition selectNodes {*[local-name()='else']}]
 
     foreach ifNode $ifNodes {
         if {[imsld::expression::eval -run_id $run_id -expression [$ifNode childNodes]]} {
@@ -180,7 +194,7 @@ ad_proc -public imsld::expression::eval {
 	    }
 	    {no-value} {
 	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
-	        set propertyvalue [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}]]
+	        set propertyvalue [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
 	        return [empty_string_p $propertyvalue]
 	    }
 	    {users-in-role} {
@@ -191,12 +205,16 @@ ad_proc -public imsld::expression::eval {
             
 	    }
 	    {less-than} {
-	        set childs [$expressionNode childNodes]
-	        return [expr {[imsld::expression::eval -run_id $run_id -expression $childs[0]] < [imsld::expression::eval -run_id $run_id -expression $childs[1]]}]
+	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
+	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
+	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] nodeValue]
+	        return [expr {$propertyvalue0 < $propertyvalue1}]
 	    }
 	    {greater-than} {
-	        set childs [$expressionNode childNodes]
-	        return [expr {[imsld::expression::eval -run_id $run_id -expression $childs[0]] > [imsld::expression::eval -run_id $run_id -expression $childs[1]]}]
+	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
+	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
+	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] nodeValue]
+	        return [expr {$propertyvalue0 > $propertyvalue1}]
 	    }
 	    {divide} {
 	        set childs [$expressionNode childNodes]
@@ -240,13 +258,13 @@ ad_proc -public imsld::expression::eval {
 	    }
 	    {is-not} {
 	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
-	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}]]
+	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
 	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] nodeValue]
 	        return [expr {$propertyvalue0 != $propertyvalue1}]
 	    }
 	    {is} {
 	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
-	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}]]
+	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
 	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] nodeValue]
 	        return [expr {$propertyvalue0 == $propertyvalue1}]
 	    }

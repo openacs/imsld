@@ -160,6 +160,8 @@ ad_proc -public imsld::runtime::property::property_value_set {
         and prop.property_id = :property_id
     }
     imsld::runtime::property::instance_value_set -instance_id $instance_id -value $value
+
+    imsld::condition::execute_all -run_id $run_id
 }
 
 ad_proc -public imsld::runtime::time_uol_started {
