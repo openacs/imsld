@@ -242,13 +242,14 @@ ad_proc -public imsld::runtime::property::property_value_get {
              or (prop.type = 'globpers' and ins.party_id = :user_id))
         and prop.property_id = :property_id
     }
+    return $value
 }
 
 ad_proc -public imsld::runtime::class::show_hide {
     -run_id
     -class
-    -title
-    -with_control
+    {-title ""}
+    {-with_control_p ""}
     -action:required
 } {
     mark a class as showh or hidden. NOTE: not recursively
@@ -274,7 +275,7 @@ ad_proc -public imsld::runtime::isvisible::show_hide {
     } else {
         set is_visible_p "f"
     }
-    db_dml set_class_shown_hidden { *SQL* }
+    db_dml set_isvisible_shown_hidden { *SQL* }
 }
 
 ad_proc -public imsld::runtime::environment::show_hide {

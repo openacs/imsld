@@ -207,13 +207,13 @@ ad_proc -public imsld::expression::eval {
 	    {less-than} {
 	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
 	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
-	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] nodeValue]
+	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] text]
 	        return [expr {$propertyvalue0 < $propertyvalue1}]
 	    }
 	    {greater-than} {
 	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
 	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
-	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] nodeValue]
+	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] text]
 	        return [expr {$propertyvalue0 > $propertyvalue1}]
 	    }
 	    {divide} {
@@ -259,13 +259,13 @@ ad_proc -public imsld::expression::eval {
 	    {is-not} {
 	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
 	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
-	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] nodeValue]
+	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] text]
 	        return [expr {$propertyvalue0 != $propertyvalue1}]
 	    }
 	    {is} {
 	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
 	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
-	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] nodeValue]
+	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] text]
 	        return [expr {$propertyvalue0 == $propertyvalue1}]
 	    }
 	    {is-member-of-role} {
@@ -288,7 +288,7 @@ ad_proc -public imsld::statement::execute {
     }
 
     foreach executeNode $statement {
-        switch -- [$executeNode nodeName] {
+        switch -- [$executeNode localName] {
             {show} {
                 foreach refNodes [$executeNode childNodes] {
                     switch -- [$refNodes localName] {
@@ -302,7 +302,7 @@ ad_proc -public imsld::statement::execute {
                                 ns_log notice "imsld::statement::execute: class ref is empty"
                                 continue
                             }
-                            imsld::runtime::class::show_hide -class $class -run_id $run_id -title $title -with_control $with_control -action "show"
+                            imsld::runtime::class::show_hide -class $class -run_id $run_id -title $title -with_control_p $with_control_p -action "show"
                         }
                         {environment-ref} {
                             # the environments doesn't have any isvisible attribute, 
@@ -343,7 +343,7 @@ ad_proc -public imsld::statement::execute {
                                 ns_log notice "imsld::statement::execute: class ref is empty"
                                 continue
                             }
-                            imsld::runtime::class::show_hide -class $class -run_id $run_id -title $title -with_control $with_control -action "hide"
+                            imsld::runtime::class::show_hide -class $class -run_id $run_id -title $title -with_control_p $with_control_p -action "hide"
                         }
                         {environment-ref} {
                             # the environments doesn't have any isvisible attribute, 
@@ -373,7 +373,7 @@ ad_proc -public imsld::statement::execute {
             }
             {change-property-value} {
                 set propertyref [$executeNode selectNodes {*[local-name()='property-ref']}]
-                set propertyvalue [[$executeNode selectNodes {*[local-name()='property-value']}] nodeValue]
+                set propertyvalue [[$executeNode selectNodes {*[local-name()='property-value']}] text]
                 imsld::runtime::property::property_value_set -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}] -value $propertyvalue
             }
             {notification} {}
