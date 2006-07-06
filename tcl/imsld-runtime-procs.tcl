@@ -217,6 +217,7 @@ ad_proc -public imsld::runtime::property::property_value_get {
         }
     }
 
+    set role_instance_id ""
     if { ![string eq $role_id ""] } {
         # find the role instance which the user belongs to
         set role_instance_id [imsld::roles::get_user_role_instance -run_id $run_id -role_id $role_id -user_id $user_id]
