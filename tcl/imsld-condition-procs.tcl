@@ -376,7 +376,7 @@ ad_proc -public imsld::statement::execute {
                 set propertyvalue [[$executeNode selectNodes {*[local-name()='property-value']}] nodeValue]
                 imsld::runtime::property::property_value_set -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}] -value $propertyvalue
             }
+            {notification} {}
         }
-        {notification} {}
     }
 }
