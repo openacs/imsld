@@ -40,7 +40,7 @@
         </querytext>
 	</fullquery>
 
-    <fullquery name="imsld::runtime::isvisible::show_hide.set_isvisible_shown">
+    <fullquery name="imsld::runtime::isvisible::show_hide.set_isvisible_shown_hidden">
         <querytext>
             update imsld_attribute_instances
             set is_visible_p = :is_visible_p
