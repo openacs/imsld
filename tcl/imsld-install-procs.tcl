@@ -276,7 +276,7 @@ ad_proc -public imsld::install::init_content_repository {
 
     content::type::attribute::new -content_type imsld_property_value -attribute_name property_id -datatype number -pretty_name "#imsld.Property_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_property_value -attribute_name langstring -datatype string -pretty_name "#imsld.Langstring#" -column_spec "varchar(4000)"
-    content::type::attribute::new -content_type imsld_property_value -attribute_name expression_xml -datatype number -pretty_name "<#_ Calculate(expression) #>" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_property_value -attribute_name expression_xml -datatype number -pretty_name "#imsld.Calculateexpression#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_property_value -attribute_name property_value_ref -datatype number -pretty_name "#imsld.Property_Value_Ref#" -column_spec "integer"
 
     # complete acts

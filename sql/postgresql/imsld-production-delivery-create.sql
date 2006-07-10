@@ -120,8 +120,8 @@ create table imsld_attribute_instances (
                     constraint imsld_pin_rn_fk  
                     references imsld_runs,
     is_visible_p    char(1)
-                    check (is_visible_p in ('t','f')),  -- title for the class
-    title           varchar(100),               
+                    check (is_visible_p in ('t','f')),  
+    title           varchar(100),                       -- title for the class
     with_control_p  char(1) 
                     check (with_control_p in ('t','f')) -- class attribute according to the spec
 );

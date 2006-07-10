@@ -63,7 +63,7 @@ $dom_doc documentElement dom_root
 set view_property_nodes [$dom_root selectNodes {//*[local-name()='view-property']}]
 foreach view_property_node $view_property_nodes {
     # get requested info
-    set identifier [string tolower [$view_property_node getAttribute ref]]
+    set identifier [$view_property_node getAttribute ref]
     set view [$view_property_node getAttribute view "value"]
     set property_of [$view_property_node getAttribute property-of "self"]
 
@@ -133,7 +133,7 @@ set view_property_group_nodes [$dom_root selectNodes {//*[local-name()='view-pro
 set view_property_group_new_node [$dom_doc createElement p]
 foreach view_property_group_node $view_property_group_nodes {
     # get requested info
-    set identifier [string tolower [$view_property_group_node getAttribute ref]]
+    set identifier [$view_property_group_node getAttribute ref]
     set view [$view_property_group_node getAttribute view "value"]
     set property_of [$view_property_group_node getAttribute property-of "self"]
 
@@ -203,7 +203,7 @@ foreach view_property_group_node $view_property_group_nodes {
 set set_property_nodes [$dom_root selectNodes {//*[local-name()='set-property']}]
 foreach set_property_node $set_property_nodes {
     # get requested info
-    set identifier [string tolower [$set_property_node getAttribute ref]]
+    set identifier [$set_property_node getAttribute ref]
     set view [$set_property_node getAttribute view "value"]
     set property_of [$set_property_node getAttribute property-of "self"]
 
@@ -337,7 +337,7 @@ foreach set_property_node $set_property_nodes {
 set set_property_group_nodes [$dom_root selectNodes {//*[local-name()='set-property-group']}]
 foreach set_property_group_node $set_property_group_nodes {
     # get requested info
-    set identifier [string tolower [$set_property_group_node getAttribute ref]]
+    set identifier [$set_property_group_node getAttribute ref]
     set view [$set_property_group_node getAttribute view "value"]
     set property_of [$set_property_group_node getAttribute property-of "self"]
 
@@ -485,7 +485,7 @@ foreach set_property_group_node $set_property_group_nodes {
 set class_nodes [$dom_root selectNodes {//*[@class]}]
 foreach class_node $class_nodes {
     # get requested info
-    set class_name_list [split [string tolower [$class_node getAttribute class]] " "]
+    set class_name_list [split [$class_node getAttribute class] " "]
 
     foreach class_name $class_name_list {
         # get class info

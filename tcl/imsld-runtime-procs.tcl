@@ -76,17 +76,17 @@ ad_proc -public imsld::runtime::property::property_value_set {
         switch $restriction_type {
             length {
                 if { [length $value] <> $restriction_value } {
-                    return [list 0 "<#_ The length must be %restriction_value% #>"]
+                    return [list 0 "[_ imsld.lt_The_length_must_be_re]"]
                 }
             }
             minLength {
                 if { [length $value] < $restriction_value } {
-                    return [list 0 "<#_ The length must be greather than %restriction_value%  #>"]
+                    return [list 0 "[_ imsld.lt_The_length_must_be_gr]"]
                 }
             }
             maxLength {
                 if { [length $value] > $restriction_value } {
-                    return [list 0 "<#_ The length must be lower than %restriction_value% #>"]
+                    return [list 0 "[_ imsld.lt_The_length_must_be_lo]"]
                 }
             }
             enumeration {
@@ -94,44 +94,44 @@ ad_proc -public imsld::runtime::property::property_value_set {
             }
             maxInclusive {
                 if { $value > $restriction_value } {
-                    return [list 0 "<#_ The value must be lower than %restriction_value% (inclusive #>"]
+                    return [list 0 "[_ imsld.lt_The_value_must_be_low]"]
                 }
             }
             minInclusive {
                 if {$value < $restriction_value } {
-                    return [list 0 "<#_ The value must be greather than %restriction_value% (inclusive) #>"]
+                    return [list 0 "[_ imsld.lt_The_value_must_be_gre]"]
                 }
             }
             maxExclusive {
                 if { $value >= $restriction_value } {
-                    return [list 0 "<#_ The value must be lower than %restriction_value% #>"]
+                    return [list 0 "[_ imsld.lt_The_value_must_be_low_1]"]
                 }
             }
             minExclusive {
                 if { $value <= $restriction_value } { 
-                    return [list 0 "<#_ The value must be greather than %restriction_value% #>"]
+                    return [list 0 "[_ imsld.lt_The_value_must_be_gre_1]"]
                 }
             }
             totalDigits {
                 if { [expr int($value)] <> $restriction_value } {
-                    return [list 0 "<#_ The integer part can't have more than %restriction_value% digits #>"]
+                    return [list 0 "[_ imsld.lt_The_integer_part_cant]"]
                 }
             }
             fractionDigits {
                 if { [expr [string length "$value"] - [string last "." "$value"] - 1] > $restriction_value } {
-                    return [list 0 "<#_ The decimal digits can't be more than %restriction_value% #>"]
+                    return [list 0 "[_ imsld.lt_The_decimal_digits_ca]"]
                 }
             }
             pattern {
                 if { ![regexp "$restriction_value" $value] } {
-                    return [list 0 "<#_ The value (%value%) doesn't match with the expression %restriction_value% #>"]
+                    return [list 0 "[_ imsld.lt_The_value_value_doesn]"]
                 }
             }
         }
     }
 
     if { [llength $enumeration_list] && [lsearch -exact $enumeration_list $value] == -1 } {
-        return [list 0 "<#_ The value %value% is not alowed  #>"]
+        return [list 0 "[_ imsld.lt_The_value_value_is_no]"]
     }
 
     
@@ -148,7 +148,8 @@ ad_proc -public imsld::runtime::property::property_value_set {
     }
 
     db_1row get_property_instance {
-        select ins.instance_id
+        select ins.instance_id,
+        ins.value as old_value
         from imsld_propertiesi prop,
         imsld_property_instances ins
         where prop.property_id = ins.property_id
@@ -161,7 +162,10 @@ ad_proc -public imsld::runtime::property::property_value_set {
     }
     imsld::runtime::property::instance_value_set -instance_id $instance_id -value $value
 
-    imsld::condition::execute_all -run_id $run_id
+    # recursive call only if the property value has changed
+    if { $old_value != $value } {
+        imsld::condition::execute_all -run_id $run_id
+    }
 }
 
 ad_proc -public imsld::runtime::time_uol_started {
@@ -266,15 +270,16 @@ ad_proc -public imsld::runtime::class::show_hide {
 ad_proc -public imsld::runtime::isvisible::show_hide {
     -run_id
     -identifier
-    -action_required
+    -action:required
 } {
     mark a isvisible as showh. NOTE: not recursively
 } {
     if { [string eq $action "show"] } {
-        set is_visible_p "t"
+         set is_visible_p "t"
     } else {
-        set is_visible_p "f"
+         set is_visible_p "f"
     }
+   
     db_dml set_isvisible_shown_hidden { *SQL* }
 }
 

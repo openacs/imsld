@@ -21,10 +21,12 @@ ad_proc -public imsld::condition::execute_all {
     set method_rev_id [db_string get_method_rev_id {SELECT method_id FROM imsld_methods WHERE imsld_id = :imsld_id}]
     set method_id [db_string get_method_id {SELECT item_id FROM cr_revisions WHERE revision_id = :method_rev_id}]
 
-    db_foreach foreach_condition {SELECT condition_xml FROM imsld_conditions WHERE method_id = :method_id} {
-	dom parse $condition_xml document
-	$document documentElement condition
-	imsld::condition::execute -run_id $run_id -condition $condition
+    foreach condition_xml [db_list foreach_condition {
+        SELECT condition_xml FROM imsld_conditions WHERE method_id = :method_id
+    }] {
+        dom parse $condition_xml document
+        $document documentElement condition
+        imsld::condition::execute -run_id $run_id -condition $condition
     }
 }
 
@@ -39,19 +41,19 @@ ad_proc -public imsld::condition::execute {
 
     foreach ifNode $ifNodes {
         if {[imsld::expression::eval -run_id $run_id -expression [$ifNode childNodes]]} {
-	    foreach thenNode $thenNodes {
-	        imsld::statement::execute -run_id $run_id -statement [$thenNode childNodes]
-	    }
-	} else {
-	    foreach elseNode $elseNodes {
-            #an else node may contain an expression or another if_then_else
-            if { [string eq [ [$elseNode selectNodes {*[position()=1] } ] localName] "if" ] } {
-                imsld::condition::execute -run_id $run_id -condition $elseNode
-            } else {
-                imsld::statement::execute -run_id $run_id -statement [$elseNode childNodes]
+            foreach thenNode $thenNodes {
+                imsld::statement::execute -run_id $run_id -statement [$thenNode childNodes]
             }
-	    }
-	}
+        } else {
+            foreach elseNode $elseNodes {
+                #an else node may contain an expression or another if_then_else
+                if { [string eq [ [$elseNode selectNodes {*[position()=1] } ] localName] "if" ] } {
+                    imsld::condition::execute -run_id $run_id -condition $elseNode
+                } else {
+                    imsld::statement::execute -run_id $run_id -statement [$elseNode childNodes]
+                }
+            }
+        }
     }
 }
 
@@ -67,214 +69,225 @@ ad_proc -public imsld::expression::eval {
 
     foreach expressionNode $expression {
         switch -- [$expressionNode localName] {
-	    {complete} {
+            {complete} {
 
-		    return 1
+                return 1
 
-	        set activityNode [$expressionNode childNodes] 
-            switch -- [$activityNode localName] {
-            {learning-activity-ref} {
-                                     set la_ref [$activityNode getAttribute {ref}]
-                                     db_1row get_la_id {
-                                                    select ila.activity_id as la_id 
-                                                           iii.imsld_id as imsld_id
-                                                    from imsld_learning_activities ila, 
-                                                         imsld_imsldsi iii, 
-                                                         imsld_componentsi ici, 
-                                                         imsld_runs ir 
-                                                    where ir.run_id=:run_id and 
-                                                          ir.imsld_id=iii.imsld_id and 
-                                                          iii.item_id=ici.imsld_id and 
-                                                          ici.item_id=ila.component_id 
-                                                          and ila.identifier=:la_ref
-                                                      }
-                                    imsld::finish_component_element -imsld_id $imsld_id \
-                                                                    -run_id $run_id \
-                                                                    -element_id $la_id \
-                                                                    -type learning \
-                                                                    -user_id $user_id \
-                                                                    -code_call
+                set activityNode [$expressionNode childNodes] 
+                switch -- [$activityNode localName] {
+                    {learning-activity-ref} {
+                        set la_ref [$activityNode getAttribute {ref}]
+                        db_1row get_la_id {
+                            select ila.activity_id as la_id 
+                            iii.imsld_id as imsld_id
+                            from imsld_learning_activities ila, 
+                            imsld_imsldsi iii, 
+                            imsld_componentsi ici, 
+                            imsld_runs ir 
+                            where ir.run_id=:run_id and 
+                            ir.imsld_id=iii.imsld_id and 
+                            iii.item_id=ici.imsld_id and 
+                            ici.item_id=ila.component_id 
+                            and ila.identifier=:la_ref
+                        }
+                        imsld::finish_component_element -imsld_id $imsld_id \
+                            -run_id $run_id \
+                            -element_id $la_id \
+                            -type learning \
+                            -user_id $user_id \
+                            -code_call
 
-                                    }
-            {support-activity-ref} {
-                                   set sa_ref [$activityNode getAttribute {ref}]
-                                   db_1row get_sa_id {
-                                                     select isa.activity_id as sa_id 
-                                                            iii.imsld_id as imsld_id
-                                                            ir.run_id as run_id
-                                                     from imsld_support_activities isa, 
-                                                          imsld_imsldsi iii, 
-                                                          imsld_componentsi ici, 
-                                                          imsld_runs ir 
-                                                     where ir.run_id=:run_id and 
-                                                           ir.imsld_id=iii.imsld_id and 
-                                                           iii.item_id=ici.imsld_id and 
-                                                           ici.item_id=isa.component_id and 
-                                                           isa.identifier=:sa_ref 
-                                                     }
-                                     imsld::finish_component_element -imsld_id $imsld_id \
-                                                                    -run_id $run_id \
-                                                                    -element_id $sa_id \
-                                                                    -type support \
-                                                                    -user_id $user_id \
-                                                                    -code_call
-                                      
-                                   }
-            {unit-of-learning-href} {
-                                    #TODO 
-                                    }
-            {activity-structure-ref} {
-                                    se as_ref [$activityNode getAttribute {ref}]
-                                    db_1row get_as_id {
-                                                      select ias.structure_id as as_id
-                                                      from imsld_activity_structures ias, 
-                                                           imsld_componentsi ici, 
-                                                           imsld_imsldsi iii, 
-                                                           imsld_runs ir 
-                                                      where ir.run_id=:run_id and 
-                                                            ir.imsld_id=iii.imsld_id and 
-                                                            iii.item_id=ici.imsld_id and 
-                                                            ias.component_id=ici.item_id 
-                                                            ias.identifier=:as_ref
-                                                       }
-                                    #TODO meter la función finish
-                                     }
-            {act-ref} {
-                       set actref [$activityNode getAttribute {ref}]
-                       db_1row get_act_id {
-                                          select iai.act_id as act_id
-                                                 imi.imsld_id as imsld_id
-                                                 ipi.play_id as play_id
-                                          from imsld_acts iai, 
-                                               imsld_imsldsi iii, 
-                                               imsld_playsi ipi, 
-                                               imsld_methodsi imi, 
-                                               imsld_runs ir 
-                                          where ir.run_id=:run_id and 
-                                                ir.imsld_id=iii.imsld_id and 
-                                                iii.item_id=imi.imsld_id and 
-                                                imi.item_id=ipi.method_id and 
-                                                ipi.item_id=iai.play_id and
-                                                iai.identifier=:actref
-                                          }
-                      imsld:mark_act_finished -play_id $play_id -imsld_id $imsld_id \
-                                              -act_id $act_id -run_id $run_id -user_id $user_id
-                      }
-            {play-ref} {
-                       set playref [$activityNode getAttribute {ref}]
-                       db_1row get_play_id {
-                                           select ipi.play_id as play_id
-                                                  iii.imsld_id as imsld_id
-                                           from imsld_imsldsi iii, 
-                                                imsld_plays ipi, 
-                                                imsld_methodsi imi, 
-                                                imsld_runs ir 
-                                           where ir.run_id=:run_id and 
-                                                 ir.imsld_id=iii.imsld_id and 
-                                                 iii.item_id=imi.imsld_id and 
-                                                 imi.item_id=ipi.method_id and 
-                                                 ipi.identifier=:playref                
-                                            }
-                       imsld::mark_play_finished -play_id $play_id -imsld_id $imsld_id \
-                                                 -run_id $run_id  -user_id $user_id 
-                       }
-	        }
-	    }
-	    {not} { return [expr ![imsld::expression::eval -run_id $run_id -expression $expressionNode]] }
-	    {current-datetime} { return [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%S"] -gmt 1 }
-	    {datetime-activity-started} {
-	        # TODO what's the actual way this is enconded in the XML? any examples?
-		return TODO
-		set activity_ref [$expressionNode getAttribute {ref}]
-		#set activity_id [] # need to get the activity_id from the activity_ref
-		return [imsld::runtime::date_time_activity_started -run_id $run_id -user_id $user_id -activity_id $activity_id]
-	    }
-	    {time-unit-of-learning-started} {
-	        return [imsld::runtime::time_uol_started -run_id $run_id]
-	    }
-	    {no-value} {
-	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
-	        set propertyvalue [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
-	        return [empty_string_p $propertyvalue]
-	    }
-	    {users-in-role} {
-	        # TODO Investigate usage in an expression
-            set roleref_value [$expressionNode selectNodes {*[local-name()='role-ref']/@ref}]
-            set role_id [imsld::roles::get_role_id -ref $roleref_value -run_id $run_id]
-            set persons_in_role [imsld::roles::get_users_in_role -run_id $run_id -role_id $role_id]
-            
-	    }
-	    {less-than} {
-	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
-	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
-	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] text]
-	        return [expr {$propertyvalue0 < $propertyvalue1}]
-	    }
-	    {greater-than} {
-	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
-	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
-	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] text]
-	        return [expr {$propertyvalue0 > $propertyvalue1}]
-	    }
-	    {divide} {
-	        set childs [$expressionNode childNodes]
-	        return [expr {[imsld::expression::eval -run_id $run_id -expression $childs[0]] / [imsld::expression::eval -run_id $run_id -expression $childs[1]]}]
-	    }
-	    {multiply} {
-	        set childs [$expressionNode childNodes]
-		set returnvalue 0
-		foreach child $childs {
-		    set returnvalue [expr {$returnvalue * [imsld::expression::eval -run_id $run_id -expression $child]}]
-		}
-	        return $returnvalue
-	    }
-	    {substract} {
-	        set childs [$expressionNode childNodes]
-	        return [expr {[imsld::expression::eval -run_id $run_id -expression $childs[0]] - [imsld::expression::eval -run_id $run_id -expression $childs[1]]}]
-	    }
-	    {sum} {
-	        set childs [$expressionNode childNodes]
-		set returnvalue 0
-		foreach child $childs {
-		    set returnvalue [expr {$returnvalue + [imsld::expression::eval -run_id $run_id -expression $child]}]
-		}
-	        return $returnvalue
-	    }
-	    {or} {
-	        set childs [$expressionNode childNodes]
-		set returnvalue 0
-		foreach child $childs {
-		    set returnvalue [expr {$returnvalue || [imsld::expression::eval -run_id $run_id -expression $child]}]
-		}
-	        return $returnvalue
-	    }
-	    {and} {
-	        set childs [$expressionNode childNodes]
-		set returnvalue 1
-		foreach child $childs {
-		    set returnvalue [expr {$returnvalue && [imsld::expression::eval -run_id $run_id -expression $child]}]
-		}
-	        return $returnvalue
-	    }
-	    {is-not} {
-	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
-	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
-	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] text]
-	        return [expr {$propertyvalue0 != $propertyvalue1}]
-	    }
-	    {is} {
-	        set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
-	        set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [string tolower [$propertyref getAttribute {ref}]]]
-	        set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] text]
-	        return [expr {$propertyvalue0 == $propertyvalue1}]
-	    }
-	    {is-member-of-role} {
-            set roleref [$expressionNode getAttribute {ref}]
-            set role_id [imsld::roles::get_role_id -ref $roleref -run_id $run_id]
-            set users_list [imsld::roles::get_users_in_role -role_id $role_id -run_id $run_id]
-            return [ expr { [lsearch $users_list $user_id] > -1} ]
-	    }
-	}
+                    }
+                    {support-activity-ref} {
+                        set sa_ref [$activityNode getAttribute {ref}]
+                        db_1row get_sa_id {
+                            select isa.activity_id as sa_id 
+                            iii.imsld_id as imsld_id
+                            ir.run_id as run_id
+                            from imsld_support_activities isa, 
+                            imsld_imsldsi iii, 
+                            imsld_componentsi ici, 
+                            imsld_runs ir 
+                            where ir.run_id=:run_id and 
+                            ir.imsld_id=iii.imsld_id and 
+                            iii.item_id=ici.imsld_id and 
+                            ici.item_id=isa.component_id and 
+                            isa.identifier=:sa_ref 
+                        }
+                        imsld::finish_component_element -imsld_id $imsld_id \
+                            -run_id $run_id \
+                            -element_id $sa_id \
+                            -type support \
+                            -user_id $user_id \
+                            -code_call
+                        
+                    }
+                    {unit-of-learning-href} {
+                        #TODO 
+                    }
+                    {activity-structure-ref} {
+                        se as_ref [$activityNode getAttribute {ref}]
+                        db_1row get_as_id {
+                            select ias.structure_id as as_id
+                            from imsld_activity_structures ias, 
+                            imsld_componentsi ici, 
+                            imsld_imsldsi iii, 
+                            imsld_runs ir 
+                            where ir.run_id=:run_id and 
+                            ir.imsld_id=iii.imsld_id and 
+                            iii.item_id=ici.imsld_id and 
+                            ias.component_id=ici.item_id 
+                            ias.identifier=:as_ref
+                        }
+                        #TODO meter la función finish
+                    }
+                    {act-ref} {
+                        set actref [$activityNode getAttribute {ref}]
+                        db_1row get_act_id {
+                            select iai.act_id as act_id
+                            imi.imsld_id as imsld_id
+                            ipi.play_id as play_id
+                            from imsld_acts iai, 
+                            imsld_imsldsi iii, 
+                            imsld_playsi ipi, 
+                            imsld_methodsi imi, 
+                            imsld_runs ir 
+                            where ir.run_id=:run_id and 
+                            ir.imsld_id=iii.imsld_id and 
+                            iii.item_id=imi.imsld_id and 
+                            imi.item_id=ipi.method_id and 
+                            ipi.item_id=iai.play_id and
+                            iai.identifier=:actref
+                        }
+                        imsld:mark_act_finished -play_id $play_id -imsld_id $imsld_id \
+                            -act_id $act_id -run_id $run_id -user_id $user_id
+                    }
+                    {play-ref} {
+                        set playref [$activityNode getAttribute {ref}]
+                        db_1row get_play_id {
+                            select ipi.play_id as play_id
+                            iii.imsld_id as imsld_id
+                            from imsld_imsldsi iii, 
+                            imsld_plays ipi, 
+                            imsld_methodsi imi, 
+                            imsld_runs ir 
+                            where ir.run_id=:run_id and 
+                            ir.imsld_id=iii.imsld_id and 
+                            iii.item_id=imi.imsld_id and 
+                            imi.item_id=ipi.method_id and 
+                            ipi.identifier=:playref                
+                        }
+                        imsld::mark_play_finished -play_id $play_id -imsld_id $imsld_id \
+                            -run_id $run_id  -user_id $user_id 
+                    }
+                }
+            }
+            {not} { 
+                return [expr ![imsld::expression::eval -run_id $run_id -expression $expressionNode]] 
+            }
+            {current-datetime} { return [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%S"] -gmt 1 }
+            {datetime-activity-started} {
+                # TODO what's the actual way this is enconded in the XML? any examples?
+                return TODO
+                set activity_ref [$expressionNode getAttribute {ref}]
+                #set activity_id [] # need to get the activity_id from the activity_ref
+                return [imsld::runtime::date_time_activity_started -run_id $run_id -user_id $user_id -activity_id $activity_id]
+            }
+            {time-unit-of-learning-started} {
+                return [imsld::runtime::time_uol_started -run_id $run_id]
+            }
+            {no-value} {
+                set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
+                set propertyvalue [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}]]
+                return [empty_string_p $propertyvalue]
+            }
+            {users-in-role} {
+                # TODO Investigate usage in an expression
+                set roleref_value [$expressionNode selectNodes {*[local-name()='role-ref']/@ref}]
+                set role_id [imsld::roles::get_role_id -ref $roleref_value -run_id $run_id]
+                set persons_in_role [imsld::roles::get_users_in_role -run_id $run_id -role_id $role_id]
+                
+            }
+            {less-than} {
+                set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
+                set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}]]
+                set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] text]
+                return [expr {$propertyvalue0 < $propertyvalue1}]
+            }
+            {greater-than} {
+                set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
+                set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}]]
+                set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] text]
+                return [expr {$propertyvalue0 > $propertyvalue1}]
+            }
+            {divide} {
+                set childs [$expressionNode childNodes]
+                return [expr {[imsld::expression::eval -run_id $run_id -expression [lindex $childs 0]] / [imsld::expression::eval -run_id $run_id -expression [lindex $childs 1]]}]
+            }
+            {multiply} {
+                set childs [$expressionNode childNodes]
+                set returnvalue 1
+                set count 0
+                foreach child $childs {
+                    set returnvalue [expr {$returnvalue * [imsld::expression::eval -run_id $run_id -expression $child]}]
+                    incr count
+                }
+                set returnvalue [expr { [string eq 0 $count] ? 0 : $returnvalue }]
+                return $returnvalue
+            }
+            {substract} {
+                set childs [$expressionNode childNodes]
+                return [expr {[imsld::expression::eval -run_id $run_id -expression [lindex $childs 0]] - [imsld::expression::eval -run_id $run_id -expression [lindex $childs 1]]}]
+            }
+            {sum} {
+                set childs [$expressionNode childNodes]
+                set returnvalue 0
+                foreach child $childs {
+                    set returnvalue [expr {$returnvalue + [imsld::expression::eval -run_id $run_id -expression $child]}]
+                }
+                return $returnvalue
+            }
+            {or} {
+                set childs [$expressionNode childNodes]
+                set returnvalue 0
+                foreach child $childs {
+                    set returnvalue [expr {$returnvalue || [imsld::expression::eval -run_id $run_id -expression $child]}]
+                }
+                return $returnvalue
+            }
+            {and} {
+                set childs [$expressionNode childNodes]
+                set returnvalue 1
+                foreach child $childs {
+                    set returnvalue [expr {$returnvalue && [imsld::expression::eval -run_id $run_id -expression $child]}]
+                }
+                return $returnvalue
+            }
+            {is-not} {
+                set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
+                set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}]]
+                set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] text]
+                return [expr {$propertyvalue0 != $propertyvalue1}]
+            }
+            {is} {
+                set propertyref [$expressionNode selectNodes {*[local-name()='property-ref']}]
+                set propertyvalue0 [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}]]
+                set propertyvalue1 [[$expressionNode selectNodes {*[local-name()='property-value']}] text]
+                return [expr {$propertyvalue0 == $propertyvalue1}]
+            }
+            {is-member-of-role} {
+                set roleref [$expressionNode getAttribute {ref}]
+                set role_id [imsld::roles::get_role_id -ref $roleref -run_id $run_id]
+                set users_list [imsld::roles::get_users_in_role -role_id $role_id -run_id $run_id]
+                return [ expr { [lsearch $users_list $user_id] > -1} ]
+            }
+            {property-ref} {
+                return [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$expressionNode getAttribute {ref}]]
+            }
+            {property-value} {
+                return [$expressionNode text]
+            }
+        }
     }
 }
 
@@ -373,8 +386,27 @@ ad_proc -public imsld::statement::execute {
             }
             {change-property-value} {
                 set propertyref [$executeNode selectNodes {*[local-name()='property-ref']}]
-                set propertyvalue [[$executeNode selectNodes {*[local-name()='property-value']}] text]
-                imsld::runtime::property::property_value_set -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}] -value $propertyvalue
+                set propertyvalueNode [$executeNode selectNodes {*[local-name()='property-value']}] 
+                set propertyvalueChildNode [$propertyvalueNode childNodes]
+                set nodeType [$propertyvalueChildNode nodeType]
+                switch --  $nodeType {
+                    {ELEMENT_NODE} {
+                        switch -- [$propertyvalueChildNode localName] {
+                            {calculate} {
+                                set propertyValue [imsld::expression::eval -run_id $run_id -expression [$propertyvalueChildNode childNodes]]
+                            }
+                            {property-ref} {
+                                set propertyValue [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyvalueChildNode getAttribute {ref}]]
+                            }
+                            
+                        }
+                    }
+                    {TEXT_NODE} {
+                        set propertyValue [$propertyvalueNode text]
+                    }
+                }
+                
+                imsld::runtime::property::property_value_set -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}] -value $propertyValue
             }
             {notification} {}
         }

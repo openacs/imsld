@@ -1683,15 +1683,19 @@
 	<fullquery name="imsld::generate_structure_activities_list.get_learning_activity_info">
 		<querytext>
 
-                    select title as activity_title,
-                    item_id as activity_item_id,
-                    activity_id,
-                    complete_act_id,
-                    is_visible_p
-                    from imsld_learning_activitiesi
-                    where item_id = :object_id_two
-                    and content_revision__is_live(activity_id) = 't'
-                
+                    select la.title as activity_title,
+                    la.item_id as activity_item_id,
+                    la.activity_id,
+                    la.complete_act_id,
+                    attr.is_visible_p
+                    from imsld_learning_activitiesi la, imsld_attribute_instances attr
+                    where la.item_id = :object_id_two
+                    and content_revision__is_live(la.activity_id) = 't'
+                    and attr.owner_id = la.activity_id
+                    and attr.run_id = :run_id
+                    and attr.type = 'isvisible'
+
+
 		</querytext>
 	</fullquery>
 
@@ -1710,14 +1714,17 @@
 	<fullquery name="imsld::generate_structure_activities_list.get_support_activity_info">
 		<querytext>
 
-                    select title as activity_title,
-                    item_id as activity_item_id,
-                    activity_id,
-                    complete_act_id,
-                    is_visible_p
-                    from imsld_support_activitiesi
-                    where item_id = :object_id_two
-                    and content_revision__is_live(activity_id) = 't'
+                    select sa.title as activity_title,
+                    sa.item_id as activity_item_id,
+                    sa.activity_id,
+                    sa.complete_act_id,
+                    attr.is_visible_p
+                    from imsld_support_activitiesi sa, imsld_attribute_instances attr
+                    where sa.item_id = :object_id_two
+                    and content_revision__is_live(sa.activity_id) = 't'
+                    and attr.owner_id = sa.activity_id
+                    and attr.run_id = :run_id
+                    and attr.type = 'isvisible'
                 
 		</querytext>
 	</fullquery>
@@ -1786,13 +1793,16 @@
 	<fullquery name="imsld::generate_activities_tree.get_learning_activity_info">
 		<querytext>
 
-                    select title as activity_title,
-                    item_id as activity_item_id,
-                    activity_id,
-                    is_visible_p,
-                    complete_act_id
-                    from imsld_learning_activitiesi
+                    select la.title as activity_title,
+                    la.item_id as activity_item_id,
+                    la.activity_id,
+                    attr.is_visible_p,
+                    la.complete_act_id
+                    from imsld_learning_activitiesi la, imsld_attribute_instances attr
                     where activity_id = :activity_id
+                    and attr.owner_id = la.activity_id
+                    and attr.run_id = :run_id
+                    and attr.type = 'isvisible'
                     
 		</querytext>
 	</fullquery>
@@ -1800,13 +1810,16 @@
 	<fullquery name="imsld::generate_activities_tree.get_support_activity_info">
 		<querytext>
 
-                    select title as activity_title,
-                    item_id as activity_item_id,
-                    activity_id,
-                    is_visible_p,
-                    complete_act_id
-                    from imsld_support_activitiesi
-                    where activity_id = :activity_id
+                    select sa.title as activity_title,
+                    sa.item_id as activity_item_id,
+                    sa.activity_id,
+                    attr.is_visible_p,
+                    sa.complete_act_id
+                    from imsld_support_activitiesi sa, imsld_attribute_instances attr
+                    where sa.activity_id = :activity_id
+                    and attr.owner_id = sa.activity_id
+                    and attr.run_id = :run_id
+                    and attr.type = 'isvisible'
                     
 		</querytext>
 	</fullquery>
