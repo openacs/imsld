@@ -12,10 +12,14 @@
 		<querytext>
         select ar.object_id_two as groups
         from acs_rels ar,
+             acs_rels ar2,
              imsld_rolesi iri
         where ar.object_id_one=iri.item_id
               and iri.role_id=:role
               and ar.rel_type='imsld_role_group_rel'
+              and ar.object_id_two=ar2.object_id_one
+              and ar2.rel_type='imsld_roleinstance_run_rel'
+              and ar2.object_id_two=:run_id
 		</querytext>
 	</fullquery>
 	<fullquery name="get_possible_parents_list">
