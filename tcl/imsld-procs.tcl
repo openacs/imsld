@@ -1169,12 +1169,9 @@ ad_proc -public imsld::user_participate_p {
                                                         and iai.item_id=ir.act_id
                                                         and ir.role_id=irolei.item_id}]
     set involved_users [list]
-    ns_log Notice "user: $user_id, act_id: $act_id, run_id: $run_id"
     foreach role $involved_roles {
-        ns_log Notice "role:$role"
         set involved_users [concat $involved_users [imsld::roles::get_users_in_role -role_id $role -run_id $run_id ]]
     }
-        ns_log Notice "involved: $involved_users"
     if { [lsearch $involved_users $user_id] < 0 } {
         return 0
     } else {
