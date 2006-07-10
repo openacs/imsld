@@ -501,6 +501,16 @@ ad_proc -public imsld::install::init_rels {
     rel_types::new imsld_on_comp_change_pv_rel "On Completion - Change Property Values rel" "On Completion - Change Property Values rels" \
         content_item 0 {} \
         content_item 0 {}
+    
+    # Properties - Conditions
+    rel_types::new imsld_prop_cond_rel "Property - Condition" "Properties - Conditions" \
+        content_item 0 {} \
+        content_item 0 {}
+
+    # Properties - When-condition-true
+    rel_types::new imsld_prop_whct_rel "Property - when-condition-true" "Properties - When-Condition-True" \
+        content_item 0 {} \
+        content_item 0 {}
 
 }
 

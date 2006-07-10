@@ -51,6 +51,7 @@
         where container_id=:parent_instance
               and not (member_id in ([join $members_list ","]))
               and not (gmm.member_id in ([join $not_allowed ","]))
+
 		</querytext>
 	</fullquery>  
     
@@ -92,6 +93,7 @@
              from acs_rels 
              where object_id_two=:group_instance
                    and rel_type='composition_rel'
+
         </querytext>
 	</fullquery>
 

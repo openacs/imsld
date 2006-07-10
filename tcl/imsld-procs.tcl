@@ -1118,6 +1118,7 @@ ad_proc -public imsld::run_finished_p {
             group by member_id
         }]
     }
+
     #get acts in run
     set acts_list [db_list get_acts_in_run {
         select iai.act_id,
@@ -1138,7 +1139,9 @@ ad_proc -public imsld::run_finished_p {
     foreach user $user_id {
         foreach act $acts_list {
             if {![imsld::act_finished_p -run_id $run_id -act_id $act -user_id $user]} {
-                set all_finished_p 0
+                if {[imsld::user_participate_p -run_id $run_id -act_id $act -user_id $user]} {
+                    set all_finished_p 0
+                }
             }
         }
     }
@@ -1146,7 +1149,38 @@ ad_proc -public imsld::run_finished_p {
     return $all_finished_p
 }
 
-
+ad_proc -public imsld::user_participate_p { 
+    -act_id:required
+    -run_id:required
+    {-user_id ""}
+} { 
+    @param act_id
+    @param run_id
+    @option user_id
+    
+    @return 0 if the user does not participate in the act. 1 otherwise
+} {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    set involved_roles [db_list get_roles_in_act {select irolei.role_id 
+                                                  from imsld_role_parts ir, 
+                                                       imsld_actsi iai, 
+                                                       imsld_rolesi irolei
+                                                  where iai.act_id=:act_id 
+                                                        and iai.item_id=ir.act_id
+                                                        and ir.role_id=irolei.item_id}]
+    set involved_users [list]
+    ns_log Notice "user: $user_id, act_id: $act_id, run_id: $run_id"
+    foreach role $involved_roles {
+        ns_log Notice "role:$role"
+        set involved_users [concat $involved_users [imsld::roles::get_users_in_role -role_id $role -run_id $run_id ]]
+    }
+        ns_log Notice "involved: $involved_users"
+    if { [lsearch $involved_users $user_id] < 0 } {
+        return 0
+    } else {
+        return 1
+    }
+}
 
 ad_proc -public imsld::act_finished_p { 
     -act_id:required
@@ -2921,6 +2955,29 @@ ad_proc -public imsld::finish_resource {
             }
         }
     }
+}
+
+ad_proc -public imsld::get_property_id {
+    -identifier:required
+    -imsld_id:required
+} {
+    <p>Get the property_id from the property_identifier in a imsld_id</p>
+
+    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+} {
+
+       return [db_string get_property_id {
+                                          select ip.property_id 
+                                          from imsld_properties ip, 
+                                               imsld_componentsi ici,
+                                               imsld_imsldsi iii
+                                          where ip.component_id=ici.item_id 
+                                                and ici.imsld_id=iii.item_id
+                                                and iii.imsld_id=:imsld_id
+                                                and ip.identifier=:identifier
+       }]
+
+
 }
 
 

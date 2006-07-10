@@ -2014,8 +2014,8 @@ ad_proc -public imsld::parse::parse_and_create_environment {
                 relation_add imsld_env_env_rel $environment_id $refrenced_env_id
             } else {
                 # case two, first verify that the referenced environment exists
-                set organizations [$manifest selectNodes "*\[local-name()=organizations\]"]
-                set environments [$organizations selectNodes {*[local-name()='learning-design']\*[local-name()='components']\*[local-name()='environments']}]
+                set organizations [$manifest selectNodes "*\[local-name()='organizations'\]"]
+                set environments [$organizations selectNodes {*[local-name()='learning-design']/*[local-name()='components']/*[local-name()='environments']}]
 #                set environments [[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:environments]
                 set found_p 0
                 foreach referenced_environment [$environments selectNodes "*\[local-name()='environment'\]"] {
@@ -2692,7 +2692,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     } else {
                         # search in the manifest ...
                         set organizations [$manifest selectNodes {*[local-name()=organizations]}]
-                        set activity_structures [$organizations {*[local-name()='learning-design']\*[local-name()='components']\*[local-name()='activities']\*[local-name()='activity-structure']}]
+                        set activity_structures [$organizations {*[local-name()='learning-design']/*[local-name()='components']/*[local-name()='activities']/*[local-name()='activity-structure']}]
 #                        set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
                         
                         set found_p 0
@@ -2797,7 +2797,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     } else {
                         # search in the manifest ...
                         set organizations [$manifest selectNodes {*[local-name()='organizations']}]
-                        set activity_structures [$organizations selectNodes {*[local-name()='learning-design']\*[local-name()='components']\*[local-name()='activities']\*[local-name()='activity-structure']}]
+                        set activity_structures [$organizations selectNodes {*[local-name()='learning-design']/*[local-name()='components']/*[local-name()='activities']/*[local-name()='activity-structure']}]
 #                        set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
                         
                         set found_p 0
@@ -2885,7 +2885,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
             } else {
                  # case two, first verify that the referenced activity structure exists
                 set organizations [$manifest selectNodes {*[local-name()='organizations']}]
-                set activity_structures [$organizations selectNodes {*\[local-name()='learning-design']\*[local-name()='components']\*[local-name()='activities']\*[local-name()='activity-structure']}]
+                set activity_structures [$organizations selectNodes {*[local-name()='learning-design']/*[local-name()='components']/*[local-name()='activities']/*[local-name()='activity-structure']}]
 #                    set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
 
                 set found_p 0
@@ -3233,15 +3233,22 @@ ad_proc -public imsld::parse::parse_and_create_act {
                 # error, referenced role does not exist
                 return [list 0 "[_ imsld.lt_Referenced_role_role_]"]
             }
-            set expression [$when_condition_true selectNodes "*\[local-name()='expression'\]"]
-            imsld::parse::validate_multiplicity -tree $expression -multiplicity 1 -element_name expression(when-condition-true) -equal
+            #select all but role-ref that is: select the expression node
+            set expression [$when_condition_true selectNodes "*\[not(local-name()='role-ref')\]"]
+            imsld::parse::validate_multiplicity -tree $expression -multiplicity 1 -element_name "[$expression localName](when-condition-true)" -equal
             
             set when_condition_true_id [imsld::item_revision_new -attributes [list [list role_id $role_id] \
                                                                                   [list expression_xml [$expression asXML]]] \
                                             -content_type imsld_when_condition_true \
                                             -parent_id $parent_id \
                                             -title $title]
-            
+            #search properties in expression 
+            set property_nodes_list [$expression selectNodes {//*[local-name()='property-ref']}]
+            foreach property $property_nodes_list {
+#TODO que funcion la get_property_id con el play_id
+                set property_id [imsld::get_property_id -identifier [$property getAttribute ref] -play_id $play_id]
+                relation_add imsld_prop_whct_rel $property_id $when_condition_true_id 
+            }
         }
         
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
@@ -3986,14 +3993,20 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         set imsld_ifs_list [$conditions selectNodes { *[local-name()='if'] } ]
      
         foreach imsld_if $imsld_ifs_list {
-           set if_then_else_list [list]
-           lappend $if_then_else_list [imsld::parse::parse_and_create_if_then_else -condition_node $imsld_if \
-                                                                                   -manifest_id $manifest_id \
-                                                                                   -parent_id $cr_folder_id \
-                                                                                   -manifest $manifest \
-                                                                                   -method_id $method_id ]
+
+           set condition_id [imsld::parse::parse_and_create_if_then_else -condition_node $imsld_if \
+                                                                         -manifest_id $manifest_id \
+                                                                         -parent_id $cr_folder_id \
+                                                                         -manifest $manifest \
+                                                                         -method_id $method_id ]
+            #search condition properties
+            set property_nodes_list [$imsld_if selectNodes { //*[local-name()='property-ref'] }]
+            
+            foreach property $property_nodes_list {
+                set property_id [imsld::get_property_id -identifier [$property getAttribute ref] -imsld_id $imsld_id]
+                relation_add imsld_prop_cond_rel $property_id $contition_id 
+            }
         }
-       
     }
         
 

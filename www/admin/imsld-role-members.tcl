@@ -42,6 +42,7 @@ if {![string eq $group_instance "0"] && [db_0or1row has_role_parent_p {}]} {
        set members_list 0 
     }
     set not_members_list [db_list get_not_members_list_2 {}]
+
     if {![llength $not_members_list]} {
        set not_members_list 0 
     }
