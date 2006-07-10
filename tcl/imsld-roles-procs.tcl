@@ -126,7 +126,6 @@ ad_proc -public imsld::roles::get_roles_names {
 
         db_1row get_role_name {}
         if {![string eq "" $name]} {
-            ns_log Notice "nooooooooooooooooombre: $name"
             set name "[string repeat "&nbsp;&nbsp;&nbsp;&nbsp;" $depth] $name"
             lappend roles_names $name
         } else {
