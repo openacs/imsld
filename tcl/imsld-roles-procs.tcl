@@ -117,7 +117,7 @@ ad_proc -public imsld::roles::get_roles_names {
 } {
     @param roles_list the list of roles to get the name
 } {
-
+    set counter 1
     set roles_names [list]
     foreach role_item_par $roles_list {
 
@@ -125,8 +125,16 @@ ad_proc -public imsld::roles::get_roles_names {
         set depth [lindex $role_item_par 1]       
 
         db_1row get_role_name {}
-        set name "[string repeat "&nbsp;&nbsp;&nbsp;&nbsp;" $depth] $name"
-        lappend roles_names $name
+        if {![string eq "" $name]} {
+            ns_log Notice "nooooooooooooooooombre: $name"
+            set name "[string repeat "&nbsp;&nbsp;&nbsp;&nbsp;" $depth] $name"
+            lappend roles_names $name
+        } else {
+            set name "role_$counter"
+            set name "[string repeat "&nbsp;&nbsp;&nbsp;&nbsp;" $depth] $name"
+            lappend roles_names $name
+            set counter [expr $counter + 1]   
+        }
     }
     return $roles_names
 }
