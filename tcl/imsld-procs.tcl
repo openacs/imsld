@@ -306,7 +306,6 @@ ad_proc -public imsld::mark_role_part_finished {
     if { ![db_0or1row marked_as_started { *SQL* }] } {
         db_dml mark_role_part_started { *SQL* }
     }
-
     db_dml insert_role_part { *SQL* }
 
     # mark as finished all the referenced activities
@@ -679,6 +678,8 @@ ad_proc -public imsld::finish_component_element {
             if { $scturcture_finished_p } {
                 imsld::finish_component_element -imsld_id $imsld_id \
                     -run_id $run_id \
+                    -play_id $play_id \
+                    -act_id $act_id \
                     -role_part_id $role_part_id \
                     -element_id $structure_id \
                     -type structure \
@@ -2541,7 +2542,6 @@ ad_proc -public imsld::get_next_activity_list {
         set play_id [lindex $play_list 0]
         set play_item_id [lindex $play_list 1]
         # get the act_id of the last completed activity,
-
         # search for the last completed act in the play
         if { ![db_0or1row get_last_completed {
             select stat.related_id,
@@ -2943,8 +2943,18 @@ ad_proc -public imsld::finish_resource {
         #if all are finished, tag the activity as finished
         if { $all_finished_p && ![db_0or1row already_finished { *SQL* }] } {
             foreach role_part_id $role_part_id_list {
+                db_1row context_info {
+                    select acts.act_id,
+                    plays.play_id
+                    from imsld_actsi acts, imsld_playsi plays, imsld_role_parts rp
+                    where rp.role_part_id = :role_part_id
+                    and rp.act_id = acts.item_id
+                    and acts.play_id = plays.item_id
+                }
                 imsld::finish_component_element -imsld_id $imsld_id  \
                     -run_id $run_id \
+                    -play_id $play_id \
+                    -act_id $act_id \
                     -role_part_id $role_part_id \
                     -element_id $activity_id \
                     -type $activity_type\
@@ -2963,18 +2973,17 @@ ad_proc -public imsld::get_property_id {
     @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
 } {
 
-       return [db_string get_property_id {
-                                          select ip.property_id 
-                                          from imsld_properties ip, 
-                                               imsld_componentsi ici,
-                                               imsld_imsldsi iii
-                                          where ip.component_id=ici.item_id 
-                                                and ici.imsld_id=iii.item_id
-                                                and iii.imsld_id=:imsld_id
-                                                and ip.identifier=:identifier
+    return
+    return [db_string get_property_id {
+        select ip.property_id 
+        from imsld_properties ip, 
+        imsld_componentsi ici,
+        imsld_imsldsi iii
+        where ip.component_id=ici.item_id 
+        and ici.imsld_id=iii.item_id
+        and iii.imsld_id=:imsld_id
+        and ip.identifier=:identifier
        }]
-
-
 }
 
 

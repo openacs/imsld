@@ -3988,27 +3988,28 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     }
     
     # Method: Conditions
-    set conditions [$method selectNodes "*\[local-name()='conditions'\]"]
-    if {[llength $conditions]} {
-        set imsld_ifs_list [$conditions selectNodes { *[local-name()='if'] } ]
-     
-        foreach imsld_if $imsld_ifs_list {
-
-           set condition_id [imsld::parse::parse_and_create_if_then_else -condition_node $imsld_if \
-                                                                         -manifest_id $manifest_id \
-                                                                         -parent_id $cr_folder_id \
-                                                                         -manifest $manifest \
-                                                                         -method_id $method_id ]
-            #search condition properties
-            set property_nodes_list [$imsld_if selectNodes { //*[local-name()='property-ref'] }]
+    set conditions_list [$method selectNodes "*\[local-name()='conditions'\]"]
+    foreach conditions $conditions_list {
+        if {[llength $conditions]} {
+            set imsld_ifs_list [$conditions selectNodes { *[local-name()='if'] } ]
             
-            foreach property $property_nodes_list {
-                set property_id [imsld::get_property_id -identifier [$property getAttribute ref] -imsld_id $imsld_id]
-                relation_add imsld_prop_cond_rel $property_id $contition_id 
+            foreach imsld_if $imsld_ifs_list {
+                
+                set condition_id [imsld::parse::parse_and_create_if_then_else -condition_node $imsld_if \
+                                      -manifest_id $manifest_id \
+                                      -parent_id $cr_folder_id \
+                                      -manifest $manifest \
+                                      -method_id $method_id ]
+                #search condition properties
+                set property_nodes_list [$imsld_if selectNodes { //*[local-name()='property-ref'] }]
+                
+                foreach property $property_nodes_list {
+                    set property_id [imsld::get_property_id -identifier [$property getAttribute ref] -imsld_id $imsld_id]
+                    #relation_add imsld_prop_cond_rel $property_id $contition_id 
+                }
             }
         }
     }
-        
 
     # Resources
     # look for the resource in the manifest and add it to the CR
