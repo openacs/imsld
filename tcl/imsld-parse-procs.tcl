@@ -627,7 +627,8 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             set filex_id [imsld::fs::file_new -href $filex_href \
                               -path_to_file $filex_href \
                               -type file \
-                              -complete_path "${tmp_dir}/${filex_href}"]
+                              -complete_path "[ns_urldecode ${tmp_dir}/${filex_href}]"]
+            
             if { !$filex_id } {
                 # an error ocurred when creating the file
                 return [list 0 "[_ imsld.lt_The_file_filex_href_w]"]
