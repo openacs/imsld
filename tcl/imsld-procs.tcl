@@ -725,7 +725,7 @@ ad_proc -public imsld::finish_component_element {
             and im.imsld_id = ii.item_id
             and content_revision__is_live(ii.imsld_id) = 't';
         }
-
+        set finish_by_trigger_p 1
         set completed_act_p 1 
         set rel_defined_p 0
 
@@ -741,8 +741,10 @@ ad_proc -public imsld::finish_component_element {
         } {
             if { ![imsld::role_part_finished_p -run_id $run_id -role_part_id $role_part_id -user_id $user_id] } {
                 set completed_act_p 0
+                set finish_by_trigger_p 0
             }
         } if_no_rows {
+            set finish_by_trigger_p 0
             # the act doesn't have any imsld_act_rp_completed_rel rel defined.
             set rel_defined_p 1
         }
@@ -760,8 +762,30 @@ ad_proc -public imsld::finish_component_element {
             }
         }
 
-        if { $completed_act_p } {
+        if { $completed_act_p } {            
             # case number 2
+            if { $finish_by_trigger_p } {
+                #finsish the act for all involved users
+                set users_in_run [db_list get_users_in_run {
+                    select gmm.member_id 
+                    from group_member_map gmm,
+                         imsld_run_users_group_ext iruge, 
+                         acs_rels ar1 
+                    where iruge.run_id=:run_id
+                          and ar1.object_id_two=iruge.group_id 
+                          and ar1.object_id_one=gmm.group_id 
+                    group by member_id
+                }]
+                foreach user $users_in_run {
+                    if { [imsld::user_participate_p -run_id $run_id -act_id $act_id -user_id $user]} {
+                        imsld::mark_act_finished -act_id $act_id \
+                            -play_id $play_id \
+                            -imsld_id $imsld_id \
+                            -run_id $run_id \
+                            -user_id $user
+                    }
+                }
+            }
             imsld::mark_act_finished -act_id $act_id \
                 -play_id $play_id \
                 -imsld_id $imsld_id \
@@ -1135,10 +1159,9 @@ ad_proc -public imsld::run_finished_p {
               and imi.item_id=ipi.method_id 
               and iai.play_id=ipi.item_id
     }]
-
     set all_finished_p 1
-    foreach user $user_id {
-        foreach act $acts_list {
+    foreach act $acts_list {
+        foreach user $user_id {
             if {![imsld::act_finished_p -run_id $run_id -act_id $act -user_id $user]} {
                 if {[imsld::user_participate_p -run_id $run_id -act_id $act -user_id $user]} {
                     set all_finished_p 0
@@ -2549,25 +2572,71 @@ ad_proc -public imsld::get_next_activity_list {
             stat.type,
             stat.act_id
             from imsld_status_user stat
-            where stat.user_id = :user_id
-            and run_id = :run_id
+            where  run_id = :run_id
             and stat.play_id = :play_id
             and stat.type in ('learning','support','structure')
             order by stat.status_date desc
             limit 1
         }] } {
-            # if there is no completed activity for the act, it hasn't been started yet. get the first act_id
-            lappend next_act_item_id_list [db_string first_act {
-                select ia.item_id as act_item_id
-                from imsld_actsi ia
-                where ia.play_id = :play_item_id
-                and ia.sort_order = (select min(ia2.sort_order) from imsld_acts ia2 where ia2.play_id = :play_item_id)
+            # if there is no completed activity for the act, it hasn't been started yet. 
+            # get the first act_id in which the user is involved and check if other users has finished previous acts
+            #get first act, get acts in run
+            set acts_list [db_list get_acts_in_run {
+                select iai.act_id
+                from imsld_runs ir, 
+                     imsld_imsldsi iii,
+                     imsld_methodsi imi,
+                     imsld_playsi ipi,
+                     imsld_actsi iai 
+                where ir.run_id=:run_id
+                      and iii.imsld_id=ir.imsld_id 
+                      and imi.imsld_id=iii.item_id 
+                      and imi.item_id=ipi.method_id 
+                      and iai.play_id=ipi.item_id
+                order by iai.sort_order
             }]
+            
+            set previous_acts [list]
+            foreach act $acts_list {
+                if {[imsld::user_participate_p -run_id $run_id -act_id $act -user_id $user_id]} {
+                    set first_involved_act $act
+                    set first_involved_act_item_id [db_string get_act_item_id {
+                                                                             select item_id
+                                                                             from imsld_actsi
+                                                                             where act_id=:first_involved_act
+                    }]
+                    break
+                } else {
+                    lappend previous_acts $act
+                }
+            }
+            
+            set involved_roles [imsld::roles::get_list_of_roles -imsld_id $imsld_id]
+            set involved_users [list]
+            foreach role $involved_roles {
+                set involved_users [concat $involved_users [imsld::roles::get_users_in_role -role_id [lindex $role 0] -run_id $run_id]]
+            }
+
+            set finish_flag 1
+            foreach user [lsort -unique $involved_users] {
+                foreach previous $previous_acts {
+                    if {![imsld::act_finished_p -run_id $run_id -act_id $previous -user_id $user] } {
+                        if {[imsld::user_participate_p -run_id $run_id -act_id $previous -user_id $user]} {
+                        set finish_flag 0
+                       }
+                    }
+                }
+            }
+            if {$finish_flag == 1 } {
+                lappend next_act_item_id_list $first_involved_act_item_id
+            }
             continue
         }
         if { ![imsld::act_finished_p -run_id $run_id -act_id $act_id -user_id $user_id] } {
-            lappend next_act_item_id_list [content::revision::item_id -revision_id $act_id]
-            continue
+            if {[imsld::user_participate_p -run_id $run_id -act_id $act_id -user_id $user_id]} {
+                lappend next_act_item_id_list [content::revision::item_id -revision_id $act_id]
+                continue
+            }
         }
         # if we reached this point, we have to search for the next act in the play
         db_1row act_info {
@@ -2575,11 +2644,12 @@ ad_proc -public imsld::get_next_activity_list {
             from imsld_acts
             where act_id = :act_id
         }
+
         if { [db_0or1row search_current_play {
             select ia.item_id as act_item_id
             from imsld_actsi ia
             where ia.play_id = :play_item_id
-            and ia.sort_order = :act_sort_order + 1
+            and ia.sort_order = :act_sort_order + 1 
         }] } {
             # get the current play_id's sort_order and sarch in the next play in the current method_id
             set all_users_finished 1
@@ -2600,7 +2670,9 @@ ad_proc -public imsld::get_next_activity_list {
                 #check if all has finished the act
                 foreach user $users_list {
                     if {![imsld::act_finished_p -act_id $last_act_id -run_id $run_id -user_id $user]} {
-                        set all_users_finished 0
+                        if {[imsld::user_participate_p -run_id $run_id -act_id $last_act_id -user_id $user]} {
+                            set all_users_finished 0
+                        }
                     }
                 }
             }
@@ -2610,7 +2682,6 @@ ad_proc -public imsld::get_next_activity_list {
             }
         }
     }
-
 
     # 1. for each act in the next_act_id_list
     # 1.2. for each role_part in the act
