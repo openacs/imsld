@@ -181,7 +181,8 @@ ad_proc -public imsld::instance::instantiate_properties {
                 # not instantiated... is it already defined (existing href)? or must we use the one of the global definition?
                 if { ![string eq $existing_href ""] } {
                     # it is already defined
-                    # NOTE: there must be a better way to deal with this, but by the moment we treat the href as the property value
+                    # NOTE: there must be a better way to deal with this, 
+                    # but by the moment we treat the href as the property value
                     set initial_value $existing_href
                 } 
                 # TODO: the property must be somehow instantiated in the given URI also
@@ -233,7 +234,6 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
     from the possible changed values of a previous run.
 } {
     db_1row context_info {
-        
         select ic.item_id as component_item_id,
         ii.imsld_id,
         ii.learning_objective_id as imsld_learning_objective_id,
@@ -248,9 +248,10 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         and ir.run_id = :run_id
     }
     
-    # 1.1. items --> learning objectives, prerequisites, roles, learning objects, activity description, information(activity structures)
+    # 1. items --> learning objectives, prerequisites, roles, 
+    #      learning objects, activity description, information(activity structures)
     
-    # 1.1.1 learning objectives items
+    # 1.1 learning objectives items
     set linear_item_list [db_list item_in_imsld_loi {
         select ii.imsld_item_id
         from acs_rels ar, imsld_itemsi ii, imsld_learning_objectivesi lo
@@ -268,7 +269,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         and ia.component_id = :component_item_id
     }]]
     
-    # 1.1.2. prerequisites
+    # 1.2. prerequisites
     set linear_item_list [concat $linear_item_list [db_list item_in_imsld_pre {
         select ii.imsld_item_id
         from acs_rels ar, imsld_itemsi ii, imsld_prerequisitesi pre
@@ -286,7 +287,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         and ia.component_id = :component_item_id
     }]]
 
-    # 1.1.3. roles
+    # 1.3. roles
     set linear_item_list [concat $linear_item_list [db_list item_in_role {
         select ii.imsld_item_id
         from acs_rels ar, imsld_itemsi ii, imsld_rolesi ir
@@ -295,7 +296,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         and ir.component_id = :component_item_id
     }]]
 
-    # 1.1.4. learning objects (environments)
+    # 1.4. learning objects (environments)
     set linear_item_list [concat $linear_item_list [db_list item_in_lo {
         select ii.imsld_item_id
         from acs_rels ar, imsld_itemsi ii, imsld_learning_objectsi lo, imsld_environmentsi env
@@ -305,7 +306,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         and env.component_id = :component_item_id
     }]]
     
-    # 1.1.5. activity description (learning activities)
+    # 1.5. activity description (learning activities)
     set linear_item_list [concat $linear_item_list [db_list item_in_la_desc {
         select ii.imsld_item_id
         from acs_rels ar, imsld_itemsi ii, imsld_learning_activitiesi la, imsld_activity_descsi ad
@@ -315,7 +316,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         and la.component_id = :component_item_id
     }]]
 
-    # 1.1.5. activity description (support activities)
+    # 1.6. activity description (support activities)
     set linear_item_list [concat $linear_item_list [db_list item_in_sa_desc {
         select ii.imsld_item_id
         from acs_rels ar, imsld_itemsi ii, imsld_support_activitiesi sa, imsld_activity_descsi ad
@@ -325,7 +326,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         and sa.component_id = :component_item_id
     }]]
     
-    # 1.1.6. information(activity structures)
+    # 1.7. information(activity structures)
     set linear_item_list [concat $linear_item_list [db_list item_in_as_info {
         select ii.imsld_item_id
         from acs_rels ar, imsld_itemsi ii, imsld_activity_structuresi ast
@@ -356,7 +357,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         }
     }
 
-    # 1.2. learning activities
+    # 2. learning activities
     db_foreach learning_activity {
         select la.activity_id,
         coalesce(la.is_visible_p, 't') as is_visible_p,
@@ -375,7 +376,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         }
     }
     
-    # 1.3. support activities
+    # 3. support activities
     db_foreach support_activity {
         select sa.activity_id,
         coalesce(sa.is_visible_p, 't') as is_visible_p,
@@ -394,7 +395,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         }
     }
 
-    # 1.4. learning object (environment)
+    # 4. learning object (environment)
     db_foreach learning_object {
         select lo.learning_object_id,
         coalesce(lo.is_visible_p, 't') as is_visible_p,
@@ -420,11 +421,11 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
             and type = 'class'
             and identifier = :class
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list is_visible_p "f"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
         }
     }
 
-    # 1.5. service (enviroment)
+    # 5. service (enviroment)
     db_foreach service {
         select serv.service_id,
         coalesce(serv.is_visible_p, 't') as is_visible_p,
@@ -450,11 +451,11 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
             and type = 'class'
             and identifier = :class
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list is_visible_p "f"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
         }
     }
 
-    # 1.6. play
+    # 6. play
     db_foreach play {
         select play.play_id,
         coalesce(play.is_visible_p, 't') as is_visible_p,
@@ -471,6 +472,23 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
             and type = 'isvisible'
         }] } {
             set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $play_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+        }
+    }
+
+    # 7. classes
+    db_foreach class {
+        select cla.class_id,
+        cla.identifier
+        from imsld_classes cla, imsld_methodsi im
+        where cla.method_id = im.item_id
+        and im.imsld_id = :run_imsld_item_id
+    } {
+        if { ![db_0or1row already_instantiated {
+            select 1 from imsld_attribute_instances
+            where identifier = :identifier
+            and run_id = :run_id
+        }] } {
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $identifier] [list run_id $run_id] [list is_visible_p "f"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
         }
     }
 

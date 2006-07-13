@@ -48,6 +48,8 @@
   <msg key="IMS-LD">IMS-LD</msg>
   <msg key="IMS-LD_Act">IMS-LD Act</msg>
   <msg key="IMS-LD_Acts">IMS-LD Acts</msg>
+  <msg key="IMS-LD_Class">IMS-LD Class</msg>
+  <msg key="IMS-LD_Classes">IMS-LD Classes</msg>
   <msg key="IMS-LD_Component">IMS-LD Component</msg>
   <msg key="IMS-LD_Components">IMS-LD Components</msg>
   <msg key="IMS-LD_Condition">IMS-LD Condition</msg>
@@ -130,6 +132,7 @@
   <msg key="lt_IMS-LD_Activity_Descr_1">IMS-LD Activity Descriptions</msg>
   <msg key="lt_IMS-LD_Activity_Struc">IMS-LD Activity Structure</msg>
   <msg key="lt_IMS-LD_Activity_Struc_1">IMS-LD Activity Structures</msg>
+  <msg key="lt_IMS-LD_Class_Ideintif">IMS-LD Class Ideintifier</msg>
   <msg key="lt_IMS-LD_Conference_Ser">IMS-LD Conference Service</msg>
   <msg key="lt_IMS-LD_Conference_Ser_1">IMS-LD Conference Services</msg>
   <msg key="lt_IMS-LD_CP_Dependencie">IMS-LD CP Dependencies</msg>

@@ -22,4 +22,7 @@ if { [db_0or1row not_fedbk_nor_assmnt {
 }] } {
     imsld::finish_resource -resource_id $resource_id -run_id $run_id
 }
-ad_returnredirect "[export_vars -base "$file_url" -url { file_url run_id resource_id resource_item_id owner_user_id }]"
+if { ![regexp {http://} $file_url] } {
+    ad_returnredirect "[export_vars -base "$file_url" -url { file_url run_id resource_id resource_item_id owner_user_id }]"
+} 
+ad_returnredirect "[export_vars -base "$file_url"]"

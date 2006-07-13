@@ -51,4 +51,6 @@ drop table imsld_time_limits cascade;
 
 drop table imsld_on_completion cascade;
 
+drop table imsld_classes cascade;
+
 drop table imsld_res_files_rel cascade;

@@ -326,7 +326,7 @@ ad_proc -public imsld::roles::get_role_id {
 } {
     Returns the role_id which has a given ref in a run, 0 if no matches found.
 } {
-    if{[db_0or1row select_role_id {
+    if { [db_0or1row select_role_id {
         select ar1.object_id_one as role_id
         from imsld_rolesi iri, 
              acs_rels ar1, 
@@ -337,8 +337,8 @@ ad_proc -public imsld::roles::get_role_id {
               and ar2.object_id_two=:run_id
               and iri.item_id=ar1.object_id_one 
               and iri.identifier=:ref
-        group by role_id;
-    }]} {
+        group by ar1.object_id_one;
+    }] } {
         return $role_id
     } else {
         return 0

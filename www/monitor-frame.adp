@@ -20,7 +20,7 @@
     <option value="select">#imsld.Select#</option>
     <multiple name="users_in_role">
         <if @users_in_role.role_user_id@ eq @monitoring_user_id@>
-        <option value="@users_in_role.role_user_id@" selected="selected">@users_in_role.user_name@ -- @users_in_role.role_user_id@ y @monitoring_user_id@</option>
+        <option value="@users_in_role.role_user_id@" selected="selected">@users_in_role.user_name@</option>
         </if><else>
         <option value="@users_in_role.role_user_id@">@users_in_role.user_name@</option>
         </else>

@@ -380,7 +380,8 @@ foreach set_property_group_node $set_property_group_nodes {
         prop.datatype,
         coalesce(ins.value, prop.initial_value) as value,
         prop.title,
-        prop.identifier
+        prop.identifier,
+        ins.instance_id
         from imsld_propertiesi prop,
         imsld_property_instances ins,
         acs_rels map
@@ -401,6 +402,7 @@ foreach set_property_group_node $set_property_group_nodes {
         set value [lindex $properties_in_group 3]
         set title [lindex $properties_in_group 4]
         set identifier [lindex $properties_in_group 5]
+        set instance_id [lindex $properties_in_group 6]
         # get the restrictions and translate them to HTML
         # currently, in HTML we can only deal with the restriction types: length, 
         # maxlength, enumeration and totaldigits. 

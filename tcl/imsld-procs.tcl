@@ -647,8 +647,9 @@ ad_proc -public imsld::finish_component_element {
     
     if { [info exists table_name] } {
         if { [db_0or1row get_related_on_completion_id ""] } {
-            db_1row get_related_resource_id { *SQL* }
-            imsld::grant_permissions -resources_activities_list $related_resource -user_id $user_id
+            if { [db_0or1row get_related_resource_id { *SQL* }] } {
+                imsld::grant_permissions -resources_activities_list $related_resource -user_id $user_id
+            }
         }
     }
     if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $type "structure"] } {

@@ -443,5 +443,16 @@
         
 		</querytext>
 	</fullquery>
+
+	<fullquery name="imsld::parse::parse_and_create_imsld_manifest.class_created_p">
+		<querytext>
+        
+        select 1 from imsld_classes
+        where identifier = :class_identifier
+          and method_id = :method_id
+    
+		</querytext>
+	</fullquery>
+
 </queryset>
 

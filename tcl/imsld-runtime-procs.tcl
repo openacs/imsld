@@ -298,7 +298,7 @@ ad_proc -public imsld::runtime::environment::show_hide {
         env.item_id as environment_item_id,
         comp.component_id,
         comp.item_id as component_item_id
-        from imsld_runs ir, imsld_componentsi comp, imsld_environmentsi env, imsld_imsldsi
+        from imsld_runs ir, imsld_componentsi comp, imsld_environmentsi env, imsld_imsldsi ii
         where ir.run_id = :run_id
         and ir.imsld_id = ii.imsld_id
         and ii.item_id = comp.imsld_id

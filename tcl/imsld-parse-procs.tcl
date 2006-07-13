@@ -3546,23 +3546,44 @@ ad_proc -public imsld::parse::parse_and_create_if_then_else {
     if { [llength $then_node] != 1 } {
         return 0
     }
-    $temporal_node appendChild $then_node
+    set then_temporal_node [$then_node cloneNode -deep]
+    $temporal_node appendChild $then_temporal_node
 
     set else_node [$condition_node selectNodes { following-sibling::*[local-name()='else' and position()=1] } ]
     if { [llength $else_node] == 1 } {
-        $temporal_node appendChild $else_node       
+        set else_temporal_node [$else_node cloneNode -deep]
+        $temporal_node appendChild $else_temporal_node       
     } elseif { [llength $else_node] > 1 } {
         return 0        
     }
     set xml_piece [$temporal_node asXML]
-
+    
     set if_then_else_id [imsld::item_revision_new -attributes [list [list method_id $method_id] \
-                                                              [list condition_xml $xml_piece]] \
-                                                  -content_type imsld_condition \
-                                                  -parent_id $parent_id]
+                                                                   [list condition_xml $xml_piece]] \
+                             -content_type imsld_condition \
+                             -parent_id $parent_id]
     return $if_then_else_id
-   
 }
+
+ad_proc -public imsld::parse::parse_and_create_class { 
+    -class_node
+    -parent_id
+    -method_id
+} {
+    Parse a class and stores all the information in the database.
+
+    Returns the class_id (item_id) if there were no errors, or 0 and an explanation messge if there was an error.
+    
+    @param method_id 
+    @param class_node
+    @param parent_id Parent folder ID
+} {
+    set class_identifier [imsld::parse::get_attribute -node $class_node -attr_name class]
+    set class_id [imsld::item_revision_new -attributes [list [list identifier $class_identifier] \
+                                                            [list method_id $method_id]] \
+                      -content_type imsld_class \
+                      -parent_id $parent_id]
+}            
 
 ad_proc -public imsld::parse::parse_and_create_calculate { 
     -calculate_node
@@ -3987,7 +4008,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
             relation_add imsld_mp_completed_rel $method_id $play_id
         }
     }
-    
+
     # Method: Conditions
     set conditions_list [$method selectNodes "*\[local-name()='conditions'\]"]
     foreach conditions $conditions_list {
@@ -4009,6 +4030,21 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                     #relation_add imsld_prop_cond_rel $property_id $contition_id 
                 }
             }
+        }
+    }
+
+    # Classes: since the class elements are 'global-elements', we have to searh for the class elements
+    #          through the entire manifest. 
+    # NOTE: The classes are initialized to "is-visible = false"
+    set classes [$method selectNodes "//*\[local-name()='class'\]"]
+    foreach class_node $classes {
+        # Check the base URI
+        set class_identifier [imsld::parse::get_attribute -node $class_node -attr_name class]
+        if { [string eq [$class_node namespaceURI] [imsld::parse::get_URI -type "imsld"]] && ![db_0or1row class_created_p { *SQL* }] } {
+            # it's an ims-ld class, store it
+            set class_id [imsld::parse::parse_and_create_class -class_node $class_node \
+                              -method_id $method_id \
+                              -parent_id $cr_folder_id]
         }
     }
 

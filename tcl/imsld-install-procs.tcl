@@ -207,6 +207,12 @@ ad_proc -public imsld::install::init_content_repository {
 
     content::type::attribute::new -content_type imsld_on_completion -attribute_name feedback_title -datatype string -pretty_name "#imsld.Feedbach_Title#" -column_spec "varchar(200)"
 
+    # classes
+    content::type::new -content_type imsld_class -supertype content_revision -pretty_name "#imsld.IMS-LD_Class#" -pretty_plural "#imsld.IMS-LD_Classes#" -table_name imsld_classes -id_column class_id
+
+    content::type::attribute::new -content_type imsld_class -attribute_name method_id -datatype number -pretty_name "#imsld.Method_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_class -attribute_name identifier -datatype string -pretty_name "#imsld.lt_IMS-LD_Class_Ideintif#" -column_spec "varchar(200)"
+
     ### IMS-LD Content Packaging
 
     # manifests
@@ -243,6 +249,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_cp_file -attribute_name path_to_file -datatype string -pretty_name "#imsld.Path_to_File#" -column_spec "varchar(2000)"
     content::type::attribute::new -content_type imsld_cp_file -attribute_name file_name -datatype string -pretty_name "#imsld.File_name#" -column_spec "varchar(2000)"
     content::type::attribute::new -content_type imsld_cp_file -attribute_name href -datatype string -pretty_name "#imsld.Href#" -column_spec "varchar(2000)"
+
 
     ### IMS-LD LEVEL B
 
@@ -762,7 +769,11 @@ ad_proc -public imsld::uninstall::empty_content_repository {
 
     # on completion
     content::type::attribute::delete -content_type imsld_on_completion -attribute_name feedback_title
-    
+
+    # classes
+    content::type::attribute::delete -content_type imsld_class -attribute_name method_id
+    content::type::attribute::delete -content_type imsld_class -attribute_name identifier
+
     ### IMS-LD Content Packaging
     
     # manifests
@@ -834,6 +845,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::delete -content_type imsld_role_part -drop_table_p t
     content::type::delete -content_type imsld_complete_act -drop_table_p t
     content::type::delete -content_type imsld_on_completion -drop_table_p t
+    content::type::delete -content_type imsld_class -drop_table_p t
 
     ### IMS-LD Content Packaging
     content::type::delete -content_type imsld_cp_manifest -drop_table_p t
