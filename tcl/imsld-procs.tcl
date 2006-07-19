@@ -3053,7 +3053,17 @@ ad_proc -public imsld::get_property_id {
     @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
 } {
 
-    return
+if {[info exist play_id] & ![info exist imsld_id]} {
+    set imsld_id [db_string get_imsld_id_from_play {
+                                                    select iii.imsld_id 
+                                                    from imsld_imsldsi iii, 
+                                                         imsld_methodsi imi, 
+                                                         imsld_plays ip 
+                                                    where ip.method_id=imi.item_id 
+                                                          and imi.imsld_id=iii.item_id 
+                                                          and ip.play_id=:play_id
+    }]
+}
     return [db_string get_property_id {
         select ip.property_id 
         from imsld_properties ip, 

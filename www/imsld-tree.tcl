@@ -24,6 +24,7 @@ db_1row imslds_in_class {
 set user_message ""
 set next_activity_id [imsld::get_next_activity_list -run_id $run_id -user_id $user_id]
 
+
 set remaining_activities [llength [join $next_activity_id]] 
 
 if {!$remaining_activities} {

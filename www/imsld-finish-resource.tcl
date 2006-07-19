@@ -20,6 +20,7 @@ if { [db_0or1row not_fedbk_nor_assmnt {
     and icr.type != 'imsqti_xmlv1p0'
     limit 1
 }] } {
+    imsld::grant_permissions -resources_activities_list $resource_id -user_id [ad_conn user_id]
     imsld::finish_resource -resource_id $resource_id -run_id $run_id
 }
 if { ![regexp {http://} $file_url] } {

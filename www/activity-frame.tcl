@@ -68,6 +68,55 @@ $dom_root setAttribute class "tabber"
 set activity_item_id [content::revision::item_id -revision_id $activity_id]
 imsld::process_activity_as_ul -activity_item_id $activity_item_id -run_id $run_id -dom_doc $doc -dom_node $dom_root
 
+    if {![string eq $activity_id ""] } {
+    db_1row get_table_name {
+        select 
+               case 
+               when exists (select 1 from imsld_learning_activities where activity_id=:activity_id) 
+               then 'imsld_learning_activities' 
+               when exists (select 1 from imsld_support_activities where activity_id=:activity_id) 
+               then 'imsld_support_activities' 
+               end as table_name 
+        from dual
+    }
+    #grant permissions to resources in activity
+    set resources_list [db_list get_resources_from_activity "
+                        select ar2.object_id_two 
+                        from $table_name ila,
+                        acs_rels ar1,
+                        acs_rels ar2 
+                        where activity_id=:activity_id
+                        and ar1.object_id_one=ila.activity_description_id 
+                        and ar1.rel_type='imsld_actdesc_item_rel' 
+                        and ar1.object_id_two=ar2.object_id_one 
+                        and ar2.rel_type='imsld_item_res_rel'
+    "]
+    set prerequisites_list [db_list get_prerequisites_list "
+                       select ar2.object_id_two 
+                       from acs_rels ar1, 
+                            acs_rels ar2, 
+                            $table_name tn 
+                       where tn.activity_id=:activity_id 
+                             and ar1.object_id_one=tn.prerequisite_id 
+                             and ar1.rel_type='imsld_preq_item_rel' 
+                             and ar1.object_id_two=ar2.object_id_one 
+                             and ar2.rel_type='imsld_item_res_rel' 
+    "]
+    set objectives_list [db_list get_objectives_list "
+                       select ar2.object_id_two 
+                       from acs_rels ar1, 
+                            acs_rels ar2, 
+                            $table_name tn 
+                       where tn.activity_id=:activity_id 
+                             and ar1.object_id_one=tn.learning_objective_id 
+                             and ar1.rel_type='imsld_lo_item_rel' 
+                             and ar1.object_id_two=ar2.object_id_one 
+                             and ar2.rel_type='imsld_item_res_rel'
+    "]
+    set resources_list [concat $resources_list [concat $prerequisites_list $objectives_list]]
+    imsld::grant_permissions -resources_activities_list $resources_list -user_id $user_id      
+    }
+
 set activities [$dom_root asXML] 
 
 set page_title {}
