@@ -71,8 +71,6 @@ ad_proc -public imsld::expression::eval {
         switch -- [$expressionNode localName] {
             {complete} {
 
-                return 1
-
                 set activityNode [$expressionNode childNodes] 
                 switch -- [$activityNode localName] {
                     {learning-activity-ref} {
@@ -90,13 +88,14 @@ ad_proc -public imsld::expression::eval {
                             ici.item_id=ila.component_id 
                             and ila.identifier=:la_ref
                         }
-                        imsld::finish_component_element -imsld_id $imsld_id \
-                            -run_id $run_id \
-                            -element_id $la_id \
-                            -type learning \
-                            -user_id $user_id \
-                            -code_call
-
+                        set return_value [db0or1row la_finished_p {
+                                                                   select 1 
+                                                                   from imsld_status_user
+                                                                   where status='finished' 
+                                                                         and related_id=:la_id 
+                                                                         and user_id=:user_id
+                                                                         and run_id=:run_id
+                        }]
                     }
                     {support-activity-ref} {
                         set sa_ref [$activityNode getAttribute {ref}]
@@ -114,13 +113,14 @@ ad_proc -public imsld::expression::eval {
                             ici.item_id=isa.component_id and 
                             isa.identifier=:sa_ref 
                         }
-                        imsld::finish_component_element -imsld_id $imsld_id \
-                            -run_id $run_id \
-                            -element_id $sa_id \
-                            -type support \
-                            -user_id $user_id \
-                            -code_call
-                        
+                        set return_value [db0or1row la_finished_p {
+                                                                   select 1 
+                                                                   from imsld_status_user
+                                                                   where status='finished' 
+                                                                         and related_id=:sa_id 
+                                                                         and user_id=:user_id
+                                                                         and run_id=:run_id
+                        }]
                     }
                     {unit-of-learning-href} {
                         #TODO 
@@ -139,7 +139,7 @@ ad_proc -public imsld::expression::eval {
                             ias.component_id=ici.item_id 
                             ias.identifier=:as_ref
                         }
-                        #TODO meter la función finish
+                        set return_value [imsld::structure_finished_p -structure_id $as_id -run_id $run_id -user_id $user_id ]
                     }
                     {act-ref} {
                         set actref [$activityNode getAttribute {ref}]
@@ -159,8 +159,7 @@ ad_proc -public imsld::expression::eval {
                             ipi.item_id=iai.play_id and
                             iai.identifier=:actref
                         }
-                        imsld:mark_act_finished -play_id $play_id -imsld_id $imsld_id \
-                            -act_id $act_id -run_id $run_id -user_id $user_id
+                        set return_value [imsld:act_finished_p -act_id $act_id -run_id $run_id -user_id $user_id]
                     }
                     {play-ref} {
                         set playref [$activityNode getAttribute {ref}]
@@ -177,10 +176,10 @@ ad_proc -public imsld::expression::eval {
                             imi.item_id=ipi.method_id and 
                             ipi.identifier=:playref                
                         }
-                        imsld::mark_play_finished -play_id $play_id -imsld_id $imsld_id \
-                            -run_id $run_id  -user_id $user_id 
+                        set return_value [imsld::play_finished_p -play_id $play_id -run_id $run_id -user_id $user_id]
                     }
                 }
+                return $return_value
             }
             {not} { 
                 return [expr ![imsld::expression::eval -run_id $run_id -expression $expressionNode]] 
