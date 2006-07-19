@@ -23,4 +23,7 @@ if {$conditions == 1} {
     }
 }
 
+# excecute all conditions
+imsld::condition::execute_all -run_id $run_id
+
 ad_returnredirect ..

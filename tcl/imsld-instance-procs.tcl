@@ -421,7 +421,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
             and type = 'class'
             and identifier = :class
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list is_visible_p "f"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
         }
     }
 
@@ -451,7 +451,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
             and type = 'class'
             and identifier = :class
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list is_visible_p "f"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
         }
     }
 
@@ -488,7 +488,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
             where identifier = :identifier
             and run_id = :run_id
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $identifier] [list run_id $run_id] [list is_visible_p "f"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $identifier] [list run_id $run_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
         }
     }
 

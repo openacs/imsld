@@ -38,7 +38,6 @@ ad_proc -public imsld::condition::execute {
     set ifNodes [$condition selectNodes {*[local-name()='if']}]
     set thenNodes [$condition selectNodes {*[local-name()='then']}]
     set elseNodes [$condition selectNodes {*[local-name()='else']}]
-
     foreach ifNode $ifNodes {
         if {[imsld::expression::eval -run_id $run_id -expression [$ifNode childNodes]]} {
             foreach thenNode $thenNodes {
@@ -66,17 +65,15 @@ ad_proc -public imsld::expression::eval {
     if {![info exist user_id]} {
         set user_id [ad_conn user_id]
     }
-
     foreach expressionNode $expression {
         switch -- [$expressionNode localName] {
             {complete} {
-
                 set activityNode [$expressionNode childNodes] 
                 switch -- [$activityNode localName] {
                     {learning-activity-ref} {
                         set la_ref [$activityNode getAttribute {ref}]
                         db_1row get_la_id {
-                            select ila.activity_id as la_id 
+                            select ila.activity_id as la_id,
                             iii.imsld_id as imsld_id
                             from imsld_learning_activities ila, 
                             imsld_imsldsi iii, 
@@ -88,7 +85,7 @@ ad_proc -public imsld::expression::eval {
                             ici.item_id=ila.component_id 
                             and ila.identifier=:la_ref
                         }
-                        set return_value [db0or1row la_finished_p {
+                        set return_value [db_0or1row la_finished_p {
                                                                    select 1 
                                                                    from imsld_status_user
                                                                    where status='finished' 
@@ -100,8 +97,8 @@ ad_proc -public imsld::expression::eval {
                     {support-activity-ref} {
                         set sa_ref [$activityNode getAttribute {ref}]
                         db_1row get_sa_id {
-                            select isa.activity_id as sa_id 
-                            iii.imsld_id as imsld_id
+                            select isa.activity_id as sa_id, 
+                            iii.imsld_id as imsld_id,
                             ir.run_id as run_id
                             from imsld_support_activities isa, 
                             imsld_imsldsi iii, 
@@ -113,7 +110,7 @@ ad_proc -public imsld::expression::eval {
                             ici.item_id=isa.component_id and 
                             isa.identifier=:sa_ref 
                         }
-                        set return_value [db0or1row la_finished_p {
+                        set return_value [db_0or1row la_finished_p {
                                                                    select 1 
                                                                    from imsld_status_user
                                                                    where status='finished' 
@@ -144,9 +141,9 @@ ad_proc -public imsld::expression::eval {
                     {act-ref} {
                         set actref [$activityNode getAttribute {ref}]
                         db_1row get_act_id {
-                            select iai.act_id as act_id
-                            imi.imsld_id as imsld_id
-                            ipi.play_id as play_id
+                            select iai.act_id as act_id,
+                            imi.imsld_id as imsld_id,
+                            ipi.play_id as play_id,
                             from imsld_acts iai, 
                             imsld_imsldsi iii, 
                             imsld_playsi ipi, 
@@ -165,7 +162,7 @@ ad_proc -public imsld::expression::eval {
                         set playref [$activityNode getAttribute {ref}]
                         db_1row get_play_id {
                             select ipi.play_id as play_id
-                            iii.imsld_id as imsld_id
+                            iii.imsld_id as imsld_id,
                             from imsld_imsldsi iii, 
                             imsld_plays ipi, 
                             imsld_methodsi imi, 
@@ -182,7 +179,7 @@ ad_proc -public imsld::expression::eval {
                 return $return_value
             }
             {not} { 
-                return [expr ![imsld::expression::eval -run_id $run_id -expression $expressionNode]] 
+                return [expr ![imsld::expression::eval -run_id $run_id -expression [$expressionNode childNodes]]] 
             }
             {current-datetime} { return [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%S"] -gmt 1 }
             {datetime-activity-started} {

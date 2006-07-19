@@ -3535,7 +3535,6 @@ ad_proc -public imsld::parse::parse_and_create_if_then_else {
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
 } {
-
     set temporal_doc [dom createDocument condition]
     set temporal_node [$temporal_doc documentElement]
 
@@ -3549,7 +3548,7 @@ ad_proc -public imsld::parse::parse_and_create_if_then_else {
     set then_temporal_node [$then_node cloneNode -deep]
     $temporal_node appendChild $then_temporal_node
 
-    set else_node [$condition_node selectNodes { following-sibling::*[local-name()='else' and position()=1] } ]
+    set else_node [$condition_node selectNodes { following-sibling::*[local-name()='else' and position()=2] } ]
     if { [llength $else_node] == 1 } {
         set else_temporal_node [$else_node cloneNode -deep]
         $temporal_node appendChild $else_temporal_node       
@@ -4014,7 +4013,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     foreach conditions $conditions_list {
         if {[llength $conditions]} {
             set imsld_ifs_list [$conditions selectNodes { *[local-name()='if'] } ]
-            
+
             foreach imsld_if $imsld_ifs_list {
                 
                 set condition_id [imsld::parse::parse_and_create_if_then_else -condition_node $imsld_if \
