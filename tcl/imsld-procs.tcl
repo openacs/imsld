@@ -644,8 +644,8 @@ ad_proc -public imsld::finish_component_element {
             set element_name "act_id"
         }
     }
-    
     if { [info exists table_name] } {
+        #grant permissions to resources in activity
         if { [db_0or1row get_related_on_completion_id ""] } {
             if { [db_0or1row get_related_resource_id { *SQL* }] } {
                 imsld::grant_permissions -resources_activities_list $related_resource -user_id $user_id
@@ -1390,6 +1390,10 @@ ad_proc -public imsld::process_service_as_ul {
             ad_script_abort
         }
     }
+    
+    #grant permissions for resources in service
+    imsld::grant_permissions -resources_activities_list $resource_item_id -user_id [ad_conn user_id]
+
     if {[string eq "t" $resource_mode]} {
         return [list $services_list $resource_item_list]
     }
@@ -1443,12 +1447,15 @@ ad_proc -public imsld::process_environment_as_ul {
                     lappend resource_item_list $resource_item_id
                 }
 
+                #grant permissions to use the resource 
+                imsld::grant_permissions -resources_activities_list $resource_item_id -user_id [ad_conn user_id]
+
                 set one_learning_object_list [imsld::process_resource_as_ul -resource_item_id $resource_item_id \
                                                   -run_id $run_id \
                                                   -dom_node $environment_node \
                                                   -dom_doc $dom_doc \
                                                   -li_mode]
-                
+
                 # in order to behave like CopperCore, we decide to replace the images with the learning object title
                 set img_nodes [$environment_node selectNodes {.//img}]
                 foreach img_node $img_nodes {
@@ -2739,6 +2746,7 @@ ad_proc -public imsld::get_next_activity_list {
     }
     # return the next_activity_id_list
     return $next_activity_id_list
+        
 }
 
 ad_proc -public imsld::get_activity_from_environment { 
