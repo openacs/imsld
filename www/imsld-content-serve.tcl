@@ -516,4 +516,15 @@ foreach class_node $class_nodes {
     }
 }
 
-ns_return 200 application/xml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>[$dom_root asXML]"
+set script [$dom_doc createElement script]
+$script setAttribute type {text/javascript}
+$script setAttribute src {/resources/imsld/imsldcontent.js}
+set bodies [$dom_root selectNodes "*\[local-name()='body'\]"]
+foreach body $bodies {
+    $body appendChild $script
+}
+
+set xmloutput {<?xml version="1.0" encoding="UTF-8"?>}
+append xmloutput [$dom_root asXML]
+
+ns_return 200 text/html $xmloutput
