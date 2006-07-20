@@ -1,4 +1,9 @@
 function withcontrolchange(img) {
+  if (img.getAttribute("src").match(/minus/i)) {
+    img.setAttribute("src", "/resources/acs-templating/plus.gif");
+  } else {
+    img.setAttribute("src", "/resources/acs-templating/minus.gif");
+  }
   var withcontrol = img.nextSibling;
   withcontrol.style.display = withcontrol.style.display?"":"none";
   var title = withcontrol.nextSibling;
