@@ -90,31 +90,36 @@ if { ![string eq $activity_id ""] && [db_0or1row get_table_name {
                         and ar1.object_id_two=ar2.object_id_one 
                         and ar2.rel_type='imsld_item_res_rel'
     "]
-    if { [string eq "imsld_learning_activities" $table_name] } {
+
+    if {[string eq 'imsld_learning_activities' $table_name]} {
+        
         set prerequisites_list [db_list get_prerequisites_list "
-                       select ar2.object_id_two 
-                       from acs_rels ar1, 
-                            acs_rels ar2, 
-                            $table_name tn 
-                       where tn.activity_id=:activity_id 
-                             and ar1.object_id_one=tn.prerequisite_id 
-                             and ar1.rel_type='imsld_preq_item_rel' 
-                             and ar1.object_id_two=ar2.object_id_one 
-                             and ar2.rel_type='imsld_item_res_rel' 
-    "]
+                           select ar2.object_id_two 
+                           from acs_rels ar1, 
+                                acs_rels ar2, 
+                                $table_name tn 
+                           where tn.activity_id=:activity_id 
+                                 and ar1.object_id_one=tn.prerequisite_id 
+                                 and ar1.rel_type='imsld_preq_item_rel' 
+                                 and ar1.object_id_two=ar2.object_id_one 
+                                 and ar2.rel_type='imsld_item_res_rel' 
+        "]
         set objectives_list [db_list get_objectives_list "
-                       select ar2.object_id_two 
-                       from acs_rels ar1, 
-                            acs_rels ar2, 
-                            $table_name tn 
-                       where tn.activity_id=:activity_id 
-                             and ar1.object_id_one=tn.learning_objective_id 
-                             and ar1.rel_type='imsld_lo_item_rel' 
-                             and ar1.object_id_two=ar2.object_id_one 
-                             and ar2.rel_type='imsld_item_res_rel'
-    "]
-        set resources_list [concat $resources_list [concat $prerequisites_list $objectives_list]]
+                           select ar2.object_id_two 
+                           from acs_rels ar1, 
+                                acs_rels ar2, 
+                                $table_name tn 
+                           where tn.activity_id=:activity_id 
+                                 and ar1.object_id_one=tn.learning_objective_id 
+                                 and ar1.rel_type='imsld_lo_item_rel' 
+                                 and ar1.object_id_two=ar2.object_id_one 
+                                 and ar2.rel_type='imsld_item_res_rel'
+        "]
+    } else {
+        set prerequisites_list [list]
+        set objectives_list [list]
     }
+    set resources_list [concat $resources_list [concat $prerequisites_list $objectives_list]]
     imsld::grant_permissions -resources_activities_list $resources_list -user_id $user_id      
 }
 
