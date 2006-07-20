@@ -508,6 +508,10 @@ foreach class_node $class_nodes {
                     $class_node setAttribute "style" "${style_value}; display:none;"
                 }
             }
+	    if { [string eq $with_control_p "t"] } {
+	        $class_node setAttribute "class" "[$class_node getAttribute class] withcontrol"
+	    }
+	    $class_node setAttribute title $title
         }
     }
 }
