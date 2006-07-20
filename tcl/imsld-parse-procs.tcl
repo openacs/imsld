@@ -3578,13 +3578,9 @@ ad_proc -public imsld::parse::parse_and_create_class {
     @param parent_id Parent folder ID
 } {
     set class_identifier [imsld::parse::get_attribute -node $class_node -attr_name class]
-    set title [imsld::parse::get_attribute -node $class_node -attr_name title]
-    set with_control_p [imsld::parse::get_attribute -node $class_node -attr_name with-control]
     set class_id [imsld::item_revision_new -attributes [list [list identifier $class_identifier] \
-                                                            [list method_id $method_id] \
-                                                            [list with_control_p $with_control_p]] \
+                                                            [list method_id $method_id]] \
                       -content_type imsld_class \
-                      -title $title \
                       -parent_id $parent_id]
 }            
 

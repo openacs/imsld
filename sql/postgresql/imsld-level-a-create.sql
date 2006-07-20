@@ -699,10 +699,7 @@ create table imsld_classes (
     method_id       integer 
                     constraint imsld_cla_methodid_fk 
                     references cr_items,    --imsld_methods
-    identifier      varchar(200),
-    with_control_p  char(1)
-                    check (with_control_p in ('t','f'))   
-                    default 'f'
+    identifier      varchar(200)
 );
 
 comment on table imsld_classes is '
