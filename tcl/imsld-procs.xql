@@ -1022,8 +1022,7 @@
 		</querytext>
 	</fullquery>
 
-
-	<fullquery name="imsld::process_service_as_ul.monitor_associated_item">
+	<fullquery name="imsld::process_service_as_ul.monitor_associated_items">
 		<querytext>
 
                 select cpr.resource_id,

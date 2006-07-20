@@ -1333,9 +1333,7 @@ ad_proc -public imsld::process_service_as_ul {
         conference {
             db_1row get_conference_info { *SQL* }
             db_foreach serv_associated_items { *SQL* } {
-                if {[string eq "t" $resource_mode]} {
-                    lappend resource_item_list $resource_item_id
-                }
+                lappend resource_item_list $resource_item_id
                 imsld::process_resource_as_ul -resource_item_id $resource_item_id \
                     -run_id $run_id \
                     -dom_node $dom_node \
@@ -1357,6 +1355,7 @@ ad_proc -public imsld::process_service_as_ul {
         send-mail {
             # FIX ME: when roles are supported, fix this so the mail is sent to the propper role
             set resource_item_list [list]
+
             db_1row get_send_mail_info { *SQL* }
 
             set send_mail_node_li [$dom_doc createElement li]
@@ -1373,6 +1372,9 @@ ad_proc -public imsld::process_service_as_ul {
         monitor {
             set resource_item_list [list]
             db_1row monitor_service_info { *SQL* }
+            db_foreach monitor_associated_items { *SQL* } {
+                lappend resource_item_list $resource_item_id
+            }
 
             set monitor_node_li [$dom_doc createElement li]
             set a_node [$dom_doc createElement a]
@@ -1392,7 +1394,7 @@ ad_proc -public imsld::process_service_as_ul {
     }
     
     #grant permissions for resources in service
-    imsld::grant_permissions -resources_activities_list $resource_item_id -user_id [ad_conn user_id]
+    imsld::grant_permissions -resources_activities_list $resource_item_list -user_id [ad_conn user_id]
 
     if {[string eq "t" $resource_mode]} {
         return [list $services_list $resource_item_list]
