@@ -3247,8 +3247,8 @@ ad_proc -public imsld::parse::parse_and_create_act {
             set property_nodes_list [$expression selectNodes {//*[local-name()='property-ref']}]
             foreach property $property_nodes_list {
 #TODO que funcion la get_property_id con el play_id
-                set property_id [imsld::get_property_id -identifier [$property getAttribute ref] -play_id $play_id]
-                relation_add imsld_prop_whct_rel $property_id $when_condition_true_id 
+#                 set property_id [imsld::get_property_id -identifier [$property getAttribute ref] -play_id $play_id]
+#                 relation_add imsld_prop_whct_rel $property_id $when_condition_true_id 
             }
         }
         
@@ -3578,9 +3578,13 @@ ad_proc -public imsld::parse::parse_and_create_class {
     @param parent_id Parent folder ID
 } {
     set class_identifier [imsld::parse::get_attribute -node $class_node -attr_name class]
+    set title [imsld::parse::get_attribute -node $class_node -attr_name title]
+    set with_control_p [imsld::parse::get_attribute -node $class_node -attr_name with-control]
     set class_id [imsld::item_revision_new -attributes [list [list identifier $class_identifier] \
-                                                            [list method_id $method_id]] \
+                                                            [list method_id $method_id] \
+                                                            [list with_control_p $with_control_p]] \
                       -content_type imsld_class \
+                      -title $title \
                       -parent_id $parent_id]
 }            
 
@@ -4025,8 +4029,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                 set property_nodes_list [$imsld_if selectNodes { //*[local-name()='property-ref'] }]
                 
                 foreach property $property_nodes_list {
-                    set property_id [imsld::get_property_id -identifier [$property getAttribute ref] -imsld_id $imsld_id]
-                    #relation_add imsld_prop_cond_rel $property_id $contition_id 
+#                     set property_id [imsld::get_property_id -identifier [$property getAttribute ref] -imsld_id $imsld_id]
+#                     relation_add imsld_prop_cond_rel $property_id $contition_id 
                 }
             }
         }

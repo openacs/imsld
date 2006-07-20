@@ -333,5 +333,6 @@
   <msg key="waiting">waiting</msg>
   <msg key="When_Condition_True">When Condition True</msg>
   <msg key="With_Control">With Control</msg>
+  <msg key="With_Control_1">With Control?</msg>
   <msg key="XML_Piece">XML Piece</msg>
 </message_catalog>

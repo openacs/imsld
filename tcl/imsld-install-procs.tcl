@@ -212,6 +212,7 @@ ad_proc -public imsld::install::init_content_repository {
 
     content::type::attribute::new -content_type imsld_class -attribute_name method_id -datatype number -pretty_name "#imsld.Method_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_class -attribute_name identifier -datatype string -pretty_name "#imsld.lt_IMS-LD_Class_Ideintif#" -column_spec "varchar(200)"
+    content::type::attribute::new -content_type imsld_class -attribute_name with_control_p -datatype string -pretty_name "#imsld.With_Control_1#" -column_spec "char(1)"
 
     ### IMS-LD Content Packaging
 
@@ -773,6 +774,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     # classes
     content::type::attribute::delete -content_type imsld_class -attribute_name method_id
     content::type::attribute::delete -content_type imsld_class -attribute_name identifier
+    content::type::attribute::delete -content_type imsld_class -attribute_name with_control_p
 
     ### IMS-LD Content Packaging
     

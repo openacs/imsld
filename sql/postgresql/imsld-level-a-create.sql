@@ -690,16 +690,19 @@ The underlying item elements point to a resource (of type webcontent or imsldcon
 Feedback are items that are mapped to this table with the imsld_feedback_rel.';
 
 create table imsld_classes (
-    class_id    integer 
-                constraint imsld_cla_fk 
-                references cr_revisions 
-                on delete cascade
-                constraint imsld_cla_pk
-                primary key,
-    method_id   integer 
-                constraint imsld_cla_methodid_fk 
-                references cr_items,    --imsld_methods
-    identifier  varchar(200)
+    class_id        integer 
+                    constraint imsld_cla_fk 
+                    references cr_revisions 
+                    on delete cascade
+                    constraint imsld_cla_pk
+                    primary key,
+    method_id       integer 
+                    constraint imsld_cla_methodid_fk 
+                    references cr_items,    --imsld_methods
+    identifier      varchar(200),
+    with_control_p  char(1)
+                    check (with_control_p in ('t','f'))   
+                    default 'f'
 );
 
 comment on table imsld_classes is '

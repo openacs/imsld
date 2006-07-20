@@ -478,8 +478,10 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
     # 7. classes
     db_foreach class {
         select cla.class_id,
-        cla.identifier
-        from imsld_classes cla, imsld_methodsi im
+        cla.identifier,
+        cla.with_control_p,
+        cla.title
+        from imsld_classesi cla, imsld_methodsi im
         where cla.method_id = im.item_id
         and im.imsld_id = :run_imsld_item_id
     } {
@@ -488,7 +490,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
             where identifier = :identifier
             and run_id = :run_id
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $identifier] [list run_id $run_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $identifier] [list run_id $run_id] [list is_visible_p "t"] [list title $title] [list with_control_p ""]] imsld_attribute_instance new]
         }
     }
 
