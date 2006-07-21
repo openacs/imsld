@@ -34,7 +34,6 @@ template::list::create \
         }
     }
 
-
 db_multirow -extend { manage_roles delete } role_groups get_groups_list {} {
     set manage_roles [export_vars -base imsld-admin-roles {imsld_id run_id role {group_instance $group_id}}]
     set delete "<a href=\"[export_vars -base "imsld-delete-instance" { imsld_id run_id role group_id }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"Delete\"></a>"

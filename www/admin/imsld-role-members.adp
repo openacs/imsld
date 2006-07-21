@@ -20,7 +20,6 @@
   </td>
   <td>
   <formtemplate id="confirm"></formtemplate> <br>
-  <formtemplate id="finish_management"></formtemplate> 
   </td>
 </tr>
 

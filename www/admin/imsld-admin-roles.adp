@@ -14,10 +14,17 @@
   <formtemplate id="choose_role"></formtemplate>
   </td>
   <td>
-     <if @role@ not eq 0>
-       <include src="imsld-groups">
-    </if>  
+  <if @role@ not eq 0>
+      <include src="imsld-groups">
+  </if> 
   </td>
+
+  <td>
+    <if @finishable@ not eq 0>
+     <formtemplate id="finish_management"></formtemplate>
+    </if>
+  </td>
+
   </tr>
 
     <if @group_instance@ not eq 0>

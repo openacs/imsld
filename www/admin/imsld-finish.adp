@@ -2,12 +2,14 @@
 
 <if @warning_flag@ not nil>
 <p><b>Some warnings has been found</b></p>
-    <p>@warnings@<p>
+    <ul>
+    @warnings;noquote@
+    </ul>
 </if>
 
 <if @error_flag@ not nil>
 <p><b>Some errors has been found</b></p>
-    <p>@errors@<p>
+    <ul>@errors;noquote@</ul>
     <a href="@back@">Go back</a>
     </if>
 <else>

@@ -126,12 +126,3 @@ ad_form -name confirm \
         -action imsld-role-confirm \
         -export {imsld_id run_id role group_instance members_list}
 
-ad_form -name finish_management \
-         -form {
-            {submit:text(submit) {label "Finish role management"}}
-        } \
-       -action imsld-finish \
-        -export {imsld_id run_id}
-
-
-

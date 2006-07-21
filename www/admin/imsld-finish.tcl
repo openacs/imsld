@@ -26,6 +26,12 @@ foreach role $roles_list {
     set min_persons [lindex $role_info 1]
     set match_persons_p [lindex $role_info 3]
 
+    db_1row get_role_name {
+           select coalesce(title,role_type) as role_name,item_id as role_item_id  
+           from imsld_rolesi 
+           where role_id=:role
+    } 
+    
  #para cada instancia del role, el maximo, minimo y demas es para cada grupo
     set role_groups [db_list get_groups_in_run {
 
@@ -44,21 +50,24 @@ foreach role $roles_list {
     }]
     if {![llength $role_groups]} {
         #warning, there's a role without instances
-            lappend warnings "[llength $role_groups]WARNING: Role $role has no groups. Having a group is not mandatory, but may be you forgot assigning one...\<br\>"
+            lappend warnings "\<li\>WARNING: Role $role_name has no groups. Having a group is not mandatory, but may be you forgot assigning one...\<\/li\>"
              set warning_flag 1           
     } else {
     
          foreach group $role_groups {
+            db_1row get_group_name {
+               select group_name from groups where group_id=:group 
+            }
             set members_list [db_list get_members_list {select member_id from group_member_map where group_id=:group group by member_id}]
 
             if {[llength $members_list] == 0} {
-                lappend warnings "WARNING: Group $group in role $role has no members. A empty group is not forbiden, but may be you forgot assigning members...\<br\>"
+                lappend warnings "\<li\>WARNING: Group $group_name in role $role_name has no members. A empty group is not forbiden, but may be you forgot assigning members...\<\/li\>"
                  set warning_flag 1           
             }
             #numero maximo
             if {![string eq "" $max_persons] && ([llength $members_list] > $max_persons)} {          
                 #error porque hay demasiada gente
-                lappend errors "ERROR: Group $group in role $role has too much members. Is must have no more than $max_persons. \<br\>Please go back and modify this.\<br\>"
+                lappend errors "\<li\>ERROR: Group $group_name in role $role_name has too much members. Is must have no more than $max_persons. \<br\>Please go back and modify this.\<\/li\>"
                 set error_flag 1
                 
             }
@@ -66,7 +75,7 @@ foreach role $roles_list {
             #numero minimo
             if { ![string eq "" $min_persons] && ([llength $members_list] < $min_persons)} {
                 #error porque no hay gente suficiente en el grupo
-                lappend errors "ERROR: Group $group in role $role has too much members. Is must have at least $min_persons. \<br\>Please go back and modify this.\<br\>"
+                lappend errors "\<li\>ERROR: Group $group_name in role $role_name has too much members. Is must have at least $min_persons. \<br\>Please go back and modify this.\<\/li\>"
                 set error_flag 1
             }
             #match person   
@@ -75,7 +84,8 @@ foreach role $roles_list {
             }
         }  
     }
-
 }
+set warnings [join $warnings ""]
+set errors [join $errors ""]
 set back [export_vars -base imsld-admin-roles {run_id}]
 set confirm [export_vars -base imsld-confirm-finish {imsld_id run_id}]

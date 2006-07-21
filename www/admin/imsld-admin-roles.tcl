@@ -10,6 +10,7 @@ ad_page_contract {
     {group_instance 0}
     run_id
     members_list:optional
+    {finishable 0}
 } 
 
 #check if the run is waiting
@@ -57,3 +58,11 @@ ad_form -name choose_role -action imsld-admin-roles -export {imsld_id run_id} -s
 if {![info exists role]} {
     set role 0
 }
+
+ad_form -name finish_management \
+            -form {
+                {submit:text(submit) {label "Finish role management"}}
+            } \
+            -action imsld-finish \
+            -export {imsld_id run_id}
+
