@@ -11,7 +11,7 @@
 
 <fullquery name="imsld::roles::create_instance.get_role_name">
 		<querytext>
-        select role_type,item_id as role_item_id  
+        select coalesce(title,role_type) as role_name,item_id as role_item_id  
         from imsld_rolesi 
         where role_id=:role_id
 		</querytext>
@@ -52,11 +52,23 @@
       </querytext>
 </fullquery>
 
-<fullquery name="imsld::roles::create_instance.name_already_exist">      
+<fullquery name="imsld::roles::create_instance.existing_instances">      
       <querytext>
-        select count(*) as names_counter
-        from groups
-        where group_name like (:role_name || '%')
+        select gr.group_name 
+        from groups gr, 
+            acs_rels ar1, 
+            acs_rels ar2, 
+            imsld_run_users_group_ext iruge, 
+            imsld_rolesi iri 
+        where ar1.rel_type='imsld_roleinstance_run_rel' 
+            and ar1.object_id_one=gr.group_id 
+            and ar1.object_id_two=iruge.group_id 
+            and iruge.run_id=:run_id
+            and iri.role_id=:role_id
+            and iri.item_id=ar2.object_id_one 
+            and ar2.rel_type='imsld_role_group_rel' 
+            and ar2.object_id_two=gr.group_id
+        order by gr.group_name desc limit 1 
       </querytext>
 </fullquery>
 
@@ -93,10 +105,12 @@
 
  <fullquery name="imsld::roles::get_depth.has_parent">      
       <querytext>
-        select parent_role_id 
-        from imsld_roles
-        where role_id=:role_id
-              and parent_role_id > 0
+        select ir2.role_id as parent_role_id 
+        from imsld_roles ir,
+             imsld_rolesi ir2  
+        where ir.role_id=:role_id
+              and ir.parent_role_id > 0 
+              and ir.parent_role_id=ir2.item_id
       </querytext>
 </fullquery>
 

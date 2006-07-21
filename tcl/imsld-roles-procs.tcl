@@ -21,9 +21,11 @@ ad_proc -public imsld::roles::create_instance {
     @param role_id identifier of the role to be instanciated
 } {
     db_1row get_role_name {} 
-    set role_name [join [list imsld $role_type $role_id] "_"]
-    set names_counter [db_string name_already_exist {}]
-    set role_name [join [list $role_name $names_counter] "_"]
+
+    set role_name [join [list $role_name] "_"]
+    set existing_instances [db_string existing_instances {} -default ${role_name}_0]
+    regexp {(.*)_(.*)} $existing_instances role_name_temp prefix names_counter
+    set role_name [join [list $role_name [expr $names_counter +1 ]] "_"]
     set user_id [ad_conn user_id] 
     set peeraddr [ad_conn peeraddr]
 
@@ -122,7 +124,7 @@ ad_proc -public imsld::roles::get_roles_names {
     foreach role_item_par $roles_list {
 
         set role_item [lindex $role_item_par 0]
-        set depth [lindex $role_item_par 1]       
+        set depth [lindex $role_item_par 1]
 
         db_1row get_role_name {}
         if {![string eq "" $name]} {
@@ -322,24 +324,36 @@ ad_proc -public imsld::roles::get_users_in_role {
 
 ad_proc -public imsld::roles::get_role_id {
     -ref:required
-    -run_id:required
+    -run_id
+    -imsld_id
 } {
-    Returns the role_id which has a given ref in a run, 0 if no matches found.
+    Returns the role_id which has a given ref in a run or imsld, 0 if no matches found.
 } {
-    if { [db_0or1row select_role_id {
-        select ar1.object_id_one as role_id
-        from imsld_rolesi iri, 
-             acs_rels ar1, 
-             acs_rels ar2 
-        where ar1.object_id_two=ar2.object_id_one 
-              and ar1.rel_type='imsld_role_group_rel' 
-              and ar2.rel_type='imsld_roleinstance_run_rel' 
-              and ar2.object_id_two=:run_id
-              and iri.item_id=ar1.object_id_one 
-              and iri.identifier=:ref
-        group by ar1.object_id_one;
-    }] } {
-        return $role_id
+    if {[info exist imsld_id]} {
+        if { [db_0or1row select_role_id_from_imsld {
+            select role_id 
+            from imsld_roles ir, 
+                 imsld_componentsi ici 
+            where ir.identifier=:ref 
+                  and ir.component_id=ici.item_id 
+                  and ici.imsld_id=:imsld_id
+        }]}  
+    } elseif { [info exist run_id] } {
+        if { [db_0or1row select_role_id_from_run {
+                select ar1.object_id_one as role_id
+                from imsld_rolesi iri, 
+                     acs_rels ar1, 
+                     acs_rels ar2 
+                where ar1.object_id_two=ar2.object_id_one 
+                      and ar1.rel_type='imsld_role_group_rel' 
+                      and ar2.rel_type='imsld_roleinstance_run_rel' 
+                      and ar2.object_id_two=:run_id
+                      and iri.item_id=ar1.object_id_one 
+                      and iri.identifier=:ref
+                group by ar1.object_id_one;v
+            }] } {
+            return $role_id
+        }
     } else {
         return 0
     }
