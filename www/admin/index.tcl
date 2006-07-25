@@ -25,9 +25,6 @@ if { ![string eq "" $set_imsld_id_live] } {
 if { ![string eq "" $set_run_id_live] } {
     db_dml make_run_live { *SQL* }
 }
-if { ![string eq "" $run_imsld_id] } {
-    imsld::instance::instantiate_imsld -imsld_id $run_imsld_id -community_id $community_id
-}
 
 set package_id [ad_conn package_id]
 permission::require_permission -object_id $package_id -privilege create
@@ -86,7 +83,7 @@ db_multirow -extend { delete_template create_run } imslds  get_imslds { *SQL* } 
         set create_run ""
     } else {
         set delete_template "<a href=\"[export_vars -base "imsld-delete" { imsld_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\"></a>"
-        set create_run "<a href=\"[export_vars -base "index" { {run_imsld_id $imsld_id} return_url }]\"> [_ imsld.create_new_run] </a>"
+        set create_run "<a href=\"[export_vars -base "run-new" { {run_imsld_id $imsld_id} return_url }]\"> [_ imsld.create_new_run] </a>"
     }
 }
 
