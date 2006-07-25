@@ -276,6 +276,7 @@
   <msg key="No">information found in the imsmanifest.xml file. Nothing to do.</msg>
   <msg key="No_IMS_LD">No IMS LD</msg>
   <msg key="None">None</msg>
+  <msg key="None_please_select">None, please select</msg>
   <msg key="Not_defined">Not defined</msg>
   <msg key="Number_of_IMD_LDs">Number of IMD LDs</msg>
   <msg key="Number_to_Select">Number to Select</msg>
@@ -315,6 +316,7 @@
   <msg key="stopped">stopped</msg>
   <msg key="Structure_Type">Structure Type</msg>
   <msg key="Support_Activities">Support Activities</msg>
+  <msg key="Supporting">user: %supported_user_name%</msg>
   <msg key="Then_Identifier">Then Identifier</msg>
   <msg key="Time_in_Seconds">Time in Seconds</msg>
   <msg key="Total_Activities">Total Activities</msg>

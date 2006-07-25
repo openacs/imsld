@@ -20,15 +20,25 @@ document.write('<style type="text/css">.tabber{display:none;}<\/style>');
 <style type="text/css">
 
 </style>
-
+<SCRIPT>
+    function confirmValue(myform){
+        myform.submit()
+    }
+</SCRIPT>
 </head>
 <body>
 
-<if @roles_template_p@ not nil>
-   <include src="support-activity-roles" supported_roles="@supported_roles@" run_id="@run_id@">
-</if>
+<if @roles_template_p@ eq 1>
+   <include src="support-activity-roles" supported_roles="@supported_roles@" run_id=@run_id@ activity_id=@activity_id@ supported_user_id=@supported_user_id@>
 
+<div style="display:none;">
+<a href="@activities;noquote@"></a>
+</div>
+</if>
+<else>
 @activities;noquote@
+</else>
+
 <iframe id="object" name="object"></iframe>
 
 </body>

@@ -1,8 +1,4 @@
-ad_page_contract {
 
-       Here is placed information about roles and users in support activities
-           
-}
 
 db_multirow role_info get_multirow_role_info "select title as role_name, role_id
                                               from imsld_rolesi
@@ -36,6 +32,13 @@ foreach instances_group $supported_role_instances {
 
    
 }
+
+if { [string eq "" $supported_user_id] } {
+    set supported_user_name "[_ imsld.None_please_select]"
+} else {
+    set supported_user_name "[person::name -person_id $supported_user_id]"
+}
+
 
 set lista [template::util::multirow_to_list supported_users_in_role]
 
