@@ -337,9 +337,7 @@ ad_proc -public imsld::roles::get_role_id {
             where ir.identifier=:ref 
                   and ir.component_id=ici.item_id 
                   and ici.imsld_id=:imsld_id
-        }]} {
-            return $role_id
-        }
+        }]}  
     } elseif { [info exist run_id] } {
         if { [db_0or1row select_role_id_from_run {
                 select ar1.object_id_one as role_id
@@ -352,7 +350,7 @@ ad_proc -public imsld::roles::get_role_id {
                       and ar2.object_id_two=:run_id
                       and iri.item_id=ar1.object_id_one 
                       and iri.identifier=:ref
-                group by ar1.object_id_one
+                group by ar1.object_id_one;v
             }] } {
             return $role_id
         }

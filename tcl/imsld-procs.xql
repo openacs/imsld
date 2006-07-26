@@ -607,19 +607,6 @@
 		</querytext>
 	</fullquery>
 
-    <fullquery name="imsld::finish_component_element.search_related_conditions">
-		<querytext>
-            select ici.condition_xml 
-            from imsld_conditionsi ici,
-                 acs_rels ar, 
-                 ${table_name}i ilai 
-            where ilai.item_id=ar.object_id_one 
-                  and ar.rel_type='imsld_ilm_cond_rel' 
-                  and ilai.${element_name}=:element_id
-                  and ici.item_id=ar.object_id_two;
-		</querytext>
-	</fullquery>
-    
 
 	<fullquery name="imsld::finish_component_element.referencer_structure">
 		<querytext>

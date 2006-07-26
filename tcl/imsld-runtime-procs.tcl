@@ -164,29 +164,7 @@ ad_proc -public imsld::runtime::property::property_value_set {
 
     # recursive call only if the property value has changed
     if { $old_value != $value } {
-        set conditions_list [db_list get_conditions_from_property {
-                                                           select ici.condition_id 
-                                                           from imsld_conditionsi ici, 
-                                                                acs_rels ar, 
-                                                                imsld_propertiesi ipi 
-                                                           where ipi.property_id=:property_id
-                                                                 and ipi.item_id=ar.object_id_one 
-                                                                 and ar.rel_type='imsld_prop_cond_rel' 
-                                                                 and ar.object_id_two=ici.item_id
-        }]
-        #property conditions
-        foreach condition_id $conditions_list {
-            set condition_xml [db_string get_xml_piece {
-                                                        select condition_xml
-                                                        from imsld_conditions
-                                                        where condition_id=:condition_id
-            }]
-            dom parse $condition_xml document
-            $document documentElement condition_node
-            imsld::condition::execute -run_id $run_id -condition $condition_node
-        }
-        #role conditions, time conditions...
-        imsld::condition::execute_time_role_conditions -run_id $run_id 
+        imsld::condition::execute_all -run_id $run_id
     }
 }
 

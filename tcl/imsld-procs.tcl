@@ -182,22 +182,6 @@ ad_proc -public imsld::sweep_expired_activities {
                     -play_id $play_id \
                     -user_id $user_id
             }
-            foreach condition_xml [db_list search_related_conditions {
-                                                                select ici.condition_xml 
-                                                                from imsld_conditionsi ici,
-                                                                     acs_rels ar, 
-                                                                     imsld_playsi ilai 
-                                                                where ilai.item_id=ar.object_id_one 
-                                                                      and ar.rel_type='imsld_ilm_cond_rel' 
-                                                                      and ilai.play_id=:play_id
-                                                                      and ici.item_id=ar.object_id_two
-            }] { 
-               dom parse $condition_xml document
-               $document documentElement condition_node
-               imsld::condition::execute -run_id $run_id -condition $condition_node
-            }
-            #role conditions, time conditions...
-            imsld::condition::execute_time_role_conditions -run_id $run_id
         }
     }
     ns_log notice "imsld::sweep_expired_activities Sweeping acts..."
@@ -221,22 +205,6 @@ ad_proc -public imsld::sweep_expired_activities {
                     -act_id $act_id \
                     -user_id $user_id
             }
-            foreach condition_xml [db_list search_related_conditions {
-                                                                select ici.condition_xml 
-                                                                from imsld_conditionsi ici,
-                                                                     acs_rels ar, 
-                                                                     imsld_actsi ilai 
-                                                                where ilai.item_id=ar.object_id_one 
-                                                                      and ar.rel_type='imsld_ilm_cond_rel' 
-                                                                      and ilai.act_id=:act_id
-                                                                      and ici.item_id=ar.object_id_two
-            }] { 
-               dom parse $condition_xml document
-               $document documentElement condition_node
-               imsld::condition::execute -run_id $run_id -condition $condition_node
-            }
-            #role conditions, time conditions...
-            imsld::condition::execute_time_role_conditions -run_id $run_id 
         }
     }
     ns_log notice "imsld::sweep_expired_activities Sweeping support activities..."
@@ -273,22 +241,6 @@ ad_proc -public imsld::sweep_expired_activities {
                             -user_id $user_id \
                             -code_call
                     }
-                    foreach condition_xml [db_list search_related_conditions {
-                                                                        select ici.condition_xml 
-                                                                        from imsld_conditionsi ici,
-                                                                             acs_rels ar, 
-                                                                             imsld_support_activitiesi ilai 
-                                                                        where ilai.item_id=ar.object_id_one 
-                                                                              and ar.rel_type='imsld_ilm_cond_rel' 
-                                                                              and ilai.activity_id=:activity_id
-                                                                              and ici.item_id=ar.object_id_two
-                    }] { 
-                       dom parse $condition_xml document
-                       $document documentElement condition_node
-                       imsld::condition::execute -run_id $run_id -condition $condition_node
-                    }
-                    #role conditions, time conditions...
-                    imsld::condition::execute_time_role_conditions -run_id $run_id
                 }
             }
         }
@@ -327,22 +279,6 @@ ad_proc -public imsld::sweep_expired_activities {
                             -user_id $user_id \
                             -code_call
                     }
-                    foreach condition_xml [db_list search_related_conditions {
-                                                                        select ici.condition_xml 
-                                                                        from imsld_conditionsi ici,
-                                                                             acs_rels ar, 
-                                                                             imsld_learning_activitiesi ilai 
-                                                                        where ilai.item_id=ar.object_id_one 
-                                                                              and ar.rel_type='imsld_ilm_cond_rel' 
-                                                                              and ilai.activity_id=:activity_id
-                                                                              and ici.item_id=ar.object_id_two
-                    }] { 
-                       dom parse $condition_xml document
-                       $document documentElement condition_node
-                       imsld::condition::execute -run_id $run_id -condition $condition_node
-                    }
-                    #role conditions, time conditions...
-                    imsld::condition::execute_time_role_conditions -run_id $run_id
                 }
             }
         }
@@ -708,16 +644,7 @@ ad_proc -public imsld::finish_component_element {
             set element_name "act_id"
         }
     }
-   
     if { [info exists table_name] } {
-        foreach condition_xml [db_list search_related_conditions ""] { 
-           dom parse $condition_xml document
-           $document documentElement condition_node
-           imsld::condition::execute -run_id $run_id -condition $condition_node
-        }
-        #role conditions, time conditions...
-        imsld::condition::execute_time_role_conditions -run_id $run_id
-
         #grant permissions to resources in activity
         if { [db_0or1row get_related_on_completion_id ""] } {
             if { [db_0or1row get_related_resource_id { *SQL* }] } {
@@ -3119,10 +3046,9 @@ ad_proc -public imsld::finish_resource {
     }
 }
 
-ad_proc -public imsld::get_property_item_id {
+ad_proc -public imsld::get_property_id {
     -identifier:required
-    -imsld_id
-    -play_id
+    -imsld_id:required
 } {
     <p>Get the property_id from the property_identifier in a imsld_id</p>
 
@@ -3131,7 +3057,7 @@ ad_proc -public imsld::get_property_item_id {
 
 if {[info exist play_id] & ![info exist imsld_id]} {
     set imsld_id [db_string get_imsld_id_from_play {
-                                                    select iii.item_id 
+                                                    select iii.imsld_id 
                                                     from imsld_imsldsi iii, 
                                                          imsld_methodsi imi, 
                                                          imsld_plays ip 
@@ -3140,15 +3066,14 @@ if {[info exist play_id] & ![info exist imsld_id]} {
                                                           and ip.play_id=:play_id
     }]
 }
-
     return [db_string get_property_id {
-        select ip.item_id 
-        from imsld_propertiesi ip, 
+        select ip.property_id 
+        from imsld_properties ip, 
         imsld_componentsi ici,
         imsld_imsldsi iii
         where ip.component_id=ici.item_id 
         and ici.imsld_id=iii.item_id
-        and iii.item_id=:imsld_id
+        and iii.imsld_id=:imsld_id
         and ip.identifier=:identifier
        }]
 }

@@ -519,16 +519,6 @@ ad_proc -public imsld::install::init_rels {
         content_item 0 {} \
         content_item 0 {}
 
-    # Roles  - conditions
-    rel_types::new imsld_role_cond_rel "Role - Condition" "Roles - Conditions" \
-        content_item 0 {} \
-        content_item 0 {}
-
-    # Imsld learning material  - conditions
-    rel_types::new imsld_ilm_cond_rel "Imsld Learning Material - Condition" "Imsld Learning Materials - Conditions" \
-        content_item 0 {} \
-        content_item 0 {}
-
 }
 
 ad_proc -public imsld::uninstall::delete_rels {  

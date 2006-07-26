@@ -3244,12 +3244,11 @@ ad_proc -public imsld::parse::parse_and_create_act {
                                             -parent_id $parent_id \
                                             -title $title]
             #search properties in expression 
-            set property_nodes_list [$expression selectNodes {.//*[local-name()='property-ref']}]
+            set property_nodes_list [$expression selectNodes {//*[local-name()='property-ref']}]
             foreach property $property_nodes_list {
-            
-
-                set property_id [imsld::get_property_item_id -identifier [$property getAttribute ref] -play_id $play_id]
-                relation_add imsld_prop_whct_rel $property_id $when_condition_true_id 
+#TODO que funcion la get_property_id con el play_id
+#                 set property_id [imsld::get_property_id -identifier [$property getAttribute ref] -play_id $play_id]
+#                 relation_add imsld_prop_whct_rel $property_id $when_condition_true_id 
             }
         }
         
@@ -4022,95 +4021,12 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                       -parent_id $cr_folder_id \
                                       -manifest $manifest \
                                       -method_id $method_id ]
-        
                 #search condition properties
-                set property_nodes_list [$imsld_if selectNodes {.//*[local-name()='property-ref'] }]
+                set property_nodes_list [$imsld_if selectNodes { //*[local-name()='property-ref'] }]
+                
                 foreach property $property_nodes_list {
-
-                    set property_id [imsld::get_property_item_id -identifier [$property getAttribute ref] -imsld_id $imsld_id]
-                    relation_add imsld_prop_cond_rel $property_id $condition_id 
-                }
-                #search condition roles
-                #search conditional imsld learning materials
-                set ilm_condition_node_list [$imsld_if selectNodes {.//*[local-name()='complete']/*}]
-
-                foreach ilm_condition_node $ilm_condition_node_list {
-                    set ref [$ilm_condition_node getAttribute ref]
-                    set node_name [$ilm_condition_node localName]
-
-                    switch $node_name {
-                        learning-activity-ref {
-                            db_1row get_la_item_id {
-                                                   select ila.item_id as ilm_item_id 
-                                                   from imsld_learning_activitiesi ila, 
-                                                        imsld_componentsi ici 
-                                                   where ila.identifier=:ref
-                                                         and ila.component_id=ici.item_id 
-                                                         and ici.imsld_id=:imsld_id
-                            }
-                        }
-                        support-activity-ref {
-                            db_1row get_sa_item_id {
-                                                    select ila.item_id as ilm_item_id 
-                                                    from imsld_support_activitiesi ila, 
-                                                         imsld_componentsi ici 
-                                                    where ila.identifier=:ref 
-                                                          and ila.component_id=ici.item_id 
-                                                          and ici.imsld_id=:imsld_id
-                            }
-                        }
-                        activity-structure-ref {
-                            db_1row get_as_item_id {
-                                                    select ila.item_id as ilm_item_id
-                                                    from imsld_activity_structuresi ila, 
-                                                         imsld_componentsi ici 
-                                                    where ila.identifier=:ref
-                                                          and ila.component_id=ici.item_id 
-                                                          and ici.imsld_id=:imsld_id
-                            }
-                        }
-                        unit-of-learning-href {
-
-                        }
-                        role-part-ref {
-                            db_1row get_role_part_item_id {
-                                                    select irp.item_id as ilm_item_id
-                                                    from imsld_role_partsi irp, 
-                                                         imsld_actsi ia,
-                                                         imsld_playsi ipi,
-                                                         imsld_methodsi imi 
-                                                    where irp.identifier=:ref 
-                                                          and irp.act_id=ia.item_id  
-                                                          and ia.play_id=ipi.item_id 
-                                                          and ipi.method_id=imi.item_id 
-                                                          and imi.imsld_id=:imsld_id
-                            }
-                        }
-                        act-ref {
-                            db_1row get_act_item_id {
-                                                    select ia.item_id as ilm_item_id 
-                                                    from imsld_actsi ia,
-                                                         imsld_playsi ipi,
-                                                         imsld_methodsi imi 
-                                                    where ia.identifier=:ref 
-                                                          and ia.play_id=ipi.item_id 
-                                                          and ipi.method_id=imi.item_id 
-                                                          and imi.imsld_id=:imsld_id
-                            }
-
-                        }
-                        play-ref {
-                            db_1row get_play_item_id {
-                                                    select ip.item_id as ilm_item_id
-                                                    from imsld_playsi ip,
-                                                         imsld_methodsi imi 
-                                                    where ip.identifier=:ref
-                                                          and ip.method_id=imi.item_id 
-                                                          and imi.imsld_id=:imsld_id;
-                            }
-                        }
-                    }
-                    relation_add imsld_ilm_cond_rel $ilm_item_id $condition_id
+#                     set property_id [imsld::get_property_id -identifier [$property getAttribute ref] -imsld_id $imsld_id]
+#                     relation_add imsld_prop_cond_rel $property_id $contition_id 
                 }
             }
         }
