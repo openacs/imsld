@@ -56,6 +56,30 @@ ad_proc -public imsld::condition::execute {
     }
 }
 
+ad_proc -public imsld::condition::execute_time_role_conditions {
+    -run_id
+} {
+} {
+foreach condition_xml [db_list get_other_conditions {
+                                   select ici.condition_xml
+                                   from imsld_conditionsi ici, 
+                                        imsld_methodsi imi,
+                                        imsld_imsldsi iii,
+                                        imsld_runs iri 
+                                   where ici.item_id not in (select object_id_two 
+                                                             from acs_rels 
+                                                             where (rel_type='imsld_prop_cond_rel' or rel_type='imsld_ilm_cond_rel')) 
+                                         and ici.method_id=imi.item_id 
+                                         and imi.imsld_id=iii.item_id 
+                                         and iri.imsld_id=iii.imsld_id 
+                                         and iri.run_id=:run_id
+    }] {
+        dom parse $condition_xml document
+        $document documentElement condition_node
+        imsld::condition::execute -run_id $run_id -condition $condition_node
+    }
+}
+
 ad_proc -public imsld::expression::eval {
     -run_id
     -expression
