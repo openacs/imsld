@@ -28,10 +28,10 @@ document.write('<style type="text/css">.tabber{display:none;}<\/style>');
 </head>
 <body>
 
-<span id="addc1" style="align:left;display:;position:absolute;top:0px;left:0px;">
+<span id="addc1" style="position:absolute;top:0px;left:0px;">
 <a href="#" onClick="return _tp(false)" title="Hide panel" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_left.png" alt="Hide" border="0" align="top"/></a>
 </span>
-<span id="addc" style="align:left;display:none;position:absolute;top:0px;left:0px;">
+<span id="addc" style="display:none;position:absolute;top:0px;left:0px;">
 <a href="#" onClick="return _tp(true)" title="Show panel" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_right.png" alt="Show" border="0" align="top"/></a>
 </span>
 
@@ -72,7 +72,12 @@ for (var i = 0; i < as.length; i++) {
   var a = as[i];
   a.setAttribute('target', 'object');
 }
-document.getElementById('object').src = as[0].getAttribute('href');
+for (var i = 0; i < as.length; i++) {
+  if (!as[i].getAttribute('href').match(/#/i)) {
+    document.getElementById('object').src = as[i].getAttribute('href');
+    break;
+  }
+}
 </script>
 
 <script type="text/javascript">
