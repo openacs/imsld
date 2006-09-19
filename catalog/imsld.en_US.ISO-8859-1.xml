@@ -7,6 +7,7 @@
   <msg key="Activity_Structures">Activity Structures</msg>
   <msg key="Acts_in_play_count">Acts in play %count%</msg>
   <msg key="Admin_IMS_LD">Admin IMS LD</msg>
+  <msg key="Back">Back to admin</msg>
   <msg key="Calculateexpression">Calculate(expression)</msg>
   <msg key="Caluclate_Identifier">Caluclate Identifier</msg>
   <msg key="Calulate_Identifier">Calulate Identifier</msg>
@@ -27,6 +28,7 @@
   <msg key="Delete_IMS_LD">Delete IMS LD</msg>
   <msg key="Delete_Run">Delete Run</msg>
   <msg key="Deleted">Deleted</msg>
+  <msg key="Descendant">Descendant roles:</msg>
   <msg key="Description">Description</msg>
   <msg key="Else_Identifier">Else Identifier</msg>
   <msg key="Error_parsing_file">Error parsing file</msg>
@@ -36,6 +38,7 @@
   <msg key="Feedback">Feedback</msg>
   <msg key="File_name">File name</msg>
   <msg key="finished">finished</msg>
+  <msg key="Groups">Groups in role</msg>
   <msg key="Href">Href</msg>
   <msg key="Identifier">Identifier</msg>
   <msg key="Identifier_Reference">Identifier Reference</msg>
@@ -283,6 +286,7 @@
   <msg key="Objectives">Objectives</msg>
   <msg key="Parameter_Identifier">Parameter Identifier</msg>
   <msg key="Parameters">Parameters</msg>
+  <msg key="Parent">Parent role:</msg>
   <msg key="Party_Identifier">Party Identifier</msg>
   <msg key="Path_to_File">Path to File</msg>
   <msg key="Play_Identifier">Play Identifier</msg>
@@ -303,6 +307,8 @@
   <msg key="Run_IMS-LD_Name">Run (IMS-LD) Name</msg>
   <msg key="Runs">Runs (IMS-LD instances)</msg>
   <msg key="Select">select user...</msg>
+  <msg key="Select_a_role">Select a role...</msg>
+  <msg key="Select_a_role_1">Select a role</msg>
   <msg key="Self">Self</msg>
   <msg key="send-mail_service">send-mail service</msg>
   <msg key="Sendmail_Identifier">Sendmail Identifier</msg>
@@ -317,7 +323,9 @@
   <msg key="Structure_Type">Structure Type</msg>
   <msg key="Support_Activities">Support Activities</msg>
   <msg key="Supporting">user: %supported_user_name%</msg>
+  <msg key="The">The selected role has no parent</msg>
   <msg key="Then_Identifier">Then Identifier</msg>
+  <msg key="There">There are no descendant roles</msg>
   <msg key="Time_in_Seconds">Time in Seconds</msg>
   <msg key="Total_Activities">Total Activities</msg>
   <msg key="Total_Roles">Parent Roles</msg>
@@ -332,6 +340,7 @@
   <msg key="User_Choice">User Choice?</msg>
   <msg key="Value">Value</msg>
   <msg key="Version">Version</msg>
+  <msg key="View_members">View members</msg>
   <msg key="waiting">waiting</msg>
   <msg key="When_Condition_True">When Condition True</msg>
   <msg key="With_Control">With Control</msg>
