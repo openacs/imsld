@@ -125,6 +125,7 @@ ad_proc -public imsld::roles::get_roles_names {
 
         set role_item [lindex $role_item_par 0]
         set depth [lindex $role_item_par 1]
+        set depth [expr { [string eq $depth ""] ? 0 : $depth }]
 
         db_1row get_role_name {}
         if {![string eq "" $name]} {

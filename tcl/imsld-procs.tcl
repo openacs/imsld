@@ -720,8 +720,18 @@ ad_proc -public imsld::finish_component_element {
 
         #grant permissions to resources in activity
         if { [db_0or1row get_related_on_completion_id ""] } {
+            # process feedback?
             if { [db_0or1row get_related_resource_id { *SQL* }] } {
                 imsld::grant_permissions -resources_activities_list $related_resource -user_id $user_id
+            }
+            # process change_property_value?
+            if { [db_0or1row get_related_change_prop_val {
+                select change_property_value_xml
+                from imsld_on_completioni
+                where item_id = :related_on_completion
+                and content_revision__is_live(on_completion_id) = 't'
+            }] } {
+                imsld::condition::eval_change_property_value -change_property_value_xml $change_property_value_xml -run_id $run_id
             }
         }
     }
@@ -3146,10 +3156,10 @@ if {[info exist play_id] & ![info exist imsld_id]} {
         from imsld_propertiesi ip, 
         imsld_componentsi ici,
         imsld_imsldsi iii
-        where ip.component_id=ici.item_id 
-        and ici.imsld_id=iii.item_id
-        and iii.item_id=:imsld_id
-        and ip.identifier=:identifier
+        where ip.component_id = ici.item_id 
+        and ici.imsld_id = iii.item_id
+        and iii.item_id = :imsld_id
+        and ip.identifier = :identifier
        }]
 }
 

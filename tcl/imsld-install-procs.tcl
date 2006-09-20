@@ -278,18 +278,13 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_restriction -attribute_name restriction_type -datatype string -pretty_name "#imsld.Restriction_Type#" -column_spec "varchar(20)"
     content::type::attribute::new -content_type imsld_restriction -attribute_name value -datatype string -pretty_name "#imsld.Value#" -column_spec "varchar"
 
-    # property values
-    content::type::new -content_type imsld_property_value -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Property_Value#" -pretty_plural "#imsld.lt_IMS-LD_Property_Value_1#" -table_name imsld_properties_values -id_column property_value_id
-
-    content::type::attribute::new -content_type imsld_property_value -attribute_name property_id -datatype number -pretty_name "#imsld.Property_Identifier#" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_property_value -attribute_name langstring -datatype string -pretty_name "#imsld.Langstring#" -column_spec "varchar(4000)"
-    content::type::attribute::new -content_type imsld_property_value -attribute_name expression_xml -datatype number -pretty_name "#imsld.Calculateexpression#" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_property_value -attribute_name property_value_ref -datatype number -pretty_name "#imsld.Property_Value_Ref#" -column_spec "integer"
-
     # complete acts
     content::type::attribute::new -content_type imsld_complete_act -attribute_name time_property_id -datatype number -pretty_name "#imsld.lt_Time_Property_Identif#" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_complete_act -attribute_name when_prop_val_is_set_id -datatype number -pretty_name "#imsld.lt_When_Property_Value_i#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_complete_act -attribute_name when_condition_true_id -datatype number -pretty_name "#imsld.When_Condition_True#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_complete_act -attribute_name when_prop_val_is_set_xml -datatype string -pretty_name "[_ imsld.lt_When_property_value_i]" -column_spec "varchar(4000)"
+
+    # on completion
+    content::type::attribute::new -content_type imsld_on_completion -attribute_name change_property_value_xml -datatype string -pretty_name "[_ imsld.lt_Change_Property_Value_1]" -column_spec "varchar(4000)"
 
     # monitor service
     content::type::new -content_type imsld_monitor_service -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Monitor_Servic#" -pretty_plural "#imsld.lt_IMS-LD_Monitor_Servic_1#" -table_name imsld_monitor_services -id_column monitor_id
@@ -504,11 +499,6 @@ ad_proc -public imsld::install::init_rels {
         content_item 0 {} \
         content_item 0 {}
 
-    # On Completion - Change Property Values
-    rel_types::new imsld_on_comp_change_pv_rel "On Completion - Change Property Values rel" "On Completion - Change Property Values rels" \
-        content_item 0 {} \
-        content_item 0 {}
-    
     # Properties - Conditions
     rel_types::new imsld_prop_cond_rel "Property - Condition" "Properties - Conditions" \
         content_item 0 {} \
@@ -516,6 +506,11 @@ ad_proc -public imsld::install::init_rels {
 
     # Properties - When-condition-true
     rel_types::new imsld_prop_whct_rel "Property - when-condition-true" "Properties - When-Condition-True" \
+        content_item 0 {} \
+        content_item 0 {}
+
+    # Properties - When property value is set
+    rel_types::new imsld_prop_wpv_is_rel "Property - when property value is set" "Property - when property value is set" \
         content_item 0 {} \
         content_item 0 {}
 
@@ -560,7 +555,11 @@ ad_proc -public imsld::uninstall::delete_rels {
     imsld::rel_type_delete -rel_type imsld_mp_completed_rel
     imsld::rel_type_delete -rel_type imsld_gprop_prop_rel
     imsld::rel_type_delete -rel_type imsld_gprop_gprop_rel
-    imsld::rel_type_delete -rel_type imsld_on_comp_change_pv_rel
+    imsld::rel_type_delete -rel_type imsld_prop_cond_rel
+    imsld::rel_type_delete -rel_type imsld_prop_whct_rel
+    imsld::rel_type_delete -rel_type imsld_prop_wpv_is_rel
+    imsld::rel_type_delete -rel_type imsld_role_cond_rel
+    imsld::rel_type_delete -rel_type imsld_ilm_cond_rel
 }
 
 ad_proc -public imsld::uninstall::delete_ext_rels {  
@@ -599,16 +598,10 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_restriction -attribute_name restriction_type
     content::type::attribute::delete -content_type imsld_restriction -attribute_name value
 
-    # property values
-    content::type::attribute::delete -content_type imsld_property_value -attribute_name property_id
-    content::type::attribute::delete -content_type imsld_property_value -attribute_name langstring
-    content::type::attribute::delete -content_type imsld_property_value -attribute_name expression_xml
-    content::type::attribute::delete -content_type imsld_property_value -attribute_name property_value_ref
-
     # complete acts
     content::type::attribute::delete -content_type imsld_complete_act -attribute_name time_property_id
-    content::type::attribute::delete -content_type imsld_complete_act -attribute_name when_prop_val_is_set_id
     content::type::attribute::delete -content_type imsld_complete_act -attribute_name when_condition_true_id
+    content::type::attribute::delete -content_type imsld_complete_act -attribute_name when_prop_val_is_set_xml
 
     # monitor service
     content::type::attribute::delete -content_type imsld_monitor_service -attribute_name service_id
@@ -779,6 +772,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
 
     # on completion
     content::type::attribute::delete -content_type imsld_on_completion -attribute_name feedback_title
+    content::type::attribute::delete -content_type imsld_on_completion -attribute_name change_property_value_xml
 
     # classes
     content::type::attribute::delete -content_type imsld_class -attribute_name method_id
@@ -826,7 +820,6 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::delete -content_type imsld_property -drop_table_p t 
     content::type::delete -content_type imsld_property_groups -drop_table_p t 
     content::type::delete -content_type imsld_restriction -drop_table_p t 
-    content::type::delete -content_type imsld_property_value -drop_table_p t 
     content::type::delete -content_type imsld_monitor_service -drop_table_p t 
     content::type::delete -content_type imsld_condition -drop_table_p t 
     content::type::delete -content_type imsld_when_condition_true -drop_table_p t 

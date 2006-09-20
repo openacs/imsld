@@ -576,6 +576,17 @@
   		</querytext>
 	</fullquery>
 
+    <fullquery name="imsld::finish_component_element.get_related_change_prop_val_id">
+		<querytext>
+
+         select ar.object_id_two as change_prop_val_id
+         from acs_rels ar
+         where ar.object_id_one = :related_on_completion
+           and ar.rel_type='imsld_on_comp_change_pv_rel'
+
+  		</querytext>
+	</fullquery>
+
     <fullquery name="imsld::finish_component_element.insert_element_entry">
 		<querytext>
                 insert into imsld_status_user (

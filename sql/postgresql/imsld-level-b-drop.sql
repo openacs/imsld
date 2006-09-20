@@ -11,8 +11,6 @@ drop table imsld_property_groups cascade;
 
 drop table imsld_restrictions cascade;
 
-drop table imsld_property_values cascade;
-
 drop table imsld_monitor_services cascade;
 
 drop table imsld_when_condition_true cascade;

@@ -78,27 +78,6 @@ create index imsld_rest_idx on imsld_restrictions(property_id);
 comment on table imsld_restrictions is '
 Restrictions of the properties. Defined in the IMS-LD spec';
 
-create table imsld_properties_values (
-    property_value_id   integer
-                        constraint imsld_propv_id_fk
-                        references cr_revisions
-                        on delete cascade
-                        constraint imsld_propv_id_pk
-                        primary key,
-    property_id         integer
-                        constraint imsld_propv_prop_fk
-                        references cr_items     --imsld_properties
-                        not null,
-    langstring          varchar(400),
-    expression_xml      text,                   --calcualte, which is actually an expression
-    property_value_ref  integer
-                        constraint imsld_prop_ref_fk
-                        references cr_items     --imsld_properties_values
-);
-
-comment on table imsld_properties_values is '
-Table used to store the values of the properties for the ''when_property_value_is set'' and ''change_property_value''.';
-
 create table imsld_monitor_services (
     monitor_id      integer 
                     constraint imsld_monserv_fk 
@@ -147,11 +126,15 @@ create index imsld_when_role_idx on imsld_when_condition_true(role_id);
 comment on table imsld_when_condition_true is '
 Simple expression for a condition. This condition applies to all the individual users mentioned in the containing role-ref. When the contained expression is true for all users in the specified roles, this condition is true.';
 
+alter table imsld_on_completion add column change_property_value_xml text;
+
 alter table imsld_send_mail_services add column email_property_id integer constraint imsld_emailprop_fk references cr_items;    --imsld_properties
 alter table imsld_send_mail_services add column username_property_id integer constraint imsld_unameprop_fk references cr_items; --imsld_properties
 
 alter table imsld_complete_acts add column time_property_id integer constraint imsld_compa_timepropv_fk references cr_items;        --imsld_properties
-alter table imsld_complete_acts add column when_prop_val_is_set_id integer constraint imsld_compa_wpvis_fk references cr_items;     --imsld_properties_values
+
+alter table imsld_complete_acts add column when_prop_val_is_set_xml text;
+
 alter table imsld_complete_acts add column when_condition_true_id integer constraint imsld_compa_whencondt_fk references cr_items;  --imsld_properties
 
 

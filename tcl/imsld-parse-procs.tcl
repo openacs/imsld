@@ -2108,12 +2108,15 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
         if { [llength $calculate] } {
             imsld::parse::validate_multiplicity -tree $calculate -multiplicity 1 -element_name calculate(property-value) -equal
 
+            set temporal_doc [dom createDocument calculate]
+            set temporal_node [$temporal_doc documentElement]
+
             # Expression
-            set expression [$calculate selectNodes "*\[local-name()='expression'\]"]
-            if { [llength $expression] } {
-                imsld::parse::validate_multiplicity -tree $expression -multiplicity 1 -element_name expression(property-value) -equal
-            } 
-            set expression_xml [$expression asXML]
+            set expression [$calculate childNodes]
+            imsld::parse::validate_multiplicity -tree $expression -multiplicity 1 -element_name expression(property-value) -equal
+            $temporal_node appendChild $expression
+
+            set expression_xml [$temporal_node asXML]
         }
     }
 
@@ -2217,7 +2220,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     set user_choice_p f
     set complete_act_id ""
     set time_in_seconds ""
-    set when_prop_value_is_set_id ""
+    set when_prop_value_is_set_xml ""
     if { [llength $complete_activity] } {
         imsld::parse::validate_multiplicity -tree $complete_activity -multiplicity 1 -element_name complete-activity(learning-activity) -equal
         
@@ -2241,28 +2244,46 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
         set when_prop_value_is_set [$complete_activity selectNodes "*\[local-name()='when-property-value-is-set'\]"] 
         if { [llength $when_prop_value_is_set] } {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(learning-activity) -equal
-            set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -property_value_node $when_prop_value_is_set \
-                                                 -manifest_id $manifest_id \
-                                                 -manifest $manifest \
-                                                 -parent_id $parent_id]
-            set when_prop_value_is_set_id [lindex $when_prop_value_is_set_list 0]
-            if { !$when_prop_value_is_set_id } {
-                # there is an error, return it
-                return $when_prop_value_is_set_list
-            }
+            # create a node where the when-property-value-is-set will be stored
+            set temporal_doc [dom createDocument when-property-value-is-set]
+            set temporal_node [$temporal_doc documentElement]
+            
+            $temporal_node appendChild $when_prop_value_is_set
+            set when_prop_value_is_set_xml [$temporal_node asXML]
         }
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
                                                                        [list user_choice_p $user_choice_p] \
-                                                                       [list when_prop_val_is_set_id $when_prop_value_is_set_id]] \
+                                                                       [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
                                  -content_type imsld_complete_act \
                                  -parent_id $parent_id]
+
+        if { [llength $when_prop_value_is_set] } {
+            #search properties in expression 
+            set property_nodes_list [$when_prop_value_is_set selectNodes {.//*[local-name()='property-ref']}]
+            foreach property $property_nodes_list {
+                set property_id [imsld::get_property_item_id -identifier [$property getAttribute ref] -imsld_id [db_string get_imsld_id {select imsld_id from imsld_componentsi where item_id = :component_id}]]
+                # map the property with the complete_act_id
+                relation_add imsld_prop_wpv_is_rel $property_id $complete_act_id
+            }
+        }
 
     }
 
     # Learning Activity: On Completion
     set on_completion [$activity_node selectNodes "*\[local-name()='on-completion'\]"]
     set on_completion_id ""
+    set change_property_value_xml ""
     if { [llength $on_completion] } {
+        # Learning Activity: On Completion: Change Property Value
+        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
+        if { [llength $change_property_value_list] } {
+            # create a node where all the change-property-values will be stored
+            set temporal_doc [dom createDocument change-property-values]
+            set temporal_node [$temporal_doc documentElement]
+            
+            $temporal_node appendChild $change_property_value_list
+            set change_property_value_xml [$temporal_node asXML]
+        }
 
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
         if { [llength $feedback_desc] } {
@@ -2270,7 +2291,8 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             set feedback_title [imsld::parse::get_title -node $feedback_desc -prefix imsld]
             set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
                                       -content_type imsld_on_completion \
-                                      -attributes [list [list feedback_title $feedback_title]]]
+                                      -attributes [list [list feedback_title $feedback_title \
+                                                             [change_property_value_xml $change_property_value_xml]]]]
             set feedback_items [$feedback_desc selectNodes "*\[local-name()='item'\]"]
             foreach feedback_item $feedback_items {
                 set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
@@ -2288,25 +2310,10 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             }
         } else {
             set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
-                                      -content_type imsld_on_completion]
-        }
-
-        # Learning Activity: On Completion: Change Property Value
-        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
-        foreach change_property_value $change_property_value_list {
-            set change_prop_value_list [imsld::parse::parse_and_create_property_value -property_value_node $change_property_value \
-                                            -manifest_id $manifest_id \
-                                            -manifest $manifest \
-                                            -parent_id $parent_id]
-            set change_prop_value_id [lindex $change_prop_value_list 0]
-            if { !$change_prop_value_id } {
-                # there is an error, return it
-                return $change_prop_value_list
-            }
-            relation_add imsld_on_comp_change_pv_rel $on_completion_id $change_prop_value_id
+                                      -content_type imsld_on_completion \
+                                      -attributes [list [list change_property_value_xml $change_property_value_xml]]]
         }
     }
-
     # crete learning activity
     set learning_activity_id [imsld::item_revision_new -attributes [list [list identifier $identifier] \
                                                                         [list component_id $component_id] \
@@ -2402,7 +2409,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     set user_choice_p f
     set complete_act_id ""
     set time_in_seconds ""
-    set when_prop_value_is_set_id ""
+    set when_prop_value_is_set_xml ""
     if { [llength $complete_activity] } {
         imsld::parse::validate_multiplicity -tree $complete_activity -multiplicity 1 -element_name complete-activity(support-activity) -equal
         
@@ -2426,36 +2433,57 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
         set when_prop_value_is_set [$complete_activity selectNodes "*\[local-name()='when-property-value-is-set'\]"] 
         if { [llength $when_prop_value_is_set] } {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(support-activity) -equal
-            set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -property_value_node $when_prop_value_is_set \
-                                                 -manifest_id $manifest_id \
-                                                 -manifest $manifest \
-                                                 -parent_id $parent_id]
-            set when_prop_value_is_set_id [lindex $when_prop_value_is_set_list 0]
-            if { !$when_prop_value_is_set_id } {
-                # there is an error, return it
-                return $when_prop_value_is_set_list
-            }
+            # create a node where the when-property-value-is-set will be stored
+            set temporal_doc [dom createDocument when-property-value-is-set]
+            set temporal_node [$temporal_doc documentElement]
+            
+            $temporal_node appendChild $when_prop_value_is_set
+            set when_prop_value_is_set_xml [$temporal_node asXML]
         }
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
                                                                        [list user_choice_p $user_choice_p] \
-                                                                       [list when_prop_val_is_set_id $when_prop_value_is_set_id]] \
+                                                                       [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
                                  -content_type imsld_complete_act \
                                  -parent_id $parent_id]
+
+        if { [llength $when_prop_value_is_set] } {
+            #search properties in expression 
+            set property_nodes_list [$when_prop_value_is_set selectNodes {.//*[local-name()='property-ref']}]
+            foreach property $property_nodes_list {
+                set property_id [imsld::get_property_item_id -identifier [$property getAttribute ref] -imsld_id [db_string get_imsld_id {select imsld_id from imsld_componentsi where item_id = :component_id}]]
+                # map the property with the complete_act_id
+                relation_add imsld_prop_wpv_is_rel $property_id $complete_act_id
+            }
+        }
 
     }
 
     # Support Activity: On completion
     set on_completion [$activity_node selectNodes "*\[local-name()='on-completion'\]"]
     set on_completion_id ""
+    set change_property_value_xml ""
     if { [llength $on_completion] } {
         imsld::parse::validate_multiplicity -tree $on_completion -multiplicity 1 -element_name on-completion(support-activity) -equal
+
+        # Support Activity: On Completion: Change Property Value
+        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
+        if { [llength $change_property_value_list] } {
+            # create a node where all the change-property-values will be stored
+            set temporal_doc [dom createDocument change-property-values]
+            set temporal_node [$temporal_doc documentElement]
+            
+            $temporal_node appendChild $change_property_value_list
+            set change_property_value_xml [$temporal_node asXML]
+        }
+
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
         if { [llength $feedback_desc] } {
             imsld::parse::validate_multiplicity -tree $feedback_desc -multiplicity 1 -element_name feedback(support-activity) -equal
             set feedback_title [imsld::parse::get_title -node $feedback_desc -prefix imsld]
             set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
                                       -content_type imsld_on_completion \
-                                      -attributes [list [list feedback_title $feedback_title]]]
+                                      -attributes [list [list feedback_title $feedback_title] \
+                                                       [list change_property_value_xml $change_property_value_xml]]]
             set feedback_items [$feedback_desc selectNodes "*\[local-name()='item'\]"]
             foreach feedback_item $feedback_items {
                 set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
@@ -2473,22 +2501,8 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             }
         } else {
             set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
-                                      -content_type imsld_on_completion]
-        }
-        
-        # Support Activity: On Completion: Change Property Value
-        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
-        foreach change_property_value $change_property_value_list {
-            set change_prop_value_list [imsld::parse::parse_and_create_property_value -property_value_node $change_property_value \
-                                            -manifest_id $manifest_id \
-                                            -manifest $manifest \
-                                            -parent_id $parent_id]
-            set change_prop_value_id [lindex $change_prop_value_list 0]
-            if { !$change_prop_value_id } {
-                # there is an error, return it
-                return $change_prop_value_list
-            }
-            relation_add imsld_on_comp_change_pv_rel $on_completion_id $change_prop_value_id
+                                      -content_type imsld_on_completion \
+                                      -attributes [list [list change_property_value_xml $change_property_value_xml]]]
         }
     }
 
@@ -3186,12 +3200,28 @@ ad_proc -public imsld::parse::parse_and_create_act {
     # get the info of the act and create it
     set identifier [imsld::parse::get_attribute -node $act_node -attr_name identifier]
     set title [imsld::parse::get_title -node $act_node -prefix imsld]
+    # get the info of the role part and create it
+    db_1row get_info {
+        select cr4.item_id as component_id,
+        ip.play_id as play_revision_id
+        from imsld_components ic, imsld_methods im, imsld_plays ip,
+        cr_revisions cr1, cr_revisions cr2, cr_revisions cr3, cr_revisions cr4
+        where cr4.revision_id = ic.component_id
+        and content_revision__is_live(ic.component_id) = 't'
+        and ic.imsld_id = cr3.item_id
+        and content_revision__is_live(cr3.revision_id) = 't'
+        and cr3.item_id = im.imsld_id
+        and im.method_id = cr2.revision_id
+        and cr2.item_id = ip.method_id
+        and ip.play_id = cr1.revision_id
+        and cr1.item_id = :play_id
+    }
     
     # Act: Complete Act: Time Limit
     set complete_act [$act_node selectNodes "*\[local-name()='complete-act'\]"]
     set complete_act_id ""
     set time_in_seconds ""
-    set when_prop_value_is_set_id ""
+    set when_prop_value_is_set_xml ""
     set when_condition_true_id ""
     if { [llength $complete_act] } {
         imsld::parse::validate_multiplicity -tree $complete_act -multiplicity 1 -element_name complete-act -equal
@@ -3206,15 +3236,12 @@ ad_proc -public imsld::parse::parse_and_create_act {
         set when_prop_value_is_set [$complete_act selectNodes "*\[local-name()='when-property-value-is-set'\]"] 
         if { [llength $when_prop_value_is_set] } {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(complete-act) -equal
-            set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -property_value_node $when_prop_value_is_set \
-                                                 -manifest_id $manifest_id \
-                                                 -manifest $manifest \
-                                                 -parent_id $parent_id]
-            set when_prop_value_is_set_id [lindex $when_prop_value_is_set_list 0]
-            if { !$when_prop_value_is_set_id } {
-                # there is an error, return it
-                return $when_prop_value_is_set_list
-            }
+            # create a node where the when-property-value-is-set will be stored
+            set temporal_doc [dom createDocument when-property-value-is-set]
+            set temporal_node [$temporal_doc documentElement]
+            
+            $temporal_node appendChild $when_prop_value_is_set
+            set when_prop_value_is_set_xml [$temporal_node asXML]
         }
         # Act: Complete Act: When Condition True
         set when_condition_true [$complete_act selectNodes "*\[local-name()='when-condition-true'\]"] 
@@ -3235,44 +3262,71 @@ ad_proc -public imsld::parse::parse_and_create_act {
                 return [list 0 "[_ imsld.lt_Referenced_role_role_]"]
             }
             #select all but role-ref that is: select the expression node
+            set temporal_doc [dom createDocument expression]
+            set temporal_node [$temporal_doc documentElement]
             set expression [$when_condition_true selectNodes "*\[not(local-name()='role-ref')\]"]
+            $temporal_node appendChild $expression
+
             imsld::parse::validate_multiplicity -tree $expression -multiplicity 1 -element_name "[$expression localName](when-condition-true)" -equal
             
             set when_condition_true_id [imsld::item_revision_new -attributes [list [list role_id $role_id] \
-                                                                                  [list expression_xml [$expression asXML]]] \
+                                                                                  [list expression_xml [$temporal_node asXML]]] \
                                             -content_type imsld_when_condition_true \
                                             -parent_id $parent_id \
                                             -title $title]
             #search properties in expression 
             set property_nodes_list [$expression selectNodes {.//*[local-name()='property-ref']}]
             foreach property $property_nodes_list {
-            
-
-                set property_id [imsld::get_property_item_id -identifier [$property getAttribute ref] -play_id $play_id]
+                set property_id [imsld::get_property_item_id -identifier [$property getAttribute ref] -play_id $play_revision_id]
+                # map the property with the condition (when condition true)
                 relation_add imsld_prop_whct_rel $property_id $when_condition_true_id 
             }
         }
         
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
                                                                        [list when_condition_true_id $when_condition_true_id] \
-                                                                       [list when_prop_val_is_set_id $when_prop_value_is_set_id]] \
+                                                                       [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
                                  -content_type imsld_complete_act \
                                  -parent_id $parent_id]
-        
+
+        if { [llength $when_prop_value_is_set] } {
+            #search properties in expression 
+            set property_nodes_list [$when_prop_value_is_set selectNodes {.//*[local-name()='property-ref']}]
+            foreach property $property_nodes_list {
+                set property_id [imsld::get_property_item_id -identifier [$property getAttribute ref] -play_id $play_revision_id]
+                # map the property with the complete_act_id
+                relation_add imsld_prop_wpv_is_rel $property_id $complete_act_id
+            }
+        }
+
     }
 
     # Act: On Completion
     set on_completion [$act_node selectNodes "*\[local-name()='on-completion'\]"]
     set on_completion_id ""
+    set change_property_value_xml ""
     if { [llength $on_completion] } {
         imsld::parse::validate_multiplicity -tree $on_completion -multiplicity 1 -element_name on-completion(complete-act) -equal
+
+        # Act: On Completion: Change Property Value
+        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
+        if { [llength $change_property_value_list] } {
+            # create a node where all the change-property-values will be stored
+            set temporal_doc [dom createDocument change-property-values]
+            set temporal_node [$temporal_doc documentElement]
+            
+            $temporal_node appendChild $change_property_value_list
+            set change_property_value_xml [$temporal_node asXML]
+        }
+
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
         if { [llength $feedback_desc] } {
             imsld::parse::validate_multiplicity -tree $feedback_desc -multiplicity 1 -element_name feedback(complete-act) -equal
             set feedback_title [imsld::parse::get_title -node $feedback_desc -prefix imsld]
             set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
                                       -content_type imsld_on_completion \
-                                      -attributes [list [list feedback_title $feedback_title]]]
+                                      -attributes [list [list feedback_title $feedback_title] \
+                                                       [list change_property_value_xml $change_property_value_xml]]]
             set feedback_items [$feedback_desc selectNodes "*\[local-name()='item'\]"]
             foreach feedback_item $feedback_items {
                 set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
@@ -3290,22 +3344,8 @@ ad_proc -public imsld::parse::parse_and_create_act {
             }
         } else {
             set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
-                                      -content_type imsld_on_completion]
-        }
-        
-        # Act: On Completion: Change Property Value
-        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
-        foreach change_property_value $change_property_value_list {
-            set change_prop_value_list [imsld::parse::parse_and_create_property_value -property_value_node $change_property_value \
-                                            -manifest_id $manifest_id \
-                                            -manifest $manifest \
-                                            -parent_id $parent_id]
-            set change_prop_value_id [lindex $change_prop_value_list 0]
-            if { !$change_prop_value_id } {
-                # there is an error, return it
-                return $change_prop_value_list
-            }
-            relation_add imsld_on_comp_change_pv_rel $on_completion_id $change_prop_value_id
+                                      -content_type imsld_on_completion \
+                                      -attributes [list [list change_property_value_xml $change_property_value_xml]]]
         }
     }
 
@@ -3378,7 +3418,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
 
     Returns a list with the new play_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
     
-    @param imsld_id IMS-LD identifier which this play belongs to
+    @param method_id method identifier which this play belongs to
     @param play_node The play node to parse 
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
@@ -3399,7 +3439,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
     set complete_act_id ""
     set time_in_seconds ""
     set when_last_act_completed_p f
-    set when_prop_value_is_set_id ""
+    set when_prop_value_is_set_xml ""
     if { [llength $complete_play] } {
         imsld::parse::validate_multiplicity -tree $complete_play -multiplicity 1 -element_name complete-play -equal
         # Play: Complete Play: Time Limit
@@ -3413,15 +3453,12 @@ ad_proc -public imsld::parse::parse_and_create_play {
         set when_prop_value_is_set [$complete_play selectNodes "*\[local-name()='when-property-value-is-set'\]"] 
         if { [llength $when_prop_value_is_set] } {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(complete-play) -equal
-            set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -property_value_node $when_prop_value_is_set \
-                                                 -manifest_id $manifest_id \
-                                                 -manifest $manifest \
-                                                 -parent_id $parent_id]
-            set when_prop_value_is_set_id [lindex $when_prop_value_is_set_list 0]
-            if { !$when_prop_value_is_set_id } {
-                # there is an error, return it
-                return $when_prop_value_is_set_list
-            }
+            # create a node where the when-property-value-is-set will be stored
+            set temporal_doc [dom createDocument when-property-value-is-set]
+            set temporal_node [$temporal_doc documentElement]
+            
+            $temporal_node appendChild $when_prop_value_is_set
+            set when_prop_value_is_set_xml [$temporal_node asXML]
         }
         # Play: Complete Play: When Last Act Completed
         set when_last_act_completed [$complete_play selectNodes "*\[local-name()='when-last-act-completed'\]"]
@@ -3430,23 +3467,47 @@ ad_proc -public imsld::parse::parse_and_create_play {
         }
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
                                                                        [list when_last_act_completed_p $when_last_act_completed_p] \
-                                                                       [list when_prop_val_is_set_id $when_prop_value_is_set_id]] \
+                                                                       [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
                                  -content_type imsld_complete_act \
                                  -parent_id $parent_id]
+        if { [llength $when_prop_value_is_set] } {
+            #search properties in expression 
+            set property_nodes_list [$when_prop_value_is_set selectNodes {.//*[local-name()='property-ref']}]
+            foreach property $property_nodes_list {
+                set property_id [imsld::get_property_item_id -identifier [$property getAttribute ref] -imsld_id [db_string get_imsld_id {select imsld_id from imsld_methodsi where item_id = :method_id}]]
+                # map the property with the complete_act_id
+                relation_add imsld_prop_wpv_is_rel $property_id $complete_act_id
+            }
+        }
+
     }
 
     # Play: On Completion
     set on_completion [$play_node selectNodes "*\[local-name()='on-completion'\]"]
     set on_completion_id ""
+    set change_property_value_xml ""
     if { [llength $on_completion] } {
         imsld::parse::validate_multiplicity -tree $on_completion -multiplicity 1 -element_name on-completion(complete-play) -equal
+
+        # Play: On Completion: Change Property Value
+        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
+        if { [llength $change_property_value_list] } {
+            # create a node where all the change-property-values will be stored
+            set temporal_doc [dom createDocument change-property-values]
+            set temporal_node [$temporal_doc documentElement]
+            
+            $temporal_node appendChild $change_property_value_list
+            set change_property_value_xml [$temporal_node asXML]
+        }
+
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
         if { [llength $feedback_desc] } {
             imsld::parse::validate_multiplicity -tree $feedback_desc -multiplicity 1 -element_name feedback(complete-play) -equal
             set feedback_title [imsld::parse::get_title -node $feedback_desc -prefix imsld]
             set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
                                       -content_type imsld_on_completion \
-                                      -attributes [list [list feedback_title $feedback_title]]]
+                                      -attributes [list [list feedback_title $feedback_title] \
+                                                       [list change_property_value_xml $change_property_value_xml]]]
             set feedback_items [$feedback_desc selectNodes "*\[local-name()='item'\]"]
             foreach feedback_item $feedback_items {
                 set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
@@ -3464,24 +3525,10 @@ ad_proc -public imsld::parse::parse_and_create_play {
             }
         } else {
             set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
-                                      -content_type imsld_on_completion]
+                                      -content_type imsld_on_completion \
+                                      -attributes [list [list change_property_value_xml $change_property_value_xml]]]
         }
         
-        # Play: On Completion: Change Property Value
-        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
-        foreach change_property_value $change_property_value_list {
-            set change_prop_value_list [imsld::parse::parse_and_create_property_value -property_value_node $change_property_value \
-                                            -manifest_id $manifest_id \
-                                            -manifest $manifest \
-                                            -parent_id $parent_id]
-            set change_prop_value_id [lindex $change_prop_value_list 0]
-            if { !$change_prop_value_id } {
-                # there is an error, return it
-                return $change_prop_value_list
-            }
-            relation_add imsld_on_comp_change_pv_rel $on_completion_id $change_prop_value_id
-        }
-
     }
 
     set play_id [imsld::item_revision_new -attributes [list [list method_id $method_id] \
@@ -3879,7 +3926,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     set complete_unit_of_learning [$method selectNodes "*\[local-name()='complete-unit-of-learning'\]"]
     set complete_act_id ""
     set time_in_seconds ""
-    set when_prop_value_is_set_id ""
+    set when_prop_value_is_set_xml ""
     if { [llength $complete_unit_of_learning] } {
         imsld::parse::validate_multiplicity -tree $complete_unit_of_learning -multiplicity 1 -element_name complete-unit-of-learning -equal
         
@@ -3894,28 +3941,48 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         set when_prop_value_is_set [$complete_unit_of_learning selectNodes "*\[local-name()='when-property-value-is-set'\]"] 
         if { [llength $when_prop_value_is_set] } {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(complete-unit-of-learning) -equal
-            set when_prop_value_is_set_list [imsld::parse::parse_and_create_property_value -property_value_node $when_prop_value_is_set \
-                                                 -manifest_id $manifest_id \
-                                                 -manifest $manifest \
-                                                 -parent_id $cr_folder_id]
-            set when_prop_value_is_set_id [lindex $when_prop_value_is_set_list 0]
-            if { !$when_prop_value_is_set_id } {
-                # there is an error, return it
-                return $when_prop_value_is_set_list
-            }
+            # create a node where the when-property-value-is-set will be stored
+            set temporal_doc [dom createDocument when-property-value-is-set]
+            set temporal_node [$temporal_doc documentElement]
+            
+            $temporal_node appendChild $when_prop_value_is_set
+            set when_prop_value_is_set_xml [$temporal_node asXML]
         }
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
-                                                                       [list when_prop_val_is_set_id $when_prop_value_is_set_id]] \
+                                                                       [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
                                  -content_type imsld_complete_act \
                                  -parent_id $cr_folder_id]
 
+        if { [llength $when_prop_value_is_set] } {
+            #search properties in expression 
+            set property_nodes_list [$when_prop_value_is_set selectNodes {.//*[local-name()='property-ref']}]
+            foreach property $property_nodes_list {
+                set property_id [imsld::get_property_item_id -identifier [$property getAttribute ref] -imsld_id [db_string get_imsld_id {select imsld_id from imsld_imsldsi where item_id = :imsld_id}]]
+                # map the property with the complete_act_id
+                relation_add imsld_prop_wpv_is_rel $property_id $complete_act_id
+            }
+        }
     }
 
     # Method: On Completion
     set on_completion [$method selectNodes "*\[local-name()='on-completion'\]"]
     set on_completion_id ""
+    set change_property_value_xml ""
     if { [llength $on_completion] } {
         imsld::parse::validate_multiplicity -tree $on_completion -multiplicity 1 -element_name on-completion(method) -equal
+
+        # Act: On Completion: Change Property Value
+        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
+        if { [llength $change_property_value_list] } {
+            # create a node where all the change-property-values will be stored
+            set temporal_doc [dom createDocument change-property-values]
+            set temporal_node [$temporal_doc documentElement]
+            
+            $temporal_node appendChild $change_property_value_list
+            set change_property_value_xml [$temporal_node asXML]
+        }
+
+
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
         if { [llength $feedback_desc] } {
             imsld::parse::validate_multiplicity -tree $feedback_desc -multiplicity 1 -element_name feedback(method) -equal
@@ -3943,21 +4010,6 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                       -content_type imsld_on_completion]
         }
         
-        # Act: On Completion: Change Property Value
-        set change_property_value_list [$on_completion selectNodes "*\[local-name()='change-property-value'\]"] 
-        foreach change_property_value $change_property_value_list {
-            set change_prop_value_list [imsld::parse::parse_and_create_property_value -property_value_node $change_property_value \
-                                            -manifest_id $manifest_id \
-                                            -manifest $manifest \
-                                            -parent_id $cr_folder_id]
-            set change_prop_value_id [lindex $change_prop_value_list 0]
-            if { !$change_prop_value_id } {
-                # there is an error, return it
-                return $change_prop_value_list
-            }
-            relation_add imsld_on_comp_change_pv_rel $on_completion_id $change_prop_value_id
-        }
-
     }
 
     set method_id [imsld::item_revision_new -parent_id $cr_folder_id \

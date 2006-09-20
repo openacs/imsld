@@ -10,6 +10,6 @@
         <frame src="imsld-tree?run_id=@run_id@" name="toc">
         <frame src="" name="environment">
     </frameset>
-    <frame src="" name="content" scrolling="no">
+    <frame src="" name="content">
 </frameset>
 </html>

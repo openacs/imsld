@@ -169,10 +169,10 @@ ad_proc -public imsld::runtime::property::property_value_set {
                                                            from imsld_conditionsi ici, 
                                                                 acs_rels ar, 
                                                                 imsld_propertiesi ipi 
-                                                           where ipi.property_id=:property_id
-                                                                 and ipi.item_id=ar.object_id_one 
-                                                                 and ar.rel_type='imsld_prop_cond_rel' 
-                                                                 and ar.object_id_two=ici.item_id
+                                                           where ipi.property_id = :property_id
+                                                                 and ipi.item_id = ar.object_id_one 
+                                                                 and ar.rel_type = 'imsld_prop_cond_rel' 
+                                                                 and ar.object_id_two = ici.item_id
         }]
         #property conditions
         foreach condition_id $conditions_list {
@@ -185,6 +185,39 @@ ad_proc -public imsld::runtime::property::property_value_set {
             $document documentElement condition_node
             imsld::condition::execute -run_id $run_id -condition $condition_node
         }
+
+        # when-condition-true:
+        # foreach when-condition-true related with the property, evaluate the whole expression
+        # referenced from the table when-condition-true to all the members of the referenced role (in the same table),
+        # and if it's true, set the act (in the table complete-acts) completed
+
+        db_foreach when_condition_true {
+            select ar.object_id_two as when_cond_true_item_id
+            from acs_rels ar,
+            imsld_propertiesi ipi
+            where ipi.property_id = :property_id
+            and ipi.item_id = ar.object_id_one
+            and ar.rel_type = 'imsld_prop_whct_rel'
+        } {
+            imsld::condition::eval_when_condition_true -when_condition_true_item_id $when_cond_true_item_id -run_id $run_id
+        }
+
+        # when-property-vale-is-set:
+        # foreach when-property-value-is-set related with the property, evaluete the expression
+        # and compare it with the referenced property, and if they have the same value, mark the referencer
+        # activity as completed
+
+        db_foreach when_prop_value_is_set {
+            select ar.object_id_two as complete_act_item_id
+            from acs_rels ar,
+            imsld_propertiesi ipi
+            where ipi.property_id = :property_id
+            and ipi.item_id = ar.object_id_one
+            and ar.rel_type = 'imsld_prop_wpv_is_rel'
+        } {
+            imsld::condition::eval_when_prop_value_is_set -complete_act_item_id $complete_act_item_id -run_id $run_id
+        }
+
         #role conditions, time conditions...
         imsld::condition::execute_time_role_conditions -run_id $run_id 
     }

@@ -16,7 +16,6 @@ ad_page_contract {
 if { [string eq $owner_user_id ""] } {
     set owner_user_id [ad_conn user_id]
 }
-
 # get file info
 db_1row get_info {
     select f.revision_id,
