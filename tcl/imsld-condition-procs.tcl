@@ -189,7 +189,6 @@ ad_proc -public imsld::condition::eval_when_prop_value_is_set {
     dom parse $when_prop_val_is_set_xml document
     $document documentElement when_prop_val_is_set_root
     set wpv_is_node [$when_prop_val_is_set_root childNodes]
-#    set wpv_is_node [$statement childNodes]
     
     set equal_value_p 0
     # get the property value
@@ -280,8 +279,10 @@ ad_proc -public imsld::condition::eval_when_prop_value_is_set {
             }
         }
         if { [db_0or1row support_activity_p {
-            select 'support' as activity_type
-            from imsld_support_activities
+            select 'support' as activity_type,
+            item_id as activity_item_id,
+            activity_id
+            from imsld_support_activitiesi
             where complete_act_id = :complete_act_item_id
             and content_revision__is_live(activity_id) = 't'
         }] } {

@@ -13,7 +13,7 @@ foreach role $supported_roles {
 }
 
 set users_in_role [list]
-    set counter 0
+set counter 0
 foreach instances_group $supported_role_instances {
     set users_in_instance [list]
     foreach instance $instances_group {
@@ -28,8 +28,7 @@ foreach instances_group $supported_role_instances {
         set username [join [db_list_of_lists get_user_name "select first_names, last_name from dotlrn_users where user_id=$member_id"]]
 
     }
-        set counter [expr $counter + 1]
-
+    set counter [expr $counter + 1]
    
 }
 

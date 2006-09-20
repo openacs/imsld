@@ -5,6 +5,7 @@ ad_page_contract {
 } {
     instances_ids:array,notnull
     return_url
+    owner_id
 } -validate {
     no_instance {
         if { [array size instances_ids] == 0 } {
@@ -23,7 +24,7 @@ foreach instance_id [array names instances_ids] {
             from imsld_property_instances
             where instance_id = :instance_id
         }
-        imsld::runtime::property::property_value_set -run_id $run_id -user_id [ad_conn user_id] -value $value -property_id $property_id
+        imsld::runtime::property::property_value_set -run_id $run_id -user_id $owner_id -value $value -property_id $property_id
     }
 }
 

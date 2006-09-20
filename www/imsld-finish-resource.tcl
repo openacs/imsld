@@ -9,7 +9,7 @@ ad_page_contract {
     owner_user_id:optional
 }
 
-# fedback nor assessment has to be marked as finished
+# fedback, assessment nor imsldcontent have to be marked as finished
 if { [db_0or1row not_fedbk_nor_assmnt { 
     select icr.resource_id
     from acs_rels ar,
@@ -18,6 +18,7 @@ if { [db_0or1row not_fedbk_nor_assmnt {
     and icr.item_id = ar.object_id_two
     and ar.object_id_two = :resource_item_id
     and icr.type != 'imsqti_xmlv1p0'
+    and icr.type != 'imsldcontent'
     limit 1
 }] } {
     imsld::grant_permissions -resources_activities_list $resource_id -user_id [ad_conn user_id]

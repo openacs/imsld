@@ -16,6 +16,7 @@ ad_page_contract {
 if { [string eq $owner_user_id ""] } {
     set owner_user_id [ad_conn user_id]
 }
+
 # get file info
 db_1row get_info {
     select f.revision_id,
@@ -312,6 +313,13 @@ foreach set_property_node $set_property_nodes {
         $form_node appendChild $input_text_node
     } 
 
+    # adding owner info
+    set owner_node [$dom_doc createElement "input"]
+    $owner_node setAttribute name "owner_id"
+    $owner_node setAttribute type "hidden"
+    $owner_node setAttribute value "$owner_user_id"
+    $form_node appendChild $owner_node
+
     # adding return url
     set return_url_node [$dom_doc createElement "input"]
     $return_url_node setAttribute name "return_url"
@@ -463,6 +471,13 @@ foreach set_property_group_node $set_property_group_nodes {
     }        
 
     set parent_node [$set_property_group_node parentNode]
+
+    # adding owner info
+    set owner_node [$dom_doc createElement "input"]
+    $owner_node setAttribute name "owner_id"
+    $owner_node setAttribute type "hidden"
+    $owner_node setAttribute value "$owner_user_id"
+    $form_node appendChild $owner_node
 
     # adding return url
     set return_url_node [$dom_doc createElement "input"]
