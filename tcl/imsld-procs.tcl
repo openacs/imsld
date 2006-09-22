@@ -757,9 +757,8 @@ ad_proc -public imsld::finish_component_element {
                     incr total_completed
                 }
             }
-            # FIX ME: when the tree wokrs fine, change the if condition for thisone
-            # if { $scturcture_finished_p || (![string eq $number_to_select ""] && ($total_completed >= $number_to_select)) } {}
-            if { $scturcture_finished_p } {
+            # If the structure has the flag number-to-select
+            if { $scturcture_finished_p || (![string eq $number_to_select ""] && ($total_completed >= $number_to_select)) } {
                 imsld::finish_component_element -imsld_id $imsld_id \
                     -run_id $run_id \
                     -play_id $play_id \
@@ -779,160 +778,173 @@ ad_proc -public imsld::finish_component_element {
     # 2. let's see if the finished role_part triggers the ending of the act which references it.
     # 3. let's see if the finished act triggers the ending the play which references it
     # 4. let's see if the finished play triggers the ending of the method which references it.
-    if { [imsld::role_part_finished_p -run_id $run_id -role_part_id $role_part_id -user_id $user_id] && ![db_0or1row already_marked_p { *SQL* }] } { 
-        # case number 1
-        imsld::finish_component_element -imsld_id $imsld_id \
-            -run_id $run_id \
-            -play_id $play_id \
-            -act_id $act_id \
-            -role_part_id $role_part_id \
-            -element_id $role_part_id \
-            -type role-part \
-            -user_id $user_id \
-            -code_call
-
-        db_1row get_role_part_info {
-            select ii.imsld_id,
-            ip.play_id,
-            ip.item_id as play_item_id,
-            ia.act_id,
-            ia.item_id as act_item_id,
-            ica.when_last_act_completed_p,
-            im.method_id,
-            im.item_id as method_item_id
-            from imsld_imsldsi ii, imsld_actsi ia, imsld_role_parts irp, 
-               imsld_methodsi im, imsld_playsi ip left outer join imsld_complete_actsi ica on (ip.complete_act_id = ica.item_id)
-            where irp.role_part_id = :role_part_id
-            and irp.act_id = ia.item_id
-            and ia.play_id = ip.item_id
-            and ip.method_id = im.item_id
-            and im.imsld_id = ii.item_id
-            and content_revision__is_live(ii.imsld_id) = 't';
+    set role_part_id_list [imsld::get_role_part_from_activity -activity_type $type -leaf_id [db_string get_item_id { select item_id from cr_revisions where revision_id = :element_id}]]
+    foreach role_part_id $role_part_id_list {
+        db_1row context_info {
+            select acts.act_id,
+            plays.play_id
+            from imsld_actsi acts, imsld_playsi plays, imsld_role_parts rp
+            where rp.role_part_id = :role_part_id
+            and rp.act_id = acts.item_id
+            and acts.play_id = plays.item_id
         }
-        set finish_by_trigger_p 1
-        set completed_act_p 1 
-        set rel_defined_p 0
 
-    set user_roles_list [imsld::roles::get_user_roles -user_id $user_id -run_id $run_id]
-        db_foreach referenced_role_part {
-            select ar.object_id_two as role_part_item_id,
-            rp.role_part_id
-            from acs_rels ar, imsld_role_partsi rp
-            where ar.object_id_one = :act_item_id
-            and rp.item_id = ar.object_id_two
-            and ar.rel_type = 'imsld_act_rp_completed_rel'
-            and content_revision__is_live(rp.role_part_id) = 't'
-        } {
-            if { ![imsld::role_part_finished_p -run_id $run_id -role_part_id $role_part_id -user_id $user_id] } {
-                set completed_act_p 0
-                set finish_by_trigger_p 0
+        if { [imsld::role_part_finished_p -run_id $run_id -role_part_id $role_part_id -user_id $user_id] && ![db_0or1row already_marked_p { *SQL* }] } { 
+            # case number 1
+            imsld::finish_component_element -imsld_id $imsld_id \
+                -run_id $run_id \
+                -play_id $play_id \
+                -act_id $act_id \
+                -role_part_id $role_part_id \
+                -element_id $role_part_id \
+                -type role-part \
+                -user_id $user_id \
+                -code_call
+
+            db_1row get_role_part_info {
+                select ii.imsld_id,
+                ip.play_id,
+                ip.item_id as play_item_id,
+                ia.act_id,
+                ia.item_id as act_item_id,
+                ica.when_last_act_completed_p,
+                im.method_id,
+                im.item_id as method_item_id
+                from imsld_imsldsi ii, imsld_actsi ia, imsld_role_parts irp, 
+                imsld_methodsi im, imsld_playsi ip left outer join imsld_complete_actsi ica on (ip.complete_act_id = ica.item_id)
+                where irp.role_part_id = :role_part_id
+                and irp.act_id = ia.item_id
+                and ia.play_id = ip.item_id
+                and ip.method_id = im.item_id
+                and im.imsld_id = ii.item_id
+                and content_revision__is_live(ii.imsld_id) = 't';
             }
-        } if_no_rows {
-            set finish_by_trigger_p 0
-            # the act doesn't have any imsld_act_rp_completed_rel rel defined.
-            set rel_defined_p 1
-        }
-        if { $rel_defined_p } {
-            # check if all the role parts have been finished and mar the act as finished.
-            db_foreach directly_referenced_role_part {
-                select irp.role_part_id
-                from imsld_role_parts irp
-                where irp.act_id = :act_item_id
-                and content_revision__is_live(irp.role_part_id) = 't'
+            set finish_by_trigger_p 1
+            set completed_act_p 1 
+            set rel_defined_p 0
+
+            set user_roles_list [imsld::roles::get_user_roles -user_id $user_id -run_id $run_id]
+            db_foreach referenced_role_part {
+                select ar.object_id_two as role_part_item_id,
+                rp.role_part_id
+                from acs_rels ar, imsld_role_partsi rp
+                where ar.object_id_one = :act_item_id
+                and rp.item_id = ar.object_id_two
+                and ar.rel_type = 'imsld_act_rp_completed_rel'
+                and content_revision__is_live(rp.role_part_id) = 't'
             } {
                 if { ![imsld::role_part_finished_p -run_id $run_id -role_part_id $role_part_id -user_id $user_id] } {
                     set completed_act_p 0
+                    set finish_by_trigger_p 0
                 }
+            } if_no_rows {
+                set finish_by_trigger_p 0
+                # the act doesn't have any imsld_act_rp_completed_rel rel defined.
+                set rel_defined_p 1
             }
-        }
-
-        if { $completed_act_p } {            
-            # case number 2
-            if { $finish_by_trigger_p } {
-                #finsish the act for all involved users
-                set users_in_run [db_list get_users_in_run {
-                    select gmm.member_id 
-                    from group_member_map gmm,
-                         imsld_run_users_group_ext iruge, 
-                         acs_rels ar1 
-                    where iruge.run_id=:run_id
-                          and ar1.object_id_two=iruge.group_id 
-                          and ar1.object_id_one=gmm.group_id 
-                    group by member_id
-                }]
-                foreach user $users_in_run {
-                    if { [imsld::user_participate_p -run_id $run_id -act_id $act_id -user_id $user]} {
-                        imsld::mark_act_finished -act_id $act_id \
-                            -play_id $play_id \
-                            -imsld_id $imsld_id \
-                            -run_id $run_id \
-                            -user_id $user
+            if { $rel_defined_p } {
+                # check if all the role parts have been finished and mar the act as finished.
+                db_foreach directly_referenced_role_part {
+                    select irp.role_part_id
+                    from imsld_role_parts irp
+                    where irp.act_id = :act_item_id
+                    and content_revision__is_live(irp.role_part_id) = 't'
+                } {
+                    if { ![imsld::role_part_finished_p -run_id $run_id -role_part_id $role_part_id -user_id $user_id] } {
+                        set completed_act_p 0
                     }
                 }
             }
-            imsld::mark_act_finished -act_id $act_id \
-                -play_id $play_id \
-                -imsld_id $imsld_id \
-                -run_id $run_id \
-                -user_id $user_id
-            
-            set completed_play_p 1
-            db_foreach referenced_act {
-                select ia.act_id
-                from imsld_acts ia, imsld_playsi ip
-                where ia.play_id = :play_item_id
-                and ip.item_id = ia.play_id
-                and content_revision__is_live(ia.act_id) = 't'
-            } {
-                if { ![imsld::act_finished_p -run_id $run_id -act_id $act_id -user_id $user_id] } {
-                    set completed_play_p 0
+
+            if { $completed_act_p } {            
+                # case number 2
+                if { $finish_by_trigger_p } {
+                    #finsish the act for all involved users
+                    set users_in_run [db_list get_users_in_run {
+                        select gmm.member_id 
+                        from group_member_map gmm,
+                        imsld_run_users_group_ext iruge, 
+                        acs_rels ar1 
+                        where iruge.run_id=:run_id
+                        and ar1.object_id_two=iruge.group_id 
+                        and ar1.object_id_one=gmm.group_id 
+                        group by member_id
+                    }]
+                    foreach user $users_in_run {
+                        if { [imsld::user_participate_p -run_id $run_id -act_id $act_id -user_id $user]} {
+                            imsld::mark_act_finished -act_id $act_id \
+                                -play_id $play_id \
+                                -imsld_id $imsld_id \
+                                -run_id $run_id \
+                                -user_id $user
+                        }
+                    }
                 }
-            }
-            if { $completed_play_p } {
-                # case number 3
-                imsld::mark_play_finished -play_id $play_id \
+                imsld::mark_act_finished -act_id $act_id \
+                    -play_id $play_id \
                     -imsld_id $imsld_id \
                     -run_id $run_id \
-                    -user_id $user_id 
+                    -user_id $user_id
                 
-                set completed_unit_of_learning_p 1 
-                set rel_defined_p 0
-                db_foreach referenced_play {
-                    select ip.play_id
-                    from acs_rels ar, imsld_playsi ip
-                    where ar.object_id_one = :method_item_id
-                    and ip.item_id = ar.object_id_two
-                    and ar.rel_type = 'imsld_mp_completed_rel'
-                    and content_revision__is_live(ip.play_id) = 't'
+                set completed_play_p 1
+                db_foreach referenced_act {
+                    select ia.act_id
+                    from imsld_acts ia, imsld_playsi ip
+                    where ia.play_id = :play_item_id
+                    and ip.item_id = ia.play_id
+                    and content_revision__is_live(ia.act_id) = 't'
                 } {
-                    if { ![imsld::play_finished_p -run_id $run_id -play_id $play_id -user_id $user_id] } {
-                        set completed_unit_of_learning_p 0
+                    if { ![imsld::act_finished_p -run_id $run_id -act_id $act_id -user_id $user_id] } {
+                        set completed_play_p 0
                     }
-                } if_no_rows {
-                    # the uol doesn't have any imsld_mp_completed_rel rel defined.
-                    set rel_defined_p 1
                 }
-                if { $rel_defined_p } {
-                    # check if all the plays have been finished and mark the imsld as finished.
-                    db_foreach directly_referenced_plays {
+                if { $completed_play_p } {
+                    # case number 3
+                    imsld::mark_play_finished -play_id $play_id \
+                        -imsld_id $imsld_id \
+                        -run_id $run_id \
+                        -user_id $user_id 
+                    
+                    set completed_unit_of_learning_p 1 
+                    set rel_defined_p 0
+                    db_foreach referenced_play {
                         select ip.play_id
-                        from imsld_plays ip
-                        where ip.method_id = :method_item_id
+                        from acs_rels ar, imsld_playsi ip
+                        where ar.object_id_one = :method_item_id
+                        and ip.item_id = ar.object_id_two
+                        and ar.rel_type = 'imsld_mp_completed_rel'
                         and content_revision__is_live(ip.play_id) = 't'
                     } {
                         if { ![imsld::play_finished_p -run_id $run_id -play_id $play_id -user_id $user_id] } {
                             set completed_unit_of_learning_p 0
                         }
+                    } if_no_rows {
+                        # the uol doesn't have any imsld_mp_completed_rel rel defined.
+                        set rel_defined_p 1
                     }
-                }
-                        
-                if { $completed_unit_of_learning_p } {
-                    # case number 4
-                    imsld::mark_imsld_finished -imsld_id $imsld_id -run_id $run_id -user_id $user_id
+                    if { $rel_defined_p } {
+                        # check if all the plays have been finished and mark the imsld as finished.
+                        db_foreach directly_referenced_plays {
+                            select ip.play_id
+                            from imsld_plays ip
+                            where ip.method_id = :method_item_id
+                            and content_revision__is_live(ip.play_id) = 't'
+                        } {
+                            if { ![imsld::play_finished_p -run_id $run_id -play_id $play_id -user_id $user_id] } {
+                                set completed_unit_of_learning_p 0
+                            }
+                        }
+                    }
+                    
+                    if { $completed_unit_of_learning_p } {
+                        # case number 4
+                        imsld::mark_imsld_finished -imsld_id $imsld_id -run_id $run_id -user_id $user_id
+                    }
                 }
             }
         }
     }
+
     if { !$code_call_p } {
         set community_id [dotlrn_community::get_community_id]
         set imsld_package_id [site_node_apm_integration::get_child_package_id \

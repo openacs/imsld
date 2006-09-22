@@ -28,7 +28,7 @@ set next_activity_id [imsld::get_next_activity_list -run_id $run_id -user_id $us
 set remaining_activities [llength [join $next_activity_id]] 
 
 if {!$remaining_activities} {
-        set all_finished [imsld::run_finished_p -run_id $run_id]
+    set all_finished [imsld::run_finished_p -run_id $run_id]
     if {$all_finished} {
         db_dml stop_run { 
             update imsld_runs 
@@ -39,15 +39,16 @@ if {!$remaining_activities} {
          set user_message "Please wait for other users ..."
     }
 }
-    set run_status [db_string get_run_status {
-        select status
-       from imsld_runs
-        where run_id=:run_id
-    }]
 
-    if {[string eq "stopped" $run_status]} {
-            set user_message "The course has been finished"
-    }
+set run_status [db_string get_run_status {
+    select status
+    from imsld_runs
+    where run_id=:run_id
+}]
+
+if {[string eq "stopped" $run_status]} {
+    set user_message "The course has been finished"
+}
 
 dom createDocument ul doc
 set dom_root [$doc documentElement]
