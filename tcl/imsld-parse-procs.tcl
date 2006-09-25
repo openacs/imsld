@@ -2292,7 +2292,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
                                       -content_type imsld_on_completion \
                                       -attributes [list [list feedback_title $feedback_title \
-                                                             [change_property_value_xml $change_property_value_xml]]]]
+                                                             [list change_property_value_xml $change_property_value_xml]]]]
             set feedback_items [$feedback_desc selectNodes "*\[local-name()='item'\]"]
             foreach feedback_item $feedback_items {
                 set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
