@@ -233,265 +233,285 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
     is created, those attributes must be initialized according to the values parsed from the manifest, and not
     from the possible changed values of a previous run.
 } {
-    db_1row context_info {
-        select ic.item_id as component_item_id,
-        ii.imsld_id,
-        ii.learning_objective_id as imsld_learning_objective_id,
-        ii.prerequisite_id as imsld_prerequisite_id,
-        ii.item_id as run_imsld_item_id,
-        rug.group_id as run_group_id
-        from imsld_componentsi ic, imsld_imsldsi ii, imsld_runs ir, imsld_run_users_group_ext rug
-        where ic.imsld_id = ii.item_id
-        and content_revision__is_live(ii.imsld_id) = 't'
-        and ii.imsld_id = ir.imsld_id
-        and rug.run_id = ir.run_id
-        and ir.run_id = :run_id
+
+    set involved_roles [imsld::roles::get_list_of_roles -imsld_id [db_string get_imsld_from_run {select imsld_id from imsld_runs where run_id=:run_id}] ]
+    set involved_users [list]
+    foreach role $involved_roles {
+        set involved_users [concat $involved_users [imsld::roles::get_users_in_role -role_id [lindex $role 0] -run_id $run_id]]
     }
     
-    # 1. items --> learning objectives, prerequisites, roles, 
-    #      learning objects, activity description, information(activity structures)
-    
-    # 1.1 learning objectives items
-    set linear_item_list [db_list item_in_imsld_loi {
-        select ii.imsld_item_id
-        from acs_rels ar, imsld_itemsi ii, imsld_learning_objectivesi lo
-        where ar.object_id_one = lo.item_id
-        and ar.object_id_two = ii.item_id
-        and lo.learning_objective_id = :imsld_learning_objective_id
-    }]
-    
-    set linear_item_list [concat $linear_item_list [db_list item_in_activity_loi {
-        select ii.imsld_item_id
-        from acs_rels ar, imsld_itemsi ii, imsld_learning_activities ia, imsld_learning_objectivesi lo
-        where ar.object_id_one = lo.item_id
-        and ar.object_id_two = ii.item_id
-        and ia.learning_objective_id = lo.item_id
-        and ia.component_id = :component_item_id
-    }]]
-    
-    # 1.2. prerequisites
-    set linear_item_list [concat $linear_item_list [db_list item_in_imsld_pre {
-        select ii.imsld_item_id
-        from acs_rels ar, imsld_itemsi ii, imsld_prerequisitesi pre
-        where ar.object_id_one = pre.item_id
-        and ar.object_id_two = ii.item_id
-        and pre.prerequisite_id = :imsld_prerequisite_id
-    }]]
-    
-    set linear_item_list [concat $linear_item_list [db_list item_in_activity_pre {
-        select ii.imsld_item_id
-        from acs_rels ar, imsld_itemsi ii, imsld_learning_activities ia, imsld_prerequisitesi pre
-        where ar.object_id_one = pre.item_id
-        and ar.object_id_two = ii.item_id
-        and ia.prerequisite_id = pre.item_id
-        and ia.component_id = :component_item_id
-    }]]
+    foreach user_id [lsort -unique $involved_users] { 
+        
+        db_1row context_info {
+            select ic.item_id as component_item_id,
+            ii.imsld_id,
+            ii.learning_objective_id as imsld_learning_objective_id,
+            ii.prerequisite_id as imsld_prerequisite_id,
+            ii.item_id as run_imsld_item_id,
+            rug.group_id as run_group_id
+            from imsld_componentsi ic, imsld_imsldsi ii, imsld_runs ir, imsld_run_users_group_ext rug
+            where ic.imsld_id = ii.item_id
+            and content_revision__is_live(ii.imsld_id) = 't'
+            and ii.imsld_id = ir.imsld_id
+            and rug.run_id = ir.run_id
+            and ir.run_id = :run_id
+        }
+        
+        # 1. items --> learning objectives, prerequisites, roles, 
+        #      learning objects, activity description, information(activity structures)
+        
+        # 1.1 learning objectives items
+        set linear_item_list [db_list item_in_imsld_loi {
+            select ii.imsld_item_id
+            from acs_rels ar, imsld_itemsi ii, imsld_learning_objectivesi lo
+            where ar.object_id_one = lo.item_id
+            and ar.object_id_two = ii.item_id
+            and lo.learning_objective_id = :imsld_learning_objective_id
+        }]
+        
+        set linear_item_list [concat $linear_item_list [db_list item_in_activity_loi {
+            select ii.imsld_item_id
+            from acs_rels ar, imsld_itemsi ii, imsld_learning_activities ia, imsld_learning_objectivesi lo
+            where ar.object_id_one = lo.item_id
+            and ar.object_id_two = ii.item_id
+            and ia.learning_objective_id = lo.item_id
+            and ia.component_id = :component_item_id
+        }]]
+        
+        # 1.2. prerequisites
+        set linear_item_list [concat $linear_item_list [db_list item_in_imsld_pre {
+            select ii.imsld_item_id
+            from acs_rels ar, imsld_itemsi ii, imsld_prerequisitesi pre
+            where ar.object_id_one = pre.item_id
+            and ar.object_id_two = ii.item_id
+            and pre.prerequisite_id = :imsld_prerequisite_id
+        }]]
+        
+        set linear_item_list [concat $linear_item_list [db_list item_in_activity_pre {
+            select ii.imsld_item_id
+            from acs_rels ar, imsld_itemsi ii, imsld_learning_activities ia, imsld_prerequisitesi pre
+            where ar.object_id_one = pre.item_id
+            and ar.object_id_two = ii.item_id
+            and ia.prerequisite_id = pre.item_id
+            and ia.component_id = :component_item_id
+        }]]
 
-    # 1.3. roles
-    set linear_item_list [concat $linear_item_list [db_list item_in_role {
-        select ii.imsld_item_id
-        from acs_rels ar, imsld_itemsi ii, imsld_rolesi ir
-        where ar.object_id_one = ir.item_id
-        and ar.object_id_two = ii.item_id
-        and ir.component_id = :component_item_id
-    }]]
+        # 1.3. roles
+        set linear_item_list [concat $linear_item_list [db_list item_in_role {
+            select ii.imsld_item_id
+            from acs_rels ar, imsld_itemsi ii, imsld_rolesi ir
+            where ar.object_id_one = ir.item_id
+            and ar.object_id_two = ii.item_id
+            and ir.component_id = :component_item_id
+        }]]
 
-    # 1.4. learning objects (environments)
-    set linear_item_list [concat $linear_item_list [db_list item_in_lo {
-        select ii.imsld_item_id
-        from acs_rels ar, imsld_itemsi ii, imsld_learning_objectsi lo, imsld_environmentsi env
-        where ar.object_id_one = lo.item_id
-        and ar.object_id_two = ii.item_id
-        and lo.environment_id = env.item_id
-        and env.component_id = :component_item_id
-    }]]
-    
-    # 1.5. activity description (learning activities)
-    set linear_item_list [concat $linear_item_list [db_list item_in_la_desc {
-        select ii.imsld_item_id
-        from acs_rels ar, imsld_itemsi ii, imsld_learning_activitiesi la, imsld_activity_descsi ad
-        where ar.object_id_one = ad.item_id
-        and ar.object_id_two = ii.item_id
-        and la.activity_description_id = ad.item_id
-        and la.component_id = :component_item_id
-    }]]
+        # 1.4. learning objects (environments)
+        set linear_item_list [concat $linear_item_list [db_list item_in_lo {
+            select ii.imsld_item_id
+            from acs_rels ar, imsld_itemsi ii, imsld_learning_objectsi lo, imsld_environmentsi env
+            where ar.object_id_one = lo.item_id
+            and ar.object_id_two = ii.item_id
+            and lo.environment_id = env.item_id
+            and env.component_id = :component_item_id
+        }]]
+        
+        # 1.5. activity description (learning activities)
+        set linear_item_list [concat $linear_item_list [db_list item_in_la_desc {
+            select ii.imsld_item_id
+            from acs_rels ar, imsld_itemsi ii, imsld_learning_activitiesi la, imsld_activity_descsi ad
+            where ar.object_id_one = ad.item_id
+            and ar.object_id_two = ii.item_id
+            and la.activity_description_id = ad.item_id
+            and la.component_id = :component_item_id
+        }]]
 
-    # 1.6. activity description (support activities)
-    set linear_item_list [concat $linear_item_list [db_list item_in_sa_desc {
-        select ii.imsld_item_id
-        from acs_rels ar, imsld_itemsi ii, imsld_support_activitiesi sa, imsld_activity_descsi ad
-        where ar.object_id_one = ad.item_id
-        and ar.object_id_two = ii.item_id
-        and sa.activity_description_id = ad.item_id
-        and sa.component_id = :component_item_id
-    }]]
-    
-    # 1.7. information(activity structures)
-    set linear_item_list [concat $linear_item_list [db_list item_in_as_info {
-        select ii.imsld_item_id
-        from acs_rels ar, imsld_itemsi ii, imsld_activity_structuresi ast
-        where ar.object_id_one = ast.item_id
-        and ar.object_id_two = ii.item_id
-        and ast.component_id = :component_item_id
-    }]]
+        # 1.6. activity description (support activities)
+        set linear_item_list [concat $linear_item_list [db_list item_in_sa_desc {
+            select ii.imsld_item_id
+            from acs_rels ar, imsld_itemsi ii, imsld_support_activitiesi sa, imsld_activity_descsi ad
+            where ar.object_id_one = ad.item_id
+            and ar.object_id_two = ii.item_id
+            and sa.activity_description_id = ad.item_id
+            and sa.component_id = :component_item_id
+        }]]
+        
+        # 1.7. information(activity structures)
+        set linear_item_list [concat $linear_item_list [db_list item_in_as_info {
+            select ii.imsld_item_id
+            from acs_rels ar, imsld_itemsi ii, imsld_activity_structuresi ast
+            where ar.object_id_one = ast.item_id
+            and ar.object_id_two = ii.item_id
+            and ast.component_id = :component_item_id
+        }]]
 
-    foreach imsld_item_id $linear_item_list {
-        db_foreach nested_associated_items {
-            select ii.imsld_item_id, ii.item_id,
-            coalesce(ii.is_visible_p, 't') as is_visible_p,
-            ii.identifier
-            from imsld_itemsi ii
-            where (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
-                   and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
-                   or ii.imsld_item_id = :imsld_item_id)
+        foreach imsld_item_id $linear_item_list {
+            db_foreach nested_associated_items {
+                select ii.imsld_item_id, ii.item_id,
+                coalesce(ii.is_visible_p, 't') as is_visible_p,
+                ii.identifier
+                from imsld_itemsi ii
+                where (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                       and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+                       or ii.imsld_item_id = :imsld_item_id)
+            } {
+                if { ![db_0or1row info_as_already_instantiated_p {
+                    select 1
+                    from imsld_attribute_instances
+                    where owner_id = :imsld_item_id
+                    and run_id = :run_id
+                    and user_id = :user_id
+                    and type = 'isvisible'
+                }] } {
+                    ns_log Notice "antes del tema: $user_id"
+                    set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $imsld_item_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list user_id $user_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+                    ns_log Notice "despues del tema"
+                }
+            }
+        }
+
+        # 2. learning activities
+        db_foreach learning_activity {
+            select la.activity_id,
+            coalesce(la.is_visible_p, 't') as is_visible_p,
+            la.identifier
+            from imsld_learning_activities la
+            where la.component_id = :component_item_id
         } {
-            if { ![db_0or1row info_as_already_instantiated_p {
+            if { ![db_0or1row la_already_instantiated_p {
                 select 1
                 from imsld_attribute_instances
-                where owner_id = :imsld_item_id
+                where owner_id = :activity_id
                 and run_id = :run_id
+                and user_id = :user_id
                 and type = 'isvisible'
             }] } {
-                set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $imsld_item_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+                set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $activity_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list user_id $user_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+            }
+        }
+        
+        # 3. support activities
+        db_foreach support_activity {
+            select sa.activity_id,
+            coalesce(sa.is_visible_p, 't') as is_visible_p,
+            sa.identifier
+            from imsld_support_activities sa
+            where sa.component_id = :component_item_id
+        } {
+            if { ![db_0or1row sa_already_instantiated_p {
+                select 1
+                from imsld_attribute_instances
+                where owner_id = :activity_id
+                and run_id = :run_id
+                and user_id = :user_id
+                and type = 'isvisible'
+            }] } {
+                set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $activity_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list user_id $user_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+            }
+        }
+
+        # 4. learning object (environment)
+        db_foreach learning_object {
+            select lo.learning_object_id,
+            coalesce(lo.is_visible_p, 't') as is_visible_p,
+            class,
+            lo.identifier
+            from imsld_learning_objects lo, imsld_environmentsi env
+            where lo.environment_id = env.item_id
+            and env.component_id = :component_item_id
+        } {
+            if { ![db_0or1row lo_already_instantiated_p {
+                select 1
+                from imsld_attribute_instances
+                where owner_id = :learning_object_id
+                and run_id = :run_id
+                and user_id = :user_id
+                and type = 'isvisible'
+            }] } {
+                set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $learning_object_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list user_id $user_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+            }
+            if { ![string eq "" $class] && ![db_0or1row lo_env_already_instantiated_p {
+                select 1
+                from imsld_attribute_instances
+                where run_id = :run_id
+                and user_id= :user_id
+                and type = 'class'
+                and identifier = :class
+            }] } {
+                set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list user_id $user_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+            }
+        }
+
+        # 5. service (enviroment)
+        db_foreach service {
+            select serv.service_id,
+            coalesce(serv.is_visible_p, 't') as is_visible_p,
+            class,
+            serv.identifier
+            from imsld_services serv, imsld_environmentsi env
+            where serv.environment_id = env.item_id
+            and env.component_id = :component_item_id
+        } {
+            if { ![db_0or1row serv_already_instantiated_p {
+                select 1
+                from imsld_attribute_instances
+                where owner_id = :service_id
+                and run_id = :run_id
+                and user_id = :user_id
+                and type = 'isvisible'
+            }] } {
+                set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $service_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list user_id $user_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+            }
+            if { ![string eq "" $class] && ![db_0or1row serv_env_already_instantiated_p {
+                select 1
+                from imsld_attribute_instances
+                where run_id = :run_id
+                and user_id = :user_id
+                and type = 'class'
+                and identifier = :class
+            }] } {
+                set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list user_id $user_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+            }
+        }
+
+        # 6. play
+        db_foreach play {
+            select play.play_id,
+            coalesce(play.is_visible_p, 't') as is_visible_p,
+            play.identifier
+            from imsld_plays play, imsld_methodsi im
+            where play.method_id = im.item_id
+            and im.imsld_id = :run_imsld_item_id
+        } {
+            if { ![db_0or1row play_already_instantiated_p {
+                select 1
+                from imsld_attribute_instances
+                where owner_id = :play_id
+                and run_id = :run_id
+                and user_id = :user_id
+                and type = 'isvisible'
+            }] } {
+                set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $play_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list user_id $user_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
+            }
+        }
+
+        # 7. classes
+        db_foreach class {
+            select cla.class_id,
+            cla.identifier
+            from imsld_classesi cla, imsld_methodsi im
+            where cla.method_id = im.item_id
+            and im.imsld_id = :run_imsld_item_id
+        } {
+            if { ![db_0or1row already_instantiated {
+                select 1 from imsld_attribute_instances
+                where identifier = :identifier
+                and run_id = :run_id
+                and user_id = :user_id
+            }] } {
+                set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $identifier] [list run_id $run_id] [list user_id $user_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
             }
         }
     }
-
-    # 2. learning activities
-    db_foreach learning_activity {
-        select la.activity_id,
-        coalesce(la.is_visible_p, 't') as is_visible_p,
-        la.identifier
-        from imsld_learning_activities la
-        where la.component_id = :component_item_id
-    } {
-        if { ![db_0or1row la_already_instantiated_p {
-            select 1
-            from imsld_attribute_instances
-            where owner_id = :activity_id
-            and run_id = :run_id
-            and type = 'isvisible'
-        }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $activity_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
-        }
-    }
-    
-    # 3. support activities
-    db_foreach support_activity {
-        select sa.activity_id,
-        coalesce(sa.is_visible_p, 't') as is_visible_p,
-        sa.identifier
-        from imsld_support_activities sa
-        where sa.component_id = :component_item_id
-    } {
-        if { ![db_0or1row sa_already_instantiated_p {
-            select 1
-            from imsld_attribute_instances
-            where owner_id = :activity_id
-            and run_id = :run_id
-            and type = 'isvisible'
-        }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $activity_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
-        }
-    }
-
-    # 4. learning object (environment)
-    db_foreach learning_object {
-        select lo.learning_object_id,
-        coalesce(lo.is_visible_p, 't') as is_visible_p,
-        class,
-        lo.identifier
-        from imsld_learning_objects lo, imsld_environmentsi env
-        where lo.environment_id = env.item_id
-        and env.component_id = :component_item_id
-    } {
-        if { ![db_0or1row lo_already_instantiated_p {
-            select 1
-            from imsld_attribute_instances
-            where owner_id = :learning_object_id
-            and run_id = :run_id
-            and type = 'isvisible'
-        }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $learning_object_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
-        }
-        if { ![string eq "" $class] && ![db_0or1row lo_env_already_instantiated_p {
-            select 1
-            from imsld_attribute_instances
-            where run_id = :run_id
-            and type = 'class'
-            and identifier = :class
-        }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
-        }
-    }
-
-    # 5. service (enviroment)
-    db_foreach service {
-        select serv.service_id,
-        coalesce(serv.is_visible_p, 't') as is_visible_p,
-        class,
-        serv.identifier
-        from imsld_services serv, imsld_environmentsi env
-        where serv.environment_id = env.item_id
-        and env.component_id = :component_item_id
-    } {
-        if { ![db_0or1row serv_already_instantiated_p {
-            select 1
-            from imsld_attribute_instances
-            where owner_id = :service_id
-            and run_id = :run_id
-            and type = 'isvisible'
-        }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $service_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
-        }
-        if { ![string eq "" $class] && ![db_0or1row serv_env_already_instantiated_p {
-            select 1
-            from imsld_attribute_instances
-            where run_id = :run_id
-            and type = 'class'
-            and identifier = :class
-        }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $class] [list run_id $run_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
-        }
-    }
-
-    # 6. play
-    db_foreach play {
-        select play.play_id,
-        coalesce(play.is_visible_p, 't') as is_visible_p,
-        play.identifier
-        from imsld_plays play, imsld_methodsi im
-        where play.method_id = im.item_id
-        and im.imsld_id = :run_imsld_item_id
-    } {
-        if { ![db_0or1row play_already_instantiated_p {
-            select 1
-            from imsld_attribute_instances
-            where owner_id = :play_id
-            and run_id = :run_id
-            and type = 'isvisible'
-        }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $play_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
-        }
-    }
-
-    # 7. classes
-    db_foreach class {
-        select cla.class_id,
-        cla.identifier
-        from imsld_classesi cla, imsld_methodsi im
-        where cla.method_id = im.item_id
-        and im.imsld_id = :run_imsld_item_id
-    } {
-        if { ![db_0or1row already_instantiated {
-            select 1 from imsld_attribute_instances
-            where identifier = :identifier
-            and run_id = :run_id
-        }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id ""] [list type "class"] [list identifier $identifier] [list run_id $run_id] [list is_visible_p "t"] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
-        }
-    }
-
     return
 }
 

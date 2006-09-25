@@ -343,17 +343,19 @@ ad_proc -public imsld::roles::get_role_id {
         }
     } elseif { [info exist run_id] } {
         if { [db_0or1row select_role_id_from_run {
-                select ar1.object_id_one as role_id
+                select iri.role_id
                 from imsld_rolesi iri, 
                      acs_rels ar1, 
-                     acs_rels ar2 
+                     acs_rels ar2,
+                     imsld_run_users_group_ext iruns
                 where ar1.object_id_two=ar2.object_id_one 
                       and ar1.rel_type='imsld_role_group_rel' 
                       and ar2.rel_type='imsld_roleinstance_run_rel' 
-                      and ar2.object_id_two=:run_id
+                      and ar2.object_id_two=iruns.group_id
+                      and iruns.run_id=:run_id
                       and iri.item_id=ar1.object_id_one 
                       and iri.identifier=:ref
-                group by ar1.object_id_one
+                group by iri.role_id
             }] } {
             return $role_id
         }

@@ -1092,6 +1092,7 @@
         and content_revision__is_live(lo.learning_object_id) = 't'
         and attr.owner_id = lo.learning_object_id
         and attr.run_id = :run_id
+        and attr.user_id = :user_id
         and attr.type = 'isvisible'
         and attr.is_visible_p = 't'
         order by lo.creation_date
@@ -1133,6 +1134,7 @@
                      or ii.imsld_item_id = :imsld_item_id)
                 and attr.owner_id = ii.imsld_item_id
                 and attr.run_id = :run_id
+                and attr.user_id = :user_id
                 and attr.type = 'isvisible'
                 and attr.is_visible_p = 't'
                         
@@ -1154,6 +1156,7 @@
         and content_revision__is_live(ise.service_id) = 't'
         and attr.owner_id = ise.service_id
         and attr.run_id = :run_id
+        and attr.user_id = :user_id
         and attr.type = 'isvisible'
         and attr.is_visible_p = 't'
         
@@ -1240,6 +1243,7 @@
                  or ii.imsld_item_id = :imsld_item_id)
             and attr.owner_id = ii.imsld_item_id
             and attr.run_id = :run_id
+            and attr.user_id = :user_id
             and attr.type = 'isvisible'
             and attr.is_visible_p = 't'
                 
@@ -1314,6 +1318,7 @@
                  or ii.imsld_item_id = :imsld_item_id)
             and attr.owner_id = ii.imsld_item_id
             and attr.run_id = :run_id
+            and attr.user_id = :user_id
             and attr.type = 'isvisible'
             and attr.is_visible_p = 't'
                 
@@ -1363,6 +1368,7 @@
                  or ii.imsld_item_id = :imsld_item_id)
             and attr.owner_id = ii.imsld_item_id
             and attr.run_id = :run_id
+            and attr.user_id = :user_id
             and attr.type = 'isvisible'
             and attr.is_visible_p = 't'
                 
@@ -1484,6 +1490,7 @@
         and content_revision__is_live(la.activity_id) = 't'
         and attr.owner_id = la.activity_id
         and attr.run_id = :run_id
+        and attr.user_id = :user_id
         and attr.type = 'isvisible'
         and attr.is_visible_p = 't'
         
@@ -1524,6 +1531,7 @@
                  or ii.imsld_item_id = :imsld_item_id)
             and attr.owner_id = ii.imsld_item_id
             and attr.run_id = :run_id
+            and attr.user_id = :user_id
             and attr.type = 'isvisible'
             and attr.is_visible_p = 't'
 
@@ -1568,6 +1576,7 @@
         and content_revision__is_live(isa.activity_id) = 't'
         and attr.owner_id = isa.activity_id
         and attr.run_id = :run_id
+        and attr.user_id = :user_id
         and attr.type = 'isvisible'
         and attr.is_visible_p = 't'
         
@@ -1609,6 +1618,7 @@
                  or ii.imsld_item_id = :imsld_item_id)
             and attr.owner_id = ii.imsld_item_id
             and attr.run_id = :run_id
+            and attr.user_id = :user_id  
             and attr.type = 'isvisible'
             and attr.is_visible_p = 't'
                 
@@ -1671,6 +1681,7 @@
                  or ii.imsld_item_id = :imsld_item_id)
             and attr.owner_id = ii.imsld_item_id
             and attr.run_id = :run_id
+            and attr.user_id = :user_id  
             and attr.type = 'isvisible'
             and attr.is_visible_p = 't'
             
@@ -1716,6 +1727,7 @@
                     and content_revision__is_live(la.activity_id) = 't'
                     and attr.owner_id = la.activity_id
                     and attr.run_id = :run_id
+                    and attr.user_id = :user_id
                     and attr.type = 'isvisible'
 
 
@@ -1747,6 +1759,7 @@
                     and content_revision__is_live(sa.activity_id) = 't'
                     and attr.owner_id = sa.activity_id
                     and attr.run_id = :run_id
+                    and attr.user_id = :user_id
                     and attr.type = 'isvisible'
                 
 		</querytext>
@@ -1806,6 +1819,7 @@
         and content_revision__is_live(rp.role_part_id) = 't'
         and attr.owner_id = ip.play_id
         and attr.run_id = :run_id
+        and attr.user_id = :user_id
         and attr.type = 'isvisible'
         and attr.is_visible_p = 't'
         order by ip.sort_order, ia.sort_order, rp.sort_order
@@ -1825,6 +1839,7 @@
                     where activity_id = :activity_id
                     and attr.owner_id = la.activity_id
                     and attr.run_id = :run_id
+                    and attr.user_id = :user_id
                     and attr.type = 'isvisible'
                     
 		</querytext>
@@ -1842,6 +1857,7 @@
                     where sa.activity_id = :activity_id
                     and attr.owner_id = sa.activity_id
                     and attr.run_id = :run_id
+                    and attr.user_id = :user_id
                     and attr.type = 'isvisible'
                     
 		</querytext>

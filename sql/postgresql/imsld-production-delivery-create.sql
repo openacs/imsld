@@ -119,6 +119,10 @@ create table imsld_attribute_instances (
     run_id          integer
                     constraint imsld_pin_rn_fk  
                     references imsld_runs,
+    user_id         integer
+                    constraint imsld_attri_user_fk      -- the vissibility property is related to this user
+                    references users
+                    not null,
     is_visible_p    char(1)
                     check (is_visible_p in ('t','f')),  
     title           varchar(100),                       -- title for the class
@@ -128,6 +132,7 @@ create table imsld_attribute_instances (
 
 create index imsld_attri_own_idx on imsld_attribute_instances(owner_id);
 create index imsld_attri_run_idx on imsld_attribute_instances(run_id);
+create index imsld_attri_user_idx on imsld_attribute_instances(user_id);
 
 comment on table imsld_attribute_instances is '
 This table holds the attribute instances for those attributes like isvisible or class (by the 

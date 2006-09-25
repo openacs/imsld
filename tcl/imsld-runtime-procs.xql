@@ -35,6 +35,7 @@
             with_control_p = :with_control_p,
             title = :title
             where run_id = :run_id
+              and user_id = :user_id
               and identifier = :class
               and type = 'class'
         </querytext>
@@ -45,6 +46,7 @@
             update imsld_attribute_instances
             set is_visible_p = :is_visible_p
             where run_id = :run_id
+              and user_id = :user_id
               and identifier = :identifier
               and type = 'isvisible'
         </querytext>

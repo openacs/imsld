@@ -11,8 +11,9 @@ ad_page_contract {
 
 # instantiating properties and activity attributes for the run
 imsld::instance::instantiate_properties -run_id $run_id
+ns_log Notice "el run si que lo ha instanciado"
 imsld::instance::instantiate_activity_attributes -run_id $run_id
-
+ns_log Notice "los atributos.que lo ha instanciado"
 # NOTE: we should verify the permissions here
 set conditions 1
 if {$conditions == 1} {

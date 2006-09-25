@@ -307,12 +307,15 @@ ad_proc -public imsld::runtime::property::property_value_get {
 ad_proc -public imsld::runtime::class::show_hide {
     -run_id
     -class
+    {-user_id ""}
     {-title ""}
     {-with_control_p ""}
     -action:required
 } {
     mark a class as showh or hidden. NOTE: not recursively
 } {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+
     if { [string eq $action "show"] } {
         set is_visible_p "t"
     } else {
@@ -325,10 +328,12 @@ ad_proc -public imsld::runtime::class::show_hide {
 ad_proc -public imsld::runtime::isvisible::show_hide {
     -run_id
     -identifier
+    {-user_id ""}
     -action:required
 } {
     mark a isvisible as showh. NOTE: not recursively
 } {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     if { [string eq $action "show"] } {
          set is_visible_p "t"
     } else {

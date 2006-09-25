@@ -41,6 +41,7 @@ ad_proc -public imsld::condition::execute {
     foreach ifNode $ifNodes {
         if {[imsld::expression::eval -run_id $run_id -expression [$ifNode childNodes]]} {
             foreach thenNode $thenNodes {
+                ns_log Notice "troncho: [$thenNode asXML]"
                 imsld::statement::execute -run_id $run_id -statement [$thenNode childNodes]
             }
         } else {
@@ -671,7 +672,7 @@ ad_proc -public imsld::statement::execute {
                             if { [string eq $class ""] } {
                                 
                                 # NOTE: according to the spec this attribute may be empty... what to do??
-                                ns_log notice "imsld::statement::execute: class ref is empty"
+d                                ns_log notice "imsld::statement::execute: class ref is empty"
                                 continue
                             }
                             imsld::runtime::class::show_hide -class $class -run_id $run_id -title $title -with_control_p $with_control_p -action "hide"

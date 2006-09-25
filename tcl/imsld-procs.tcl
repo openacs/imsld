@@ -1384,18 +1384,21 @@ ad_proc -public imsld::class_visible_p {
     -run_id:required
     -owner_id:required
     -class_name:required
+    {-user_id ""}
 } { 
     @param run_id
     @param owner_id
     @param class_name
 
-    @return 1 if the class of the owner_id is currently visible in the run, 0 otherwise.
+    @return 1 if the class of the owner_id is currently visible in the run for a given user_id, 0 otherwise.
 } {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     return [expr ![db_0or1row class_visible_p {
         select 1
         from imsld_attribute_instances
         where run_id = :run_id
         and type = 'class'
+        and user_id = :user_id
         and identifier = :class_name
         and is_visible_p = 'f'
     }]]
@@ -1407,6 +1410,7 @@ ad_proc -public imsld::process_service_as_ul {
     {-resource_mode "f"}
     -dom_node
     -dom_doc
+    {-user_id ""}
 } { 
     @param service_item_id
     @param run_id
@@ -1416,6 +1420,7 @@ ad_proc -public imsld::process_service_as_ul {
 
     @return a html list (in a dom tree) of the associated resources referenced from the given service.
 } {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     set services_list [list]
 
     # get service info
@@ -1502,6 +1507,7 @@ ad_proc -public imsld::process_environment_as_ul {
     {-resource_mode "f"}
     -dom_node:required
     -dom_doc:required
+    {-user_id ""}
 } { 
     @param environment_item_id
     @param run_id
@@ -1511,6 +1517,7 @@ ad_proc -public imsld::process_environment_as_ul {
 
     @return a html list (in a dom tree) of the associated resources, files and environments referenced from the given environment.
 } {  
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     # get environment info
     db_1row environment_info { *SQL* }
 
@@ -1630,6 +1637,7 @@ ad_proc -public imsld::process_learning_objective_as_ul {
     {-resource_mode "f"}
     -dom_node
     -dom_doc
+    {-user_id ""}
 } {
     @param run_id
     @option imsld_item_id
@@ -1637,9 +1645,11 @@ ad_proc -public imsld::process_learning_objective_as_ul {
     @option resource_mode
     @param dom_node
     @param dom_doc
+    @param user_id
 
     @return a html list (ul, using tdom) with the objective title and the associated resources referenced from the learning objective of the given activity or ims-ld
-} {  
+} { 
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     set learning_objective_item_id ""
     if { ![string eq "" $imsld_item_id] } {
         db_0or1row lo_id_from_imsld_item_id { *SQL* }
@@ -1683,6 +1693,7 @@ ad_proc -public imsld::process_prerequisite_as_ul {
     {-resource_mode "f"}
     -dom_node
     -dom_doc
+    {-user_id ""}
 } {
     @param run_id
     @option imsld_item_id
@@ -1692,7 +1703,8 @@ ad_proc -public imsld::process_prerequisite_as_ul {
     @param dom_doc
 
     @return a html list (using tdom) of the associated resources referenced from the prerequisite of the given ims-ld or activity
-} {  
+} { 
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     set prerequisite_item_id ""
     if { ![string eq "" $imsld_item_id] } {
         db_0or1row lo_id_from_imsld_item_id { *SQL* }
@@ -1733,6 +1745,7 @@ ad_proc -public imsld::process_feedback_as_ul {
     {-on_completion_item_id ""}
     -dom_node
     -dom_doc
+    {-user_id ""}
 } {
     @param run_id
     @option on_completion_item_id
@@ -1740,7 +1753,8 @@ ad_proc -public imsld::process_feedback_as_ul {
     @param dom_doc
 
     @return a html list (using tdom) with the feedback title and the associated resources referenced from the given feedback (on_completion)
-} {  
+} { 
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     set feedback_item_id ""
     # get on completion info
     db_1row feedback_info { *SQL* }
@@ -1764,6 +1778,7 @@ ad_proc -public imsld::process_resource_as_ul {
     -dom_node 
     -dom_doc
     -li_mode:boolean
+    {-user_id ""}
 } {
     @param resource_item_id
     @param run_id
@@ -1773,6 +1788,7 @@ ad_proc -public imsld::process_resource_as_ul {
 
     @return The html ul (using tdom) of the files associated to the given resource_id
 } {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     set community_id [expr { [string eq "" $community_id] ? "[dotlrn_community::get_community_id]" : $community_id }]
     set imsld_package_id [site_node_apm_integration::get_child_package_id \
                               -package_id [dotlrn_community::get_package_id $community_id] \
@@ -1888,6 +1904,8 @@ ad_proc -public imsld::process_activity_as_ul {
     -dom_node:required
     -dom_doc
     {-resource_mode "f"}
+    {-user_id ""}
+
 } {
     @param activity_item_id
     @param run_id
@@ -1899,6 +1917,7 @@ ad_proc -public imsld::process_activity_as_ul {
     It only works whith the learning and support activities, since it will only return the objectives, prerequistes,
     associated resources but not the environments.
 } {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     if { [db_0or1row is_imsld {
         select 1 from imsld_imsldsi where item_id = :activity_item_id
     }] } {
@@ -1942,6 +1961,7 @@ ad_proc -public imsld::process_activity_environments_as_ul {
     {-resource_mode "f"}
     -dom_node
     -dom_doc
+    {-user_id ""}
 } {
     @param activity_item_id
     @param run_id
@@ -1952,7 +1972,7 @@ ad_proc -public imsld::process_activity_environments_as_ul {
     
     @return The html list (using tdom) of resources (learning objects and services) associated to the activity's environment(s)
 } {
-    
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     # get the rel_type
     if { [db_0or1row is_imsld {
         select 1 from imsld_imsldsi where item_id = :activity_item_id
@@ -1996,6 +2016,7 @@ ad_proc -public imsld::process_imsld_as_ul {
     {-resource_mode "f"}
     -dom_node
     -dom_doc
+    {-user_id ""}
 } {
     @param imsld_item_id
     @param run_id
@@ -2003,6 +2024,7 @@ ad_proc -public imsld::process_imsld_as_ul {
     
     @return The html list (using tdom) of the resources associated to the given imsld_id (objectives and prerequisites).
 } {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     db_1row imsld_info {
         select prerequisite_id as prerequisite_item_id,
         learning_objective_id as learning_objective_item_id,
@@ -2061,6 +2083,7 @@ ad_proc -public imsld::process_learning_activity_as_ul {
     {-resource_mode "f"}
     -dom_node
     -dom_doc
+    {-user_id ""}
 } {
     @param activity_item_id
     @param run_id
@@ -2071,7 +2094,7 @@ ad_proc -public imsld::process_learning_activity_as_ul {
     
     @return The list (activity_name, list of associated urls, using tdom) of the activity in the IMS-LD.
 } {
-    set user_id [ad_conn user_id]
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     if { ![db_0or1row activity_info { *SQL* }] } {
         # is visible is false, do not show anything
         return
@@ -2194,6 +2217,7 @@ ad_proc -public imsld::process_support_activity_as_ul {
     {-resource_mode "f"}
     -dom_node
     -dom_doc
+    {-user_id ""}
 } {
     @param activity_item_id
     @param run_id
@@ -2203,7 +2227,7 @@ ad_proc -public imsld::process_support_activity_as_ul {
 
     @return The list of items (resources, feedback, environments, using tdom) associated with the support activity
 } {
-    set user_id [ad_conn user_id]
+     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     if { ![db_0or1row activity_info { *SQL* }] } {
         # is visible is false do not show anything
         return
@@ -2285,6 +2309,7 @@ ad_proc -public imsld::process_activity_structure_as_ul {
     {-resource_mode "f"}
     -dom_node
     -dom_doc
+    {-user_id ""}
 } {
     @param structure_item_id
     @param run_id
@@ -2294,7 +2319,7 @@ ad_proc -public imsld::process_activity_structure_as_ul {
     
     @return The html list (using tdom) of items (information) associated with the activity structure
 } {
-
+     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id } ]
     # get the items associated with the activity
     set info_tab_node [$dom_doc createElement li]
     set text [$dom_doc createTextNode "[_ imsld.Information]"]
