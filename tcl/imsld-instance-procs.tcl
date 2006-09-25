@@ -362,9 +362,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
                     and user_id = :user_id
                     and type = 'isvisible'
                 }] } {
-                    ns_log Notice "antes del tema: $user_id"
                     set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list owner_id $imsld_item_id] [list type "isvisible"] [list identifier $identifier] [list run_id $run_id] [list user_id $user_id] [list is_visible_p $is_visible_p] [list title ""] [list with_control_p ""]] imsld_attribute_instance new]
-                    ns_log Notice "despues del tema"
                 }
             }
         }
