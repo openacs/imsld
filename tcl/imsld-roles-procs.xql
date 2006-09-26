@@ -203,6 +203,7 @@
        and gmm.member_id=:user_id 
        and iruge.group_id=ar.object_id_two 
        and iruge.run_id=:run_id
+       and gmm.container_id = gmm.group_id
        and ar2.object_id_two=gmm.group_id 
        and ar2.rel_type='imsld_role_group_rel' 
        and ar2.object_id_one=iri.item_id
