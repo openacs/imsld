@@ -1791,6 +1791,21 @@
 		</querytext>
 	</fullquery>
 
+	<fullquery name="imsld::generate_activities_tree.current_role">
+		<querytext>
+
+        select map.active_role_id as user_role_id
+        from imsld_run_users_group_rels map,
+        acs_rels ar,
+        imsld_run_users_group_ext iruge
+        where ar.rel_id = map.rel_id
+        and ar.object_id_one = iruge.group_id
+        and ar.object_id_two = :user_id
+        and iruge.run_id = :run_id
+        
+		</querytext>
+	</fullquery>
+
 	<fullquery name="imsld::generate_activities_tree.referenced_role_parts">
 		<querytext>
 
@@ -1815,7 +1830,7 @@
         and im.imsld_id = ii.item_id
         and ii.imsld_id = :imsld_id
         and rp.role_id = iri.item_id
-        and iri.role_id in ([join $user_roles_list ","])
+        and iri.role_id = :user_role_id
         and content_revision__is_live(rp.role_part_id) = 't'
         and attr.owner_id = ip.play_id
         and attr.run_id = :run_id

@@ -2533,7 +2533,16 @@ ad_proc -public imsld::generate_activities_tree {
     }
     # start with the role parts
 
-    set user_roles_list [imsld::roles::get_user_roles -user_id $user_id -run_id $run_id]
+    set user_role_id [db_string current_role {
+        select map.active_role_id as user_role_id
+        from imsld_run_users_group_rels map,
+        acs_rels ar,
+        imsld_run_users_group_ext iruge
+        where ar.rel_id = map.rel_id
+        and ar.object_id_one = iruge.group_id
+        and ar.object_id_two = :user_id
+        and iruge.run_id = :run_id
+    }]
     foreach role_part_list [db_list_of_lists referenced_role_parts { *SQL* }] {
         set type [lindex $role_part_list 0]
         set activity_id [lindex $role_part_list 1]

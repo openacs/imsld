@@ -329,27 +329,32 @@ ad_proc -public imsld::install::init_ext_rels {
     create default rels between imsld items and acs objects
 } { 
     # ims-ld roles - oacs groups
-     rel_types::new imsld_role_group_rel "ims-ld role - imsld_role_group" "ims-ld roles - imsld_role_groups"  \
+    rel_types::new imsld_role_group_rel "ims-ld role - imsld_role_group" "ims-ld roles - imsld_role_groups"  \
         content_item 0 {} \
         imsld_role_group 0 {}
-     
+    
     # ims-ld role instance - ims-ld run
-     rel_types::new imsld_roleinstance_run_rel "imsld role instance - imsld run" "imsld role instances - ims_ld_run_groups"  \
+    rel_types::new imsld_roleinstance_run_rel "imsld role instance - imsld run" "imsld role instances - ims_ld_run_groups"  \
         imsld_role_group 0 {} \
         imsld_run_users_group 0 {} 
-
-
+    
     # ims-ld run - oacs users
-     rel_types::new imsld_run_users_group_rel "ims_ld_run_group - acs_users" "ims_ld_run_group - acs_users"  \
+    rel_types::new -table_name imsld_run_users_group_rels \
+        -create_table_p 0 \
+        imsld_run_users_group_rel \
+        "ims_ld_run_group - acs_users" "ims_ld_run_group - acs_users"  \
         imsld_run_users_group 0 {} \
         party 0 {}
+    attribute::add -min_n_values 0 -max_n_values 0 imsld_run_users_group_rel integer "active_role_id" "Active Roles IDs"
+    # FIX ME (there is no way to add attributes to the rels without creating the whole plsql code)
+    package_recreate_hierarchy imsld_run_users_group
 }
 
 ad_proc -public imsld::install::init_rels {  
 } { 
     Create default rels between imsld items
 } { 
-
+    
     # Learning Objetcives - IMS-LD Items
     rel_types::new imsld_lo_item_rel "Learing Objective - Imsld Item rel" "Learing Objective - Imsld Item rels"  \
         content_item 0 {} \

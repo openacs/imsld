@@ -3,6 +3,7 @@ ad_page_contract {
     @creation-date Mar 2006
 } {
     run_id:integer,notnull
+    {current_role_id ""}
 }
 
 # initialize variables
@@ -20,6 +21,49 @@ db_1row imslds_in_class {
     where imsld.imsld_id = run.imsld_id
     and run.run_id = :run_id
 } 
+
+# current role information.
+# the user must have an active role in the run
+
+if { ![empty_string_p $current_role_id] } {
+    # a role has been selected, update in db
+    db_dml update_current_role {
+        update imsld_run_users_group_rels
+        set active_role_id = :current_role_id
+        where rel_id = (select ar.rel_id
+                        from acs_rels ar, imsld_run_users_group_ext iruge
+                        where ar.object_id_one = iruge.group_id
+                        and ar.object_id_two = :user_id
+                        and iruge.run_id = :run_id)
+    }
+}
+
+set possible_user_roles [imsld::roles::get_user_roles -user_id $user_id -run_id $run_id]
+set possible_user_role_names [imsld::roles::get_roles_names -roles_list $possible_user_roles]
+# remove &nbsp; added in the previous proc
+regsub -all "&nbsp;" $possible_user_role_names "" $possible_user_role_names
+
+if { ![db_0or1row get_current_role {
+    select map.active_role_id as user_role_id
+    from imsld_run_users_group_rels map,
+    acs_rels ar,
+    imsld_run_users_group_ext iruge
+    where ar.rel_id = map.rel_id
+    and ar.object_id_one = iruge.group_id
+    and ar.object_id_two = :user_id
+    and iruge.run_id = :run_id
+}] } {
+    # generate the first option
+    set possible_user_roles [linsert $possible_user_roles 0 0]
+    set possible_user_role_names [linsert $possible_user_role_names 0 "<#_ Select role... #>"]
+    set user_role_id -1
+}
+
+template::multirow create possible_roles role_id role_name
+
+foreach role $possible_user_roles {
+    template::multirow append possible_roles $role [lindex $possible_user_role_names [lsearch -exact $possible_user_roles $role]]
+}
 
 set user_message ""
 set next_activity_id [imsld::get_next_activity_list -run_id $run_id -user_id $user_id]
@@ -62,12 +106,17 @@ $dom_root appendChild $imsld_title_node
 
 set activities_node [$doc createElement ul]
 
-imsld::generate_activities_tree -run_id $run_id \
-    -user_id $user_id \
-    -next_activity_id_list $next_activity_id \
-    -dom_node $activities_node \
-    -dom_doc $doc
-
-$imsld_title_node appendChild $activities_node
-
-set html_tree [$dom_root asXML]
+if { $user_role_id == -1 } {
+    set html_tree ""
+} else {
+    
+    imsld::generate_activities_tree -run_id $run_id \
+        -user_id $user_id \
+        -next_activity_id_list $next_activity_id \
+        -dom_node $activities_node \
+        -dom_doc $doc
+    
+    $imsld_title_node appendChild $activities_node
+    
+    set html_tree [$dom_root asXML]
+}

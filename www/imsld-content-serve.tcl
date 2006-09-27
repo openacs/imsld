@@ -511,7 +511,7 @@ foreach class_node $class_nodes {
             with_control_p
             from imsld_attribute_instances
             where run_id = :run_id
-            and user_id = :user_id
+            and user_id = :owner_user_id
             and identifier = :class_name
             and type = 'class'
         }] } {

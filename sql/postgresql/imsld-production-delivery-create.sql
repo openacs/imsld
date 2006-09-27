@@ -141,3 +141,14 @@ which scope is the current run. So every time a run is created, those attributes
 initializated according to the initial parsed values from the manifest, not being affected
 by a previous run.';
 
+create table imsld_run_users_group_rels (
+    rel_id      integer
+                constraint imsld_rug_rels_fk
+                references acs_rels
+                constraint imsld_rug_rels_pk
+                primary key
+);
+
+comment on table imsld_run_users_group_rels is '
+This table stores the relationships between users and runs. It is also used to store the current role of the users in the run.';
+
