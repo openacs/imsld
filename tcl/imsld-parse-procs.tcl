@@ -1705,7 +1705,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
         set title [imsld::parse::get_title -node $conference -prefix imsld]
         
         # manager
-        set manager [$conference selectNodes "*\[local-name()='manager'\]"]
+        set manager [$conference selectNodes "*\[local-name()='conference-manager'\]"]
         set manager_id ""
         if { [llength $manager] } {
             imsld::parse::validate_multiplicity -tree $manager -multiplicity 1 -element_name conference-manager -equal
