@@ -260,6 +260,7 @@ foreach set_property_node $set_property_nodes {
         value as restriction_value
         from imsld_restrictions
         where property_id = :property_item_id
+        and (restriction_type='length' or  restriction_type='maxlength' or restriction_type='totaldigits' or restriction_type='enumeration')
     } {
         switch $restriction_type {
             length -
