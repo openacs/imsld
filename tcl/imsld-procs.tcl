@@ -2643,7 +2643,7 @@ ad_proc -public imsld::generate_activities_tree {
                 #  in the "structure_next_activity" function. which is the case when structure-type is "sequence")
                 db_1row get_activity_structure_info { *SQL* }
                 set started_p [db_0or1row as_completed_p { *SQL* }]
-                if { $started_p || [string eq $structure_type "selection"] } {
+                if { $started_p } {
                     set structure_node [$dom_doc createElement li]
                     $structure_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
