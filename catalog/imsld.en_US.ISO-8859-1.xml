@@ -313,6 +313,7 @@
   <msg key="Select">select user...</msg>
   <msg key="Select_a_role">Select a role...</msg>
   <msg key="Select_a_role_1">Select a role</msg>
+  <msg key="Select_role">Select role...</msg>
   <msg key="Self">Self</msg>
   <msg key="send-mail_service">send-mail service</msg>
   <msg key="Sendmail_Identifier">Sendmail Identifier</msg>
