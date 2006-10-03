@@ -29,6 +29,7 @@
 <input type="hidden" name="run_id" value="@run_id@">
 <input type="hidden" name="role_id" value="@role_id@">
 <input type="hidden" name="monitor_id" value="@monitor_id@">
+<input type="submit" name="ok" value="OK" />
 </form>
 </if>
 
@@ -67,7 +68,7 @@ document.getElementById('object').src = as[0].getAttribute('href');
 </script>
 
 <SCRIPT>
-  document.forms['choose-user'].elements['formbutton:ok'].style.display="none"
+  document.forms['choose-user'].elements['ok'].style.display="none"
 </SCRIPT>
 
 </html>

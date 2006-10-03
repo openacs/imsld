@@ -43,7 +43,8 @@ div {
     </else>
 </multiple>
 </select>
-<input type="hidden" name="run_id" value=@run_id@>
+<input type="hidden" name="run_id" value=@run_id@ />
+<input type="submit" name="ok" value="OK" />
 </form>
 </div>
 @html_tree;noquote@
@@ -68,7 +69,7 @@ for (var i = 0; i < as.length; i++) {
 </script>
 
 <SCRIPT>
-  document.forms['choose-role'].elements['formbutton:ok'].style.display="none"
+  document.forms['choose-role'].elements['ok'].style.display="none"
 </SCRIPT>
 
 </html>
