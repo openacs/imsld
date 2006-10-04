@@ -410,7 +410,7 @@ ad_proc -public imsld::mark_role_part_finished {
             set resources_activities_list [imsld::process_activity_structure_as_ul -run_id $run_id -structure_item_id $activity_item_id -resource_mode "t" -dom_node $foo_node -dom_doc $foo_doc]
         }
         #grant permissions for newly showed resources
-        imsld::grant_permissions -resources_activities_list $resources_activities_list -user_id $user_id
+        imsld::grant_permissions -resources_activities_list $resources_activities_list -user_id $user_id -run_id $run_id
     }
 
 }
@@ -722,7 +722,7 @@ ad_proc -public imsld::finish_component_element {
         if { [db_0or1row get_related_on_completion_id ""] } {
             # process feedback?
             if { [db_0or1row get_related_resource_id { *SQL* }] } {
-                imsld::grant_permissions -resources_activities_list $related_resource -user_id $user_id
+                imsld::grant_permissions -resources_activities_list $related_resource -user_id $user_id -run_id $run_id
             }
             # process change_property_value?
             if { [db_0or1row get_related_change_prop_val {
@@ -1494,7 +1494,7 @@ ad_proc -public imsld::process_service_as_ul {
     }
     
     #grant permissions for resources in service
-    imsld::grant_permissions -resources_activities_list $resource_item_list -user_id [ad_conn user_id]
+    imsld::grant_permissions -resources_activities_list $resource_item_list -user_id [ad_conn user_id] -run_id $run_id
 
     if {[string eq "t" $resource_mode]} {
         return [list $services_list $resource_item_list]
@@ -1552,7 +1552,7 @@ ad_proc -public imsld::process_environment_as_ul {
                 }
 
                 #grant permissions to use the resource 
-                imsld::grant_permissions -resources_activities_list $resource_item_id -user_id [ad_conn user_id]
+                imsld::grant_permissions -resources_activities_list $resource_item_id -user_id [ad_conn user_id] -run_id $run_id
 
                 set one_learning_object_list [imsld::process_resource_as_ul -resource_item_id $resource_item_id \
                                                   -run_id $run_id \
@@ -3209,10 +3209,104 @@ if {[info exist play_id] & ![info exist imsld_id]} {
        }]
 }
 
+ad_proc -public imsld::grant_forum_permissions {
+    -user_id
+    -resource_item_id
+    -run_id
+} {
+    <p>Grant permissions to forums related to an imsld package</p>
+
+    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+} {
+    #get the forum object_id
+    db_1row get_forum_object_id {select acs_object_id as forum_id
+                                 from imsld_cp_resourcesi 
+                                 where item_id=:resource_item_id
+                                 }
+    #get the user active role
+    db_1row get_active_role {
+                            select iruns.active_role_id as active_role
+                            from imsld_run_users_group_rels iruns,
+                                 acs_rels ar,
+                                 imsld_run_users_group_ext iruge 
+                            where iruge.run_id=:run_id 
+                                  and ar.object_id_one=iruge.group_id 
+                                  and ar.object_id_two=:user_id 
+                                  and ar.rel_type='imsld_run_users_group_rel' 
+                                  and ar.rel_id=iruns.rel_id
+    }
+    
+#get the permissions related to that role
+    if {[db_0or1row is_manager {select ics.manager_id 
+                                from imsld_conference_services ics,
+                                     acs_rels ar
+                                where ar.rel_type='imsld_item_res_rel'
+                                      and ar.object_id_two=:resource_item_id
+                                      and ics.imsld_item_id=ar.object_id_one
+                                      and ics.manager_id=:active_role}]
+    } {
+        permission::grant -party_id $user_id -object_id $forum_id  -privilege "read"
+        permission::grant -party_id $user_id -object_id $forum_id  -privilege "create"
+        permission::grant -party_id $user_id -object_id $forum_id  -privilege "admin"
+    }
+
+#moderator
+    if {[db_0or1row is_moderator {select ics.moderator_id 
+                                from imsld_conference_services ics, 
+                                     acs_rels ar
+                                where ics.imsld_item_id=ar.object_id_one
+                                      and ar.rel_type='imsld_item_res_rel'
+                                      and ar.object_id_two=:resource_item_id
+                                      and ics.moderator_id=:active_role}]
+    } {
+        permission::grant -party_id $user_id -object_id $forum_id  -privilege "read"
+        permission::grant -party_id $user_id -object_id $forum_id  -privilege "create"
+        permission::grant -party_id $user_id -object_id $forum_id  -privilege "admin"
+        permission::grant -party_id $user_id -object_id $forum_id  -privilege "forum_moderate"
+
+    }
+
+#participant
+    if {[db_0or1row is_participant {select iroles.role_id as participant_id
+                                    from acs_rels ar, 
+                                         acs_rels ar2, 
+                                         imsld_conference_servicesi ics,
+                                         imsld_rolesi iroles
+                                    where ar2.rel_type='imsld_item_res_rel' 
+                                          and ar2.object_id_two=:resource_item_id
+                                          and ar2.object_id_one=ics.imsld_item_id 
+                                          and ics.item_id=ar.object_id_one 
+                                          and ar.rel_type='imsld_conf_part_rel'
+                                          and ar.object_id_two=iroles.item_id
+                                          and iroles.role_id=:active_role}]
+    } {
+        permission::grant -party_id $user_id -object_id $forum_id  -privilege "read"
+        permission::grant -party_id $user_id -object_id $forum_id  -privilege "create"
+    }
+
+
+#observer
+    if {[db_0or1row is_observer {select iroles.role_id as observer_id
+                                    from acs_rels ar, 
+                                         acs_rels ar2, 
+                                         imsld_conference_servicesi ics,
+                                         imsld_rolesi iroles
+                                    where ar2.rel_type='imsld_item_res_rel' 
+                                          and ar2.object_id_two=:resource_item_id
+                                          and ar2.object_id_one=ics.imsld_item_id 
+                                          and ics.item_id=ar.object_id_one 
+                                          and ar.rel_type='imsld_conf_obser_rel'
+                                          and ar.object_id_two=iroles.item_id
+                                          and iroles.role_id=:active_role}]
+    } {
+        permission::grant -party_id $user_id -object_id $forum_id  -privilege "read"
+    }
+}
 
 ad_proc -public imsld::grant_permissions {
     -resources_activities_list
     -user_id
+    -run_id
 } {
     <p>Grant permissions to imsld files related to imsld resources</p>
 
@@ -3224,15 +3318,13 @@ ad_proc -public imsld::grant_permissions {
             
                 set related_cr_items [db_list get_cr_item_from_resource {} ]
                 
-                foreach the_object_id $related_cr_items {
-                    permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
+                foreach related_item $related_cr_items {
+                    permission::grant -party_id $user_id -object_id $related_item  -privilege "read"
                 }
             } else {
                 if {[db_0or1row is_forum {}]} {
-                    permission::grant -party_id $user_id -object_id $the_object_id  -privilege "forum_moderate"
+                    imsld::grant_forum_permissions -user_id $user_id -resource_item_id $the_resource_id -run_id $run_id
                 } 
-
-                permission::grant -party_id $user_id -object_id $the_object_id  -privilege "read"
             }
    }
 }

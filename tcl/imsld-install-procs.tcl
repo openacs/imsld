@@ -156,7 +156,8 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_conference_service -attribute_name conference_type -datatype string -pretty_name "#imsld.Conference_Type#" -column_spec "char(12)"
     content::type::attribute::new -content_type imsld_conference_service -attribute_name imsld_item_id -datatype number -pretty_name "#imsld.Item_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_conference_service -attribute_name manager_id -datatype number -pretty_name "#imsld.Manager_Identifier#" -column_spec "integer"
-
+    content::type::attribute::new -content_type imsld_conference_service -attribute_name moderator_id -datatype number -pretty_name "<#_ Moderator_Identifier  #>"  -column_spec "integer"
+    
     # methods
     content::type::new -content_type imsld_method -supertype content_revision -pretty_name "#imsld.IMS-LD_Method#" -pretty_plural "#imsld.IMS-LD_Methods#" -table_name imsld_methods -id_column method_id
     
@@ -739,7 +740,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_conference_service -attribute_name conference_type
     content::type::attribute::delete -content_type imsld_conference_service -attribute_name imsld_item_id
     content::type::attribute::delete -content_type imsld_conference_service -attribute_name manager_id
-    
+    content::type::attribute::delete -content_type imsld_conference_service -attribute_name moderator_id   
     # methods
     content::type::attribute::delete -content_type imsld_method -attribute_name imsld_id
     content::type::attribute::delete -content_type imsld_method -attribute_name complete_act_id

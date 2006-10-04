@@ -1772,9 +1772,31 @@ ad_proc -public imsld::parse::parse_and_create_service {
 	
         }
         
+        # moderator
+        set moderator_id ""
+        set moderator_list [$conference selectNodes "*\[local-name()='moderator'\]"]
+        if { [llength $moderator_list] } {
+            foreach moderator $moderator_list {
+                set role_ref [imsld::parse::get_attribute -node $moderator -attr_name role-ref]
+                if { ![db_0or1row get_role_id_from_role_ref {
+                    select item_id as moderator_id 
+                    from imsld_rolesi 
+                    where identifier = :role_ref 
+                    and content_revision__is_live(role_id) = 't' 
+                    and component_id = :component_id 
+                }] } {
+                    # there is no role with that identifier, return the error
+                    return [list 0 "[_ imsld.lt_There_is_no_role_with_4]"]
+                } else {
+                    set moderator_id $role_item_id
+                }
+            }
+        }
+
         # create the conference service
         set conference_id [imsld::item_revision_new -attributes [list [list service_id $service_id] \
                                                                           [list manager_id $manager_id] \
+                                                                          [list moderator_id $moderator_id] \
                                                                           [list conference_type $conference_type] \
                                                                           [list imsld_item_id $imsld_item_id]] \
                                -content_type imsld_conference_service \
@@ -1824,27 +1846,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
             }
         }
 
-        # moderator
-        set moderator_list [$conference selectNodes "*\[local-name()='moderator'\]"]
-        if { [llength $moderator_list] } {
-            foreach moderator $moderator_list {
-                set role_ref [imsld::parse::get_attribute -node $moderator -attr_name role-ref]
-                if { ![db_0or1row get_role_id_from_role_ref {
-                    select item_id as moderator_id 
-                    from imsld_rolesi 
-                    where identifier = :role_ref 
-                    and content_revision__is_live(role_id) = 't' 
-                    and component_id = :component_id 
-                }] } {
-                    # there is no role with that identifier, return the error
-                    return [list 0 "[_ imsld.lt_There_is_no_role_with_4]"]
-                } else {
-                    set moderator_id $role_item_id
-                }
-                # map conference with moderator role
-                relation_add imsld_conf_moder_rel $conference_id $moderator_id
-            }
-        }        
+                
     }
     
     # index service (not supported)
