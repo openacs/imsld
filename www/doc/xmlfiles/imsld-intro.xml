@@ -76,11 +76,12 @@
     <itemizedlist>
       <listitem>
         <para><ulink url="http://alfanet.ia.uned.es/">Alfanet</ulink>.The
-        people of Alfanet has already done some integration of IMS-LD with
-        OpenACS. At the time of writing this specification we were waiting to
-        have access to their code in order to evaluate the possibility to make
-        use of what they have already done, avoiding the waist of resources,
-        but by the moment we don't know if this will be possible.</para>
+        people of Alfanet have already done some integration of IMS-LD and
+        OpenACS which is published in <ulink
+        url="http://alfanet.ia.uned.es/alfanet/pages/available_components.htm">the
+        Alanet project page</ulink>. We couldn't do any reuse of the resources
+        dough, because at the time of developing the package we didn't have
+        access to the code.</para>
       </listitem>
 
       <listitem>
