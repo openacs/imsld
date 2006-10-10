@@ -14,8 +14,13 @@ namespace eval imsld::statement {}
 
 ad_proc -public imsld::condition::execute_all {
     -run_id
+    -user_id
 } {
 } {
+    if {![info exist user_id]} {
+    	set user_id [ad_conn user_id] 
+    }
+
     set imsld_rev_id [db_string get_imsld_rev_id {SELECT imsld_id FROM imsld_runs WHERE run_id = :run_id}]
     set imsld_id [db_string get_item_id {SELECT item_id FROM cr_revisions WHERE revision_id = :imsld_rev_id}]
     set method_rev_id [db_string get_method_rev_id {SELECT method_id FROM imsld_methods WHERE imsld_id = :imsld_id}]
@@ -26,30 +31,36 @@ ad_proc -public imsld::condition::execute_all {
     }] {
         dom parse $condition_xml document
         $document documentElement condition
-        imsld::condition::execute -run_id $run_id -condition $condition
+        imsld::condition::execute -run_id $run_id -condition $condition -user_id $user_id
     }
 }
 
 ad_proc -public imsld::condition::execute {
     -run_id
     -condition
+    -user_id
 } {
 } {
+
+    if {![info exist user_id]} {
+	    set user_id [ad_conn user_id] 
+    }
+
     set ifNodes [$condition selectNodes {*[local-name()='if']}]
     set thenNodes [$condition selectNodes {*[local-name()='then']}]
     set elseNodes [$condition selectNodes {*[local-name()='else']}]
     foreach ifNode $ifNodes {
-        if {[imsld::expression::eval -run_id $run_id -expression [$ifNode childNodes]]} {
+        if {[imsld::expression::eval -user_id $user_id -run_id $run_id -expression [$ifNode childNodes]]} {
             foreach thenNode $thenNodes {
-                imsld::statement::execute -run_id $run_id -statement [$thenNode childNodes]
+                imsld::statement::execute -run_id $run_id -statement [$thenNode childNodes] -user_id $user_id
             }
         } else {
             foreach elseNode $elseNodes {
                 #an else node may contain an expression or another if_then_else
                 if { [string eq [ [$elseNode selectNodes {*[position()=1] } ] localName] "if" ] } {
-                    imsld::condition::execute -run_id $run_id -condition $elseNode
+                    imsld::condition::execute -run_id $run_id -condition $elseNode -user_id $user_id
                 } else {
-                    imsld::statement::execute -run_id $run_id -statement [$elseNode childNodes]
+                    imsld::statement::execute -run_id $run_id -statement [$elseNode childNodes] -user_id $user_id
                 }
             }
         }
@@ -612,6 +623,7 @@ ad_proc -public imsld::expression::eval {
 ad_proc -public imsld::statement::execute {
     -run_id
     -statement
+    -user_id
 } {
 } {
     if {![info exist user_id]} {
@@ -633,7 +645,8 @@ ad_proc -public imsld::statement::execute {
                                 ns_log notice "imsld::statement::execute: class ref is empty"
                                 continue
                             }
-                            imsld::runtime::class::show_hide -class $class -run_id $run_id -title $title -with_control_p $with_control_p -action "show"
+                            imsld::runtime::class::show_hide -class $class -run_id $run_id -title $title \
+                                                             -with_control_p $with_control_p -action "show" -user_id $user_id
                         }
                         {environment-ref} {
                             # the environments doesn't have any isvisible attribute, 
@@ -647,16 +660,16 @@ ad_proc -public imsld::statement::execute {
                             # NOT IMPLEMENTED: noop
                         }
                         {item-ref} {
-                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show"
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show" -user_id $user_id
                         }
                         {learning-activity-ref} {
-                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show"
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show" -user_id $user_id
                         }
                         {support-activity-ref} {
-                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show"
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show" -user_id $user_id
                         }
                         {play-ref} {
-                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show"
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "show" -user_id $user_id
                         }
                     }
                 }
@@ -674,7 +687,8 @@ ad_proc -public imsld::statement::execute {
                                 ns_log notice "imsld::statement::execute: class ref is empty"
                                 continue
                             }
-                            imsld::runtime::class::show_hide -class $class -run_id $run_id -title $title -with_control_p $with_control_p -action "hide"
+                            imsld::runtime::class::show_hide -class $class -run_id $run_id -title $title \
+                                                             -with_control_p $with_control_p -action "hide" -user_id $user_id
                         }
                         {environment-ref} {
                             # the environments doesn't have any isvisible attribute, 
@@ -688,16 +702,16 @@ ad_proc -public imsld::statement::execute {
                             # NOT IMPLEMENTED: noop
                         }
                         {item-ref} {
-                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide"
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide" -user_id $user_id
                         }
                         {learning-activity-ref} {
-                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide"
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide" -user_id $user_id
                         }
                         {support-activity-ref} {
-                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide"
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide" -user_id $user_id
                         }
                         {play-ref} {
-                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide"
+                            imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] -action "hide" -user_id $user_id
                         }
                     }
                 }

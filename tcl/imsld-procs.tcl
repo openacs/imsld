@@ -1879,7 +1879,6 @@ ad_proc -public imsld::process_resource_as_ul {
         }
         # get associated urls
         db_foreach associated_urls { *SQL* } {
-
             set a_node [$dom_doc createElement a]
             $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" { {file_url "[export_vars -base $url]"} resource_item_id run_id}]"
             set img_node [$dom_doc createElement img]

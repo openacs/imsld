@@ -315,7 +315,6 @@ ad_proc -public imsld::runtime::class::show_hide {
     mark a class as showh or hidden. NOTE: not recursively
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
-
     if { [string eq $action "show"] } {
         set is_visible_p "t"
     } else {
@@ -347,9 +346,14 @@ ad_proc -public imsld::runtime::environment::show_hide {
     -run_id
     -identifier
     -action
+    -user_id
 } {
     mark an environment as showh or hidden. NOTE: not recursively
 } {
+
+    if {![info exist user_id]} {
+        set user_id [ad_conn user_id]
+    }
     # according to the spec, the environments doesn't have any isvisible attribute
     # so we show the referenced learning objects and services
 
@@ -373,7 +377,7 @@ ad_proc -public imsld::runtime::environment::show_hide {
         from imsld_learning_objects lo, imsld_environmentsi env
         where lo.environment_id = :environment_item_id
     } {
-        imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $lo_identifier -action $action
+        imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $lo_identifier -action $action -user_id $user_id
     }
 
     # 2. show the services
@@ -383,7 +387,7 @@ ad_proc -public imsld::runtime::environment::show_hide {
         from imsld_services serv
         where serv.environment_id = :environment_item_id
     } {
-        imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $serv_identifier -action $action
+        imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $serv_identifier -action $action -user_id $user_id
     }
     
 }
@@ -392,9 +396,13 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
     -run_id
     -identifier
     -action
+    -user_id
 } {
     mark an activity structure as showh or hidden. NOTE: not recursively
 } {
+    if {![info exist user_id]} {
+        set user_id [ad_conn user_id]
+    }
     # according to the spec, the activity structures doesn't have any isvisible attribute
     # so we show the referenced activities, learning infos and environments
 
@@ -417,7 +425,7 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
         where ar.object_id_one = :structure_item_id
         and ar.object_id_two = ii.item_id
     } {
-        imsld::runtime::isvisible::show -run_id $run_id -identifier $ii_identifier -action $action
+        imsld::runtime::isvisible::show -run_id $run_id -identifier $ii_identifier -action $action  -user_id $user_id
     }
 
     # 2. show the learning activities
@@ -428,7 +436,7 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
         where ar.object_id_one = :structure_item_id
         and ar.object_id_two = la.item_id
     } {
-        imsld::runtime::isvisible::show -run_id $run_id -identifier $la_identifier -action $action
+        imsld::runtime::isvisible::show -run_id $run_id -identifier $la_identifier -action $action -user_id $user_id
     }
 
     # 3. show the support activities
@@ -439,7 +447,7 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
         where ar.object_id_one = :structure_item_id
         and ar.object_id_two = sa.item_id
     } {
-        imsld::runtime::isvisible::show -run_id $run_id -identifier $sa_identifier -action $action
+        imsld::runtime::isvisible::show -run_id $run_id -identifier $sa_identifier -action $action -user_id $user_id
     }
 
     # 4. show the activity structures
@@ -450,7 +458,7 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
         where ar.object_id_one = :structure_item_id
         and ar.object_id_two = ias.item_id
     } {
-        imsld::runtime::isvisible::show -run_id $run_id -identifier $structure_identifier -action $action
+        imsld::runtime::isvisible::show -run_id $run_id -identifier $structure_identifier -action $action -user_id $user_id
     }
 
     # 5. show the environments
@@ -461,7 +469,7 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
         where ar.object_id_one = :structure_item_id
         and ar.object_id_two = env.item_id
     } {
-        imsld::runtime::isvisible::show -run_id $run_id -identifier $structure_identifier -action $action
+        imsld::runtime::isvisible::show -run_id $run_id -identifier $structure_identifier -action $action -user_id $user_id
     }
     
 }

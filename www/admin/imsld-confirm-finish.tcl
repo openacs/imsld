@@ -22,7 +22,16 @@ if {$conditions == 1} {
     }
 }
 
-# excecute all conditions
-imsld::condition::execute_all -run_id $run_id
+# excecute all conditions for all users
+
+set users_list [list]
+foreach role_id [imsld::roles::get_list_of_roles -imsld_id $imsld_id] {
+   set users_list [concat $users_list [imsld::roles::get_users_in_role -role_id [lindex $role_id 0] -run_id $run_id]]
+}
+   
+foreach user_id $users_list {
+    imsld::condition::execute_all -run_id $run_id -user_id $user_id
+}
+
 
 ad_returnredirect ..
