@@ -12,7 +12,6 @@ ad_page_contract {
     resource_item_id
     {role_id ""}
 }
-
 if { [string eq $owner_user_id ""] } {
     set owner_user_id [ad_conn user_id]
 }
@@ -46,7 +45,7 @@ db_1row context_info {
 
 # Parser
 # XML => DOM document
-dom parse $xml_string dom_doc
+dom parse $xml_string dom_doc 
 # DOM document => DOM root
 $dom_doc documentElement dom_root
 
@@ -539,6 +538,34 @@ set bodies [$dom_root selectNodes "*\[local-name()='body'\]"]
 foreach body $bodies {
     $body appendChild $script
 }
+# Get file-storage root folder_id
+set community_id [dotlrn_community::get_community_id]
+set fs_package_id [site_node_apm_integration::get_child_package_id \
+                                        -package_id [dotlrn_community::get_package_id $community_id] \
+                                        -package_key "file-storage"]
+set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
+set fs_resource_info [db_1row get_fs_resource_info {
+                                        select cpf.imsld_file_id as imsld_file_id,
+                                            cpf.parent_id as parent_id
+                                        from imsld_cp_filesx cpf,
+                                            acs_rels ar, imsld_res_files_rels map
+                                        where ar.object_id_one = :resource_item_id
+                                            and ar.object_id_two = cpf.item_id
+                                            and ar.rel_id = map.rel_id
+                                            and content_revision__is_live(cpf.imsld_file_id) = 't'
+                                            and map.displayable_p = 't'
+}]
+
+set folder_path [db_exec_plsql get_folder_path {select content_item__get_path(:parent_id,:root_folder_id); }]
+set file_url "[apm_package_url_from_id $fs_package_id]view/${folder_path}"
+
+set head_node [$dom_root selectNodes {//*[local-name()='head']}]
+if {![llength [$head_node selectNodes {/*[local-name()='base']}]]} {
+    set base_node [$dom_doc createElement "base"]
+    $base_node setAttribute href [ns_conn location]$file_url/
+    $head_node appendChild $base_node
+}
+
 
 set xmloutput {<?xml version="1.0" encoding="UTF-8"?>}
 append xmloutput [$dom_root asXML]
