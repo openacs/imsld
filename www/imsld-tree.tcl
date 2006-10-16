@@ -30,7 +30,7 @@ set possible_user_role_names [imsld::roles::get_roles_names -roles_list $possibl
 regsub -all "&nbsp;" $possible_user_role_names "" $possible_user_role_names
 
 # if there is only one role, set it
-set current_role_id [expr { [llength $possible_user_roles] == 1 ? [lindex $possible_user_roles 0] : "" }]
+set current_role_id [expr { [llength $possible_user_roles] == 1 ? [lindex $possible_user_roles 0] : "$current_role_id" }]
 
 if { ![empty_string_p $current_role_id] } {
     # a role has been selected, update in db
