@@ -298,9 +298,10 @@ foreach set_property_node $set_property_nodes {
     # prepare replacement
     set form_node [$dom_doc createElement "form"]
     $form_node setAttribute name "set-properties"
-    $form_node setAttribute action "properties-value-set"
+    set url_prefix [ns_conn url]
+    regexp (.*)/ $url_prefix url_prefix
+    $form_node setAttribute action "${url_prefix}/properties-value-set"
     $form_node setAttribute method "get"
-
     if { [string eq $view "title-value"] } {
         $form_node appendChild [$dom_doc createTextNode "$title"] 
     }
@@ -351,7 +352,9 @@ foreach set_property_group_node $set_property_group_nodes {
     # prepare replacement
     set form_node [$dom_doc createElement "form"]
     $form_node setAttribute name "set-properties"
-    $form_node setAttribute action "properties-value-set"
+    set url_prefix [ns_conn url]
+    regexp (.*)/ $url_prefix url_prefix
+    $form_node setAttribute action "${url_prefix}/properties-value-set"
     $form_node setAttribute method "get"
 
     # add group title (according to the spec)
