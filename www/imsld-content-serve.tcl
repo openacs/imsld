@@ -300,7 +300,7 @@ foreach set_property_node $set_property_nodes {
     $form_node setAttribute name "set-properties"
     set url_prefix [ns_conn url]
     regexp (.*)/ $url_prefix url_prefix
-    $form_node setAttribute action "${url_prefix}/properties-value-set"
+    $form_node setAttribute action "${url_prefix}properties-value-set"
     $form_node setAttribute method "get"
     if { [string eq $view "title-value"] } {
         $form_node appendChild [$dom_doc createTextNode "$title"] 
@@ -565,7 +565,9 @@ set file_url "[apm_package_url_from_id $fs_package_id]view/${folder_path}"
 set head_node [$dom_root selectNodes {//*[local-name()='head']}]
 if {![llength [$head_node selectNodes {/*[local-name()='base']}]]} {
     set base_node [$dom_doc createElement "base"]
-    $base_node setAttribute href [ns_conn location]$file_url/
+    set base_prefix [ns_conn url]
+    regexp (.*)/ $base_prefix base_prefix
+    $base_node setAttribute href "$base_prefix/$file_url/"
     $head_node appendChild $base_node
 }
 
