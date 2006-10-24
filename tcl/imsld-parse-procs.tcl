@@ -935,7 +935,7 @@ ad_proc -public imsld::parse::parse_and_create_restriction {
 }
 
 ad_proc -public imsld::parse::parse_and_create_global_def { 
-    -global_def_node
+    {-global_def_node ""}
     -identifier
     -existing_href
     -component_id
@@ -949,10 +949,10 @@ ad_proc -public imsld::parse::parse_and_create_global_def {
 
     Returns a list with the new global_definition_id (item_id, actually a property_id) created if there were no errors, or 0 and an explanation messge if there was an error.
     
-    @param global_def_node global_def node to parse
+    @option global_def_node global_def node to parse
     @param identifier
     @param existing_href
-    @component_id Comoponent id of the one which owns the property
+    @param component_id Comoponent id of the one which owns the property
     @param type Type of the property defined by this global definition, which can be globpers or glob
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
@@ -961,18 +961,26 @@ ad_proc -public imsld::parse::parse_and_create_global_def {
 } {
     upvar files_struct_list files_struct_list
     
-    set uri [imsld::parse::get_attribute -node $global_def_node -attr_name uri]
-    set title [imsld::parse::get_title -node $global_def_node -prefix imsld]
-    set datatype [$global_def_node selectNodes "*\[local-name()='datatype'\]" ] 
-    imsld::parse::validate_multiplicity -tree $global_def_node -multiplicity 1 -element_name "global-definition datatype" -equal
-    set datatype [string tolower [imsld::parse::get_attribute -node $global_def_node -attr_name datatype]]
-    set initial_value [$global_def_node selectNodes "*\[local-name()='initial-value'\]"] 
-    imsld::parse::validate_multiplicity -tree $initial_value -multiplicity 1 -element_name "global-definition initial-value" -lower_than
-    if { [llength $initial_value] } {
-        set initial_value [imsld::parse::get_element_text -node $initial_value]
+    if { ![empty_string_p $global_def_node] } {
+        set uri [imsld::parse::get_attribute -node $global_def_node -attr_name uri]
+        set title [imsld::parse::get_title -node $global_def_node -prefix imsld]
+        set datatype [$global_def_node selectNodes "*\[local-name()='datatype'\]" ] 
+        imsld::parse::validate_multiplicity -tree $global_def_node -multiplicity 1 -element_name "global-definition datatype" -equal
+        set datatype [string tolower [imsld::parse::get_attribute -node $global_def_node -attr_name datatype]]
+        set initial_value [$global_def_node selectNodes "*\[local-name()='initial-value'\]"] 
+        imsld::parse::validate_multiplicity -tree $initial_value -multiplicity 1 -element_name "global-definition initial-value" -lower_than
+        if { [llength $initial_value] } {
+            set initial_value [imsld::parse::get_element_text -node $initial_value]
+        } else {
+            set initial_value ""
+        }
     } else {
+        set uri ""
+        set datatype ""
         set initial_value ""
+        set title ""
     }
+
 
     set globpers_property_id [imsld::item_revision_new -attributes [list [list component_id $component_id] \
                                                                   [list identifier $identifier] \
@@ -985,19 +993,21 @@ ad_proc -public imsld::parse::parse_and_create_global_def {
                             -title $title \
                             -parent_id $parent_id]
 
-    set restrictions [$global_def_node selectNodes "*\[local-name()='restriction'\]"]
-    foreach restriction $restrictions {
-        set restriction_list [imsld::parse::parse_and_create_restriction -manifest $manifest \
-                                  -property_id $globpers_property_id \
-                                  -manifest_id $manifest_id \
-                                  -restriction_node $restriction \
-                                  -parent_id $parent_id \
-                                  -tmp_dir $tmp_dir]
-        
-        set restriction_id [lindex $restriction_list 0]
-        if { !$restriction_id } {
-            # an error happened, abort and return the list whit the error
-            return $restriction_list
+    if { ![empty_string_p $global_def_node] } {
+        set restrictions [$global_def_node selectNodes "*\[local-name()='restriction'\]"]
+        foreach restriction $restrictions {
+            set restriction_list [imsld::parse::parse_and_create_restriction -manifest $manifest \
+                                      -property_id $globpers_property_id \
+                                      -manifest_id $manifest_id \
+                                      -restriction_node $restriction \
+                                      -parent_id $parent_id \
+                                      -tmp_dir $tmp_dir]
+            
+            set restriction_id [lindex $restriction_list 0]
+            if { !$restriction_id } {
+                # an error happened, abort and return the list whit the error
+                return $restriction_list
+            }
         }
     }
     return $globpers_property_id
@@ -1275,12 +1285,15 @@ ad_proc -public imsld::parse::parse_and_create_property {
         set gp_existing [$globpers_property selectNodes "*\[local-name()='existing'\]"] 
         imsld::parse::validate_multiplicity -tree $gp_existing -multiplicity 1 -element_name "existing(globpers)" -lower_than
         if { [llength $gp_existing] } {
-            set gp_existing_href [imsld::parse::get_attribute -node $gp_exiting -attr_name href]
+            set gp_existing_href [imsld::parse::get_attribute -node $gp_existing -attr_name href]
         } else {
             set gp_existing_href ""
         }
 
         set global_def [$globpers_property selectNodes "*\[local-name()='global-definition'\]"]
+        if { ![empty_string_p $global_def] } {
+            imsld::parse::validate_multiplicity -tree $global_def -multiplicity 1 -element_name "global-definition(globpers)" -equal
+        }
         set global_def_list [imsld::parse::parse_and_create_global_def -type globpers \
                                  -identifier $gp_identifier \
                                  -existing_href $gp_existing_href \
@@ -1686,13 +1699,14 @@ ad_proc -public imsld::parse::parse_and_create_service {
                 set username_property_id ""
             }
 
-            set email_data_id [imsld::item_revision_new -attributes [list [list send_mail_id $send_mail_id] \
-                                                                         [list role_id $role_id] \
+            set email_data_id [imsld::item_revision_new -attributes [list [list role_id $role_id] \
                                                                          [list mail_data {}] \
                                                                          [list email_property_id $email_property_id] \
                                                                          [list username_property_id $username_property_id]] \
                                    -content_type imsld_send_mail_data \
                                    -parent_id $parent_id]
+            # map email_data with the service
+            relation_add imsld_send_mail_serv_data_rel $send_mail_id $email_data_id
         }
     }
 
@@ -1874,7 +1888,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
 
         # monitor: role-ref
         set role_ref [$monitor_service selectNodes "*\[local-name()='role-ref'\]"]
-        imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name role-ref -equal
+        imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name "role-ref (monitor service)" -equal
         set ref [imsld::parse::get_attribute -node $role_ref -attr_name ref]
         if { ![db_0or1row get_role_id {
             select ir.item_id as role_id
@@ -2151,6 +2165,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     @param tmp_dir Temporary directory where the files were exctracted
 } {
     upvar files_struct_list files_struct_list
+    upvar warnings warnings
 
     # get the info of the learning activity and create it
     set identifier [imsld::parse::get_attribute -node $activity_node -attr_name identifier]
@@ -2329,6 +2344,29 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                                   -content_type imsld_learning_activity \
                                   -title $title \
                                   -parent_id $parent_id]
+
+    # to avoid infinite loops, take the notifications parsing out
+    if { [llength $on_completion] } {
+        # Learning Activity: On Completion: Notifications
+        set notifications_list [$on_completion selectNodes "*\[local-name()='notification'\]"] 
+        if { [llength $notifications_list] } {
+            foreach notification $notifications_list {
+                set notification_list [imsld::parse::parse_and_create_notification -component_id $component_id \
+                                           -notification_node $notification \
+                                           -manifest $manifest \
+                                           -manifest_id $manifest_id \
+                                           -parent_id $parent_id \
+                                           -tmp_dir $tmp_dir]
+                set notification_id [lindex $notification_list 0]
+                if { !$notification_id } {
+                    # an error occurred, return it
+                    return $notification_list
+                }
+                # map on_completion with the notif
+                relation_add imsld_on_comp_notif_rel $on_completion_id $notification_id
+            }
+        }
+    }
     
     # Learning Activity: Environments
     set environment_refs [$activity_node selectNodes "*\[local-name()='environment-ref'\]"]
@@ -2378,6 +2416,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     @option parent_role_id Parent role identifier. Default to null
 } {
     upvar files_struct_list files_struct_list
+    upvar warnings warnings
 
     # get the info of the support activity and create it
     set identifier [imsld::parse::get_attribute -node $activity_node -attr_name identifier]
@@ -2520,6 +2559,30 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                                  -title $title \
                                  -parent_id $parent_id]
     
+    # to avoid infinite loops, take the notifications parsing out
+    if { [llength $on_completion] } {
+        # Support Activity: On Completion: Notifications
+        set notifications_list [$on_completion selectNodes "*\[local-name()='notification'\]"] 
+        if { [llength $notifications_list] } {
+            foreach notification $notifications_list {
+                set notification_list [imsld::parse::parse_and_create_notification -component_id $component_id \
+                                           -notification_node $notification \
+                                           -manifest $manifest \
+                                           -manifest_id $manifest_id \
+                                           -parent_id $parent_id \
+                                           -tmp_dir $tmp_dir]
+                set notification_id [lindex $notification_list 0]
+                if { !$notification_id } {
+                    # an error occurred, return it
+                    return $notification_list
+                }
+
+                # map on_completion with the notif
+                relation_add imsld_on_comp_notif_rel $on_completion_id $notification_id
+            }
+        }
+    }
+
     # Support Activity: Role ref
     set role_ref_list [$activity_node selectNodes "*\[local-name()='role-ref'\]"]
     foreach role_ref $role_ref_list {
@@ -2815,7 +2878,6 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                         # search in the manifest ...
                         set organizations [$manifest selectNodes {*[local-name()='organizations']}]
                         set activity_structures [$organizations selectNodes {*[local-name()='learning-design']/*[local-name()='components']/*[local-name()='activities']/*[local-name()='activity-structure']}]
-#                        set activity_structures [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:activities] child all imsld:activity-structure]
                         
                         set found_p 0
                         foreach referenced_activity_structure $activity_structures {
@@ -3359,7 +3421,31 @@ ad_proc -public imsld::parse::parse_and_create_act {
                     -content_type imsld_act \
                     -parent_id $parent_id \
                     -title $title]
+
+    # to avoid infinite loops, take the notifications parsing out
+    if { [llength $on_completion] } {
+        # Act: On Completion: Notifications
+        set notifications_list [$on_completion selectNodes "*\[local-name()='notification'\]"] 
+        if { [llength $notifications_list] } {
+            foreach notification $notifications_list {
+                set notification_list [imsld::parse::parse_and_create_notification -component_id $component_id \
+                                           -notification_node $notification \
+                                           -manifest $manifest \
+                                           -manifest_id $manifest_id \
+                                           -parent_id $parent_id \
+                                           -tmp_dir $tmp_dir]
+                set notification_id [lindex $notification_list 0]
+                if { !$notification_id } {
+                    # an error occurred, return it
+                    return $notification_list
+                }
+                # map on_completion with the notif
+                relation_add imsld_on_comp_notif_rel $on_completion_id $notification_id
+            }
+        }
+    }
     
+
     # Act: Role Parts
     set role_parts [$act_node selectNodes "*\[local-name()='role-part'\]"]
     imsld::parse::validate_multiplicity -tree $role_parts -multiplicity 1 -element_name role-parts -greather_than
@@ -3543,6 +3629,29 @@ ad_proc -public imsld::parse::parse_and_create_play {
                      -title $title \
                      -parent_id $parent_id]
 
+    # to avoid infinite loops, take the notifications parsing out
+    if { [llength $on_completion] } {
+        # Play: On Completion: Notifications
+        set notifications_list [$on_completion selectNodes "*\[local-name()='notification'\]"] 
+        if { [llength $notifications_list] } {
+            foreach notification $notifications_list {
+                set notification_list [imsld::parse::parse_and_create_notification -method_id $method_id \
+                                           -notification_node $notification \
+                                           -manifest $manifest \
+                                           -manifest_id $manifest_id \
+                                           -parent_id $parent_id \
+                                           -tmp_dir $tmp_dir]
+                set notification_id [lindex $notification_list 0]
+                if { !$notification_id } {
+                    # an error occurred, return it
+                    return $notification_list
+                }
+                # map on_completion with the notif
+                relation_add imsld_on_comp_notif_rel $on_completion_id $notification_id
+            }
+        }
+    }
+
     # Play: Acts
     set acts [$play_node selectNodes "*\[local-name()='act'\]"]
     imsld::parse::validate_multiplicity -tree $acts -multiplicity 1 -element_name acts -greather_than
@@ -3566,6 +3675,196 @@ ad_proc -public imsld::parse::parse_and_create_play {
     }
     
     return $play_id
+}
+
+ad_proc -public imsld::parse::parse_and_create_notification { 
+    -component_id
+    -method_id
+    -notification_node:required
+    -manifest:required
+    -manifest_id:required
+    -parent_id:required
+    -tmp_dir:required
+} {
+    Parse a notification and stores all the information in the database.
+
+    Returns a list with the new notification_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
+    
+    @option component_id Component identifier which the notification belongs
+    @option imsld_id IMS-LD identifier which this notification belongs
+    @param manifest Manifest tree
+    @param manifest_id Manifest ID or the manifest being parsed
+    @param notification_node The notification node to parse 
+    @param parent_id Parent folder ID
+    @param tmp_dir Temporary directory where the files were exctracted
+} {
+    upvar files_struct_list files_struct_list
+    upvar warnings warnings
+
+    if { [info exists component_id] } {
+        db_1row get_info_from_comp { *SQL* }
+    }
+    if { [info exists method_id] } {
+        db_1row get_info_from_method { *SQL* }
+    }
+
+    set subject_node [$notification_node selectNodes "*\[local-name()='subject'\]"]
+    imsld::parse::validate_multiplicity -tree $subject_node -multiplicity 1 -element_name "subject (notification)" -equal
+    set subject [imsld::parse::get_element_text -node $subject_node]
+
+    # notification: learning-activity-ref
+    set la_ref [$notification_node selectNodes "*\[local-name()='learning-activity-ref'\]"]
+    set activity_id ""
+    if { [llength $la_ref] } {
+        imsld::parse::validate_multiplicity -tree $la_ref -multiplicity 1 -element_name learning-activity-ref(notification) -equal
+        # search in the already parsed activities
+
+        set learning_activity_ref [imsld::parse::get_attribute -node $la_ref -attr_name ref]
+        if { ![db_0or1row la_get_learning_activity_id { *SQL* }] } {
+            # may be the reference is wrong, search in the support activityes before returning an error
+            if { [db_0or1row la_get_learning_support_activity_id { *SQL* }] } {
+                # warning message
+                append warnings "<li> [_ imsld.lt_The_refernced_learnin] </li>"
+
+            } else {
+                # search in the manifest ...
+                set organizations [$manifest selectNodes {*[local-name()='organizations']}]
+                set learning_activities [$organizations selectNodes {*[local-name()='learning-design']/*[local-name()='components']/*[local-name()='activities']/*[local-name()='learning-activity']}]
+                
+                set found_p 0
+                foreach referenced_learning_activity $learning_activities {
+                    set referenced_identifier [imsld::parse::get_attribute -node $referenced_learning_activity -attr_name identifier]
+                    if { [string eq $learning_activity_ref $referenced_identifier] } {
+                        set found_p 1
+                        set referenced_learning_activity_node $referenced_learning_activity
+                    }
+                }
+                if { $found_p } {
+                    # ok, let's create the learning activity
+                    set learning_activity_ref_list [imsld::parse::parse_and_create_learning_activity -activity_node $referenced_learning_activity_node \
+                                                         -component_id $component_id \
+                                                         -manifest_id $manifest_id \
+                                                         -manifest $manifest \
+                                                         -parent_id $parent_id \
+                                                         -tmp_dir $tmp_dir]
+                    
+                    set activity_id [lindex $learning_activity_ref_list 0]
+                    if { !$activity_id } {
+                        # there is an error, abort and return the list with the error
+                        return $learning_activity_ref_list
+                    }
+                } else {
+                    # error, referenced learning activity does not exist
+                    return [list 0 "[_ imsld.lt_Referenced_learning_a_6]"]
+                }
+                
+            }
+        }
+    }
+    
+    # notification: support-activity-ref
+    set sa_ref [$notification_node selectNodes "*\[local-name()='support-activity-ref'\]"]
+    if { [llength $sa_ref] } {
+        imsld::parse::validate_multiplicity -tree $sa_ref -multiplicity 1 -element_name support-activity-ref(notification) -equal
+        # search in the already parsed activities
+        
+        set support_activity_ref [imsld::parse::get_attribute -node $sa_ref -attr_name ref]
+        if { ![db_0or1row sa_get_support_activity_id { *SQL* }] } {
+            # may be the reference is wrong, search in the learning activityes before returning an error
+            if { [db_0or1row sa_get_learning_activity_id { *SQL* }] } {
+                # warning message
+                append warnings "<li> [_ imsld.lt_The_refernced_support] </li>"
+
+            } else {
+                # search in the manifest ...
+                set organizations [$manifest selectNodes {*[local-name()='organizations']}]
+                set support_activities [$organizations selectNodes {*[local-name()='learning-design']/*[local-name()='components']/*[local-name()='activities']/*[local-name()='support-activity']}]
+                
+                set found_p 0
+                foreach referenced_support_activity $support_activities {
+                    set referenced_identifier [imsld::parse::get_attribute -node $referenced_support_activity -attr_name identifier]
+                    if { [string eq $support_activity_ref $referenced_identifier] } {
+                        set found_p 1
+                        set referenced_support_activity_node $referenced_support_activity
+                    }
+                }
+                if { $found_p } {
+                    # ok, let's create the support activity
+                    set support_activity_ref_list [imsld::parse::parse_and_create_support_activity -activity_node $referenced_support_activity_node \
+                                                         -component_id $component_id \
+                                                         -manifest_id $manifest_id \
+                                                         -manifest $manifest \
+                                                         -parent_id $parent_id \
+                                                         -tmp_dir $tmp_dir]
+                    
+                    set activity_id [lindex $learning_activity_ref_list 0]
+                    if { !$activity_id } {
+                        # there is an error, abort and return the list with the error
+                        return $support_activity_ref_list
+                    }
+                } else {
+                    # error, referenced learning activity does not exist
+                    return [list 0 "<#_ Referenced support activity (%support_activity_ref%) from notification does not exist"]
+                }
+                
+            }
+        }
+    }
+
+    # if we reached this point, the referenced activity is stored in the variable activity_id
+    # lets create create the notification
+    set notification_id [imsld::item_revision_new -attributes [list [list activity_id $activity_id] \
+                                                                   [list subject $subject] \
+                                                                   [list imsld_id $imsld_id]] \
+                             -content_type imsld_notification \
+                             -parent_id $parent_id]
+
+    # notification: email data
+    set email_data_list [$notification_node selectNodes "*\[local-name()='email-data'\]"]
+    imsld::parse::validate_multiplicity -tree $email_data_list -multiplicity 1 -element_name email-data -greather_than
+    foreach email_data $email_data_list {
+        set role_ref [$email_data selectNodes "*\[local-name()='role-ref'\]"]
+        imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name role-ref(email-data) -equal
+        set ref [imsld::parse::get_attribute -node $role_ref -attr_name ref]
+
+        if { ![db_0or1row get_role_id_from_ref { *SQL* }] } {
+            # there is no role with that identifier, return the error
+            return [list 0 "[_ imsld.lt_There_is_no_role_with]"]
+        }
+
+        # email-property-ref
+        set email_property_ref [imsld::parse::get_attribute -node $email_data -attr_name email-property-ref]
+        if { ![string eq $email_property_ref ""] } {
+            if { ![db_0or1row get_email_property_id { *SQL* }] } {
+                # there is no property with that identifier, return the error
+                return [list 0 "[_ imsld.lt_There_is_no_property__1]"]
+            } 
+        } else {
+            set email_property_id ""
+        }
+
+        # username-property-ref
+        set username_property_ref [imsld::parse::get_attribute -node $email_data -attr_name username-property-ref]
+        if { ![string eq $username_property_ref ""] } {
+            if { ![db_0or1row get_username_property_id { *SQL* }] } {
+                # there is no property with that identifier, return the error
+                return [list 0 "[_ imsld.lt_There_is_no_property__2]"]
+            }
+        } else {
+            set username_property_id ""
+        }
+        
+        set email_data_id [imsld::item_revision_new -attributes [list [list role_id $role_id] \
+                                                                     [list mail_data {}] \
+                                                                     [list email_property_id $email_property_id] \
+                                                                     [list username_property_id $username_property_id]] \
+                               -content_type imsld_send_mail_data \
+                               -parent_id $parent_id]
+        
+        # do the mappings
+        relation_add imsld_notif_email_rel $notification_id $email_data_id
+    }
+    return $notification_id
 }
 
 ad_proc -public imsld::parse::parse_and_create_if_then_else { 
@@ -3867,6 +4166,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     }
     
     # Componetns: Activities
+    # N.B.: With the level C and notificaitons, it is possible to make a reference to an 'uncreated'
+    #       learning or support activity. Therefore we must check before if the activity has not been created
     set activities [$components selectNodes "*\[local-name()='activities'\]"]
     if { [llength $activities] } {
         imsld::parse::validate_multiplicity -tree $activities -multiplicity 1 -element_name components -equal
@@ -3876,15 +4177,24 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         imsld::parse::validate_multiplicity -tree $learning_activities -multiplicity 1 -element_name learning-activities -greather_than
         
         foreach learning_activity $learning_activities {
-            set learning_activity_list [imsld::parse::parse_and_create_learning_activity -component_id $component_id \
-                                            -activity_node $learning_activity \
-                                            -manifest $manifest \
-                                            -manifest_id $manifest_id \
-                                            -parent_id $cr_folder_id \
-                                            -tmp_dir $tmp_dir]
-            if { ![lindex $learning_activity_list 0] } {
+            set la_identifier [imsld::parse::get_attribute -node $learning_activity -attr_name identifier]
+            
+            if { ![db_0or1row already_crated_la_p {
+                select 1
+                from imsld_learning_activities
+                where identifier = :la_identifier
+                and component_id = :component_id
+            }] } {
+                set learning_activity_list [imsld::parse::parse_and_create_learning_activity -component_id $component_id \
+                                                -activity_node $learning_activity \
+                                                -manifest $manifest \
+                                                -manifest_id $manifest_id \
+                                                -parent_id $cr_folder_id \
+                                                -tmp_dir $tmp_dir]
+                if { ![lindex $learning_activity_list 0] } {
                     # an error happened, abort and return the list whit the error
-                return $learning_activity_list
+                    return $learning_activity_list
+                }
             }
         }
 
@@ -3892,15 +4202,24 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         set support_activities [$activities selectNodes "*\[local-name()='support-activity'\]"]
         
         foreach support_activity $support_activities {
-            set support_activity_list [imsld::parse::parse_and_create_support_activity -component_id $component_id \
-                                           -activity_node $support_activity \
-                                           -manifest $manifest \
-                                           -manifest_id $manifest_id \
-                                           -parent_id $cr_folder_id \
-                                           -tmp_dir $tmp_dir]
-            if { ![lindex $support_activity_list 0] } {
+            set sa_identifier [imsld::parse::get_attribute -node $support_activity -attr_name identifier]
+            
+            if { ![db_0or1row already_crated_sa_p {
+                select 1
+                from imsld_support_activities
+                where identifier = :sa_identifier
+                and component_id = :component_id
+            }] } {
+                set support_activity_list [imsld::parse::parse_and_create_support_activity -component_id $component_id \
+                                               -activity_node $support_activity \
+                                               -manifest $manifest \
+                                               -manifest_id $manifest_id \
+                                               -parent_id $cr_folder_id \
+                                               -tmp_dir $tmp_dir]
+                if { ![lindex $support_activity_list 0] } {
                     # an error happened, abort and return the list whit the error
-                return $support_activity_list
+                    return $support_activity_list
+                }
             }
         }
 
@@ -4019,6 +4338,29 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                        -attributes [list [list imsld_id $imsld_id] \
                                         [list complete_act_id $complete_act_id] \
                                         [list on_completion_id $on_completion_id]]]
+
+    # to avoid infinite loops, take the notifications parsing out
+    if { [llength $on_completion] } {
+        # Method: On Completion: Notifications
+        set notifications_list [$on_completion selectNodes "*\[local-name()='notification'\]"] 
+        if { [llength $notifications_list] } {
+            foreach notification $notifications_list {
+                set notification_list [imsld::parse::parse_and_create_notification -method_id $method_id \
+                                           -notification_node $notification \
+                                           -manifest $manifest \
+                                           -manifest_id $manifest_id \
+                                           -parent_id $cr_folder_id \
+                                           -tmp_dir $tmp_dir]
+                set notification_id [lindex $notification_list 0]
+                if { !$notification_id } {
+                    # an error occurred, return it
+                    return $notification_list
+                }
+                # map on_completion with the notif
+                relation_add imsld_on_comp_notif_rel $on_completion_id $notification_id
+            }
+        }
+    }
 
     # Method: Plays
     set plays [$method selectNodes "*\[local-name()='play'\]"]

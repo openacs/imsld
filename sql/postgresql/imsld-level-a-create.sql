@@ -453,10 +453,6 @@ create table imsld_send_mail_data (
                     on delete cascade
                     constraint imsld_semaildata_pk  
                     primary key,  
-    send_mail_id    integer
-                    constraint imsld_semaildata_smailid_fk
-                    references cr_items     --imsld_send_mail_services
-                    not null,
     role_id         integer
                     constraint imsld_semaildata_roleid_fk
                     references cr_items     --imsld_roles
@@ -464,7 +460,6 @@ create table imsld_send_mail_data (
     mail_data       text
 );
 
-create index imsld_sm_data_sm_id_idx on imsld_send_mail_data(send_mail_id);
 create index imsld_sm_data_role_id_idx on imsld_send_mail_data(role_id);
 
 create table imsld_conference_services (

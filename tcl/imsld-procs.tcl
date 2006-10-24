@@ -644,8 +644,117 @@ ad_proc -public imsld::item_revision_new {
                              -is_live "t" \
                              -package_id $package_id]
     }
-    
     return $item_id
+}
+
+ad_proc -public imsld::do_notification {
+    -imsld_id
+    -run_id
+    -subject
+    -activity_id
+    {-username ""}
+    {-email_address ""}
+    -role_id
+    {-user_id ""}
+} {
+    @param imsld_id
+} {
+    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    
+    # notifications
+    set community_id [dotlrn_community::get_community_id]
+    set community_name [dotlrn_community::get_community_name $community_id]
+    set community_url [ns_conn location][dotlrn_community::get_community_url $community_id]
+    set imsld_title [content::revision::revision_name -revision_id $imsld_id]
+    set imsld_url "[ns_conn location][lindex [site_node::get_url_from_object_id -object_id [ad_conn package_id]] 0]imsld-frameset?run_id=$run_id"
+    set sender_name [party::name -party_id $user_id]
+    set sender_email [party::email -party_id $user_id]
+
+    if { [string eq "" $subject] } {
+        set subject "[_ imsld.lt_community_name_imsld_]"
+    }
+    
+    # get the activity type
+    if { ![empty_string_p $activity_id] } {
+        # get the activity_type
+        if { [db_0or1row learning_activity_p { *SQL* }] } {
+            set activity_type learning
+            set where_clause [db_map learning_activity]
+        } else {
+            set activity_type support
+            set where_clause [db_map support_activity]
+        }
+    }
+
+    if { ![empty_string_p $email_address] && [util_email_valid_p $email_address] } {
+        # Use this to build up extra mail headers        
+        set extra_headers [ns_set new]
+        
+        # This should disable most auto-replies.
+        ns_set put $extra_headers Precedence list
+
+        set body_html "[_ imsld.lt_username_br__________]"
+
+        set message_data [build_mime_message [ad_html_to_text $body_html] $body_html]
+        ns_set put $extra_headers MIME-Version [ns_set get $message_data MIME-Version]
+        ns_set put $extra_headers Content-ID [ns_set get $message_data Content-ID]
+        ns_set put $extra_headers Content-Type [ns_set get $message_data Content-Type]
+        set content [ns_set get $message_data body]
+        
+        acs_mail_lite::send -to_addr $email_address \
+            -from_addr $sender_email \
+            -subject $subject \
+            -body $content \
+            -extraheaders $extra_headers
+    } else {
+        # invalid mail!
+        ns_log notice "imsld::do_notification: Not sending notification because the email is invalid!"
+    }
+
+    # if activity_id is not null:
+    # add the activity to the rel imsld_run_time_activities_rel
+    if { ![string eq "" $activity_id] && ![db_0or1row already_mapped { *SQL* }] } {
+        # map the activity to the role
+        relation_add imsld_run_time_activities_rel $role_id $activity_id
+    }
+    # send a notification (email) to each user in the role
+    foreach recipient_user_id [imsld::roles::get_users_in_role -role_id $role_id -run_id $run_id] {
+        set recepient_name [party::name -party_id $recipient_user_id] 
+        set body_html "[_ imsld.lt_Dear_recepient_name_b]"
+        # if activity_id is not null: 
+        # 1. make it visible
+        # 2. get the activity url in order to send it in the email
+        if { ![empty_string_p $activity_id] } {
+            # 1. make it visible
+            db_dml make_activity_visible { *SQL* }
+            # 2. get the activity url for the recipient user_id
+            set activity_url [imsld::activity_url -run_id $run_id -activity_id $activity_id -user_id $recipient_user_id]
+            set activity_title [content::revision::revision_name -revision_id $activity_id]
+            append body_html "[_ imsld.lt_br___________________]"
+        } else {
+            append body_html "[_ imsld.lt_br____________________1]"
+        }
+        # Use this to build up extra mail headers        
+        set extra_headers [ns_set new]
+        
+        # This should disable most auto-replies.
+        ns_set put $extra_headers Precedence list
+
+        set message_data [build_mime_message [ad_html_to_text $body_html] $body_html]
+        ns_set put $extra_headers MIME-Version [ns_set get $message_data MIME-Version]
+        ns_set put $extra_headers Content-ID [ns_set get $message_data Content-ID]
+        ns_set put $extra_headers Content-Type [ns_set get $message_data Content-Type]
+        set content [ns_set get $message_data body]
+        
+        acs_mail_lite::send -to_addr [party::email -party_id $recipient_user_id] \
+            -from_addr $sender_email \
+            -subject $subject \
+            -body $content \
+            -extraheaders $extra_headers
+    }
+
+    # log the notification
+    db_dml log_notification { *SQL* }
 }
 
 ad_proc -public imsld::finish_component_element {
@@ -730,11 +839,58 @@ ad_proc -public imsld::finish_component_element {
                 from imsld_on_completioni
                 where item_id = :related_on_completion
                 and content_revision__is_live(on_completion_id) = 't'
+                and change_property_value_xml is not null
             }] } {
                 imsld::condition::eval_change_property_value -change_property_value_xml $change_property_value_xml -run_id $run_id
             }
+            # notifications
+            foreach notification_list [db_list_of_lists get_notifications { *SQL* }] {
+                set subject [lindex $notification_list 0]
+                set activity_id [content::item::get_live_revision -item_id [lindex $notification_list 1]]
+                set notification_id [lindex $notification_list 2]
+                set notification_item_id [lindex $notification_list 3]
+                
+                # send an email for each email-data associated to the notification
+                foreach email_data [db_list_of_lists get_email_datas { *SQL* }] {
+                    set role_id [lindex $email_data 0]
+                    set mail_data [lindex $email_data 1]
+                    set email_property_id [lindex $email_data 2]
+                    set username_property_id [lindex $email_data 3]
+                    
+                    if { ![empty_string_p $username_property_id] } {
+                        # get the username proprty value
+                        # NOTE: there is no specification for the format of the email property value
+                        #       so we assume it is a single username
+                        db_1row get_username_property_id { *SQL* }
+                        set username [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -property_id $property_id]
+                    } else {
+                        set username ""
+                    }
+
+                    if { ![empty_string_p $email_property_id] } {
+                        # get the email proprty value
+                        # NOTE: there is no specification for the format of the email property value
+                        #       so we assume it is a single email address.
+                        #       we also send the notificaiton to the rest of the role members
+                        db_1row get_email_property_id { *SQL* }
+                        set email_address [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -property_id $property_id]
+                    } else {
+                        set email_address ""
+                    }
+
+                    imsld::do_notification -imsld_id $imsld_id \
+                        -run_id $run_id \
+                        -subject $subject \
+                        -activity_id $activity_id \
+                        -username $username \
+                        -email_address $email_address \
+                        -role_id $role_id \
+                        -user_id $user_id
+                }
+            }
         }
     }
+    
     if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $type "structure"] } {
         foreach referencer_structure_list [db_list_of_lists referencer_structure { *SQL* }] {
             set structure_id [lindex $referencer_structure_list 0]
@@ -1453,7 +1609,7 @@ ad_proc -public imsld::process_service_as_ul {
         }
 
         send-mail {
-            # FIX ME: when roles are supported, fix this so the mail is sent to the propper role
+            # FIX ME: Currently only one send-mail-data is supported
             set resource_item_list [list]
 
             db_1row get_send_mail_info { *SQL* }
@@ -1771,6 +1927,24 @@ ad_proc -public imsld::process_feedback_as_ul {
     }
 }
 
+ad_proc -public imsld::activity_url {
+    -activity_id:required
+    -run_id:required
+    {-user_id ""}
+} {
+    @param activity_id
+    @param run_id
+    @option user_id
+
+    @returns the url for the given activity
+} {
+
+    set user_id [expr { [string eq $user_id ""] ? [ad_conn user_id] : $user_id }]
+
+    return "[export_vars -base "activity-frame" -url {activity_id run_id user_id}]"
+
+}
+
 ad_proc -public imsld::process_resource_as_ul {
     -resource_item_id
     -run_id
@@ -1904,19 +2078,20 @@ ad_proc -public imsld::process_activity_as_ul {
     -dom_doc
     {-resource_mode "f"}
     {-user_id ""}
-
 } {
     @param activity_item_id
     @param run_id
     @option resource_mode default f
     @param dom_node
     @param dom_doc
-    
+    @option user_id default ad_conn user_id
+
     @return The html list (activity_name, list of associated urls, using tdom) of the activity in the IMS-LD. 
     It only works whith the learning and support activities, since it will only return the objectives, prerequistes,
     associated resources but not the environments.
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    
     if { [db_0or1row is_imsld {
         select 1 from imsld_imsldsi where item_id = :activity_item_id
     }] } {
@@ -2402,7 +2577,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     $activity_node setAttribute class "liOpen"
 
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id}]"
+                    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -2443,7 +2618,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     set activity_node [$dom_doc createElement li]
                     $activity_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id}]"
+                    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -2484,7 +2659,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     set structure_node [$dom_doc createElement li]
                     $structure_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {{activity_id $structure_id} run_id}]"
+                    $a_node setAttribute href "[imsld::activity_url -activity_id $structure_id -run_id $run_id -user_id $user_id]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -2542,6 +2717,7 @@ ad_proc -public imsld::generate_activities_tree {
         and ar.object_id_two = :user_id
         and iruge.run_id = :run_id
     }]
+    # get the referenced role parts
     foreach role_part_list [db_list_of_lists referenced_role_parts { *SQL* }] {
         set type [lindex $role_part_list 0]
         set activity_id [lindex $role_part_list 1]
@@ -2563,7 +2739,7 @@ ad_proc -public imsld::generate_activities_tree {
                     set activity_node [$dom_doc createElement li]
                     $activity_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id}]"
+                    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -2603,7 +2779,7 @@ ad_proc -public imsld::generate_activities_tree {
                     set activity_node [$dom_doc createElement li]
                     $activity_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id}]"
+                    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -2646,7 +2822,7 @@ ad_proc -public imsld::generate_activities_tree {
                     set structure_node [$dom_doc createElement li]
                     $structure_node setAttribute class "liOpen"
                     set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[export_vars -base "activity-frame" -url {{activity_id $structure_id} run_id}]"
+                    $a_node setAttribute href "[imsld::activity_url -activity_id $structure_id -run_id $run_id -user_id $user_id]"
                     $a_node setAttribute target "content"
                     set text [$dom_doc createTextNode "$activity_title"]
                     $a_node appendChild $text
@@ -2665,6 +2841,113 @@ ad_proc -public imsld::generate_activities_tree {
                     $structure_node appendFromList [list ul [list] [concat [list] $nested_list]]
                     $dom_node appendChild $structure_node
                 }
+            }
+        }
+    }
+}
+
+ad_proc -public imsld::generate_runtime_assigned_activities_tree {
+    -run_id:required
+    -user_id
+    -dom_node
+    -dom_doc
+} {
+    @param run_id
+    @param user_id
+    @param dom_node
+    @param dom_doc
+
+    @return A list of lists of the activities 
+} {
+    # context info
+    db_1row imsld_info { *SQL* }
+    
+    # 1. get the current role of the user
+    # 2. get any related activities to the role with the rel imsld_run_time_activities_rel
+    # 3. get the info of those activities (role_part_id, act_id, play_id) and generate the list
+    #    NOTE: the activity will be shown only once, no matter from how many role parts it is referenced
+
+    set user_role_id [db_string current_role { *SQL* }]
+
+
+    # get the referenced activities to the role, assigned at runtime (notifications, level C)
+
+    foreach activity_id [db_list runtime_activities { *SQL* } ] {
+        # get the activity_type
+        if { [db_0or1row learning_activity_p { *SQL* }] } {
+            set activity_type learning
+        } else {
+            set activity_type support
+        }
+        set role_part_id [imsld::get_role_part_from_activity -activity_type $activity_type -leaf_id [content::revision::item_id -revision_id $activity_id]]
+        
+        # role_part context info
+        db_1row role_part_context { *SQL* }
+
+        switch $activity_type {
+            learning {
+                # add the learning activity to the tree
+                db_1row get_learning_activity_info { *SQL* }
+                set completed_activity_p [db_0or1row la_already_completed { *SQL* }]
+                set activity_node [$dom_doc createElement li]
+                $activity_node setAttribute class "liOpen"
+                set a_node [$dom_doc createElement a]
+                $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+                $a_node setAttribute target "content"
+                set text [$dom_doc createTextNode "$activity_title"]
+                $a_node appendChild $text
+                $activity_node appendChild $a_node
+                
+                set text [$dom_doc createTextNode " "]
+                $activity_node appendChild $text
+                
+                if { !$completed_activity_p } {
+                    set input_node [$dom_doc createElement input]
+                    $input_node setAttribute type "checkbox"
+                    $input_node setAttribute style "vertical-align: bottom;"
+                    $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld\""
+                    $activity_node appendChild $input_node
+                } else {
+                    set input_node [$dom_doc createElement input]
+                    $input_node setAttribute type "checkbox"
+                    $input_node setAttribute checked "true"
+                    $input_node setAttribute disabled "true"
+                    $activity_node appendChild $input_node
+                }
+                
+                $dom_node appendChild $activity_node
+            }
+            support {
+                # add the support activity to the tree
+                db_1row get_support_activity_info { *SQL* }
+                set completed_activity_p [db_0or1row sa_already_completed { *SQL* }]
+                set activity_node [$dom_doc createElement li]
+                $activity_node setAttribute class "liOpen"
+                set a_node [$dom_doc createElement a]
+                $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+                $a_node setAttribute target "content"
+                set text [$dom_doc createTextNode "$activity_title"]
+                $a_node appendChild $text
+                $activity_node appendChild $a_node
+                
+                set text [$dom_doc createTextNode " "]
+                $activity_node appendChild $text
+                
+                if { !$completed_activity_p } {
+                    set input_node [$dom_doc createElement input]
+                    $input_node setAttribute type "checkbox"
+                    $input_node setAttribute style "vertical-align: bottom;"
+                    $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld\""
+                    $activity_node appendChild $input_node
+                } else {
+                        set input_node [$dom_doc createElement input]
+                    $input_node setAttribute type "checkbox"
+                    $input_node setAttribute checked "true"
+                    $input_node setAttribute disabled "true"
+                    $activity_node appendChild $input_node
+                }
+                
+                $dom_node appendChild $activity_node
             }
         }
     }

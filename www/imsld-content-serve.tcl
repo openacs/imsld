@@ -337,8 +337,83 @@ foreach set_property_node $set_property_nodes {
     set parent_node [$set_property_node parentNode]
     # first, replace property node with the form node
     $parent_node replaceChild $form_node $set_property_node
-    # FIXME: tDOME apparently adds automathically  the attribute xmlns when replacing a node...
+    # FIXME: tDOME apparently(??) adds automathically  the attribute xmlns when replacing a node...
     $form_node removeAttribute xmlns
+
+    # level C: notifications
+    foreach notification_node [$set_property_node selectNodes "*\[local-name()='notification'\]"] {
+        set activity_id ""
+        set subjectValue ""
+        set subjectNode [$notification_node selectNodes {*[local-name()='subject']}]
+        if { [llength $subjectNode] } {
+            set subjectValue [$subjectNode text]
+        }
+        
+        set larefNode [$notification_node selectNodes {*[local-name()='learning-activity-ref']}] 
+        if { [llength $larefNode] } {
+            set larefValue [$larefNode getAttribute ref ""]
+            set activityIdentifier $larefValue
+        }
+        
+        set sarefNode [$notification_node selectNodes {*[local-name()='support-activity-ref']}] 
+        if { [llength $sarefNode] } {
+            set sarefValue [$sarefNode getAttribute ref ""]
+            set activityIdentifier $sarefValue
+        }
+        
+        if { [info exists activityIdentifier] } {
+            set activity_id [db_string get_activity_id {
+                select owner_id
+                from imsld_attribute_instances
+                where identifier = :activityIdentifier
+                and run_id = :run_id
+                and user_id = :owner_user_id
+            }]
+        }
+        
+        foreach emailDataNode [$notification_node selectNodes {*[local-name()='email-data']}] {
+            
+            set emailPropertyRef [$emailDataNode getAttribute email-property-ref ""]
+            set usernamePropertyRef [$emailDataNode getAttribute username-property-ref ""]
+            set roleRef [[$emailDataNode selectNodes {*[local-name()='role-ref']}] getAttribute ref ""]
+            set username ""
+            set email_address ""
+            
+            if { ![empty_string_p $usernamePropertyRef] } {
+                # get the username proprty value
+                # NOTE: there is no specification for the format of the email property value
+                #       so we assume it is a single username
+                set username [imsld::runtime::property::property_value_get -run_id $run_id -user_id $owner_user_id -identifier $usernamePropertyRef]
+            }
+            
+            if { ![empty_string_p $emailPropertyRef] } {
+                # get the email proprty value
+                # NOTE: there is no specification for the format of the email property value
+                #       so we assume it is a single email address.
+                #       we also send the notificaiton to the rest of the role members
+                set email_address [imsld::runtime::property::property_value_get -run_id $run_id -user_id $owner_user_id -identifier $emailPropertyRef]
+            }
+            
+            db_1row get_context_info {
+                select role_id, ii.imsld_id
+                from imsld_roles ir, imsld_componentsi ic, imsld_imsldsi ii, imsld_runs run
+                where ir.identifier = :roleRef
+                and ir.component_id = ic.item_id
+                and ic.imsld_id = ii.item_id
+                and ii.imsld_id = run.imsld_id
+                and run.run_id = :run_id
+            }
+            
+            imsld::do_notification -imsld_id $imsld_id \
+                -run_id $run_id \
+                -subject $subjectValue \
+                -activity_id $activity_id \
+                -username $username \
+                -email_address $email_address \
+                -role_id $role_id \
+                -user_id $owner_user_id
+        }
+    }
 }
 
 # 4. set-property-group nodes
@@ -498,6 +573,81 @@ foreach set_property_group_node $set_property_group_nodes {
     $parent_node replaceChild $form_node $set_property_group_node
     # FIXME: tDOME apparently adds automathically  the attribute xmlns when replacing a node...
     $form_node removeAttribute xmlns
+
+    # level C: notifications
+    foreach notification_node [$set_property_group_node selectNodes "*\[local-name()='notification'\]"] {
+        set activity_id ""
+        set subjectValue ""
+        set subjectNode [$notification_node selectNodes {*[local-name()='subject']}]
+        if { [llength $subjectNode] } {
+            set subjectValue [$subjectNode text]
+        }
+        
+        set larefNode [$notification_node selectNodes {*[local-name()='learning-activity-ref']}] 
+        if { [llength $larefNode] } {
+            set larefValue [$larefNode getAttribute ref ""]
+            set activityIdentifier $larefValue
+        }
+        
+        set sarefNode [$notification_node selectNodes {*[local-name()='support-activity-ref']}] 
+        if { [llength $sarefNode] } {
+            set sarefValue [$sarefNode getAttribute ref ""]
+            set activityIdentifier $sarefValue
+        }
+        
+        if { [info exists activityIdentifier] } {
+            set activity_id [db_string get_activity_id {
+                select owner_id
+                from imsld_attribute_instances
+                where identifier = :activityIdentifier
+                and run_id = :run_id
+                and user_id = :owner_user_id
+            }]
+        }
+        
+        foreach emailDataNode [$notification_node selectNodes {*[local-name()='email-data']}] {
+            
+            set emailPropertyRef [$emailDataNode getAttribute email-property-ref ""]
+            set usernamePropertyRef [$emailDataNode getAttribute username-property-ref ""]
+            set roleRef [[$emailDataNode selectNodes {*[local-name()='role-ref']}] getAttribute ref ""]
+            set username ""
+            set email_address ""
+            
+            if { ![empty_string_p $usernamePropertyRef] } {
+                # get the username proprty value
+                # NOTE: there is no specification for the format of the email property value
+                #       so we assume it is a single username
+                set username [imsld::runtime::property::property_value_get -run_id $run_id -user_id $owner_user_id -identifier $usernamePropertyRef]
+            }
+            
+            if { ![empty_string_p $emailPropertyRef] } {
+                # get the email proprty value
+                # NOTE: there is no specification for the format of the email property value
+                #       so we assume it is a single email address.
+                #       we also send the notificaiton to the rest of the role members
+                set email_address [imsld::runtime::property::property_value_get -run_id $run_id -user_id $owner_user_id -identifier $emailPropertyRef]
+            }
+            
+            db_1row get_context_info {
+                select role_id, ii.imsld_id
+                from imsld_roles ir, imsld_componentsi ic, imsld_imsldsi ii, imsld_runs run
+                where ir.identifier = :roleRef
+                and ir.component_id = ic.item_id
+                and ic.imsld_id = ii.item_id
+                and ii.imsld_id = run.imsld_id
+                and run.run_id = :run_id
+            }
+            
+            imsld::do_notification -imsld_id $imsld_id \
+                -run_id $run_id \
+                -subject $subjectValue \
+                -activity_id $activity_id \
+                -username $username \
+                -email_address $email_address \
+                -role_id $role_id \
+                -user_id $owner_user_id
+        }
+    }
 }
 
 # 6. class nodes

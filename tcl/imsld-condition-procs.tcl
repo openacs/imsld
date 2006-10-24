@@ -739,7 +739,79 @@ ad_proc -public imsld::statement::execute {
                 }
                 imsld::runtime::property::property_value_set -run_id $run_id -user_id $user_id -identifier [$propertyref getAttribute {ref}] -value $propertyValue
             }
-            {notification} {}
+            {notification} {
+                set activity_id ""
+                set subjectValue ""
+                set subjectNode [$executeNode selectNodes {*[local-name()='subject']}]
+                if { [llength $subjectNode] } {
+                    set subjectValue [$subjectNode text]
+                }
+
+                set larefNode [$executeNode selectNodes {*[local-name()='learning-activity-ref']}] 
+                if { [llength $larefNode] } {
+                    set larefValue [$larefNode getAttribute ref ""]
+                    set activityIdentifier $larefValue
+                }
+
+                set sarefNode [$executeNode selectNodes {*[local-name()='support-activity-ref']}] 
+                if { [llength $sarefNode] } {
+                    set sarefValue [$sarefNode getAttribute ref ""]
+                    set activityIdentifier $sarefValue
+                }
+                
+                if { [info exists activityIdentifier] } {
+                    set activity_id [db_string get_activity_id {
+                        select owner_id
+                        from imsld_attribute_instances
+                        where identifier = :activityIdentifier
+                        and run_id = :run_id
+                        and user_id = :user_id
+                    }]
+                }
+
+                foreach emailDataNode [$executeNode selectNodes {*[local-name()='email-data']}] {
+
+                    set emailPropertyRef [$emailDataNode getAttribute email-property-ref ""]
+                    set usernamePropertyRef [$emailDataNode getAttribute username-property-ref ""]
+                    set roleRef [[$emailDataNode selectNodes {*[local-name()='role-ref']}] getAttribute ref ""]
+                    set username ""
+                    set email_address ""
+                    
+                    if { ![empty_string_p $usernamePropertyRef] } {
+                        # get the username proprty value
+                        # NOTE: there is no specification for the format of the email property value
+                        #       so we assume it is a single username
+                        set username [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier $usernamePropertyRef]
+                    }
+
+                    if { ![empty_string_p $emailPropertyRef] } {
+                        # get the email proprty value
+                        # NOTE: there is no specification for the format of the email property value
+                        #       so we assume it is a single email address.
+                        #       we also send the notificaiton to the rest of the role members
+                        set email_address [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier $emailPropertyRef]
+                    }
+                    
+                    db_1row get_context_info {
+                        select role_id, ii.imsld_id
+                        from imsld_roles ir, imsld_componentsi ic, imsld_imsldsi ii, imsld_runs run
+                        where ir.identifier = :roleRef
+                        and ir.component_id = ic.item_id
+                        and ic.imsld_id = ii.item_id
+                        and ii.imsld_id = run.imsld_id
+                        and run.run_id = :run_id
+                    }
+                    
+                    imsld::do_notification -imsld_id $imsld_id \
+                        -run_id $run_id \
+                        -subject $subjectValue \
+                        -activity_id $activity_id \
+                        -username $username \
+                        -email_address $email_address \
+                        -role_id $role_id \
+                        -user_id $user_id
+                }
+            }
         }
     }
 }

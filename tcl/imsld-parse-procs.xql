@@ -424,6 +424,116 @@
 		</querytext>
 	</fullquery>
 
+	<fullquery name="imsld::parse::parse_and_create_notification.get_info_from_comp">
+		<querytext>
+
+            select imsld_id
+            from imsld_componentsi
+            where item_id = :component_id
+                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::parse::parse_and_create_notification.get_info_from_method">
+		<querytext>
+
+            select ico.item_id as component_id
+            im.imsld_id
+            from imsld_methodsi im,
+            imsld_componetnsi ico
+            where im.item_id = :method_id
+            and im.imsld_id = ico.imsld_id
+                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::parse::parse_and_create_notification.la_get_learning_activity_id">
+		<querytext>
+
+            select item_id as activity_id,
+            activity_id as learning_activity_id
+            from imsld_learning_activitiesi
+            where identifier = :learning_activity_ref 
+            and content_revision__is_live(activity_id) = 't' 
+            and component_id = :component_id
+                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::parse::parse_and_create_notification.la_get_learning_support_activity_id">
+		<querytext>
+
+                select item_id as activity_id,
+                activity_id as support_activity_id
+                from imsld_support_activitiesi
+                where identifier = :learning_activity_ref 
+                and content_revision__is_live(activity_id) = 't' 
+                and component_id = :component_id
+                        
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::parse::parse_and_create_notification.sa_get_support_activity_id">
+		<querytext>
+
+            select item_id as activity_id,
+            activity_id as support_activity_id
+            from imsld_support_activitiesi
+            where identifier = :support_activity_ref 
+            and content_revision__is_live(activity_id) = 't' 
+            and component_id = :component_id
+                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::parse::parse_and_create_notification.sa_get_learning_activity_id">
+		<querytext>
+
+                select item_id as activity_id,
+                activity_id as learning_activity_id
+                from imsld_learning_activitiesi
+                where identifier = :support_activity_ref 
+                and content_revision__is_live(activity_id) = 't' 
+                and component_id = :component_id
+                        
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::parse::parse_and_create_notification.get_role_id_from_ref">
+		<querytext>
+
+            select ir.item_id as role_id
+            from imsld_rolesi ir
+            where ir.identifier = :ref 
+            and content_revision__is_live(ir.role_id) = 't' 
+            and ir.component_id = :component_id
+                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::parse::parse_and_create_notification.get_email_property_id">
+		<querytext>
+
+                select item_id as email_property_id
+                from imsld_propertiesi 
+                where identifier = :email_property_ref
+                and content_revision__is_live(property_id) = 't' 
+                and component_id = :component_id             
+
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::parse::parse_and_create_notification.get_username_property_id">
+		<querytext>
+
+                select item_id as username_property_id
+                from imsld_propertiesi 
+                where identifier = :username_property_ref
+                and content_revision__is_live(property_id) = 't' 
+                and component_id = :component_id 
+
+		</querytext>
+	</fullquery>
 
 	<fullquery name="imsld::parse::parse_and_create_imsld_manifest.get_rp_id">
 		<querytext>

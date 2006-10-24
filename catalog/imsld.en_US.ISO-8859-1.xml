@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<message_catalog package_key="imsld" package_version="0.1d" locale="en_US" charset="ISO-8859-1">
+<message_catalog package_key="imsld" package_version="1.0d" locale="en_US" charset="ISO-8859-1">
 
   <msg key="_Component">Component Identifier</msg>
   <msg key="Act_Identifier">Act Identifier</msg>
   <msg key="active">active</msg>
+  <msg key="Activity_Identifier">Activity Identifier</msg>
   <msg key="Activity_Structures">Activity Structures</msg>
   <msg key="Acts_in_play_count">Acts in play %count%</msg>
   <msg key="Admin_IMS_LD">Admin IMS LD</msg>
@@ -35,6 +36,7 @@
   <msg key="Error_parsing_file">Error parsing file</msg>
   <msg key="Existing_href">Existing href</msg>
   <msg key="Expression">Expression</msg>
+  <msg key="Extra_Activities">Extra Activities</msg>
   <msg key="Feedbach_Title">Feedbach Title</msg>
   <msg key="Feedback">Feedback</msg>
   <msg key="File_name">File name</msg>
@@ -115,13 +117,20 @@
   <msg key="li_impozzible_li">&lt;li&gt; impozzible &lt;/li&gt;</msg>
   <msg key="lt_Activity_Description_">Activity Description Identifier</msg>
   <msg key="lt_Activity_Structure_Id">Activity Structure Identifier</msg>
+  <msg key="lt_br___________________">&lt;br&gt;\ 
+                              Go to the activity &lt;a href=\&quot;%activity_url%\&quot;&gt;%activity_title%&lt;/a&gt; (of the UoL &lt;a href=\&quot;%imsld_url%\&quot;&gt;%imsld_title%&lt;/a&gt; in the community &lt;a href=\&quot;$community_url\&quot;&gt;%community_name%&lt;/a&gt;) for further details.</msg>
+  <msg key="lt_br____________________1">&lt;br&gt;\
+                              Go to the UoL &lt;a href=\&quot;%imsld_url%\&quot;&gt;$imsld_title&lt;/a&gt; (in the &lt;a href=\&quot;%community_url%\&quot;&gt;%community_name%&lt;/a&gt; community) for further details.</msg>
   <msg key="lt_br__Warnings_ul_warni">&lt;br /&gt; Warnings: &lt;ul&gt; %warnings% &lt;/ul&gt;</msg>
   <msg key="lt_Change_Property_Value">Change Property Value Identifier</msg>
   <msg key="lt_Change_Property_Value_1">Change Property Value XML</msg>
+  <msg key="lt_community_name_imsld_">%community_name%: %imsld_title%</msg>
   <msg key="lt_Complete_Act_Identifi">Complete Act Identifier</msg>
   <msg key="lt_Could_not_determine_w">Could not determine whit what program uncompress the file %upload_file% has. Aborting</msg>
   <msg key="lt_Couldnt_determine_if_">Couldn't determine if this is a well formed IMS-LD: %message%</msg>
   <msg key="lt_Creaginting_new_IMS-L">Creaginting new IMS-LD</msg>
+  <msg key="lt_Dear_recepient_name_b">Dear %recepient_name% &lt;br&gt; \
+                       %sender_name has% triggered this notification. Please do not replay to this email. &lt;br&gt;</msg>
   <msg key="lt_Email_Propery_Identif">Email Propery Identifier</msg>
   <msg key="lt_Environment_Identifie">Environment Identifier</msg>
   <msg key="lt_Error_creating_folder">Error creating folder</msg>
@@ -204,6 +213,7 @@
   <msg key="lt_Referenced_learning_a_3">Referenced learning activity (%learning_activity_ref_ref%) in role part %identifier% does not exist.</msg>
   <msg key="lt_Referenced_learning_a_4">Referenced learning activity %learning_activity_ref_ref% in role part %identifier% is actually an activity structure.</msg>
   <msg key="lt_Referenced_learning_a_5">Referenced learning activity %learning_activity_ref_ref% in role part %identifier% is actually a support activity.</msg>
+  <msg key="lt_Referenced_learning_a_6">Referenced learning activity (%learning_activity_ref%) from notification does not exist</msg>
   <msg key="lt_Referenced_role_role_">Referenced role (%role_ref_ref%) in role part %identifier% does not exist.</msg>
   <msg key="lt_Referenced_support_ac">Referenced support activity %learning_activity_ref% is actually an activity structure!.</msg>
   <msg key="lt_Referenced_support_ac_1">Referenced support activity %support_activity_ref% is actually an activity structure!.</msg>
@@ -223,6 +233,8 @@
   <msg key="lt_The_length_must_be_re">The length must be %restriction_value%</msg>
   <msg key="lt_The_referenced_play_i">The referenced play in 'when play completed' in the method does not exist</msg>
   <msg key="lt_The_referenced_role_p">The referenced role part in 'when role part completed' of the act %identifier% does not exist</msg>
+  <msg key="lt_The_refernced_learnin">The refernced learning activity in the notification is actually a support activity!</msg>
+  <msg key="lt_The_refernced_support">The refernced support activity in the notification is actually a learning activity!</msg>
   <msg key="lt_The_resource_resource">The resource %resource_identifier% has a reference to a non existing file (%resource_href%).</msg>
   <msg key="lt_The_value_must_be_gre">The value must be greather than %restriction_value% (inclusive)</msg>
   <msg key="lt_The_value_must_be_gre_1">The value must be greather than %restriction_value%</msg>
@@ -249,7 +261,7 @@
   <msg key="lt_There_must_be_exactly">There must be exactly %multiplicity% %element_name% and there are %tree_length%. This is not supported, sorry.</msg>
   <msg key="lt_There_was_an_error_cr">There was an error creating the folder. Aborting.</msg>
   <msg key="lt_There_was_an_error_cr_1">There was an error creating the tmp_dir to unzip the file.</msg>
-  <msg key="lt_There_was_an_error_de">There was an error deleting the IMS LD $imsld_id. This is the error: &lt;pre&gt;%errmsg%&lt;/pre&gt;</msg>
+  <msg key="lt_There_was_an_error_de">There was an error deleting the IMS LD %imsld_id%. This is the error: &lt;pre&gt;%errmsg%&lt;/pre&gt;</msg>
   <msg key="lt_There_was_an_error_de_1">There was an error deleting the Run %run_id%. This is what the database said: &lt;pre&gt; %errmsg%&lt;/pre&gt;</msg>
   <msg key="lt_There_was_an_error_ge">There was an error generating the tmp_dir to unzip the file.</msg>
   <msg key="lt_There_was_an_error_pa">There was an error parsing the manifest. Please correct it and try again. &lt;br /&gt;&lt;code&gt;%errmsg%&lt;/code&gt;</msg>
@@ -259,6 +271,9 @@
   <msg key="lt_ul_Completed_Activiti">&lt;ul&gt; Completed Activities &lt;br /&gt;</msg>
   <msg key="lt_ul_Next_Activity_acti">&lt;ul&gt; %first_or_next% Activity: %activity_name%</msg>
   <msg key="lt_Uploading_and_process">Uploading and processing your course, please wait...</msg>
+  <msg key="lt_username_br__________">%username% &lt;br&gt; \
+                       %sender_name% has triggered this notification. Please do not replay to this email. &lt;br&gt;&lt;br&gt; \
+                       Go to the UoL: &lt;a href=\&quot;%imsld_url%\&quot;&gt;%imsld_title%&lt;/a&gt; (in the community: &lt;a href=\&quot;%community_url%\&quot;&gt;%community_name%&lt;/a&gt; community) for further details.</msg>
   <msg key="lt_Username_Property_Ide">Username Property Identifier</msg>
   <msg key="lt_Valid_types_are_learn">Valid types are learning, support and structure</msg>
   <msg key="lt_Warning_More_than_one">More than one learning object in environment %identifier%. Just one used (the first one)</msg>
@@ -276,6 +291,7 @@
   <msg key="Max_Persons">Max Persons</msg>
   <msg key="Method_Identifier">Method Identifier</msg>
   <msg key="Min_Persons">Min Persons</msg>
+  <msg key="Moderator_Identifier">Moderator_Identifier</msg>
   <msg key="Monitoring">User</msg>
   <msg key="nbspnbspnbspdone">&amp;nbsp;&amp;nbsp;&amp;nbsp;done</msg>
   <msg key="New_IMS-LD">New IMS-LD</msg>
@@ -284,6 +300,9 @@
   <msg key="None">None</msg>
   <msg key="None_please_select">None, please select</msg>
   <msg key="Not_defined">Not defined</msg>
+  <msg key="Notification">Notification</msg>
+  <msg key="Notification_Subject">Notification Subject</msg>
+  <msg key="Notifications">Notifications</msg>
   <msg key="Number_of_IMD_LDs">Number of IMD LDs</msg>
   <msg key="Number_to_Select">Number to Select</msg>
   <msg key="Objectives">Objectives</msg>

@@ -48,6 +48,7 @@ div {
 </form>
 </div>
 @html_tree;noquote@
+@aux_html_tree;noquote@
 <if @user_message@ not nil>
 @user_message@
 </if>

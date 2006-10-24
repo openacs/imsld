@@ -494,7 +494,6 @@
 		</querytext>
 	</fullquery>
 
-
 	<fullquery name="imsld::rel_type_delete.drop_relationship_type">
 		<querytext>
             BEGIN
@@ -502,6 +501,64 @@
                                     cascade_p => 't' );
             END;
         
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::do_notification.learning_activity_p">
+		<querytext>
+        
+            select 1 
+            from imsld_learning_activities
+            where activity_id = :activity_id
+        
+		</querytext>
+	</fullquery>
+
+    <partialquery name="imsld::do_notification.learning_activity">
+      <querytext>
+
+        where learning_activity_id = :activity_id
+	
+      </querytext>
+    </partialquery>
+
+    <partialquery name="imsld::do_notification.support_activity">
+      <querytext>
+
+        where support_activity_id = :activity_id
+	
+      </querytext>
+    </partialquery>
+
+	<fullquery name="imsld::do_notification.already_mapped">
+		<querytext>
+        
+        select 1
+        from acs_rels 
+        where object_id_one = :role_id
+        and object_id_two = :activity_id
+        and rel_type = 'imsld_run_time_activities_rel'
+    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::do_notification.make_activity_visible">
+		<querytext>
+        
+                update imsld_attribute_instances
+                set is_visible_p = 't'
+                where user_id = :recipient_user_id
+                and owner_id = :activity_id
+            
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::do_notification.log_notification">
+		<querytext>
+        
+        insert into imsld_notifications_history (run_id, from_user_id, notification_date, target_activity_id, to_user_id)
+        values (:run_id, :user_id, now(), :activity_id, :recipient_user_id)
+    
 		</querytext>
 	</fullquery>
 
@@ -584,6 +641,63 @@
          where ar.object_id_one = :related_on_completion
            and ar.rel_type='imsld_on_comp_change_pv_rel'
 
+  		</querytext>
+	</fullquery>
+
+    <fullquery name="imsld::finish_component_element.get_notifications">
+		<querytext>
+
+                select ino.subject,
+                ino.activity_id,
+                ino.notification_id,
+                ino.item_id as notification_item_id
+                from imsld_notificationsi ino,
+                acs_rels ar
+                where ar.object_id_two = ino.item_id
+                and ar.object_id_one = :related_on_completion
+                and ar.rel_type = 'imsld_on_comp_notif_rel'
+            
+  		</querytext>
+	</fullquery>
+
+    <fullquery name="imsld::finish_component_element.get_email_datas">
+		<querytext>
+
+                    select ir.role_id,
+                    data.mail_data,
+                    data.email_property_id,
+                    data.username_property_id
+                    from imsld_send_mail_datai data,
+                    acs_rels ar,
+                    imsld_rolesi ir
+                    where ar.object_id_two = data.item_id
+                    and ar.rel_type = 'imsld_notif_email_rel'
+                    and ar.object_id_one = :notification_item_id
+                    and ir.item_id = data.role_id
+                    and content_revision__is_live(ir.role_id) = 't'
+                
+  		</querytext>
+	</fullquery>
+
+    <fullquery name="imsld::finish_component_element.get_username_property_id">
+		<querytext>
+
+                            select property_id
+                            from imsld_propertiesi
+                            where item_id = :username_property_id
+                            and content_revision__is_live(property_id) = 't'
+                        
+  		</querytext>
+	</fullquery>
+
+    <fullquery name="imsld::finish_component_element.get_email_property_id">
+		<querytext>
+
+                            select property_id
+                            from imsld_propertiesi
+                            where item_id = :email_property_id
+                            and content_revision__is_live(property_id) = 't'
+                        
   		</querytext>
 	</fullquery>
 
@@ -1021,9 +1135,11 @@
     <fullquery name="imsld::process_service_as_ul.get_send_mail_info">
 		<querytext>
 
-                select sm.title as send_mail_title, sm.mail_id as sendmail_id
+                select sm.title as send_mail_title, ar.object_id_two as sendmail_id
                 from imsld_send_mail_servicesi sm
                 where sm.service_id = :service_item_id
+                and sm.item_id = ar.object_id_one
+                and ar.rel_type = 'imsld_send_mail_serv_data_rel'
                 and content_revision__is_live(sm.mail_id) = 't'
             
    		</querytext>
@@ -1900,6 +2016,128 @@
                     and status = 'started'
                     and run_id = :run_id
                     
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_runtime_assigned_activities_tree.imsld_info">
+		<querytext>
+
+        select imsld_id 
+        from imsld_runs
+        where run_id = :run_id
+                        
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_runtime_assigned_activities_tree.current_role">
+		<querytext>
+
+        select map.active_role_id as user_role_id
+        from imsld_run_users_group_rels map,
+        acs_rels ar,
+        imsld_run_users_group_ext iruge
+        where ar.rel_id = map.rel_id
+        and ar.object_id_one = iruge.group_id
+        and ar.object_id_two = :user_id
+        and iruge.run_id = :run_id
+                        
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_runtime_assigned_activities_tree.runtime_activities">
+		<querytext>
+
+        select ar.object_id_two as activity_id
+        from acs_rels ar
+        where ar.object_id_one = :user_role_id
+        and ar.rel_type = 'imsld_run_time_activities_rel'
+                        
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_runtime_assigned_activities_tree.learning_activity_p">
+		<querytext>
+
+            select 1
+            from imsld_learning_activities
+            where activity_id = :activity_id
+                            
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_runtime_assigned_activities_tree.role_part_context">
+		<querytext>
+
+            select ia.act_id,
+            ip.play_id
+            from imsld_role_parts rp,
+            imsld_actsi ia,
+            imsld_playsi ip
+            where rp.act_id = ia.item_id
+            and ia.play_id = ip.item_id
+            and rp.role_part_id = :role_part_id
+            and content_revision__is_live(ip.play_id) = 't'
+                            
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_runtime_assigned_activities_tree.get_learning_activity_info">
+		<querytext>
+ 
+                    select la.title as activity_title,
+                    la.item_id as activity_item_id,
+                    la.activity_id,
+                    attr.is_visible_p,
+                    la.complete_act_id
+                    from imsld_learning_activitiesi la, imsld_attribute_instances attr
+                    where activity_id = :activity_id
+                    and attr.owner_id = la.activity_id
+                    and attr.run_id = :run_id
+                    and attr.user_id = :user_id
+                    and attr.type = 'isvisible'
+                                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_runtime_assigned_activities_tree.la_already_completed">
+		<querytext>
+
+                    select 1 from imsld_status_user 
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and run_id = :run_id
+                    and status = 'finished'
+                                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_runtime_assigned_activities_tree.get_support_activity_info">
+		<querytext>
+
+                    select sa.title as activity_title,
+                    sa.item_id as activity_item_id,
+                    sa.activity_id,
+                    attr.is_visible_p,
+                    sa.complete_act_id
+                    from imsld_support_activitiesi sa, imsld_attribute_instances attr
+                    where sa.activity_id = :activity_id
+                    and attr.owner_id = sa.activity_id
+                    and attr.run_id = :run_id
+                    and attr.user_id = :user_id
+                    and attr.type = 'isvisible'
+                                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_runtime_assigned_activities_tree.sa_already_completed">
+		<querytext>
+
+                    select 1 from imsld_status_user 
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and run_id = :run_id
+                    and status = 'finished'
+                                    
 		</querytext>
 	</fullquery>
 

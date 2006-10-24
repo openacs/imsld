@@ -145,7 +145,6 @@ ad_proc -public imsld::install::init_content_repository {
     # send mail data
     content::type::new -content_type imsld_send_mail_data -supertype content_revision -pretty_name "#imsld.IMS-LD_Sendmail_Data#" -pretty_plural "#imsld.IMS-LD_Sendmail_Data#" -table_name imsld_send_mail_data -id_column data_id
 
-    content::type::attribute::new -content_type imsld_send_mail_data -attribute_name send_mail_id -datatype number -pretty_name "#imsld.Sendmail_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_send_mail_data -attribute_name role_id -datatype number -pretty_name "#imsld.Role_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_send_mail_data -attribute_name mail_data -datatype string -pretty_name "#imsld.Mail_Data#" -column_spec "varchar(4000)"
 
@@ -156,7 +155,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_conference_service -attribute_name conference_type -datatype string -pretty_name "#imsld.Conference_Type#" -column_spec "char(12)"
     content::type::attribute::new -content_type imsld_conference_service -attribute_name imsld_item_id -datatype number -pretty_name "#imsld.Item_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_conference_service -attribute_name manager_id -datatype number -pretty_name "#imsld.Manager_Identifier#" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_conference_service -attribute_name moderator_id -datatype number -pretty_name "<#_ Moderator_Identifier  #>"  -column_spec "integer"
+    content::type::attribute::new -content_type imsld_conference_service -attribute_name moderator_id -datatype number -pretty_name "#imsld.Moderator_Identifier#"  -column_spec "integer"
     
     # methods
     content::type::new -content_type imsld_method -supertype content_revision -pretty_name "#imsld.IMS-LD_Method#" -pretty_plural "#imsld.IMS-LD_Methods#" -table_name imsld_methods -id_column method_id
@@ -282,10 +281,10 @@ ad_proc -public imsld::install::init_content_repository {
     # complete acts
     content::type::attribute::new -content_type imsld_complete_act -attribute_name time_property_id -datatype number -pretty_name "#imsld.lt_Time_Property_Identif#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_complete_act -attribute_name when_condition_true_id -datatype number -pretty_name "#imsld.When_Condition_True#" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_complete_act -attribute_name when_prop_val_is_set_xml -datatype string -pretty_name "[_ imsld.lt_When_property_value_i]" -column_spec "varchar(4000)"
+    content::type::attribute::new -content_type imsld_complete_act -attribute_name when_prop_val_is_set_xml -datatype string -pretty_name "#imsld.lt_When_property_value_i#" -column_spec "varchar(4000)"
 
     # on completion
-    content::type::attribute::new -content_type imsld_on_completion -attribute_name change_property_value_xml -datatype string -pretty_name "[_ imsld.lt_Change_Property_Value_1]" -column_spec "varchar(4000)"
+    content::type::attribute::new -content_type imsld_on_completion -attribute_name change_property_value_xml -datatype string -pretty_name "#imsld.lt_Change_Property_Value_1#" -column_spec "varchar(4000)"
 
     # monitor service
     content::type::new -content_type imsld_monitor_service -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Monitor_Servic#" -pretty_plural "#imsld.lt_IMS-LD_Monitor_Servic_1#" -table_name imsld_monitor_services -id_column monitor_id
@@ -295,9 +294,9 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_monitor_service -attribute_name self_p -datatype string -pretty_name "#imsld.Self#" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_monitor_service -attribute_name imsld_item_id -datatype number -pretty_name "#imsld.lt_IMS-LD_Item_Identifie#" -column_spec "integer"
 
-    # send mail service
-    content::type::attribute::new -content_type imsld_send_mail_service -attribute_name email_property_id -datatype number -pretty_name "#imsld.lt_Email_Propery_Identif#" -column_spec "integer"
-    content::type::attribute::new -content_type imsld_send_mail_service -attribute_name username_property_id -datatype number -pretty_name "#imsld.lt_Username_Property_Ide#" -column_spec "integer"
+    # send mail data
+    content::type::attribute::new -content_type imsld_send_mail_data -attribute_name email_property_id -datatype number -pretty_name "#imsld.lt_Email_Propery_Identif#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_send_mail_data -attribute_name username_property_id -datatype number -pretty_name "#imsld.lt_Username_Property_Ide#" -column_spec "integer"
 
     # when condition true
     content::type::new -content_type imsld_when_condition_true -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_When_Condition#" -pretty_plural "#imsld.lt_IMS-LD_When_Condition_1#" -table_name imsld_when_condition_true -id_column when_condition_true_id
@@ -310,6 +309,15 @@ ad_proc -public imsld::install::init_content_repository {
 
     content::type::attribute::new -content_type imsld_condition -attribute_name method_id -datatype number -pretty_name "#imsld.Method_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_condition -attribute_name condition_xml -datatype string -pretty_name "#imsld.Condition#" -column_spec "varchar(4000)"
+
+    ### IMS-LD LEVEL C
+
+    # notifications
+    content::type::new -content_type imsld_notification -supertype content_revision -pretty_name "#imsld.Notification#" -pretty_plural "#imsld.Notifications#"  -table_name imsld_notifications -id_column notification_id
+    
+    content::type::attribute::new -content_type imsld_notification -attribute_name imsld_id -datatype number -pretty_name "#imsld.IMS-LD_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_notification -attribute_name activity_id -datatype number -pretty_name "#imsld.Activity_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_notification -attribute_name subject -datatype string -pretty_name "#imsld.Notification_Subject#" -column_spec "varchar(4000)"
 }
 
 ad_proc -public imsld::install::create_group_types {  
@@ -530,6 +538,28 @@ ad_proc -public imsld::install::init_rels {
         content_item 0 {} \
         content_item 0 {}
 
+    # Imsld on completion  - notifications
+    rel_types::new imsld_on_comp_notif_rel "On Completion - Notification" "On Completion - Notifications" \
+        content_item 0 {} \
+        content_item 0 {}
+
+    # Imsld notification  - email datas
+    rel_types::new imsld_notif_email_rel "Notification - Email Data" "Notification - Email Datas" \
+        content_item 0 {} \
+        content_item 0 {}
+
+    # Imsld send mail service  - email datas
+    rel_types::new imsld_send_mail_serv_data_rel "Send Mail Service - Email Data" "Send Mail Service - Email Datas" \
+        content_item 0 {} \
+        content_item 0 {}
+
+    # Level C, notifications: Runtime assigned activities
+    # Notifications may set to TRUE the visibility attribute of ANY activity for a given role, 
+    # and by any we mean that the activity does not have to be assigned to a role part associated with that role. 
+    # Therefore we crate this rel type where we map the role with the runtime assigned activities 
+    rel_types::new imsld_run_time_activities_rel "Role - Activity" "Role - Activities" \
+        content_revision 0 {} \
+        content_revision 0 {}
 }
 
 ad_proc -public imsld::uninstall::delete_rels {  
@@ -566,6 +596,9 @@ ad_proc -public imsld::uninstall::delete_rels {
     imsld::rel_type_delete -rel_type imsld_prop_wpv_is_rel
     imsld::rel_type_delete -rel_type imsld_role_cond_rel
     imsld::rel_type_delete -rel_type imsld_ilm_cond_rel
+    imsld::rel_type_delete -rel_type imsld_on_comp_notif_rel
+    imsld::rel_type_delete -rel_type imsld_notif_email_rel
+    imsld::rel_type_delete -rel_type imsld_send_mail_serv_data_rel
 }
 
 ad_proc -public imsld::uninstall::delete_ext_rels {  
@@ -582,7 +615,12 @@ ad_proc -public imsld::uninstall::empty_content_repository {
 } { 
 
     ### Attributes
-    
+
+    ### IMS-LD Level C
+    content::type::attribute::delete -content_type imsld_notification -attribute_name imsld_id
+    content::type::attribute::delete -content_type imsld_notification -attribute_name activity_id
+    content::type::attribute::delete -content_type imsld_notification -attribute_name subject
+
     ### IMS-LD level B
 
     # properties
@@ -615,9 +653,9 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_monitor_service -attribute_name self_p 
     content::type::attribute::delete -content_type imsld_monitor_service -attribute_name imsld_item_id
 
-    # send mail service
-    content::type::attribute::delete -content_type imsld_send_mail_service -attribute_name email_property_id
-    content::type::attribute::delete -content_type imsld_send_mail_service -attribute_name username_property_id
+    # send mail data
+    content::type::attribute::delete -content_type imsld_send_mail_data -attribute_name email_property_id
+    content::type::attribute::delete -content_type imsld_send_mail_data -attribute_name username_property_id
 
     # when condition true
     content::type::attribute::delete -content_type imsld_when_condition_true -attribute_name role_id
@@ -731,7 +769,6 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_send_mail_service -attribute_name parameters
 
     # send mail data
-    content::type::attribute::delete -content_type imsld_send_mail_data -attribute_name send_mail_id
     content::type::attribute::delete -content_type imsld_send_mail_data -attribute_name role_id
     content::type::attribute::delete -content_type imsld_send_mail_data -attribute_name mail_data
     
@@ -821,6 +858,9 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     }
     
     ### Content Types
+
+    ### IMS-LD Level C
+    content::type::delete -content_type imsld_notification -drop_table_p t 
 
     ### IMS-LD Level B
     content::type::delete -content_type imsld_property -drop_table_p t 

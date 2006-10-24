@@ -122,4 +122,35 @@ if { $user_role_id == -1 } {
     $imsld_title_node appendChild $activities_node
     
     set html_tree [$dom_root asXML]
+
+    # runtime generated activities (notifications, level C)
+    if { [db_string generated_acitivties_p {
+        select count(*)
+        from acs_rels
+        where object_id_one = :current_role_id
+        and rel_type = 'imsld_run_time_activities_rel'
+    } -default 0] > 0 } {
+        dom createDocument ul aux_doc
+        set aux_dom_root [$aux_doc documentElement]
+        $aux_dom_root setAttribute class "mktree"
+        $aux_dom_root setAttribute style "white-space: nowrap;"
+        set aux_title_node [$aux_doc createElement li]
+        $aux_title_node setAttribute class "liOpen"
+        set text [$doc createTextNode "[_ imsld.Extra_Activities]"] 
+        $aux_title_node appendChild $text
+        $aux_dom_root appendChild $aux_title_node
+        
+        set aux_activities_node [$aux_doc createElement ul]
+        imsld::generate_runtime_assigned_activities_tree -run_id $run_id \
+            -user_id $user_id \
+            -dom_node $aux_activities_node \
+            -dom_doc $aux_doc
+        
+        $aux_title_node appendChild $aux_activities_node
+        
+        set aux_html_tree [$aux_dom_root asXML]
+    } else {
+        set aux_html_tree ""
+    }
+    
 }

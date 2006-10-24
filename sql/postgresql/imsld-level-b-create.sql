@@ -128,8 +128,8 @@ Simple expression for a condition. This condition applies to all the individual 
 
 alter table imsld_on_completion add column change_property_value_xml text;
 
-alter table imsld_send_mail_services add column email_property_id integer constraint imsld_emailprop_fk references cr_items;    --imsld_properties
-alter table imsld_send_mail_services add column username_property_id integer constraint imsld_unameprop_fk references cr_items; --imsld_properties
+alter table imsld_send_mail_data add column email_property_id integer constraint imsld_semailprop_fk references cr_items;    --imsld_properties
+alter table imsld_send_mail_data add column username_property_id integer constraint imsld_sunameprop_fk references cr_items; --imsld_properties
 
 alter table imsld_complete_acts add column time_property_id integer constraint imsld_compa_timepropv_fk references cr_items;        --imsld_properties
 
