@@ -111,6 +111,7 @@ set activities_node [$doc createElement ul]
 
 if { $user_role_id == -1 } {
     set html_tree ""
+    set aux_html_tree ""
 } else {
     
     imsld::generate_activities_tree -run_id $run_id \
