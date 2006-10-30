@@ -1136,7 +1136,7 @@
 		<querytext>
 
                 select sm.title as send_mail_title, ar.object_id_two as sendmail_id
-                from imsld_send_mail_servicesi sm
+                from imsld_send_mail_servicesi sm, acs_rels ar
                 where sm.service_id = :service_item_id
                 and sm.item_id = ar.object_id_one
                 and ar.rel_type = 'imsld_send_mail_serv_data_rel'
