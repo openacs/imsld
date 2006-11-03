@@ -129,7 +129,7 @@
   <msg key="lt_Could_not_determine_w">Could not determine whit what program uncompress the file %upload_file% has. Aborting</msg>
   <msg key="lt_Couldnt_determine_if_">Couldn't determine if this is a well formed IMS-LD: %message%</msg>
   <msg key="lt_Creaginting_new_IMS-L">Creaginting new IMS-LD</msg>
-  <msg key="lt_Dear_recepient_name_b">Dear %recepient_name% &lt;br&gt; \
+  <msg key="lt_Dear_recepient_name_b">Dear %recepient_name% &lt;br&gt; 
                        %sender_name has% triggered this notification. Please do not replay to this email. &lt;br&gt;</msg>
   <msg key="lt_Email_Propery_Identif">Email Propery Identifier</msg>
   <msg key="lt_Environment_Identifie">Environment Identifier</msg>
@@ -271,8 +271,8 @@
   <msg key="lt_ul_Completed_Activiti">&lt;ul&gt; Completed Activities &lt;br /&gt;</msg>
   <msg key="lt_ul_Next_Activity_acti">&lt;ul&gt; %first_or_next% Activity: %activity_name%</msg>
   <msg key="lt_Uploading_and_process">Uploading and processing your course, please wait...</msg>
-  <msg key="lt_username_br__________">%username% &lt;br&gt; \
-                       %sender_name% has triggered this notification. Please do not replay to this email. &lt;br&gt;&lt;br&gt; \
+  <msg key="lt_username_br__________">%username% &lt;br&gt; 
+                       %sender_name% has triggered this notification. Please do not replay to this email. &lt;br&gt;&lt;br&gt; 
                        Go to the UoL: &lt;a href=\&quot;%imsld_url%\&quot;&gt;%imsld_title%&lt;/a&gt; (in the community: &lt;a href=\&quot;%community_url%\&quot;&gt;%community_name%&lt;/a&gt; community) for further details.</msg>
   <msg key="lt_Username_Property_Ide">Username Property Identifier</msg>
   <msg key="lt_Valid_types_are_learn">Valid types are learning, support and structure</msg>

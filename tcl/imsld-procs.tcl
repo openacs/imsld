@@ -656,12 +656,25 @@ ad_proc -public imsld::do_notification {
     {-email_address ""}
     -role_id
     {-user_id ""}
+    -notified_users_list
 } {
     @param imsld_id
+    @param run_id
+    @param subject
+    @option username
+    @option email_address
+    @param role_id
+    @option user_id user_id of the one sending the notification
+    @param notified_users_list list to keep track of the notified users
+
+    @return the list of the notified users
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     
     # notifications
+    # according to the spec: "The implementation should ensure that a user receives one notification only, 
+    # even if the user is a member of several roles targeted by the notification", that's why we use the list
+    # notified_users_list and check before sending the notification.
     set community_id [dotlrn_community::get_community_id]
     set community_name [dotlrn_community::get_community_name $community_id]
     set community_url [ns_conn location][dotlrn_community::get_community_url $community_id]
@@ -686,7 +699,7 @@ ad_proc -public imsld::do_notification {
         }
     }
 
-    if { ![empty_string_p $email_address] && [util_email_valid_p $email_address] } {
+    if { ![empty_string_p $email_address] && [util_email_valid_p $email_address] && ([lsearch -exact $notified_users_list $email_address] == -1) } {
         # Use this to build up extra mail headers        
         set extra_headers [ns_set new]
         
@@ -706,6 +719,8 @@ ad_proc -public imsld::do_notification {
             -subject $subject \
             -body $content \
             -extraheaders $extra_headers
+
+        lappend notified_users_list $email_address
     } else {
         # invalid mail!
         ns_log notice "imsld::do_notification: Not sending notification because the email is invalid!"
@@ -719,42 +734,49 @@ ad_proc -public imsld::do_notification {
     }
     # send a notification (email) to each user in the role
     foreach recipient_user_id [imsld::roles::get_users_in_role -role_id $role_id -run_id $run_id] {
-        set recepient_name [party::name -party_id $recipient_user_id] 
-        set body_html "[_ imsld.lt_Dear_recepient_name_b]"
-        # if activity_id is not null: 
-        # 1. make it visible
-        # 2. get the activity url in order to send it in the email
-        if { ![empty_string_p $activity_id] } {
+        set recipient_email [party::email -party_id $recipient_user_id]
+        if { [lsearch -exact $notified_users_list $email_address] == -1 } {
+            set recepient_name [party::name -party_id $recipient_user_id] 
+            set body_html "[_ imsld.lt_Dear_recepient_name_b]"
+            # if activity_id is not null: 
             # 1. make it visible
-            db_dml make_activity_visible { *SQL* }
-            # 2. get the activity url for the recipient user_id
-            set activity_url [imsld::activity_url -run_id $run_id -activity_id $activity_id -user_id $recipient_user_id]
-            set activity_title [content::revision::revision_name -revision_id $activity_id]
-            append body_html "[_ imsld.lt_br___________________]"
-        } else {
-            append body_html "[_ imsld.lt_br____________________1]"
+            # 2. get the activity url in order to send it in the email
+            if { ![empty_string_p $activity_id] } {
+                # 1. make it visible
+                db_dml make_activity_visible { *SQL* }
+                # 2. get the activity url for the recipient user_id
+                set activity_url [imsld::activity_url -run_id $run_id -activity_id $activity_id -user_id $recipient_user_id]
+                set activity_title [content::revision::revision_name -revision_id $activity_id]
+                append body_html "[_ imsld.lt_br___________________]"
+            } else {
+                append body_html "[_ imsld.lt_br____________________1]"
+            }
+            # Use this to build up extra mail headers        
+            set extra_headers [ns_set new]
+            
+            # This should disable most auto-replies.
+            ns_set put $extra_headers Precedence list
+
+            set message_data [build_mime_message [ad_html_to_text $body_html] $body_html]
+            ns_set put $extra_headers MIME-Version [ns_set get $message_data MIME-Version]
+            ns_set put $extra_headers Content-ID [ns_set get $message_data Content-ID]
+            ns_set put $extra_headers Content-Type [ns_set get $message_data Content-Type]
+            set content [ns_set get $message_data body]
+            
+            acs_mail_lite::send -to_addr $recipient_email \
+                -from_addr $sender_email \
+                -subject $subject \
+                -body $content \
+                -extraheaders $extra_headers
+
+            lappend notified_users_list $recipient_email
         }
-        # Use this to build up extra mail headers        
-        set extra_headers [ns_set new]
-        
-        # This should disable most auto-replies.
-        ns_set put $extra_headers Precedence list
-
-        set message_data [build_mime_message [ad_html_to_text $body_html] $body_html]
-        ns_set put $extra_headers MIME-Version [ns_set get $message_data MIME-Version]
-        ns_set put $extra_headers Content-ID [ns_set get $message_data Content-ID]
-        ns_set put $extra_headers Content-Type [ns_set get $message_data Content-Type]
-        set content [ns_set get $message_data body]
-        
-        acs_mail_lite::send -to_addr [party::email -party_id $recipient_user_id] \
-            -from_addr $sender_email \
-            -subject $subject \
-            -body $content \
-            -extraheaders $extra_headers
     }
-
+        
     # log the notification
     db_dml log_notification { *SQL* }
+
+    return $notified_users_list
 }
 
 ad_proc -public imsld::finish_component_element {
@@ -844,6 +866,7 @@ ad_proc -public imsld::finish_component_element {
                 imsld::condition::eval_change_property_value -change_property_value_xml $change_property_value_xml -run_id $run_id
             }
             # notifications
+            set notified_users_list [list]
             foreach notification_list [db_list_of_lists get_notifications { *SQL* }] {
                 set subject [lindex $notification_list 0]
                 set activity_id [content::item::get_live_revision -item_id [lindex $notification_list 1]]
@@ -862,7 +885,9 @@ ad_proc -public imsld::finish_component_element {
                         # NOTE: there is no specification for the format of the email property value
                         #       so we assume it is a single username
                         db_1row get_username_property_id { *SQL* }
-                        set username [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -property_id $property_id]
+                        set username [imsld::runtime::property::property_value_get -run_id $run_id \
+                                          -user_id $user_id \
+                                          -property_id $property_id]
                     } else {
                         set username ""
                     }
@@ -873,19 +898,22 @@ ad_proc -public imsld::finish_component_element {
                         #       so we assume it is a single email address.
                         #       we also send the notificaiton to the rest of the role members
                         db_1row get_email_property_id { *SQL* }
-                        set email_address [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -property_id $property_id]
+                        set email_address [imsld::runtime::property::property_value_get -run_id $run_id \
+                                               -user_id $user_id \
+                                               -property_id $property_id]
                     } else {
                         set email_address ""
                     }
 
-                    imsld::do_notification -imsld_id $imsld_id \
-                        -run_id $run_id \
-                        -subject $subject \
-                        -activity_id $activity_id \
-                        -username $username \
-                        -email_address $email_address \
-                        -role_id $role_id \
-                        -user_id $user_id
+                    set notified_users_list [imsld::do_notification -imsld_id $imsld_id \
+                                                 -run_id $run_id \
+                                                 -subject $subject \
+                                                 -activity_id $activity_id \
+                                                 -username $username \
+                                                 -email_address $email_address \
+                                                 -role_id $role_id \
+                                                 -user_id $user_id \
+                                                 -notified_users_list $notified_users_list]
                 }
             }
         }

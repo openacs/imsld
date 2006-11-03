@@ -562,6 +562,91 @@ ad_proc -public imsld::install::init_rels {
         content_revision 0 {}
 }
 
+ad_proc -public imsld::install::after_upgrade {
+    -from_version_name:required
+    -to_version_name:required
+} {
+    apm_upgrade_logic \
+        -from_version_name $from_version_name \
+        -to_version_name $to_version_name \
+        -spec {
+            0.01d 1.0d {
+                ### IMS-LD LEVEL C
+                
+                # notifications
+                content::type::new -content_type imsld_notification -supertype content_revision -pretty_name "#imsld.Notification#" -pretty_plural "#imsld.Notifications#"  -table_name imsld_notifications -id_column notification_id
+                
+                content::type::attribute::new -content_type imsld_notification -attribute_name imsld_id -datatype number -pretty_name "#imsld.IMS-LD_Identifier#" -column_spec "integer"
+                content::type::attribute::new -content_type imsld_notification -attribute_name activity_id -datatype number -pretty_name "#imsld.Activity_Identifier#" -column_spec "integer"
+                content::type::attribute::new -content_type imsld_notification -attribute_name subject -datatype string -pretty_name "#imsld.Notification_Subject#" -column_spec "varchar(4000)"
+                
+                # Imsld on completion  - notifications
+                rel_types::new imsld_on_comp_notif_rel "On Completion - Notification" "On Completion - Notifications" \
+                    content_item 0 {} \
+                    content_item 0 {}
+                
+                # Imsld notification  - email datas
+                rel_types::new imsld_notif_email_rel "Notification - Email Data" "Notification - Email Datas" \
+                    content_item 0 {} \
+                    content_item 0 {}
+                
+                # Level C, notifications: Runtime assigned activities
+                # Notifications may set to TRUE the visibility attribute of ANY activity for a given role, 
+                # and by any we mean that the activity does not have to be assigned to a role part associated with that role. 
+                # Therefore we crate this rel type where we map the role with the runtime assigned activities 
+                rel_types::new imsld_run_time_activities_rel "Role - Activity" "Role - Activities" \
+                    content_revision 0 {} \
+                    content_revision 0 {}
+                
+                # special case: add the new attributes, new rel and migrate the existing data
+
+                content::type::attribute::new -content_type imsld_send_mail_data -attribute_name email_property_id -datatype number -pretty_name "#imsld.lt_Email_Propery_Identif#" -column_spec "integer"
+                content::type::attribute::new -content_type imsld_send_mail_data -attribute_name username_property_id -datatype number -pretty_name "#imsld.lt_Username_Property_Ide#" -column_spec "integer"
+
+                # Imsld send mail service  - email datas
+                rel_types::new imsld_send_mail_serv_data_rel "Send Mail Service - Email Data" "Send Mail Service - Email Datas" \
+                    content_item 0 {} \
+                    content_item 0 {}
+                
+                db_foreach send_mail_data {
+                    select serv.username_property_id, 
+                    serv.email_property_id, 
+                    data.data_id,
+                    data.item_id as data_item_id,
+                    serv.item_id as serv_item_id
+                    from imsld_send_mail_datai data, imsld_send_mail_servicesi serv 
+                    where data.send_mail_id = serv.item_id
+                    and content_revision__is_live(serv.mail_id) = 't'
+                } {
+
+                    db_dml update_table {
+                        update imsld_send_mail_data
+                        set email_property_id = :email_property_id,
+                        username_property_id = :username_property_id
+                        where data_id = :data_id
+                    }
+
+                    relation_add imsld_notif_email_rel $serv_item_id $data_item_id
+                }
+                
+                
+                # finally, delete the attributes
+                content::type::attribute::delete -content_type imsld_send_mail_data \
+                    -attribute_name send_mail_id \
+                    -drop_column t
+                content::type::attribute::delete -content_type imsld_send_mail_service \
+                    -attribute_name email_property_id \
+                    -drop_column t
+                content::type::attribute::delete -content_type imsld_send_mail_service \
+                    -attribute_name username_property_id \
+                    -drop_column t
+                
+                
+            }
+        }
+}   
+
+
 ad_proc -public imsld::uninstall::delete_rels {  
 } { 
     Delete default rels between imsld items

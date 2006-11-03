@@ -1135,7 +1135,7 @@
     <fullquery name="imsld::process_service_as_ul.get_send_mail_info">
 		<querytext>
 
-                select sm.title as send_mail_title, ar.object_id_two as sendmail_id
+                select sm.title as send_mail_title, sm.mail_id as sendmail_id
                 from imsld_send_mail_servicesi sm, acs_rels ar
                 where sm.service_id = :service_item_id
                 and sm.item_id = ar.object_id_one

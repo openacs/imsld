@@ -742,6 +742,7 @@ ad_proc -public imsld::statement::execute {
             {notification} {
                 set activity_id ""
                 set subjectValue ""
+                set notified_users_list [list]
                 set subjectNode [$executeNode selectNodes {*[local-name()='subject']}]
                 if { [llength $subjectNode] } {
                     set subjectValue [$subjectNode text]
@@ -802,14 +803,15 @@ ad_proc -public imsld::statement::execute {
                         and run.run_id = :run_id
                     }
                     
-                    imsld::do_notification -imsld_id $imsld_id \
-                        -run_id $run_id \
-                        -subject $subjectValue \
-                        -activity_id $activity_id \
-                        -username $username \
-                        -email_address $email_address \
-                        -role_id $role_id \
-                        -user_id $user_id
+                    set notified_users_list [imsld::do_notification -imsld_id $imsld_id \
+                                                 -run_id $run_id \
+                                                 -subject $subjectValue \
+                                                 -activity_id $activity_id \
+                                                 -username $username \
+                                                 -email_address $email_address \
+                                                 -role_id $role_id \
+                                                 -user_id $user_id \
+                                                 -notified_users_list $notified_users_list]
                 }
             }
         }

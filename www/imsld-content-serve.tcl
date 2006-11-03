@@ -341,6 +341,7 @@ foreach set_property_node $set_property_nodes {
     $form_node removeAttribute xmlns
 
     # level C: notifications
+    set notified_users_list [list]
     foreach notification_node [$set_property_node selectNodes "*\[local-name()='notification'\]"] {
         set activity_id ""
         set subjectValue ""
@@ -404,14 +405,15 @@ foreach set_property_node $set_property_nodes {
                 and run.run_id = :run_id
             }
             
-            imsld::do_notification -imsld_id $imsld_id \
-                -run_id $run_id \
-                -subject $subjectValue \
-                -activity_id $activity_id \
-                -username $username \
-                -email_address $email_address \
-                -role_id $role_id \
-                -user_id $owner_user_id
+            set notified_users_list [imsld::do_notification -imsld_id $imsld_id \
+                                         -run_id $run_id \
+                                         -subject $subjectValue \
+                                         -activity_id $activity_id \
+                                         -username $username \
+                                         -email_address $email_address \
+                                         -role_id $role_id \
+                                         -user_id $owner_user_id \
+                                         -notified_users_list $notified_users_list]
         }
     }
 }
