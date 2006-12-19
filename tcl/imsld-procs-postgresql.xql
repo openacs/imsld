@@ -9,4 +9,11 @@
       </querytext>
 </fullquery>
 
+<fullquery name="imsld::group_type_delete.drop_group_type">
+      <querytext>
+        select acs_object_type__drop_type(:group_type,'t');
+      </querytext>
+</fullquery>
+
+
 </queryset>

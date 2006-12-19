@@ -12,3 +12,5 @@ drop table imsld_status_user cascade;
 drop table imsld_property_instances cascade;
 
 drop table imsld_attribute_instances cascade;
+
+drop table imsld_run_users_group_rels cascade;

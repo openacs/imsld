@@ -650,7 +650,7 @@ ad_proc -public imsld::install::after_upgrade {
 ad_proc -public imsld::uninstall::delete_rels {  
 } { 
     Delete default rels between imsld items
-} { 
+} {
     imsld::rel_type_delete -rel_type imsld_lo_item_rel
     imsld::rel_type_delete -rel_type imsld_res_files_rel
     imsld::rel_type_delete -rel_type imsld_preq_item_rel
@@ -684,6 +684,7 @@ ad_proc -public imsld::uninstall::delete_rels {
     imsld::rel_type_delete -rel_type imsld_on_comp_notif_rel
     imsld::rel_type_delete -rel_type imsld_notif_email_rel
     imsld::rel_type_delete -rel_type imsld_send_mail_serv_data_rel
+    imsld::rel_type_delete -rel_type imsld_run_time_activities_rel
 }
 
 ad_proc -public imsld::uninstall::delete_ext_rels {  
@@ -691,7 +692,20 @@ ad_proc -public imsld::uninstall::delete_ext_rels {
     Delete default rels between imsld and non IMS-LD objects
 } { 
     imsld::rel_type_delete -rel_type imsld_role_group_rel
-    imsld::rel_type_delete -rel_type imsld_res_files_rel
+    imsld::rel_type_delete -rel_type imsld_roleinstance_run_rel
+#TODO: drop attributes
+    imsld::rel_type_delete -rel_type imsld_run_users_group_rel
+}
+
+
+ad_proc -public imsld::uninstall::delete_group_types {  
+} { 
+    Delete default group types
+} {
+
+    imsld::group_type_delete -group_type imsld_role_group 
+#TODO: drop attributes
+    imsld::group_type_delete -group_type imsld_run_users_group
 }
 
 ad_proc -public imsld::uninstall::empty_content_repository {  
@@ -751,9 +765,6 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_condition -attribute_name condition_xml
 
     ### IMS-LD Production and Delivery
-    content::type::attribute::delete -content_type imsld_property_instance -attribute_name property_id
-    content::type::attribute::delete -content_type imsld_property_instance -attribute_name party_id
-    content::type::attribute::delete -content_type imsld_property_instance -attribute_name value
 
     ### IMS-LD level A
 
@@ -929,68 +940,60 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_cp_dependency -attribute_name identifierref
 
     # imsld cp files
-    content::type::attribute::delete -content_type imsld_cp_file -attribute_name resource_id
     content::type::attribute::delete -content_type imsld_cp_file -attribute_name path_to_file
     content::type::attribute::delete -content_type imsld_cp_file -attribute_name file_name
     content::type::attribute::delete -content_type imsld_cp_file -attribute_name href
 
     ### IMS-LD Production and Delivery
 
-    # imsld runs attributes
-    foreach attribute_list [package_object_attribute_list imsld_run] {
-        set attribute_id [lindex $attribute_list 0]
-        attribute::delete $attribute_id
-    }
-    
     ### Content Types
-
+    ### IMS-LD Production and Delivery
+    db_dml delete_table_ipi { drop table imsld_property_instances }
+    db_dml delete_table_isu { drop table imsld_status_user }
+    db_dml delete_table_iai { drop table imsld_attribute_instances }
+    db_dml delete_table_ir { drop table imsld_runs cascade}
     ### IMS-LD Level C
-    content::type::delete -content_type imsld_notification -drop_table_p t 
+    content::type::delete -content_type imsld_notification  
 
     ### IMS-LD Level B
-    content::type::delete -content_type imsld_property -drop_table_p t 
-    content::type::delete -content_type imsld_property_groups -drop_table_p t 
-    content::type::delete -content_type imsld_restriction -drop_table_p t 
-    content::type::delete -content_type imsld_monitor_service -drop_table_p t 
-    content::type::delete -content_type imsld_condition -drop_table_p t 
-    content::type::delete -content_type imsld_when_condition_true -drop_table_p t 
+    content::type::delete -content_type imsld_property_groups  
+    content::type::delete -content_type imsld_property  
+    content::type::delete -content_type imsld_restriction  
+    content::type::delete -content_type imsld_monitor_service  
+    content::type::delete -content_type imsld_condition  
+    content::type::delete -content_type imsld_when_condition_true  
 
     ### IMS-LD Level A
-    content::type::delete -content_type imsld_learning_object -drop_table_p t 
-    content::type::delete -content_type imsld_imsld -drop_table_p t
-    content::type::delete -content_type imsld_learning_objective -drop_table_p t
-    content::type::delete -content_type imsld_prerequisite -drop_table_p t
-    content::type::delete -content_type imsld_item -drop_table_p t
-    content::type::delete -content_type imsld_component -drop_table_p t
-    content::type::delete -content_type imsld_role -drop_table_p t
-    content::type::delete -content_type imsld_prerequisite -drop_table_p t
-    content::type::delete -content_type imsld_activity_desc -drop_table_p t
-    content::type::delete -content_type imsld_learning_activity -drop_table_p t
-    content::type::delete -content_type imsld_support_activity -drop_table_p t
-    content::type::delete -content_type imsld_activity_structure -drop_table_p t
-    content::type::delete -content_type imsld_environment -drop_table_p t
-    content::type::delete -content_type imsld_service -drop_table_p t
-    content::type::delete -content_type imsld_send_mail_service -drop_table_p t
-    content::type::delete -content_type imsld_send_mail_data -drop_table_p t
-    content::type::delete -content_type imsld_conference_service -drop_table_p t
-    content::type::delete -content_type imsld_method -drop_table_p t
-    content::type::delete -content_type imsld_play -drop_table_p t
-    content::type::delete -content_type imsld_act -drop_table_p t
-    content::type::delete -content_type imsld_role_part -drop_table_p t
-    content::type::delete -content_type imsld_complete_act -drop_table_p t
-    content::type::delete -content_type imsld_on_completion -drop_table_p t
-    content::type::delete -content_type imsld_class -drop_table_p t
+    content::type::delete -content_type imsld_learning_object  
+    content::type::delete -content_type imsld_imsld 
+    content::type::delete -content_type imsld_learning_objective 
+    content::type::delete -content_type imsld_prerequisite 
+    content::type::delete -content_type imsld_item 
+    content::type::delete -content_type imsld_component 
+    content::type::delete -content_type imsld_role 
+    content::type::delete -content_type imsld_activity_desc 
+    content::type::delete -content_type imsld_learning_activity 
+    content::type::delete -content_type imsld_support_activity 
+    content::type::delete -content_type imsld_activity_structure 
+    content::type::delete -content_type imsld_environment 
+    content::type::delete -content_type imsld_service 
+    content::type::delete -content_type imsld_send_mail_service 
+    content::type::delete -content_type imsld_send_mail_data 
+    content::type::delete -content_type imsld_conference_service 
+    content::type::delete -content_type imsld_method 
+    content::type::delete -content_type imsld_play 
+    content::type::delete -content_type imsld_act 
+    content::type::delete -content_type imsld_role_part 
+    content::type::delete -content_type imsld_complete_act 
+    content::type::delete -content_type imsld_on_completion 
+    content::type::delete -content_type imsld_class 
 
     ### IMS-LD Content Packaging
-    content::type::delete -content_type imsld_cp_manifest -drop_table_p t
-    content::type::delete -content_type imsld_cp_organization -drop_table_p t
-    content::type::delete -content_type imsld_cp_resource -drop_table_p t
-    content::type::delete -content_type imsld_cp_dependency -drop_table_p t
-    content::type::delete -content_type imsld_cp_file -drop_table_p t
-
-    ### IMS-LD Production and Delivery
-
-    content::type::delete -content_type imsld_property_instance -drop_table_p t
+    content::type::delete -content_type imsld_cp_manifest 
+    content::type::delete -content_type imsld_cp_organization 
+    content::type::delete -content_type imsld_cp_resource 
+    content::type::delete -content_type imsld_cp_dependency 
+    content::type::delete -content_type imsld_cp_file 
 
 }
 

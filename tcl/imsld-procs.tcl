@@ -537,7 +537,28 @@ ad_proc -public imsld::mark_method_finished {
             -user_id $user_id
     }
 }
+ad_proc -public imsld::group_type_delete {
+    -group_type:required
+} {
+    Deletes a group type (since the group_types does not have a delete proc)
+} {
+#select all groups of this type
+set group_id_list [db_list select_groups {
+                     select ao.object_id as group_id
+                     from acs_objects ao
+                     where ao.object_type= :group_type
+                  }]
+#delete all groups and drop group_type
+         foreach group_id $group_id_list {
+            group::delete $group_id
+         }
 
+
+         db_dml delete_group_type {delete from group_types where group_type=:group_type}
+         db_exec_plsql drop_group_type {}
+     
+
+}
 ad_proc -public imsld::rel_type_delete { 
     -rel_type:required
 } { 
@@ -549,7 +570,6 @@ ad_proc -public imsld::rel_type_delete {
         from acs_object_types t
         where t.object_type = :rel_type
     }
-    
     set rel_id_list [db_list select_rel_ids {
         select r.rel_id
         from acs_rels r
@@ -3611,6 +3631,112 @@ ad_proc -public imsld::grant_forum_permissions {
     } {
         permission::grant -party_id $user_id -object_id $forum_id  -privilege "read"
     }
+}
+
+ad_proc -public imsld::delete_run {
+    -run_id:required
+} {
+    <p>Delete a run with all dependencies</p>
+    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+} {
+
+    db_dml delete_related_property_instances {
+        delete from imsld_property_instances where run_id=:run_id
+    }
+    db_dml delete_related_attribute_instances {
+        delete from imsld_attribute_instances where run_id=:run_id
+    }
+    db_dml delete_related_status_user {
+        delete from imsld_status_user where run_id=:run_id
+    }
+    db_dml delete_related_notification_history {
+        delete from imsld_notifications_history where run_id=:run_id
+    }
+
+    db_dml delete_run {delete from imsld_runs where run_id=:run_id}
+}
+
+ad_proc -public imsld::delete_cr_item {
+    -item_id:required
+    -only_revisions:boolean
+} {
+    <p>Delete an item in cr_items if created by imsld</p>
+    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+} {
+#we must search for dependencies before aplying content::item::delete
+    set related_imsld_item_list [db_list_of_lists get_related_imsld_items {
+        select cri.content_type, 
+               crr.revision_id,
+               aot.table_name,
+               aot.id_column
+        from cr_items cri,
+             cr_revisions crr,
+             acs_object_types aot
+        where cri.item_id=:item_id
+              and crr.item_id=cri.item_id
+              and aot.object_type=cri.content_type
+    }]
+    
+    foreach related_item $related_imsld_item_list {
+            #delete all item_types
+        db_dml delete_imsld_type "delete 
+                                  from [lindex $related_item 2] 
+                                  where [lindex $related_item 3] = [lindex $related_item 1]"
+        content::revision::delete -revision_id [lindex $related_item 1]
+    }
+
+    set relations_list [db_list get_acs_relations {
+        select rel_id from acs_rels where object_id_one=:item_id or object_id_two=:item_id
+    }]
+    foreach relation $relations_list {
+        relation_remove $relation
+    }
+        
+    if {!$only_revisions_p} {
+         content::item::delete -item_id $item_id   
+    }
+    
+
+        
+}
+
+
+ad_proc -public imsld::drop_imsld_package {
+    -object_id:required
+} {
+    <p>Drop an imsld package</p>
+    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+} {
+    #get related runs and drop them
+    set run_id_list [db_list get_run_id_list {
+                     select ir.run_id 
+                     from acs_objects ao,
+                          cr_items crr, 
+                          cr_revisions crev,
+                          imsld_runs ir 
+                     where ao.context_id=:object_id
+                          and crr.content_type='imsld_imsld' 
+                          and crr.item_id=ao.object_id 
+                          and crev.item_id=crr.item_id 
+                          and ir.imsld_id=crev.revision_id
+    } ]
+    
+    foreach run_id $run_id_list {
+        imsld::delete_run -run_id $run_id
+    }
+    
+    set related_objects_list  [db_list get_related_objects {select object_id as related_object_id
+                                                      from acs_objects
+                                                      where context_id=:object_id
+                                                            and object_type='content_item'
+                                                       }]
+        foreach related_item $related_objects_list {        
+            imsld::delete_cr_item -item_id $related_item -only_revisions
+        }
+        #to avoid conflicts, we first remove all revisions and then we remove the items themselves
+        foreach related_item $related_objects_list {        
+            imsld::delete_cr_item -item_id $related_item
+        }
 }
 
 ad_proc -public imsld::grant_permissions {

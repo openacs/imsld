@@ -27,6 +27,8 @@
             <callback type="after-install"  proc="imsld::apm_callback::after_install"/>
             <callback type="after-upgrade"  proc="imsld::install::after_upgrade"/>
             <callback type="before-uninstall"  proc="imsld::apm_callback::before_uninstall"/>
+            <callback type="before-uninstantiate"  proc="imsld::apm_callback::before_uninstantiate"/>
+            <callback type="before-unmount"  proc="imsld::apm_callback::before_unmount"/>
         </callbacks>
         <parameters>
         <!-- No version parameters -->

@@ -19,7 +19,7 @@ drop table imsld_components cascade;
  
 drop table imsld_roles cascade;
 
-drop table imsld_activity_descs;
+drop table imsld_activity_descs cascade;
 
 drop table imsld_learning_activities cascade;
 
@@ -53,4 +53,11 @@ drop table imsld_on_completion cascade;
 
 drop table imsld_classes cascade;
 
+drop table imsld_as_la_rels cascade; 
+drop table imsld_as_sa_rels cascade; 
+drop table imsld_as_as_rels cascade;
+
 drop table imsld_res_files_rel cascade;
+
+drop table imsld_role_group_ext;
+drop table imsld_run_users_group_ext;
