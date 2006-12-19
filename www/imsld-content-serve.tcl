@@ -717,8 +717,7 @@ set file_url "[apm_package_url_from_id $fs_package_id]view/${folder_path}"
 set head_node [$dom_root selectNodes {//*[local-name()='head']}]
 if {![llength [$head_node selectNodes {/*[local-name()='base']}]]} {
     set base_node [$dom_doc createElement "base"]
-    set base_prefix [ns_conn url]
-    regexp (.*)/ $base_prefix base_prefix
+    set base_prefix [ns_conn location]
     $base_node setAttribute href "$base_prefix/$file_url/"
     $head_node appendChild $base_node
 }
