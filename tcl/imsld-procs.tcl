@@ -3553,6 +3553,13 @@ ad_proc -public imsld::grant_forum_permissions {
                                  from imsld_cp_resourcesi 
                                  where item_id=:resource_item_id
                                  }
+#first, revoke all permissions
+        permission::revoke -party_id $user_id -object_id $forum_id  -privilege "write"
+        permission::revoke -party_id $user_id -object_id $forum_id  -privilege "create"
+        permission::revoke -party_id $user_id -object_id $forum_id  -privilege "admin"
+        permission::revoke -party_id $user_id -object_id $forum_id  -privilege "forum_moderate"
+
+
     #get the user active role
     db_1row get_active_role {
                             select iruns.active_role_id as active_role
@@ -3565,34 +3572,45 @@ ad_proc -public imsld::grant_forum_permissions {
                                   and ar.rel_type='imsld_run_users_group_rel' 
                                   and ar.rel_id=iruns.rel_id
     }
-    
+
 #get the permissions related to that role
-    if {[db_0or1row is_manager {select ics.manager_id 
+    set manager_in_forum 0
+    if {[db_0or1row is_manager {select iri.role_id as manager_role_id
                                 from imsld_conference_services ics,
-                                     acs_rels ar
+                                     acs_rels ar,
+                                     imsld_rolesi iri
                                 where ar.rel_type='imsld_item_res_rel'
                                       and ar.object_id_two=:resource_item_id
                                       and ics.imsld_item_id=ar.object_id_one
-                                      and ics.manager_id=:active_role}]
+                                      and iri.item_id=ics.manager_id
+                                      }]
     } {
-        permission::grant -party_id $user_id -object_id $forum_id  -privilege "read"
-        permission::grant -party_id $user_id -object_id $forum_id  -privilege "create"
-        permission::grant -party_id $user_id -object_id $forum_id  -privilege "admin"
+        set manager_in_forum 1
+        if {[string equal $manager_role_id $active_role ]} {
+            permission::grant -party_id $user_id -object_id $forum_id  -privilege "admin"
+        }
     }
 
 #moderator
     if {[db_0or1row is_moderator {select ics.moderator_id 
                                 from imsld_conference_services ics, 
-                                     acs_rels ar
+                                     acs_rels ar,
+                                     imsld_rolesi iri
                                 where ics.imsld_item_id=ar.object_id_one
                                       and ar.rel_type='imsld_item_res_rel'
                                       and ar.object_id_two=:resource_item_id
-                                      and ics.moderator_id=:active_role}]
+                                      and iri.item_id=ics.moderator_id
+                                      and iri.role_id=:active_role}]
     } {
+        if {[string equal $manager_in_forum "0"]} {
+             permission::grant -party_id $user_id -object_id $forum_id  -privilege "write" 
+             set manager_in_forum 1
+        }
+
         permission::grant -party_id $user_id -object_id $forum_id  -privilege "read"
-        permission::grant -party_id $user_id -object_id $forum_id  -privilege "create"
-        permission::grant -party_id $user_id -object_id $forum_id  -privilege "admin"
-        permission::grant -party_id $user_id -object_id $forum_id  -privilege "forum_moderate"
+        db_foreach get_existing_messages { select message_id from forums_messages where forum_id=:forum_id } {
+            permission::grant -party_id $user_id -object_id $message_id -privilege "forum_moderate"
+        }
 
     }
 
@@ -3612,6 +3630,14 @@ ad_proc -public imsld::grant_forum_permissions {
     } {
         permission::grant -party_id $user_id -object_id $forum_id  -privilege "read"
         permission::grant -party_id $user_id -object_id $forum_id  -privilege "create"
+        if {[string equal $manager_in_forum "0"]} {
+             permission::grant -party_id $user_id -object_id $forum_id  -privilege "admin" 
+             set manager_in_forum 1
+        }
+
+        db_foreach get_existing_messages { select message_id from forums_messages where forum_id=:forum_id } {
+            permission::grant -party_id $user_id -object_id $message_id -privilege "write"
+        }
     }
 
 

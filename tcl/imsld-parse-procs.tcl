@@ -1568,6 +1568,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_object {
 
 ad_proc -public imsld::parse::parse_and_create_forum { 
     -name
+    -is_moderated:boolean
 } {
     Create a forum with the given name.
 
@@ -1578,10 +1579,16 @@ ad_proc -public imsld::parse::parse_and_create_forum {
     set forums_package_id [site_node_apm_integration::get_child_package_id \
                                -package_id [dotlrn_community::get_package_id $community_id] \
                                -package_key "forums"]
-    set acs_object_id [forum::new -name $name -package_id $forums_package_id]
+    if {$is_moderated_p} {
+        set acs_object_id [forum::new -name $name -package_id $forums_package_id -posting_policy "moderated"]   
+    } else { 
+        set acs_object_id [forum::new -name $name -package_id $forums_package_id]   
+    }
+
     #revoke read permissions until first usage
     if {[info exist acs_object_id]} {
         permission::set_not_inherit -object_id $acs_object_id
+
         set party_id [db_list get_allowed_parties {}]
         foreach parti $party_id {
             permission::revoke -party_id $parti -object_id $acs_object_id -privilege "read"
@@ -1748,7 +1755,16 @@ ad_proc -public imsld::parse::parse_and_create_service {
                             -parent_id $parent_id]
         
         if { [string eq $conference_type "asynchronous"] } {
+
+        set moderator_list [$conference selectNodes "*\[local-name()='moderator'\]"]
+        if { [llength $moderator_list] } {
+            set acs_object_id [imsld::parse::parse_and_create_forum -name $title -is_moderated]            
+        
+        } else {
             set acs_object_id [imsld::parse::parse_and_create_forum -name $title]            
+        }
+            
+
             set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
                                  -identifier "forumresource-$service_id" \
                                  -type "forum" \
