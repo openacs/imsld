@@ -1,5 +1,5 @@
 <master>
-  <property name="title">titulin</property>
-  <property name="context">contextin</property>
+  <property name="title">@page_title@</property>
+  <property name="context">@context@</property>
 
 @warnings;noquote@

@@ -534,10 +534,10 @@
 		<querytext>
         
         select 1
-        from acs_rels 
-        where object_id_one = :role_id
-        and object_id_two = :activity_id
-        and rel_type = 'imsld_run_time_activities_rel'
+        from imsld_runtime_activities_rels
+        where role_id = :role_id
+        and activity_id = :activity_id
+        and run_id = :run_id
     
 		</querytext>
 	</fullquery>
@@ -1169,15 +1169,13 @@
                 cpr.item_id as resource_item_id,
                 cpr.type as resource_type
                 from imsld_cp_resourcesi cpr, imsld_itemsi ii,
-                acs_rels ar, imsld_res_files_rels map
+                acs_rels ar
                 where ar.object_id_one = ii.item_id
                 and ar.object_id_two = cpr.item_id
                 and content_revision__is_live(cpr.resource_id) = 't'
                 and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      or ii.imsld_item_id = :imsld_item_id)
-                and ar.rel_id = map.rel_id
-                and map.displayable_p = 't'
 
          </querytext>
 	</fullquery>
@@ -1496,6 +1494,7 @@
 		<querytext>
 
         select identifier,
+        resource_id,
         type as resource_type,
         title as resource_title,
         acs_object_id
@@ -2047,10 +2046,10 @@
 	<fullquery name="imsld::generate_runtime_assigned_activities_tree.runtime_activities">
 		<querytext>
 
-        select ar.object_id_two as activity_id
-        from acs_rels ar
-        where ar.object_id_one = :user_role_id
-        and ar.rel_type = 'imsld_run_time_activities_rel'
+        select activity_id
+        from imsld_runtime_activities_rels
+        where role_id = :user_role_id
+        and run_id = :run_id
                         
 		</querytext>
 	</fullquery>
@@ -2516,6 +2515,7 @@
                 where related_id = :resource_id
                 and status = 'finished'
                 and run_id = :run_id
+                and user_id = :user_id
 		</querytext>
 	</fullquery>
 

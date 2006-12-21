@@ -9,6 +9,7 @@ ad_library {
 }
 
 namespace eval imsld {}
+namespace eval imsld::map {}
 
 ad_proc -public imsld::safe_url_name { 
     -name:required
@@ -59,6 +60,34 @@ ad_proc -public imsld::object_type_image_path {
         }
     }
     return $image_path
+} 
+
+ad_proc -public imsld::map::role_to_activity { 
+    -run_id
+    -activity_id
+    -role_id
+} { 
+    @param run_id
+    @param activity_id
+    @param role_id
+    
+    @return The rel_id created
+} {
+    if { [db_0or1row existing_rel {
+        select rel_id
+        from imsld_runtime_activities_rels
+        where run_id = :run_id
+        and activity_id = :activity_id
+        and role_id = :role_id
+    }] } {
+        return $rel_id
+    }
+    
+    set rel_id [db_nextval acs_object_id_seq]
+    db_dml insert_mapping {
+        insert into imsld_runtime_activities_rels (rel_id, run_id, activity_id, role_id)
+        select imsld_rar_seq.nextval, :run_id, :activity_id, :role_id from dual
+    }
 } 
 
 ad_proc -public imsld::get_role_part_from_activity {
@@ -750,7 +779,11 @@ ad_proc -public imsld::do_notification {
     # add the activity to the rel imsld_run_time_activities_rel
     if { ![string eq "" $activity_id] && ![db_0or1row already_mapped { *SQL* }] } {
         # map the activity to the role
-        relation_add imsld_run_time_activities_rel $role_id $activity_id
+        # NOTE: this mappnig couldn't be done using acs_rels becuase we could map more than once the same activity with the same role,
+        # with differnet context info (run_id), but that's not taken into account when creating the acs rel even tough if when creating the rel 
+        # we indicate that the rel info is stored in other table....
+
+        imsld::map::role_to_activity -run_id $run_id -activity_id $activity_id -role_id $role_id
     }
     # send a notification (email) to each user in the role
     foreach recipient_user_id [imsld::roles::get_users_in_role -role_id $role_id -run_id $run_id] {
@@ -1641,8 +1674,8 @@ ad_proc -public imsld::process_service_as_ul {
                 imsld::process_resource_as_ul -resource_item_id $resource_item_id \
                     -run_id $run_id \
                     -dom_node $dom_node \
-                    -dom_doc $dom_doc
-
+                    -dom_doc $dom_doc \
+                    -li_mode
                 # replace the image with the conference name
                 set img_nodes [$dom_node selectNodes {.//img}]
                 foreach img_node $img_nodes {
@@ -1655,40 +1688,41 @@ ad_proc -public imsld::process_service_as_ul {
                 ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
             }
         }
-
         send-mail {
             # FIX ME: Currently only one send-mail-data is supported
             set resource_item_list [list]
 
             db_1row get_send_mail_info { *SQL* }
-
             set send_mail_node_li [$dom_doc createElement li]
             set a_node [$dom_doc createElement a]
-            
-            $a_node setAttribute href "[export_vars -base "[dotlrn_community::get_community_url [dotlrn_community::get_community_id]]imsld/imsld-sendmail" {{send_mail_id $sendmail_id} {run_id $run_id}}]"
+            $a_node setAttribute href [export_vars -base "[dotlrn_community::get_community_url [dotlrn_community::get_community_id]]imsld/imsld-sendmail" {{send_mail_id $sendmail_id} {run_id $run_id}}]            
             set service_title [$dom_doc createTextNode "$send_mail_title"]
             $a_node setAttribute target "content"
             $a_node appendChild $service_title
             $send_mail_node_li appendChild $a_node
             $dom_node appendChild $send_mail_node_li
         }
-        
         monitor {
             set resource_item_list [list]
+            set imsld_package_id [site_node_apm_integration::get_child_package_id \
+                                      -package_id [dotlrn_community::get_package_id [dotlrn_community::get_community_id]] \
+                                      -package_key "[imsld::package_key]"]
             db_1row monitor_service_info { *SQL* }
             db_foreach monitor_associated_items { *SQL* } {
-                lappend resource_item_list $resource_item_id
-            }
 
-            set monitor_node_li [$dom_doc createElement li]
-            set a_node [$dom_doc createElement a]
-            
-            $a_node setAttribute href "[export_vars -base "[dotlrn_community::get_community_url [dotlrn_community::get_community_id]]imsld/monitor-frame" { monitor_id run_id }]"
-            set service_title [$dom_doc createTextNode "$monitor_service_title"]
-            $a_node setAttribute target "content"
-            $a_node appendChild $service_title
-            $monitor_node_li appendChild $a_node
-            $dom_node appendChild $monitor_node_li
+                lappend resource_item_list $resource_item_id
+                set monitor_node_li [$dom_doc createElement li]
+                set a_node [$dom_doc createElement a]
+                set file_url [export_vars -base "[dotlrn_community::get_community_url [dotlrn_community::get_community_id]]imsld/monitor-frame" { monitor_id }]
+                $a_node setAttribute href [export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]
+                $a_node setAttribute target "content"
+                set service_title [$dom_doc createTextNode "$monitor_service_title"]
+                $a_node appendChild $service_title
+                $monitor_node_li appendChild $a_node
+                $dom_node appendChild $monitor_node_li
+            } if_no_rows {
+                ns_log debug "No monitor info"
+            }
         }
 
         default {
@@ -1816,9 +1850,9 @@ ad_proc -public imsld::process_environment_as_ul {
     foreach nested_environment_item_id [db_list nested_environment { *SQL* }] {
         set one_nested_environment_list [imsld::process_environment_as_ul -environment_item_id $nested_environment_item_id \
                                              -run_id $run_id \
-                                            -resource_mode $resource_mode \
-                                            -dom_node $environment_node \
-                                            -dom_doc $dom_doc]
+                                             -resource_mode $resource_mode \
+                                             -dom_node $environment_node \
+                                             -dom_doc $dom_doc]
         # the title is stored in [lindex $one_nested_environment_list 0], but is not returned for displaying porpouses
         set nested_environment_list [concat $nested_environment_list \
                                          [lindex $one_nested_environment_list 1] \
@@ -1934,7 +1968,7 @@ ad_proc -public imsld::process_prerequisite_as_ul {
             set one_prerequisite_ul [imsld::process_resource_as_ul -resource_item_id $resource_item_id \
                                          -run_id $run_id \
                                          -dom_doc $dom_doc \
-                                         -dom_node $dom_node]
+                                         -dom_node $dom_node
         } if_no_rows {
             ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
         }
@@ -2055,10 +2089,11 @@ ad_proc -public imsld::process_resource_as_ul {
             set parent_id [lindex $file_list 3]
             # get the fs file path
             set folder_path [db_exec_plsql get_folder_path { *SQL* }]
-            set fs_file_url [db_1row get_fs_file_url { *SQL* }]
+            db_1row get_fs_file_url { *SQL* }
+            set fs_file_url $file_url
             set file_url "imsld-content-serve"
             set a_node [$dom_doc createElement a]
-            $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id resource_id $resource_id}]"
+            $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
             set img_node [$dom_doc createElement img]
             $img_node setAttribute src "[imsld::object_type_image_path -object_type file-storage]"
             $img_node setAttribute border "0"
@@ -2312,7 +2347,6 @@ ad_proc -public imsld::process_learning_activity_as_ul {
     @option resource_mode default f
     @param dom_node
     @param dom_doc
-
     
     @return The list (activity_name, list of associated urls, using tdom) of the activity in the IMS-LD.
 } {
@@ -2765,6 +2799,7 @@ ad_proc -public imsld::generate_activities_tree {
         and ar.object_id_two = :user_id
         and iruge.run_id = :run_id
     }]
+
     # get the referenced role parts
     foreach role_part_list [db_list_of_lists referenced_role_parts { *SQL* }] {
         set type [lindex $role_part_list 0]
@@ -3364,7 +3399,7 @@ ad_proc -public imsld::get_activity_from_resource {
                 select serv.environment_id as environment_item_id
                 from imsld_conference_servicesi ecs,
                 imsld_servicesi serv
-                where ecs.item_id = :object_id_one
+                where ecs.imsld_item_id = :object_id_one
                 and ecs.service_id = serv.item_id
             }] } {
                 set activities_list [concat $activities_list [imsld::get_activity_from_environment -environment_item_id $environment_item_id]]
@@ -3416,8 +3451,6 @@ ad_proc -public imsld::finish_resource {
 
     @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
 } {
-
-
     #look for the asociated activities
     set activities_list [imsld::get_activity_from_resource -resource_id $resource_id]
     # process each activity
@@ -3469,7 +3502,7 @@ ad_proc -public imsld::finish_resource {
                     select 1 
                     from imsld_status_user stat, imsld_cp_resourcesi icr
                     where icr.item_id = :res_id
-                    and icr.resource_id = stat.completed_id
+                    and icr.resource_id = stat.related_id
                     and user_id = :user_id
                     and run_id = :run_id
                     and status = 'finished'
@@ -3791,4 +3824,4 @@ ad_proc -public imsld::grant_permissions {
    }
 }
 ad_register_proc GET /finish-component-element* imsld::finish_component_element
-ad_register_proc POST /finish-component-elementx* imsld::finish_component_element
+ad_register_proc POST /finish-component-element* imsld::finish_component_element

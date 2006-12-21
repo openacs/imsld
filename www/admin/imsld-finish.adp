@@ -1,24 +1,25 @@
 <master>
 
 <if @warning_flag@ not nil>
-<p><b>Some warnings has been found</b></p>
+<p><b>#imsld.lt_Some_warnings_has_bee#</b></p>
     <ul>
     @warnings;noquote@
     </ul>
 </if>
 
 <if @error_flag@ not nil>
-<p><b>Some errors has been found</b></p>
+<p><b>#imsld.lt_Some_errors_has_been_#</b></p>
     <ul>@errors;noquote@</ul>
-    <a href="@back@">Go back</a>
+    <a href="@back@">#imsld.Go_back#</a>
     </if>
 <else>
 
 <hr>
-<p>Are all the students asigned to the proper roles? If you confirm now, no more changes will be acepted later.</p>
+<p>#imsld.lt_Are_all_the_students_#</p>
 
-<p>If you are not sure that everything is OK, please <a href="@back@">go back</a></p>
-<p>Otherwise, if everthing is OK and you are sure, please <a href="@confirm@">Confirm</a>.</p>
+<p>#imsld.lt_If_you_are_not_sure_t# <a href="@back@">#imsld.go_back#</a></p>
+<p>#imsld.lt_Otherwise_if_everthin# <a href="@confirm@">#imsld.Confirm#</a>.</p>
 </else>
+
 
 

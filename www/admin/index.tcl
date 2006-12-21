@@ -146,7 +146,7 @@ db_multirow -extend { manage delete_template image_path image_alt image_title } 
             set image_alt "[_ imsld.active]"
             set image_title "[_ imsld.active]"
             set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/active.png"
-            set manage "<a href=\"[export_vars -base "imsld-view-roles" { run_id }]\">[_ imsld.View_members]</a>" 
+            set manage "<a href=\"[export_vars -base "imsld-view-roles" { run_id }]\">[_ imsld.View_members]</a> | <a href=\"[export_vars -base "monitor/" { run_id }]\">[_ imsld.Monitor]</a>" 
         }
         waiting {
             set image_alt "[_ imsld.waiting]"
@@ -159,7 +159,7 @@ db_multirow -extend { manage delete_template image_path image_alt image_title } 
             set image_alt "[_ imsld.stopped]"
             set image_title "[_ imsld.stopped]"
             set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
-            set manage "<a href=\"[export_vars -base "imsld-view-roles" { run_id }]\">[_ imsld.View_members]</a>" 
+            set manage "<a href=\"[export_vars -base "imsld-view-roles" { run_id }]\">[_ imsld.View_members]</a> | <a href=\"[export_vars -base "monitor/" { run_id }]\">[_ imsld.Monitor]</a>" 
         }
     }    
 }

@@ -1,7 +1,7 @@
 
   <property name="title">@page_title;noquote@</property>
   <property name="context">@context;noquote@</property>
-  <p><strong>Select a role to send the email</strong></p>
+  <p><strong>#imsld.lt_Select_a_role_to_send#</strong></p>
   <ul>
         <multiple name="all_email_data">
             <li>
@@ -10,3 +10,4 @@
             <br>
         </multiple>
   </ul>
+

@@ -12,6 +12,7 @@ set context ""
 set community_id [dotlrn_community::get_community_id]
 set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
 set user_id [ad_conn user_id]
+set community_url [dotlrn_community::get_community_url $community_id]
 
 db_1row imslds_in_class {
     select imsld.item_id as imsld_item_id,
@@ -127,9 +128,9 @@ if { $user_role_id == -1 } {
     # runtime generated activities (notifications, level C)
     if { [db_string generated_acitivties_p {
         select count(*)
-        from acs_rels
-        where object_id_one = :current_role_id
-        and rel_type = 'imsld_run_time_activities_rel'
+        from imsld_runtime_activities_rels
+        where role_id = :current_role_id
+        and run_id = :run_id
     } -default 0] > 0 } {
         dom createDocument ul aux_doc
         set aux_dom_root [$aux_doc documentElement]

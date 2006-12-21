@@ -34,4 +34,4 @@ foreach user_id $users_list {
 }
 
 
-ad_returnredirect ..
+ad_returnredirect .

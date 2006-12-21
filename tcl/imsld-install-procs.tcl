@@ -552,14 +552,6 @@ ad_proc -public imsld::install::init_rels {
     rel_types::new imsld_send_mail_serv_data_rel "Send Mail Service - Email Data" "Send Mail Service - Email Datas" \
         content_item 0 {} \
         content_item 0 {}
-
-    # Level C, notifications: Runtime assigned activities
-    # Notifications may set to TRUE the visibility attribute of ANY activity for a given role, 
-    # and by any we mean that the activity does not have to be assigned to a role part associated with that role. 
-    # Therefore we crate this rel type where we map the role with the runtime assigned activities 
-    rel_types::new imsld_run_time_activities_rel "Role - Activity" "Role - Activities" \
-        content_revision 0 {} \
-        content_revision 0 {}
 }
 
 ad_proc -public imsld::install::after_upgrade {
@@ -590,16 +582,7 @@ ad_proc -public imsld::install::after_upgrade {
                     content_item 0 {} \
                     content_item 0 {}
                 
-                # Level C, notifications: Runtime assigned activities
-                # Notifications may set to TRUE the visibility attribute of ANY activity for a given role, 
-                # and by any we mean that the activity does not have to be assigned to a role part associated with that role. 
-                # Therefore we crate this rel type where we map the role with the runtime assigned activities 
-                rel_types::new imsld_run_time_activities_rel "Role - Activity" "Role - Activities" \
-                    content_revision 0 {} \
-                    content_revision 0 {}
-                
                 # special case: add the new attributes, new rel and migrate the existing data
-
                 content::type::attribute::new -content_type imsld_send_mail_data -attribute_name email_property_id -datatype number -pretty_name "#imsld.lt_Email_Propery_Identif#" -column_spec "integer"
                 content::type::attribute::new -content_type imsld_send_mail_data -attribute_name username_property_id -datatype number -pretty_name "#imsld.lt_Username_Property_Ide#" -column_spec "integer"
 
@@ -684,7 +667,6 @@ ad_proc -public imsld::uninstall::delete_rels {
     imsld::rel_type_delete -rel_type imsld_on_comp_notif_rel
     imsld::rel_type_delete -rel_type imsld_notif_email_rel
     imsld::rel_type_delete -rel_type imsld_send_mail_serv_data_rel
-    imsld::rel_type_delete -rel_type imsld_run_time_activities_rel
 }
 
 ad_proc -public imsld::uninstall::delete_ext_rels {  

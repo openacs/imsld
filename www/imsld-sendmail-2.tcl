@@ -9,13 +9,13 @@ set users_list [imsld::roles::get_mail_recipients -role_destination_ref $role_re
 set users_list [lindex $users_list 0]
 
 if {[string eq $recipients all-in-role]} {
-    #todos los miembros del role: calcula destinatarios, redirige y punto
+    #all the role members: get the receipients, redirects and that's it
 
     
     ad_returnredirect [export_vars -base ../spam {{recipients:multiple $users_list} {referer one-community-admin}}]
     ad_script_abort
 } else {
-    #se puede seleccionar los miembros. hay que hacer un template::list
+    #chosse among members the receiptients. use a template::list
     set page_title "Role members"
     set context {}
     set bulk_actions "{Compose mail} {../spam} {Send mail to selected members}"

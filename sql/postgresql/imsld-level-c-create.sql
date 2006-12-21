@@ -44,3 +44,24 @@ create table imsld_notifications_history (
 comment on table imsld_notifications_history is '
 Table used to keep track of the notifications';
 
+create sequence t_imsld_rar_seq;
+create view imsld_rar_seq as
+select nextval('t_imsld_rar_seq') as nextval;
+
+create table imsld_runtime_activities_rels (
+    rel_id      integer
+                constraint imsld_rar_rels_pk
+                primary key,
+    run_id      integer
+                constraint imsld_rar_run_fk
+                references imsld_runs,
+    role_id     integer
+                constraint imsld_rar_role_fk
+                references cr_revisions,
+    activity_id integer
+                constraint imsld_rar_act_fk
+                references cr_revisions
+);
+
+comment on table imsld_runtime_activities_rels is '
+This table stores the relationships between run time assigned activities and roles.';
