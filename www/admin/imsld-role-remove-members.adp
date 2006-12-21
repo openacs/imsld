@@ -1,3 +1,0 @@
-<master>
-
-@user_id@
