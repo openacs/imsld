@@ -562,7 +562,7 @@ ad_proc -public imsld::install::after_upgrade {
         -from_version_name $from_version_name \
         -to_version_name $to_version_name \
         -spec {
-            0.01d 1.0d {
+            0.1d 1.0d {
                 ### IMS-LD LEVEL C
                 
                 # notifications

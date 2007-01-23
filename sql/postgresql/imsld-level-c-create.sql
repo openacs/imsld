@@ -65,3 +65,4 @@ create table imsld_runtime_activities_rels (
 
 comment on table imsld_runtime_activities_rels is '
 This table stores the relationships between run time assigned activities and roles.';
+
