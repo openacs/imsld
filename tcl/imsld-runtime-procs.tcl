@@ -330,7 +330,7 @@ ad_proc -public imsld::runtime::isvisible::show_hide {
     {-user_id ""}
     -action:required
 } {
-    mark a isvisible as showh. NOTE: not recursively
+    mark an isvisible as shown. NOTE: not recursively
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     if { [string eq $action "show"] } {
@@ -408,8 +408,8 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
 
     db_1row context_info {
         select isa.structure_id,
-        isa.item as structure_item_id
-        from imsld_runs ir, imsld_componentsi comp, imsld_activity_structuresi isa, imsld_imsldsi
+        isa.item_id as structure_item_id
+        from imsld_runs ir, imsld_componentsi comp, imsld_activity_structuresi isa, imsld_imsldsi ii
         where ir.run_id = :run_id
         and ir.imsld_id = ii.imsld_id
         and ii.item_id = comp.imsld_id
@@ -425,51 +425,53 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
         where ar.object_id_one = :structure_item_id
         and ar.object_id_two = ii.item_id
     } {
-        imsld::runtime::isvisible::show -run_id $run_id -identifier $ii_identifier -action $action  -user_id $user_id
+        imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $ii_identifier -action $action  -user_id $user_id
     }
 
     # 2. show the learning activities
     db_foreach learning_activity {
         select la.item_id as activity_item_id,
         la.identifier as la_identifier
-        from imsld_learning_activitiesi, acs_rels ar
+        from imsld_learning_activitiesi la, acs_rels ar
         where ar.object_id_one = :structure_item_id
         and ar.object_id_two = la.item_id
     } {
-        imsld::runtime::isvisible::show -run_id $run_id -identifier $la_identifier -action $action -user_id $user_id
+        imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $la_identifier -action $action -user_id $user_id
     }
 
     # 3. show the support activities
     db_foreach support_activity {
         select sa.item_id as activity_item_id,
         sa.identifier as sa_identifier
-        from imsld_support_activitiesi, acs_rels ar
+        from imsld_support_activitiesi sa, acs_rels ar
         where ar.object_id_one = :structure_item_id
         and ar.object_id_two = sa.item_id
     } {
-        imsld::runtime::isvisible::show -run_id $run_id -identifier $sa_identifier -action $action -user_id $user_id
+        imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $sa_identifier -action $action -user_id $user_id
     }
 
     # 4. show the activity structures
+    # according to the spec, the activity structures don't have any isvisible attribute, but we have found some example imsmanifests
+    # which use it...
     db_foreach structure {
         select ias.item_id as structure_item_id,
         ias.identifier as structure_identifier
-        from imsld_activity_structuresi, acs_rels ar
+        from imsld_activity_structuresi ias, acs_rels ar
         where ar.object_id_one = :structure_item_id
         and ar.object_id_two = ias.item_id
     } {
-        imsld::runtime::isvisible::show -run_id $run_id -identifier $structure_identifier -action $action -user_id $user_id
+        imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $structure_identifier -action $action -user_id $user_id
     }
 
     # 5. show the environments
-    db_foreach structure {
+    db_foreach environment {
         select env.item_id as env_item_id,
         env.identifier as env_identifier
-        from imsld_environmentsi, acs_rels ar
+        from imsld_environmentsi env, acs_rels ar
         where ar.object_id_one = :structure_item_id
         and ar.object_id_two = env.item_id
     } {
-        imsld::runtime::isvisible::show -run_id $run_id -identifier $structure_identifier -action $action -user_id $user_id
+        imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $env_identifier -action $action -user_id $user_id
     }
     
 }
