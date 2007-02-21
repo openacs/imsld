@@ -57,10 +57,13 @@ ad_proc -public imsld::condition::execute {
         } else {
             foreach elseNode $elseNodes {
                 #an else node may contain an expression or another if_then_else
-                if { [string eq [ [$elseNode selectNodes {*[position()=1] } ] localName] "if" ] } {
-                    imsld::condition::execute -run_id $run_id -condition $elseNode -user_id $user_id
-                } else {
-                    imsld::statement::execute -run_id $run_id -statement [$elseNode childNodes] -user_id $user_id
+
+                if {[$elseNode hasChildNodes]} {
+                    if { [string eq [ [$elseNode selectNodes {*[position()=1] } ] localName] "if" ] } {
+                        imsld::condition::execute -run_id $run_id -condition $elseNode -user_id $user_id
+                    } else {
+                        imsld::statement::execute -run_id $run_id -statement [$elseNode childNodes] -user_id $user_id
+                    }
                 }
             }
         }
