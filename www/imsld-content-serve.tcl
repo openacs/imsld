@@ -657,7 +657,6 @@ set class_nodes [$dom_root selectNodes {//*[@class]}]
 foreach class_node $class_nodes {
     # get requested info
     set class_name_list [split [$class_node getAttribute class] " "]
-
     foreach class_name $class_name_list {
         # get class info
         if { [db_0or1row class_info {

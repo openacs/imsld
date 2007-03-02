@@ -175,15 +175,27 @@ ad_proc -public imsld::runtime::property::property_value_set {
                                                                  and ar.object_id_two = ici.item_id
         }]
         #property conditions
-        foreach condition_id $conditions_list {
-            set condition_xml [db_string get_xml_piece {
-                                                        select condition_xml
-                                                        from imsld_conditions
-                                                        where condition_id=:condition_id
-            }]
-            dom parse $condition_xml document
-            $document documentElement condition_node
-            imsld::condition::execute -run_id $run_id -condition $condition_node
+        db_foreach user_in_run { 
+            select gmm.member_id 
+            from group_member_map gmm,
+            imsld_run_users_group_ext iruge, 
+            acs_rels ar1 
+            where iruge.run_id=:run_id
+            and ar1.object_id_two=iruge.group_id 
+            and ar1.object_id_one=gmm.group_id 
+            group by member_id
+
+        } {
+            foreach condition_id $conditions_list {
+                set condition_xml [db_string get_xml_piece {
+                                                            select condition_xml
+                                                            from imsld_conditions
+                                                            where condition_id=:condition_id
+                }]
+                dom parse $condition_xml document
+                $document documentElement condition_node
+                imsld::condition::execute -run_id $run_id -user_id $member_id -condition $condition_node
+            }
         }
 
         # when-condition-true:

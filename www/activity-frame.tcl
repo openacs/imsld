@@ -129,9 +129,7 @@ if { !$roles_template_p } {
         set resources_list [concat $resources_list [concat $prerequisites_list $objectives_list]]
         imsld::grant_permissions -resources_activities_list $resources_list -user_id $user_id -run_id $run_id
     }
-
     set activities [$dom_root asXML] 
-
 } else {
     # a user has been selected to be supported
     # get the associated resource of the support activity

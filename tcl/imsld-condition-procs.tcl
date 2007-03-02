@@ -41,11 +41,9 @@ ad_proc -public imsld::condition::execute {
     -user_id
 } {
 } {
-
     if {![info exist user_id]} {
 	    set user_id [ad_conn user_id] 
     }
-
     set ifNodes [$condition selectNodes {*[local-name()='if']}]
     set thenNodes [$condition selectNodes {*[local-name()='then']}]
     set elseNodes [$condition selectNodes {*[local-name()='else']}]
@@ -57,7 +55,7 @@ ad_proc -public imsld::condition::execute {
         } else {
             foreach elseNode $elseNodes {
                 #an else node may contain an expression or another if_then_else
-
+#prevent for empty else nodes
                 if {[$elseNode hasChildNodes]} {
                     if { [string eq [ [$elseNode selectNodes {*[position()=1] } ] localName] "if" ] } {
                         imsld::condition::execute -run_id $run_id -condition $elseNode -user_id $user_id
@@ -515,7 +513,7 @@ ad_proc -public imsld::expression::eval {
                 return $return_value
             }
             {not} { 
-                return [expr ![imsld::expression::eval -run_id $run_id -expression [$expressionNode childNodes]]] 
+                return [expr ![imsld::expression::eval -run_id $run_id  -user_id $user_id -expression [$expressionNode childNodes]]] 
             }
             {current-datetime} { return [clock format [clock seconds] -format "%Y-%m-%dT%H:%M:%S"] -gmt 1 }
             {datetime-activity-started} {
@@ -542,26 +540,26 @@ ad_proc -public imsld::expression::eval {
             }
             {less-than} {
                 set childs [$expressionNode childNodes]
-                set propertyvalue0 [imsld::expression::eval -run_id $run_id -expression [lindex $childs 0]]
-                set propertyvalue1 [imsld::expression::eval -run_id $run_id -expression [lindex $childs 1]]
+                set propertyvalue0 [imsld::expression::eval -run_id $run_id  -user_id $user_id -expression [lindex $childs 0]]
+                set propertyvalue1 [imsld::expression::eval -run_id $run_id  -user_id $user_id -expression [lindex $childs 1]]
                 return [expr {$propertyvalue0 < $propertyvalue1}]
             }
             {greater-than} {
                 set childs [$expressionNode childNodes]
-                set propertyvalue0 [imsld::expression::eval -run_id $run_id -expression [lindex $childs 0]]
-                set propertyvalue1 [imsld::expression::eval -run_id $run_id -expression [lindex $childs 1]]
+                set propertyvalue0 [imsld::expression::eval -run_id $run_id  -user_id $user_id -expression [lindex $childs 0]]
+                set propertyvalue1 [imsld::expression::eval -run_id $run_id  -user_id $user_id -expression [lindex $childs 1]]
                 return [expr {$propertyvalue0 > $propertyvalue1}]
             }
             {divide} {
                 set childs [$expressionNode childNodes]
-                return [expr {[imsld::expression::eval -run_id $run_id -expression [lindex $childs 0]] / [imsld::expression::eval -run_id $run_id -expression [lindex $childs 1]]}]
+                return [expr {[imsld::expression::eval -run_id $run_id -expression [lindex $childs 0]] / [imsld::expression::eval -run_id $run_id  -user_id $user_id -expression [lindex $childs 1]]}]
             }
             {multiply} {
                 set childs [$expressionNode childNodes]
                 set returnvalue 1
                 set count 0
                 foreach child $childs {
-                    set returnvalue [expr {$returnvalue * [imsld::expression::eval -run_id $run_id -expression $child]}]
+                    set returnvalue [expr {$returnvalue * [imsld::expression::eval -run_id $run_id  -user_id $user_id -expression $child]}]
                     incr count
                 }
                 set returnvalue [expr { [string eq 0 $count] ? 0 : $returnvalue }]
@@ -569,13 +567,13 @@ ad_proc -public imsld::expression::eval {
             }
             {substract} {
                 set childs [$expressionNode childNodes]
-                return [expr {[imsld::expression::eval -run_id $run_id -expression [lindex $childs 0]] - [imsld::expression::eval -run_id $run_id -expression [lindex $childs 1]]}]
+                return [expr {[imsld::expression::eval -run_id $run_id -expression [lindex $childs 0]] - [imsld::expression::eval -run_id $run_id  -user_id $user_id -expression [lindex $childs 1]]}]
             }
             {sum} {
                 set childs [$expressionNode childNodes]
                 set returnvalue 0
                 foreach child $childs {
-                    set returnvalue [expr {$returnvalue + [imsld::expression::eval -run_id $run_id -expression $child]}]
+                    set returnvalue [expr {$returnvalue + [imsld::expression::eval -run_id $run_id  -user_id $user_id -expression $child]}]
                 }
                 return $returnvalue
             }
@@ -583,7 +581,7 @@ ad_proc -public imsld::expression::eval {
                 set childs [$expressionNode childNodes]
                 set returnvalue 0
                 foreach child $childs {
-                    set returnvalue [expr {$returnvalue || [imsld::expression::eval -run_id $run_id -expression $child]}]
+                    set returnvalue [expr {$returnvalue || [imsld::expression::eval -run_id $run_id  -user_id $user_id -expression $child]}]
                 }
                 return $returnvalue
             }
@@ -591,20 +589,20 @@ ad_proc -public imsld::expression::eval {
                 set childs [$expressionNode childNodes]
                 set returnvalue 1
                 foreach child $childs {
-                    set returnvalue [expr {$returnvalue && [imsld::expression::eval -run_id $run_id -expression $child]}]
+                    set returnvalue [expr {$returnvalue && [imsld::expression::eval -user_id $user_id -run_id $run_id -expression $child]}]
                 }
                 return $returnvalue
             }
             {is-not} {
                 set childs [$expressionNode childNodes]
-                set propertyvalue0 [imsld::expression::eval -run_id $run_id -expression [lindex $childs 0]]
-                set propertyvalue1 [imsld::expression::eval -run_id $run_id -expression [lindex $childs 1]]
+                set propertyvalue0 [imsld::expression::eval -run_id $run_id  -user_id $user_id -expression [lindex $childs 0]]
+                set propertyvalue1 [imsld::expression::eval -run_id $run_id  -user_id $user_id -expression [lindex $childs 1]]
                 return [expr {$propertyvalue0 != $propertyvalue1}]
             }
             {is} {
                 set childs [$expressionNode childNodes]
-                set propertyvalue0 [imsld::expression::eval -run_id $run_id -expression [lindex $childs 0]]
-                set propertyvalue1 [imsld::expression::eval -run_id $run_id -expression [lindex $childs 1]]
+                set propertyvalue0 [imsld::expression::eval -run_id $run_id -user_id $user_id -expression [lindex $childs 0]]
+                set propertyvalue1 [imsld::expression::eval -run_id $run_id -user_id $user_id -expression [lindex $childs 1]]
                 return [expr {$propertyvalue0 == $propertyvalue1}]
             }
             {is-member-of-role} {
@@ -728,7 +726,7 @@ ad_proc -public imsld::statement::execute {
                     {ELEMENT_NODE} {
                         switch -- [$propertyvalueChildNode localName] {
                             {calculate} {
-                                set propertyValue [imsld::expression::eval -run_id $run_id -expression [$propertyvalueChildNode childNodes]]
+                                set propertyValue [imsld::expression::eval -run_id $run_id  -user_id $user_id -expression [$propertyvalueChildNode childNodes]]
                             }
                             {property-ref} {
                                 set propertyValue [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyvalueChildNode getAttribute {ref}]]
