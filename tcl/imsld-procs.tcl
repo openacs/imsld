@@ -379,6 +379,63 @@ ad_proc -public imsld::sweep_expired_activities {
     }
 }
 
+ad_proc -public imsld::global_folder_id { 
+    {-community_id ""}
+} {
+    Returns the global folder id where the global properties of type file are stored.
+    This folder is a subfolder of the dotlrn root folder and there must be only one in the .LRN installation
+} {
+    set community_id [expr { [empty_string_p $community_id] ? [dotlrn_community::get_community_id] : $community_id }]
+
+    set dotlrn_root_folder_id [dotlrn_fs::get_dotlrn_root_folder_id]
+    set global_folder_id [content::item::get_id -item_path "imsld_global_folder" -root_folder_id $dotlrn_root_folder_id -resolve_index f] 
+
+    if { [empty_string_p $global_folder_id] } {
+        db_transaction {
+            set folder_name "imsld_global_folder"
+
+            # checks for write permission on the parent folder
+	    ad_require_permission $dotlrn_root_folder_id write
+
+            # create the root cr dir
+
+            set global_folder_id [imsld::cr::folder_new -parent_id $dotlrn_root_folder_id -folder_name $folder_name -folder_label "IMS-LD"]
+
+            # PERMISSIONS FOR FILE-STORAGE
+
+            # Before we go about anything else, lets just set permissions straight.
+            # Disable folder permissions inheritance
+            permission::toggle_inherit -object_id $global_folder_id
+            
+            # Set read permissions for community/class dotlrn_member_rel
+            set party_id_member [dotlrn_community::get_rel_segment_id -community_id $community_id -rel_type dotlrn_member_rel]
+            permission::grant -party_id $party_id_member -object_id $global_folder_id -privilege read
+            
+            # Set read permissions for community/class dotlrn_admin_rel
+            set party_id_admin [dotlrn_community::get_rel_segment_id -community_id $community_id -rel_type dotlrn_admin_rel]
+            permission::grant -party_id $party_id_admin -object_id $global_folder_id -privilege read
+            
+            # Set read permissions for *all* other professors  within .LRN
+            # (so they can see the content)
+            set party_id_professor [dotlrn::user::type::get_segment_id -type professor]
+            permission::grant -party_id $party_id_professor -object_id $global_folder_id -privilege read
+            
+            # Set read permissions for *all* other admins within .LRN
+            # (so they can see the content)
+            set party_id_admins [dotlrn::user::type::get_segment_id -type admin]
+            permission::grant -party_id $party_id_admins -object_id $global_folder_id -privilege read
+        }
+        # register content types
+        content::folder::register_content_type -folder_id $global_folder_id \
+            -content_type imsld_property_instance
+
+        # allow subfolders inside our parent folder
+        content::folder::register_content_type -folder_id $global_folder_id \
+            -content_type content_folder
+    }
+    return $global_folder_id
+}
+
 ad_proc -public imsld::mark_role_part_finished { 
     -role_part_id:required
     -imsld_id:required
@@ -652,7 +709,7 @@ ad_proc -public imsld::item_revision_new {
     @option user_id 
     @option creation_ip 
     @option creation_date 
-    @option edit Are we editing the manifest?
+    @option edit Are we editing the item?
     @param parent_id Identifier of the parent folder
 } {
 
@@ -660,14 +717,12 @@ ad_proc -public imsld::item_revision_new {
     set creation_ip [expr { [string eq "" $creation_ip] ? [ad_conn peeraddr] : $creation_ip }]
     set creation_date [expr { [string eq "" $creation_date] ? [dt_sysdate] : $creation_date }]
     set package_id [expr { [string eq "" $package_id] ? [ad_conn package_id] : $package_id }]
-    set item_id [expr { [string eq "" $item_id] ? [db_nextval "acs_object_id_seq"] : $item_id }]
-
-    set item_name "${item_id}_content_type"
     
-    if { !$edit_p } {
-        # create
+    if { [string eq $item_id ""] } {
+        # create the item
+	set item_id [db_nextval "acs_object_id_seq"]
         set item_id [content::item::new -item_id $item_id \
-                         -name $item_name \
+                         -name "${item_id}_content_type" \
                          -content_type $content_type \
                          -parent_id $parent_id \
                          -creation_user $user_id \
@@ -2082,6 +2137,7 @@ ad_proc -public imsld::process_resource_as_ul {
         }
 
     } elseif { [string eq $resource_type "imsldcontent"] } {
+
         foreach file_list [db_list_of_lists associated_files { *SQL* }] {
             set imsld_file_id [lindex $file_list 0]
             set file_name [lindex $file_list 1]
@@ -2115,7 +2171,7 @@ ad_proc -public imsld::process_resource_as_ul {
             set file_name [lindex $file_list 1]
             set item_id [lindex $file_list 2]
             set parent_id [lindex $file_list 3]
-           # get the fs file path
+	    # get the fs file path
             set folder_path [db_exec_plsql get_folder_path { *SQL* }]
             set fs_file_url [db_1row get_fs_file_url { *SQL* }]
             set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
@@ -3433,7 +3489,7 @@ ad_proc -public imsld::get_resource_from_object {
     -object_id
 } {
     <p>Get the object which is asociated with an acs_object_id</p>
-    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+    @author Luis de la Fuente ValentÃ­n (lfuente@it.uc3m.es)
 } {
     db_1row get_resource {
         select resource_id
@@ -3449,7 +3505,7 @@ ad_proc -public imsld::finish_resource {
 } {
     <p>Tag a resource as finished into an activity. Return true if success, false otherwise</p>
 
-    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+    @author Luis de la Fuente ValentÃ­n (lfuente@it.uc3m.es)
 } {
     #look for the asociated activities
     set activities_list [imsld::get_activity_from_resource -resource_id $resource_id]
@@ -3545,7 +3601,7 @@ ad_proc -public imsld::get_property_item_id {
 } {
     <p>Get the property_id from the property_identifier in a imsld_id</p>
 
-    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+    @author Luis de la Fuente ValentÃ­n (lfuente@it.uc3m.es)
 } {
 
 if {[info exist play_id] & ![info exist imsld_id]} {
@@ -3579,7 +3635,7 @@ ad_proc -public imsld::grant_forum_permissions {
 } {
     <p>Grant permissions to forums related to an imsld package</p>
 
-    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+    @author Luis de la Fuente ValentÃ­n (lfuente@it.uc3m.es)
 } {
     #get the forum object_id
     db_1row get_forum_object_id {select acs_object_id as forum_id
@@ -3696,11 +3752,13 @@ ad_proc -public imsld::delete_run {
     -run_id:required
 } {
     <p>Delete a run with all dependencies</p>
-    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+    @author Luis de la Fuente ValentÃ­n (lfuente@it.uc3m.es)
 } {
 
     db_dml delete_related_property_instances {
-        delete from imsld_property_instances where run_id=:run_id
+        select content_revision__delete(instance_id)
+	from imsld_property_instances 
+	where run_id=:run_id
     }
     db_dml delete_related_attribute_instances {
         delete from imsld_attribute_instances where run_id=:run_id
@@ -3720,7 +3778,7 @@ ad_proc -public imsld::delete_cr_item {
     -only_revisions:boolean
 } {
     <p>Delete an item in cr_items if created by imsld</p>
-    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+    @author Luis de la Fuente ValentÃ­n (lfuente@it.uc3m.es)
 } {
 #we must search for dependencies before aplying content::item::delete
     set related_imsld_item_list [db_list_of_lists get_related_imsld_items {
@@ -3764,7 +3822,7 @@ ad_proc -public imsld::drop_imsld_package {
     -object_id:required
 } {
     <p>Drop an imsld package</p>
-    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+    @author Luis de la Fuente ValentÃ­n (lfuente@it.uc3m.es)
 } {
     #get related runs and drop them
     set run_id_list [db_list get_run_id_list {
@@ -3805,7 +3863,7 @@ ad_proc -public imsld::grant_permissions {
 } {
     <p>Grant permissions to imsld files related to imsld resources</p>
 
-    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+    @author Luis de la Fuente ValentÃ­n (lfuente@it.uc3m.es)
 } {
         foreach the_resource_id [join $resources_activities_list] {
 

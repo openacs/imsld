@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<message_catalog package_key="imsld" package_version="1.0d" locale="en_US" charset="ISO-8859-1">
+<message_catalog package_key="imsld" package_version="1.1d" locale="en_US" charset="ISO-8859-1">
 
+  <msg key="1_Local_Properties">1. Local Properties</msg>
+  <msg key="5_Global_Properties">5. Global Properties</msg>
   <msg key="_Assigned_users">| Assigned users:</msg>
   <msg key="_Component">Component Identifier</msg>
   <msg key="_Creation_Date">| Creation Date:</msg>
@@ -27,6 +29,7 @@
   <msg key="Conference_Type">Conference Type</msg>
   <msg key="Confirm">Confirm</msg>
   <msg key="Confirm_New_IMS-LD">Confirm: New IMS-LD</msg>
+  <msg key="Confirm_this_changes">Confirm these changes</msg>
   <msg key="Context_info">Context info</msg>
   <msg key="Create_New">Create New?</msg>
   <msg key="create_new_run">create new run</msg>
@@ -34,13 +37,16 @@
   <msg key="Creating_new_IMS-LD">Creating new IMS-LD...</msg>
   <msg key="Creation_Date">Creation Date</msg>
   <msg key="Data_Type">Data Type</msg>
+  <msg key="Delete">Delete</msg>
   <msg key="Delete_IMS_LD">Delete IMS LD</msg>
   <msg key="Delete_Run">Delete Run</msg>
   <msg key="Deleted">Deleted</msg>
+  <msg key="Delte">Delte</msg>
   <msg key="Descendant">Descendant roles:</msg>
   <msg key="Description">Description</msg>
   <msg key="Else_Identifier">Else Identifier</msg>
   <msg key="Email">Email</msg>
+  <msg key="Empty_property_value">Empty property value</msg>
   <msg key="Error_parsing_file">Error parsing file</msg>
   <msg key="Existing_href">Existing href</msg>
   <msg key="Exit">Exit UoL</msg>
@@ -56,6 +62,7 @@
   <msg key="go_back">go back</msg>
   <msg key="Group_members">Group members</msg>
   <msg key="Groups">Groups in role</msg>
+  <msg key="Hide">Hide</msg>
   <msg key="Href">Href</msg>
   <msg key="Identifier">Identifier</msg>
   <msg key="Identifier_Reference">Identifier Reference</msg>
@@ -130,11 +137,14 @@
   <msg key="li_activity_title_li">&lt;li&gt; %activity_title% &lt;/li&gt;</msg>
   <msg key="li_file_name_li">&lt;li&gt; %file_name% &lt;/li&gt;</msg>
   <msg key="li_impozzible_li">&lt;li&gt; impozzible &lt;/li&gt;</msg>
+  <msg key="lt_2_Local-personal_Prop">2. Local-personal Properties</msg>
+  <msg key="lt_3_Local-role_Properti">3. Local-role Properties</msg>
+  <msg key="lt_4_Global-personal_Pro">4. Global-personal Properties</msg>
   <msg key="lt_Activity_Description_">Activity Description Identifier</msg>
   <msg key="lt_Activity_Structure_Id">Activity Structure Identifier</msg>
   <msg key="lt_Are_all_the_students_">Are all the students asigned to the proper roles? If you confirm now, no more changes will be acepted later.</msg>
   <msg key="lt_br___________________">&lt;br&gt;\ 
-                              Go to the activity &lt;a href=\&quot;%activity_url%\&quot;&gt;%activity_title%&lt;/a&gt; (of the UoL &lt;a href=\&quot;%imsld_url%\&quot;&gt;%imsld_title%&lt;/a&gt; in the community &lt;a href=\&quot;$community_url\&quot;&gt;%community_name%&lt;/a&gt;) for further details.</msg>
+                              Go to the activity &lt;a href=\&quot;%activity_url%\&quot;&gt;%activity_title%&lt;/a&gt; (of the UoL &lt;a href=\&quot;%imsld_url%\&quot;&gt;%imsld_title%&lt;/a&gt; in the community &lt;a href=\&quot;%community_url%\&quot;&gt;%community_name%&lt;/a&gt;) for further details.</msg>
   <msg key="lt_br____________________1">&lt;br&gt;\
                               Go to the UoL &lt;a href=\&quot;%imsld_url%\&quot;&gt;$imsld_title&lt;/a&gt; (in the &lt;a href=\&quot;%community_url%\&quot;&gt;%community_name%&lt;/a&gt; community) for further details.</msg>
   <msg key="lt_br__Warnings_ul_warni">&lt;br /&gt; Warnings: &lt;ul&gt; %warnings% &lt;/ul&gt;</msg>
@@ -156,6 +166,7 @@
   <msg key="lt_Expression_Identifier">Expression Identifier</msg>
   <msg key="lt_Expression_One_Identi">Expression One Identifier</msg>
   <msg key="lt_Expression_Two_Identi">Expression Two Identifer</msg>
+  <msg key="lt_Finish_role_managemen">Finish role management</msg>
   <msg key="lt_h2Uploading_new_IMS_L">&lt;h2&gt;Uploading new IMS Learning Design&lt;/h2&gt;</msg>
   <msg key="lt_If_you_are_not_sure_t">If you are not sure that everything is OK, please</msg>
   <msg key="lt_Import_IMS-LD_ZIP_Fil">Import IMS-LD ZIP File</msg>
@@ -179,6 +190,8 @@
   <msg key="lt_IMS-LD_On_Completions">IMS-LD On Completions</msg>
   <msg key="lt_IMS-LD_Property_Group">IMS-LD Property Group</msg>
   <msg key="lt_IMS-LD_Property_Group_1">IMS-LD Property Groups</msg>
+  <msg key="lt_IMS-LD_Property_Insta">IMS-LD Property Instance</msg>
+  <msg key="lt_IMS-LD_Property_Insta_1">IMS-LD Property Instances</msg>
   <msg key="lt_IMS-LD_Property_Value">IMS-LD Property Value</msg>
   <msg key="lt_IMS-LD_Property_Value_1">IMS-LD Property Values</msg>
   <msg key="lt_IMS-LD_Sendmail_Servi">IMS-LD Sendmail Service</msg>
@@ -190,6 +203,7 @@
   <msg key="lt_Index_search_service_">Index search service not supported</msg>
   <msg key="lt_Information_given_but">Information given but no item associated to it for the role %role_title%</msg>
   <msg key="lt_Information_given_but_1">Information given but no item associated to it for the activity structure %identifier%</msg>
+  <msg key="lt_Invalid_property_type">Invalid property type.</msg>
   <msg key="lt_Invalid_type_type_in_">Invalid type %type% in imsld::next_activity</msg>
   <msg key="lt_learning-desing_tag_n">learning-desing tag not found in imsmanifest.xml</msg>
   <msg key="lt_Learning_Activity_Ide">Learning Activity Identifier</msg>
@@ -219,6 +233,7 @@
   <msg key="lt_Parent_Role_Identifie">Parent Role Identifier</msg>
   <msg key="lt_Please_confirm_the_in">Please, confirm the information you are uploading</msg>
   <msg key="lt_Please_submit_a_value">Please submit a value</msg>
+  <msg key="lt_Property_String_Ident">Property String Identifier</msg>
   <msg key="lt_Referenced_activity_s">Referenced activity structure %ref% does not exist</msg>
   <msg key="lt_Referenced_activity_s_1">Referenced activity structure (%activity_structure_ref_ref%) in role part %identifier% does not exist.</msg>
   <msg key="lt_Referenced_activity_s_2">Referenced activity structure %activity_structure_ref_ref% in role part %identifier% is actually an support activity.</msg>
@@ -243,6 +258,7 @@
   <msg key="lt_Referenced_support_ac_4">Referenced support activity (%support_activity_ref_ref%) in role part %identifie% does not exist.</msg>
   <msg key="lt_Referenced_support_ac_5">Referenced support activity %support_activity_ref_ref% in role part %identifier% is actually an activity structure.</msg>
   <msg key="lt_Referenced_support_ac_6">Referenced support activity %support_activity_ref% in role part %identifier% is actually a learning activity.</msg>
+  <msg key="lt_Referenced_support_ac_7">Referenced support activity (%support_activity_ref%) from notification does not exist</msg>
   <msg key="lt_Select_a_role_to_send">Select a role to send the email</msg>
   <msg key="lt_Select_parent_for_the">Select parent for the new instance</msg>
   <msg key="lt_Select_role_to_suppor">Select role to support...</msg>
@@ -251,6 +267,7 @@
   <msg key="lt_Some_errors_has_been_">Some errors has been found</msg>
   <msg key="lt_Some_warnings_has_bee">Some warnings has been found</msg>
   <msg key="lt_Sorry_that_service_ty">Sorry, that service type (%service_type%) hasn't been implemented yet.</msg>
+  <msg key="lt_Sorry_your_browser_do">Sorry, your browser doesn't support JavaScript (or it is disabled). This is needed to access the course.</msg>
   <msg key="lt_Support_Activity_Iden">Support Activity Identifier</msg>
   <msg key="lt_The_decimal_digits_ca">The decimal digits can't be more than %restriction_value%</msg>
   <msg key="lt_The_file_filex_href_w">The file %filex_href% was not created, it wasn't found in the manifest</msg>
@@ -285,6 +302,8 @@
   <msg key="lt_There_is_no_role_with_6">There is no role with the identifier %ref% (referenced by: locrole property)</msg>
   <msg key="lt_There_is_no_role_with_7">There is no role with the identifier %ref% (referenced from a monitor service)</msg>
   <msg key="lt_There_is_no_role_with_8">There is no role with the identifier %role_ref% (referenced from within an expression)</msg>
+  <msg key="lt_There_must_be_at_leas">There must be at least a role ref or a self reference in the monitor service.</msg>
+  <msg key="lt_There_must_be_at_leas_1">There must be at least one support activity or one learning activity.</msg>
   <msg key="lt_There_must_be_exactly">There must be exactly %multiplicity% %element_name% and there are %tree_length%. This is not supported, sorry.</msg>
   <msg key="lt_There_was_an_error_cr">There was an error creating the folder. Aborting.</msg>
   <msg key="lt_There_was_an_error_cr_1">There was an error creating the tmp_dir to unzip the file.</msg>
@@ -298,6 +317,8 @@
   <msg key="lt_Time_Property_Identif">Time Property Identifier</msg>
   <msg key="lt_ul_Completed_Activiti">&lt;ul&gt; Completed Activities &lt;br /&gt;</msg>
   <msg key="lt_ul_Next_Activity_acti">&lt;ul&gt; %first_or_next% Activity: %activity_name%</msg>
+  <msg key="lt_Unestable_state_reach">Unestable state reached</msg>
+  <msg key="lt_Unstable_state_reache">Unstable state reached when evaluating conditions (An infinite loop was detected). Please, contact the administrator and review the conditions of the UoL.</msg>
   <msg key="lt_Uploading_and_process">Uploading and processing your course, please wait...</msg>
   <msg key="lt_username_br__________">%username% &lt;br&gt; 
                        %sender_name% has triggered this notification. Please do not replay to this email. &lt;br&gt;&lt;br&gt; 
@@ -326,6 +347,7 @@
   <msg key="Moderator_Identifier">Moderator_Identifier</msg>
   <msg key="Monitor">Monitor</msg>
   <msg key="monitor">monitor</msg>
+  <msg key="Monitor_properties">Monitor properties</msg>
   <msg key="Monitoring">User</msg>
   <msg key="Name">Name</msg>
   <msg key="nbspnbspnbspdone">&amp;nbsp;&amp;nbsp;&amp;nbsp;done</msg>
@@ -333,6 +355,7 @@
   <msg key="No">information found in the imsmanifest.xml file. Nothing to do.</msg>
   <msg key="No_IMS_LD">No IMS LD</msg>
   <msg key="No_info_was_found">No info was found</msg>
+  <msg key="No_properties_found">No properties found.</msg>
   <msg key="None">None</msg>
   <msg key="None_please_select">None, please select</msg>
   <msg key="Not_defined">Not defined</msg>
@@ -355,6 +378,8 @@
   <msg key="Property_Identifier">Property Identifier</msg>
   <msg key="Property_Instance">Property Instance</msg>
   <msg key="Property_Instances">Property Instances</msg>
+  <msg key="Property_Name">Property Name</msg>
+  <msg key="Property_Value">Property Value</msg>
   <msg key="Property_Value_Ref">Property Value Ref.</msg>
   <msg key="Recipients">Recipients</msg>
   <msg key="Reference_Identifier">Reference Identifier</msg>
@@ -364,6 +389,7 @@
   <msg key="Role_Identifier">Role Identifier</msg>
   <msg key="Role_Type">Role Type</msg>
   <msg key="Roles_in_Run">Role(s) in Run</msg>
+  <msg key="Run_Identifier">Run Identifier</msg>
   <msg key="Run_IMS-LD_Name">Run (IMS-LD) Name</msg>
   <msg key="Runinfo_Name">Run(UoL) Name:</msg>
   <msg key="Runs">Runs (IMS-LD instances)</msg>
@@ -378,6 +404,7 @@
   <msg key="Sequence_Used">Sequence Used</msg>
   <msg key="Service_Identifier">Service Identifier</msg>
   <msg key="Service_Type">Service Type</msg>
+  <msg key="Show">Show</msg>
   <msg key="since">since</msg>
   <msg key="Sort">Sort</msg>
   <msg key="Sort_Order">Sort Order</msg>
@@ -407,6 +434,7 @@
   <msg key="User_Choice">User Choice?</msg>
   <msg key="Value">Value</msg>
   <msg key="Version">Version</msg>
+  <msg key="view_file">view file</msg>
   <msg key="View_members">View members</msg>
   <msg key="waiting">waiting</msg>
   <msg key="When_Condition_True">When Condition True</msg>

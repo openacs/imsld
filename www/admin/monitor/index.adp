@@ -6,12 +6,12 @@
     <title>@course_name@</title>
 </head>
 <frameset rows="%30,*">
-  <frame src="run-info?run_id=@run_id@" name="run-info">
+  <frame src="run-info?run_id=@run_id@" name="run-info" title="run-info">
   <frameset cols="30%,*">
     <frameset rows="60%,*">
-    <frame src="monitor-tree?run_id=@run_id@" name="toc">
+    <frame src="monitor-tree?run_id=@run_id@" name="toc" title="toc">
       <frame src="" name="environment">
     </frameset>  
-    <frame src="" name="content">
+    <frame src="" name="content" title="content">
   </frameset>
 </html>

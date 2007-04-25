@@ -121,7 +121,7 @@ db_multirow asign_not_members get_not_users_list {}
 
 ad_form -name confirm \
         -form {
-            {submit:text(submit) {label "Confirm this changes"}}
+            {submit:text(submit) {label "[_ imsld.Confirm_this_changes]"}}
         } \
         -action imsld-role-confirm \
         -export {imsld_id run_id role group_instance members_list}

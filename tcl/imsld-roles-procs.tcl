@@ -104,14 +104,14 @@ ad_proc -public imsld::roles::get_list_of_roles {
 } {
     @param imsld_id identifier of the imsld from wich roles will be searched
 } {
-   set main_roles [db_list roles_list {}]
-   set roles_list [list]
-   foreach role $main_roles {
-       set depth [imsld::roles::get_depth -role_id $role]
-       lappend roles_list [list $role $depth]
-
-   }
-   return $roles_list
+    set main_roles [db_list roles_list {}]
+    set roles_list [list]
+    foreach role $main_roles {
+	set depth [imsld::roles::get_depth -role_id $role]
+	lappend roles_list [list $role $depth]
+	
+    }
+    return $roles_list
 }
 
 ad_proc -public imsld::roles::get_roles_names {

@@ -181,3 +181,55 @@ ad_proc -public imsld::fs::file_new {
         return 0
     }
 }
+
+ad_proc -public imsld::fs::empty_file {
+    -revision_id
+    {-string ""}
+} { 
+    Create an empty file and stores in the given revision id.
+    this is helpful for the property of type file (for instance), because when the properties are instantiated, there is no
+    file associated to them and the fs shows an error message.
+
+    @param revision_id
+    @param string Optional string that will be written into the file
+
+} {  
+    set string [expr { [string eq "" $string] ? "[_ imsld.Empty_property_value]" : "$string" }]
+    set tmpfile [ns_mktemp "/tmp/imsld_emtpyXXXXXX"]
+    set file [open $tmpfile a]
+    puts $file "$string"
+    close $file
+    regexp {[^//\\]+$} $tmpfile file_name
+
+    set mime_type "text/plain"
+    # database_p according to the file storage parameter
+    set fs_package_id [site_node_apm_integration::get_child_package_id \
+			   -package_id [dotlrn_community::get_package_id [dotlrn_community::get_community_id]] \
+			   -package_key "file-storage"]
+    set database_p [parameter::get -parameter "StoreFilesInDatabaseP" -package_id $fs_package_id]
+    set content_length [file size $tmpfile]
+    if { !$database_p } {
+	# create the new item
+	set filename [cr_create_content_file [content::revision::item_id -revision_id $revision_id] $revision_id $tmpfile]
+	db_dml set_file_content {
+	    update cr_revisions
+	    set content = :filename,
+	    mime_type = :mime_type,
+	    content_length = :content_length
+	    where revision_id = :revision_id
+	}
+    } else {
+	# create the new item
+	db_dml lob_content "
+                            update cr_revisions  
+                            set lob = [set __lob_id [db_string get_lob_id "select empty_lob()"]] 
+                            where revision_id = :revision_id" -blob_files [list $tmpfile]
+	
+	# Unfortunately, we can only calculate the file size after the lob is uploaded 
+	db_dml lob_size {
+	    update cr_revisions
+	    set content_length = :content_length
+	    where revision_id = :revision_id
+	}
+    }
+} 

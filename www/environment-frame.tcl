@@ -2,7 +2,7 @@ ad_page_contract {
 
     This is the frame that contains the associated URLs of an environment
 
-    @author Eduardo Pérez Ureta <eduardo.perez@uc3m.es>
+    @author Eduardo PÃ©rez Ureta <eduardo.perez@uc3m.es>
     @creation-date 2006-03-03
 } -query {
     activity_id:integer,notnull

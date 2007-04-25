@@ -3,7 +3,7 @@
 ad_page_contract {
     Sets the property value through a function call
 } {
-    instances_ids:array,notnull
+    instances_ids:array
     return_url
     owner_id
 } -validate {
@@ -14,17 +14,32 @@ ad_page_contract {
     }
 }
 
-foreach instance_id [array names instances_ids] {
+foreach instance_id [array names instances_ids -regexp {[^[:alpha:]]$}] {
     if { [info exists instances_ids($instance_id)] } {
         # avoiding hacks
-        set value $instances_ids($instance_id)
         db_1row instance_info_id {
-            select property_id,
-            run_id
-            from imsld_property_instances
-            where instance_id = :instance_id
+            select ins.property_id,
+            ins.run_id,
+	    prop.datatype
+            from imsld_property_instances ins,
+	    imsld_properties prop
+            where ins.instance_id = :instance_id
+	    and ins.property_id = prop.property_id
         }
-        imsld::runtime::property::property_value_set -run_id $run_id -user_id $owner_id -value $value -property_id $property_id
+	
+	if { [string eq "file" $datatype] } {
+	    imsld::runtime::property::property_value_set -run_id $run_id \
+		-user_id $owner_id \
+		-value $instances_ids($instance_id) \
+		-property_id $property_id \
+		-upload_file $instances_ids($instance_id) \
+		-tmpfile $instances_ids(${instance_id}.tmpfile)
+	} else {
+	    imsld::runtime::property::property_value_set -run_id $run_id \
+		-user_id $owner_id \
+		-value $instances_ids($instance_id) \
+		-property_id $property_id
+	}
     }
 }
 

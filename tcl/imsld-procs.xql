@@ -1537,18 +1537,20 @@
 	<fullquery name="imsld::process_resource_as_ul.associated_files">
 		<querytext>
 
-            select cpf.imsld_file_id,
+            select cr.revision_id as imsld_file_id,
             cpf.file_name,
             cpf.item_id, 
             cpf.parent_id
             from imsld_cp_filesx cpf,
-            acs_rels ar, imsld_res_files_rels map
+            acs_rels ar, imsld_res_files_rels map,
+	    cr_revisions cr
             where ar.object_id_one = :resource_item_id
             and ar.object_id_two = cpf.item_id
+	    and cpf.item_id = cr.item_id
             and ar.rel_id = map.rel_id
-            and content_revision__is_live(cpf.imsld_file_id) = 't'
+            and content_revision__is_live(cr.revision_id) = 't'
             and map.displayable_p = 't'
-                
+
 		</querytext>
 	</fullquery>
 

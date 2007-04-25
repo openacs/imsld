@@ -36,9 +36,81 @@ ad_proc -public imsld::instance::instantiate_imsld {
             relation_add imsld_run_users_group_rel $group_run_id $user_id
         }
     }
-    imsld::instance::instantiate_properties -run_id $run_id
     imsld::instance::instantiate_activity_attributes -run_id $run_id
     return $run_id
+}
+
+ad_proc -public imsld::instance::create_run_folder { 
+    -run_id:required
+    {-community_id ""}
+} {
+    set community_id [expr { [empty_string_p $community_id] ? [dotlrn_community::get_community_id] : $community_id }]
+
+    db_1row get_context_inf {
+	select org.manifest_id
+	from imsld_runs ir,
+	imsld_imslds iis,
+	imsld_cp_organizationsi org
+	where ir.run_id = :run_id
+	and ir.imsld_id = iis.imsld_id
+	and iis.organization_id = org.item_id
+    }
+    # Gets file-storage root folder_id
+    set fs_package_id [site_node_apm_integration::get_child_package_id \
+                           -package_id [dotlrn_community::get_package_id $community_id] \
+                           -package_key "file-storage"]
+    
+    set fs_root_folder_id [fs::get_root_folder -package_id $fs_package_id]
+
+    set fs_folder_id [content::item::get_id -item_path "manifest_${manifest_id}" -root_folder_id $fs_root_folder_id -resolve_index f] 
+    set run_folder_id [content::item::get_id -item_path "run_${run_id}" -root_folder_id $fs_root_folder_id -resolve_index f] 
+
+    if { [empty_string_p $run_folder_id] } {
+        db_transaction {
+            set folder_name "run_${run_id}"
+
+            # checks for write permission on the parent folder
+            if { ![empty_string_p $fs_root_folder_id] } {
+                ad_require_permission $fs_root_folder_id write
+            }
+
+            # create the root cr dir
+
+            set run_folder_id [imsld::cr::folder_new -parent_id $fs_folder_id -folder_name $folder_name -folder_label "Run-${run_id}-Folder"]
+
+            # PERMISSIONS FOR FILE-STORAGE
+
+            # Before we go about anything else, lets just set permissions straight.
+            # Disable folder permissions inheritance
+            permission::toggle_inherit -object_id $run_folder_id
+            
+            # Set read permissions for community/class dotlrn_member_rel
+            set party_id_member [dotlrn_community::get_rel_segment_id -community_id $community_id -rel_type dotlrn_member_rel]
+            permission::grant -party_id $party_id_member -object_id $run_folder_id -privilege read
+            
+            # Set read permissions for community/class dotlrn_admin_rel
+            set party_id_admin [dotlrn_community::get_rel_segment_id -community_id $community_id -rel_type dotlrn_admin_rel]
+            permission::grant -party_id $party_id_admin -object_id $run_folder_id -privilege read
+            
+            # Set read permissions for *all* other professors  within .LRN
+            # (so they can see the content)
+            set party_id_professor [dotlrn::user::type::get_segment_id -type professor]
+            permission::grant -party_id $party_id_professor -object_id $run_folder_id -privilege read
+            
+            # Set read permissions for *all* other admins within .LRN
+            # (so they can see the content)
+            set party_id_admins [dotlrn::user::type::get_segment_id -type admin]
+            permission::grant -party_id $party_id_admins -object_id $run_folder_id -privilege read
+        }
+        # register content types
+        content::folder::register_content_type -folder_id $run_folder_id \
+            -content_type imsld_property_instance
+
+        # allow subfolders inside our parent folder
+        content::folder::register_content_type -folder_id $run_folder_id \
+            -content_type content_folder
+    }
+    return $run_folder_id
 }
 
 ad_proc -public imsld::instance::instantiate_properties { 
@@ -58,32 +130,56 @@ ad_proc -public imsld::instance::instantiate_properties {
     db_1row context_info {
         select ic.item_id as component_item_id,
         ii.imsld_id,
-        rug.group_id as run_group_id
-        from imsld_componentsi ic, imsld_imsldsi ii, imsld_runs ir, imsld_run_users_group_ext rug
+	ii.item_id as imsld_item_id,
+        rug.group_id as run_group_id,
+	org.manifest_id
+        from imsld_componentsi ic, imsld_imsldsi ii, imsld_runs ir, imsld_run_users_group_ext rug,
+	imsld_cp_organizationsi org
         where ic.imsld_id = ii.item_id
         and content_revision__is_live(ii.imsld_id) = 't'
         and ii.imsld_id = ir.imsld_id
         and rug.run_id = ir.run_id
         and ir.run_id = :run_id
+	and ii.organization_id = org.item_id
     }
+
+    # before we can continue we create the folder where the properties of type file will be stored
+    set run_folder_id [imsld::instance::create_run_folder -run_id $run_id]
+    set cr_root_folder_id [imsld::cr::get_root_folder -community_id [dotlrn_community::get_community_id]]
+    set cr_folder_id [content::item::get_id -item_path "cr_manifest_${manifest_id}" -root_folder_id $cr_root_folder_id -resolve_index f] 
+    set global_folder_id [imsld::global_folder_id]
 
     # 1. loc-property: We create only one entry in the imsld_property_instances table for each property of this type
     db_foreach loc_property {
         select property_id,
         identifier,
         datatype,
-        initial_value
-        from imsld_properties
+        initial_value,
+	title,
+	item_id as property_item_id
+        from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'loc'
     } {
         if { ![db_0or1row loc_already_instantiated_p {
             select 1
-            from imsld_property_instances
+            from imsld_property_instancesi
             where property_id = :property_id
-            and run_id = :run_id
+	    and identifier = :identifier
+	    and run_id = :run_id
         }] } {
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list property_id $property_id] [list identifier $identifier] [list party_id ""] [list run_id $run_id] [list value $initial_value]] imsld_property_instance new]
+            set instance_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
+								       [list value $initial_value] \
+								       [list identifier $identifier] \
+								       [list property_id $property_id]] \
+				 -content_type imsld_property_instance \
+				 -title $identifier \
+				 -parent_id [expr [string eq $datatype "file"] ? $run_folder_id : $cr_folder_id]]
+
+	    if { [string eq $datatype "file"] } {
+		# initialize the file to an empty one so the fs doesn't generate an error when requesting the file
+		imsld::fs::empty_file -revision_id [content::item::get_live_revision -item_id $instance_id]
+	    }
         }
     }
 
@@ -92,8 +188,10 @@ ad_proc -public imsld::instance::instantiate_properties {
         select property_id,
         identifier,
         datatype,
-        initial_value
-        from imsld_properties
+        initial_value,
+	title,
+	item_id as property_item_id
+        from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'locpers'
     }] {
@@ -101,6 +199,7 @@ ad_proc -public imsld::instance::instantiate_properties {
         set identifier [lindex $property_list 1]
         set datatype [lindex $property_list 2]
         set initial_value [lindex $property_list 3]
+        set property_item_id [lindex $property_list 4]
         db_foreach user_in_run {
             select ar.object_id_two as party_id
             from acs_rels ar
@@ -109,12 +208,24 @@ ad_proc -public imsld::instance::instantiate_properties {
         } { 
             if { ![db_0or1row locrole_already_instantiated_p {
                 select 1
-                from imsld_property_instances
+                from imsld_property_instancesi
                 where property_id = :property_id
+		and identifier = :identifier
                 and party_id = :party_id
-                and run_id = :run_id
+		and run_id = :run_id
             }] } {
-                set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list property_id $property_id] [list identifier $identifier] [list party_id $party_id] [list run_id $run_id] [list value $initial_value]] imsld_property_instance new]
+		set instance_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
+									   [list value $initial_value] \
+									   [list identifier $identifier] \
+									   [list party_id $party_id] \
+									   [list property_id $property_id]] \
+				     -content_type imsld_property_instance \
+				     -title $identifier \
+				     -parent_id [expr [string eq $datatype "file"] ? $run_folder_id : $cr_folder_id]]
+		if { [string eq $datatype "file"] } {
+		    # initialize the file to an empty one so the fs doesn't generate an error when requesting the file
+		    imsld::fs::empty_file -revision_id [content::item::get_live_revision -item_id $instance_id]
+		}
             }
         }
     }
@@ -124,8 +235,10 @@ ad_proc -public imsld::instance::instantiate_properties {
         select property_id,
         identifier,
         datatype,
-        initial_value
-        from imsld_properties
+        initial_value,
+	title,
+	item_id as property_item_id
+        from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'locrole'
     } {
@@ -140,7 +253,28 @@ ad_proc -public imsld::instance::instantiate_properties {
             and ar3.object_id_one = run_group.group_id
             and run_group.run_id = :run_id
         } { 
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list property_id $property_id] [list identifier $identifier] [list party_id $party_id] [list run_id $run_id] [list value $initial_value]] imsld_property_instance new]
+            if { ![db_0or1row locrole_already_instantiated_p {
+                select 1
+                from imsld_property_instancesi
+                where property_id = :property_id
+		and identifier = :identifier
+                and party_id = :party_id
+		and run_id = :run_id
+            }] } {
+		
+		set instance_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
+									   [list value $initial_value] \
+									   [list identifier $identifier] \
+									   [list party_id $party_id] \
+									   [list property_id $property_id]] \
+				     -content_type imsld_property_instance \
+				     -title $identifier \
+				     -parent_id [expr [string eq $datatype "file"] ? $run_folder_id : $cr_folder_id]]
+		if { [string eq $datatype "file"] } {
+		    # initialize the file to an empty one so the fs doesn't generate an error when requesting the file
+		    imsld::fs::empty_file -revision_id [content::item::get_live_revision -item_id $instance_id]
+		}
+	    }
         }
     }
 
@@ -155,8 +289,10 @@ ad_proc -public imsld::instance::instantiate_properties {
         datatype,
         initial_value,
         existing_href,
-        uri
-        from imsld_properties
+        uri,
+	title,
+	item_id as property_item_id
+        from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'globpers'
     }] {
@@ -166,6 +302,7 @@ ad_proc -public imsld::instance::instantiate_properties {
         set initial_value [lindex $property_list 3]
         set existing_href [lindex $property_list 4]
         set uri [lindex $property_list 5]
+        set property_item_id [lindex $property_list 6]
         db_foreach user_in_run {
             select ar.object_id_two as party_id
             from acs_rels ar
@@ -186,7 +323,17 @@ ad_proc -public imsld::instance::instantiate_properties {
                     set initial_value $existing_href
                 } 
                 # TODO: the property must be somehow instantiated in the given URI also
-                set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list property_id $property_id] [list identifier $identifier] [list party_id $party_id] [list run_id $run_id] [list value $initial_value]] imsld_property_instance new]
+		set instance_id [imsld::item_revision_new -attributes [list [list value $initial_value] \
+									   [list identifier $identifier] \
+									   [list party_id $party_id] \
+									   [list property_id $property_id]] \
+				     -content_type imsld_property_instance \
+				     -title $identifier \
+				     -parent_id [expr [string eq $datatype "file"] ? $global_folder_id : $cr_folder_id]]
+		if { [string eq $datatype "file"] } {
+		    # initialize the file to an empty one so the fs doesn't generate an error when requesting the file
+		    imsld::fs::empty_file -revision_id [content::item::get_live_revision -item_id $instance_id]
+		}
             }
         }
     }
@@ -199,8 +346,10 @@ ad_proc -public imsld::instance::instantiate_properties {
         datatype,
         initial_value,
         existing_href,
-        uri
-        from imsld_properties
+        uri,
+	title,
+	item_id as property_item_id
+        from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'global'
     } {
@@ -216,8 +365,16 @@ ad_proc -public imsld::instance::instantiate_properties {
                 set initial_value $existing_href
             } 
             # TODO: the property must be somehow instantiated in the given URI also
-            set instance_id [package_exec_plsql -var_list [list [list instance_id ""] [list property_id $property_id] [list identifier $identifier] [list party_id ""] [list run_id $run_id] [list value $initial_value]] imsld_property_instance new]
-        }
+	    set instance_id [imsld::item_revision_new -attributes [list [list value $initial_value] \
+								       [list identifier $identifier] \
+								       [list property_id $property_id]] \
+				 -content_type imsld_property_instance \
+				 -parent_id [expr [string eq $datatype "file"] ? $global_folder_id : $cr_folder_id]]
+	    if { [string eq $datatype "file"] } {
+		# initialize the file to an empty one so the fs doesn't generate an error when requesting the file
+		imsld::fs::empty_file -revision_id [content::item::get_live_revision -item_id $instance_id]
+	    }
+	}
     }
 
     return
@@ -358,7 +515,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
                     select 1
                     from imsld_attribute_instances
                     where owner_id = :imsld_item_id
-                    and run_id = :run_id
+		    and run_id = :run_id
                     and user_id = :user_id
                     and type = 'isvisible'
                 }] } {
@@ -525,3 +682,5 @@ ad_proc -public imsld::instance::delete_imsld_instance {
 }
 
 
+
+#  LocalWords:  type

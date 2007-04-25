@@ -553,6 +553,7 @@ ad_proc -public imsld::parse::initialize_folders {
         content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_cp_organization
         content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_cp_resource
         content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_cp_dependency
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_monitor_service
     }
 
     return [list $fs_folder_id $cr_folder_id]
@@ -960,7 +961,7 @@ ad_proc -public imsld::parse::parse_and_create_global_def {
     @param tmp_dir Temporary directory where the files were exctracted
 } {
     upvar files_struct_list files_struct_list
-    
+
     if { ![empty_string_p $global_def_node] } {
         set uri [imsld::parse::get_attribute -node $global_def_node -attr_name uri]
         set title [imsld::parse::get_title -node $global_def_node -prefix imsld]
@@ -989,9 +990,9 @@ ad_proc -public imsld::parse::parse_and_create_global_def {
                                                                   [list type $type] \
                                                                   [list datatype $datatype] \
                                                                   [list initial_value $initial_value]] \
-                            -content_type imsld_property \
-                            -title $title \
-                            -parent_id $parent_id]
+				  -content_type imsld_property \
+				  -title $title \
+				  -parent_id $parent_id]
 
     if { ![empty_string_p $global_def_node] } {
         set restrictions [$global_def_node selectNodes "*\[local-name()='restriction'\]"]
@@ -1054,6 +1055,7 @@ ad_proc -public imsld::parse::parse_and_create_property_group {
             and component_id = :component_id
         }] } {
             # there is no property with that identifier, return the error
+	    # because at this point, all the properties (not property groups) have been parsed and sotred in the db
             return [list 0 "[_ imsld.lt_There_is_no_property_]"]
         }
         relation_add imsld_gprop_prop_rel $property_group_id $property_item_id
@@ -1151,7 +1153,6 @@ ad_proc -public imsld::parse::parse_and_create_property {
         } else {
             set lp_initial_value ""
         }
-
         set property_id [imsld::item_revision_new -attributes [list [list component_id $component_id] \
                                                                       [list identifier $lp_identifier] \
                                                                       [list type loc] \
@@ -1195,13 +1196,13 @@ ad_proc -public imsld::parse::parse_and_create_property {
         }
 
         set property_id [imsld::item_revision_new -attributes [list [list component_id $component_id] \
-                                                                       [list identifier $lpp_identifier] \
-                                                                       [list type locpers] \
-                                                                       [list datatype $lpp_datatype] \
-                                                                       [list initial_value $lpp_initial_value]] \
-                                 -content_type imsld_property \
-                                 -title $lpp_title \
-                                 -parent_id $parent_id]
+								   [list identifier $lpp_identifier] \
+								   [list type locpers] \
+								   [list datatype $lpp_datatype] \
+								   [list initial_value $lpp_initial_value]] \
+			     -content_type imsld_property \
+			     -title $lpp_title \
+			     -parent_id $parent_id]
         
         set lpp_restrictions [$locpers_property selectNodes "*\[local-name()='restriction'\]"]
         foreach lpp_restriction $lpp_restrictions {
@@ -1257,9 +1258,10 @@ ad_proc -public imsld::parse::parse_and_create_property {
                                                                        [list datatype $lrp_datatype] \
                                                                        [list role_id $role_id] \
                                                                        [list initial_value $lrp_initial_value]] \
-                                 -content_type imsld_property \
-                                 -title $lrp_title \
-                                 -parent_id $parent_id]
+			     -content_type imsld_property \
+			     -title $lrp_title \
+			     -parent_id $parent_id]
+
         
         set lrp_restrictions [$locrole_property selectNodes "*\[local-name()='restriction'\]"]
         foreach lrp_restriction $lrp_restrictions {
@@ -1904,18 +1906,20 @@ ad_proc -public imsld::parse::parse_and_create_service {
 
         # monitor: role-ref
         set role_ref [$monitor_service selectNodes "*\[local-name()='role-ref'\]"]
-        imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name "role-ref (monitor service)" -equal
-        set ref [imsld::parse::get_attribute -node $role_ref -attr_name ref]
-        if { ![db_0or1row get_role_id {
-            select ir.item_id as role_id
-            from imsld_rolesi ir
-            where ir.identifier = :ref 
-            and content_revision__is_live(ir.role_id) = 't' 
-            and ir.component_id = :component_id
-        }] } {
-            # there is no role with that identifier, return the error
-            return [list 0 "[_ imsld.lt_There_is_no_role_with_7]"]
-        }
+	if { [llength $role_ref] } {
+	    imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name "role-ref (monitor service)" -equal
+	    set ref [imsld::parse::get_attribute -node $role_ref -attr_name ref]
+	    if { ![db_0or1row get_role_id {
+		select ir.item_id as role_id
+		from imsld_rolesi ir
+		where ir.identifier = :ref 
+		and content_revision__is_live(ir.role_id) = 't' 
+		and ir.component_id = :component_id
+	    }] } {
+		# there is no role with that identifier, return the error
+		return [list 0 "[_ imsld.lt_There_is_no_role_with_7]"]
+	    }
+	}
         
         # monitor: self
         set self [$monitor_service selectNodes "*\[local-name()='self'\]"]
@@ -1925,6 +1929,9 @@ ad_proc -public imsld::parse::parse_and_create_service {
         } else {
             set self_p f
         }
+	if { ![llength $role_ref] && [string eq $self "f"] } {
+	    return [list 0 "[_ imsld.lt_There_must_be_at_leas]"]
+	}
         
         set imsld_item [$monitor_service selectNodes "*\[local-name()='item'\]"]
         imsld::parse::validate_multiplicity -tree $imsld_item -multiplicity 1 -element_name "imslditem(monitor service)" -equal
@@ -3820,7 +3827,7 @@ ad_proc -public imsld::parse::parse_and_create_notification {
                     }
                 } else {
                     # error, referenced learning activity does not exist
-                    return [list 0 "<#_ Referenced support activity (%support_activity_ref%) from notification does not exist"]
+                    return [list 0 "[_ imsld.lt_Referenced_support_ac_7]"]
                 }
                 
             }
@@ -4190,7 +4197,6 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
 
         # Componets: Activities: Learning Activities
         set learning_activities [$activities selectNodes "*\[local-name()='learning-activity'\]"]
-        imsld::parse::validate_multiplicity -tree $learning_activities -multiplicity 1 -element_name learning-activities -greather_than
         
         foreach learning_activity $learning_activities {
             set la_identifier [imsld::parse::get_attribute -node $learning_activity -attr_name identifier]
@@ -4238,6 +4244,10 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                 }
             }
         }
+
+	if { ![llength imsld::parse::get_attribute] && ![llength $support_activities] } {
+	    return [list 0 "[_ imsld.lt_There_must_be_at_leas_1]"]
+	}
 
         # Components: Activities: Activity Structures
         set actvity_structures [$activities selectNodes "*\[local-name()='activity-structure'\]"]

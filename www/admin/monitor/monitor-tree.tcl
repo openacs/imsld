@@ -26,6 +26,35 @@ db_1row imslds_info {
     and run.run_id = :run_id
 } 
 
+if { [db_string count_properties {
+    select count(*)
+    from imsld_property_instances
+    where run_id = :run_id
+    or run_id is null
+}] } {
+    # there is at least one property
+    dom createDocument ul props_doc
+    set props_dom_root [$props_doc documentElement]
+    $props_dom_root setAttribute class "mktree"
+    $props_dom_root setAttribute style "white-space: nowrap;"
+    set props_title_node [$props_doc createElement li]
+    $props_title_node setAttribute class "liOpen"
+    set text [$props_doc createTextNode "[_ imsld.Monitor_properties]"] 
+    $props_title_node appendChild $text
+    $props_dom_root appendChild $props_title_node
+    
+    set properties_node [$props_doc createElement ul]
+    imsld::monitor::properties_tree -run_id $run_id \
+        -dom_node $properties_node \
+        -dom_doc $props_doc
+    
+    $props_title_node appendChild $properties_node
+    
+    set properties_tree [$props_dom_root asXML]
+} else {
+    set properties_tree ""
+}
+
 dom createDocument ul doc
 set dom_root [$doc documentElement]
 $dom_root setAttribute class "mktree"

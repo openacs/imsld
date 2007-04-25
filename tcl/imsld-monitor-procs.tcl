@@ -333,6 +333,103 @@ ad_proc -public imsld::monitor::activities_tree {
     }
 }
 
+ad_proc -public imsld::monitor::properties_tree {
+    -run_id:required
+    -dom_node
+    -dom_doc
+} {
+    @param run_id
+    @param dom_node
+    @param dom_doc
+
+    @return A list of lists of all the properties associated with the run (and the global properties)
+} {
+    db_1row imsld_info {
+        select imsld_id 
+        from imsld_runs
+        where run_id = :run_id
+    }
+
+    # 1. local properties: associated to the run
+
+    set local_node [$dom_doc createElement li]
+    $local_node setAttribute class "liOpen"
+    set a_node [$dom_doc createElement a]
+    $a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id {type "loc"}}]"
+    $a_node setAttribute target "content"
+    set text [$dom_doc createTextNode "[_ imsld.1_Local_Properties]"]
+    $a_node appendChild $text
+    $local_node appendChild $a_node
+
+    $dom_node appendChild $local_node
+
+    # 2. loc-pers properties: associated to each user in the run
+
+    set locpers_node [$dom_doc createElement li]
+    $locpers_node setAttribute class "liOpen"
+    set a_node [$dom_doc createElement a]
+    $a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id {type "locpers"}}]"
+    $a_node setAttribute target "content"
+    set text [$dom_doc createTextNode "[_ imsld.lt_2_Local-personal_Prop]"]
+    $a_node appendChild $text
+    $locpers_node appendChild $a_node
+
+    $dom_node appendChild $locpers_node
+
+    # 3. loc-role properties: associated to each role in the run
+
+    set locrole_node [$dom_doc createElement li]
+    $locrole_node setAttribute class "liClosed"
+    set text [$dom_doc createTextNode "[_ imsld.lt_3_Local-role_Properti]"]
+    $a_node appendChild $text
+    $locrole_node appendChild $text
+
+    set locrole_ul [$dom_doc createElement ul]
+
+    foreach role_id_list [imsld::roles::get_list_of_roles -imsld_id $imsld_id] {
+	set role_id [lindex $role_id_list 0]
+	set role_node [$dom_doc createElement li]
+	$role_node setAttribute class "liOpen"
+	set a_node [$dom_doc createElement a]
+	$a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id role_id {type "locrole"}}]"
+	$a_node setAttribute target "content"
+	set text [$dom_doc createTextNode "[content::item::get_title -item_id [content::revision::item_id -revision_id $role_id]]"]
+	$a_node appendChild $text
+	$role_node appendChild $a_node
+	
+	$locrole_ul appendChild $role_node
+    }
+
+    $locrole_node appendChild $locrole_ul
+    $dom_node appendChild $locrole_node
+
+    # 4. glob-pers properties: associated with the users
+
+    set globpers_node [$dom_doc createElement li]
+    $globpers_node setAttribute class "liOpen"
+    set a_node [$dom_doc createElement a]
+    $a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id {type "globpers"}}]"
+    $a_node setAttribute target "content"
+    set text [$dom_doc createTextNode "[_ imsld.lt_4_Global-personal_Pro]"]
+    $a_node appendChild $text
+    $globpers_node appendChild $a_node
+
+    $dom_node appendChild $globpers_node
+
+    # 5. global: global properties
+
+    set globpers_node [$dom_doc createElement li]
+    $globpers_node setAttribute class "liOpen"
+    set a_node [$dom_doc createElement a]
+    $a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id {type "glob"}}]"
+    $a_node setAttribute target "content"
+    set text [$dom_doc createTextNode "[_ imsld.5_Global_Properties]"]
+    $a_node appendChild $text
+    $globpers_node appendChild $a_node
+
+    $dom_node appendChild $globpers_node
+}
+
 ad_proc -public imsld::monitor::runtime_assigned_activities_tree {
     -run_id:required
     -dom_node

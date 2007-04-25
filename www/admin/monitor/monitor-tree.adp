@@ -10,6 +10,11 @@
         myform.submit()
     }
 </SCRIPT>
+<NOSCRIPT>
+<br /><br />
+#imsld.lt_Sorry_your_browser_do#
+<br /><br />
+</NOSCRIPT>
 
 <style type="text/css">
 ul {
@@ -51,6 +56,8 @@ a.button:hover  {
 </head>
 <body>
 <a href="@imsld_admin_url@"  style="display: block; position: fixed;" class="button" target="_top">#imsld.Exit#</a>
+<br />
+@properties_tree;noquote@
 @html_tree;noquote@
 @aux_html_tree;noquote@
 </body>

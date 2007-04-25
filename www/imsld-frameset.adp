@@ -7,9 +7,9 @@
 </head>
 <frameset cols="30%,*">
     <frameset rows="50%,*">
-        <frame src="imsld-tree?run_id=@run_id@" name="toc">
-        <frame src="" name="environment">
+        <frame src="imsld-tree?run_id=@run_id@" name="toc" title="toc">
+        <frame src="" name="environment" title="environment">
     </frameset>
-    <frame src="" name="content">
+    <frame src="" name="content" title="content">
 </frameset>
 </html>

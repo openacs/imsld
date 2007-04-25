@@ -11,6 +11,11 @@
         myform.submit()
     }
 </SCRIPT>
+<NOSCRIPT>
+<br /><br />
+#imsld.lt_Sorry_your_browser_do#
+<br /><br />
+</NOSCRIPT>
 
 <style type="text/css">
 ul {
@@ -97,3 +102,5 @@ for (var i = 0; i < as.length; i++) {
 </SCRIPT>
 
 </html>
+
+

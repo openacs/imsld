@@ -82,7 +82,7 @@ db_multirow -extend { delete_template create_run } imslds  get_imslds { *SQL* } 
         set delete_template "<span style=\"font-style: italic; color: red; font-size: 9pt;\">[_ imsld.Deleted]</span> <a href=[export_vars -base "index" { {set_imsld_id_live $item_id} }]>[_ imsld.Make_it_live]</a>"
         set create_run ""
     } else {
-        set delete_template "<a href=\"[export_vars -base "imsld-delete" { imsld_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\"></a>"
+        set delete_template "<a href=\"[export_vars -base "imsld-delete" { imsld_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"<\#_ Delete  #>\"></a>"
         set create_run "<a href=\"[export_vars -base "run-new" { {run_imsld_id $imsld_id} return_url }]\"> [_ imsld.create_new_run] </a>"
     }
 }
@@ -107,7 +107,7 @@ template::list::create \
             label "[_ imsld.Status]"
             orderby_asc {status asc}
             orderby_desc {status desc}
-            display_template {<img src="@imsld_runs.image_path;noquote@" alt="@imsld_runs.image_alt@" title="@imsld_runs.image_title@" border="0"></a>}
+            display_template {<img src="@imsld_runs.image_path;noquote@" alt="@imsld_runs.image_alt@" title="@imsld_runs.image_title@" border="0" alt="[_ imsld.Status]"></a>}
         }
         creation_date {
             label "[_ imsld.Creation_Date]"
@@ -135,14 +135,14 @@ set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
 
 db_multirow -extend { manage delete_template image_path image_alt image_title } imsld_runs get_runs { *SQL* } {
 
-    set delete_template "<a href=\"[export_vars -base "run-delete" { run_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\"></a>"
+    set delete_template "<a href=\"[export_vars -base "run-delete" { run_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"[_ imsld.Delte]\"></a>"
     
     switch $status {
         deleted {
             set delete_template "<span style=\"font-style: italic; color: red; font-size: 9pt;\">[_ imsld.Deleted]</span> <a href=[export_vars -base "index" { {set_run_id_live $run_id} }]>[_ imsld.Make_it_live]</a>"
         }
         active {
-            set delete_template "<a href=\"[export_vars -base "run-delete" { run_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\"></a>"
+            set delete_template "<a href=\"[export_vars -base "run-delete" { run_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"[_ imsld.Delete]\"></a>"
             set image_alt "[_ imsld.active]"
             set image_title "[_ imsld.active]"
             set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/active.png"

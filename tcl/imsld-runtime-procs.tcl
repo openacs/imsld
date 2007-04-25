@@ -18,20 +18,97 @@ namespace eval imsld::runtime::environment {}
 
 ad_proc -public imsld::runtime::property::instance_value_set {
     -instance_id
-    -value
+    {-value ""}
+    {-upload_file ""}
+    {-tmpfile ""}
 } {
-    db_dml update_instance_value { *SQL* }
+    db_1row instance_info {
+	select ins.run_id,
+	prop.component_id,
+	ins.identifier,
+	ins.party_id,
+	prop.type,
+	prop.role_id,
+	prop.existing_href,
+	prop.uri,
+	prop.datatype,
+	prop.initial_value,
+	ins.property_id,
+	ins.title,
+	ins.item_id
+	from imsld_property_instancesx ins,
+	imsld_properties prop
+	where ins.instance_id = :instance_id
+	and ins.property_id = prop.property_id
+    }
+
+    #	db_dml update_instance_value { *SQL* }
+    
+    set instance_item_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
+								    [list value $value] \
+								    [list identifier $identifier] \
+								    [list party_id $party_id] \
+								    [list property_id $property_id]] \
+			      -content_type imsld_property_instance \
+			      -title $title \
+			      -item_id $item_id]
+        
+    if { [string eq "file" $datatype] } {
+	set instance_id [content::item::get_live_revision -item_id $instance_item_id]
+	
+	# Get the filename part of the upload file
+	if { ![regexp {[^//\\]+$} $upload_file file_name] } {
+	    # no match
+	    set file_name [imsld::safe_url_name -name $upload_file]
+	}
+
+	set mime_type [cr_filename_to_mime_type -create $file_name]
+	# database_p according to the file storage parameter
+	set fs_package_id [site_node_apm_integration::get_child_package_id \
+			       -package_id [dotlrn_community::get_package_id [dotlrn_community::get_community_id]] \
+			       -package_key "file-storage"]
+	set database_p [parameter::get -parameter "StoreFilesInDatabaseP" -package_id $fs_package_id]
+	set content_length [file size $tmpfile]
+	if { !$database_p } {
+	    # create the new item
+	    set filename [cr_create_content_file $item_id $instance_id $tmpfile]
+	    db_dml set_file_content {
+		update cr_revisions
+		set content = :filename,
+		mime_type = :mime_type,
+		content_length = :content_length
+		where revision_id = :instance_id
+	    }
+	} else {
+	    # create the new item
+	    db_dml lob_content "
+                            update cr_revisions  
+                            set lob = [set __lob_id [db_string get_lob_id "select empty_lob()"]] 
+                            where revision_id = :instance_id" -blob_files [list $tmpfile]
+	    
+	    # Unfortunately, we can only calculate the file size after the lob is uploaded 
+	    db_dml lob_size {
+		update cr_revisions
+		set content_length = :content_length
+		where revision_id = :instance_id
+	    }
+	}
+    }
 }
 
 ad_proc -public imsld::runtime::property::property_value_set {
     -run_id
     -user_id
-    -value
+    {-value ""}
     {-identifier ""}
     {-property_id ""}
+    {-upload_file ""}
+    {-tmpfile ""}
 } {
     Sets a property to the given value. If some restriction is violated returns 0 and an explanation.
 } {
+    upvar recursivity_count recursivity_count
+
     # context info
     db_1row context_info {
         select ic.item_id as component_item_id,
@@ -50,7 +127,8 @@ ad_proc -public imsld::runtime::property::property_value_set {
         db_1row property_info_from_identifier {
             select type,
             property_id,
-            role_id
+            role_id,
+	    datatype
             from imsld_properties
             where component_id = :component_item_id
             and identifier = :identifier
@@ -59,82 +137,13 @@ ad_proc -public imsld::runtime::property::property_value_set {
         db_1row property_info_from_id {
             select type,
             identifier,
-            role_id
+            role_id,
+	    datatype
             from imsld_properties
             where property_id = :property_id
         }
     }
 
-    # validate against restrictions
-    set enumeration_list [list]
-    db_foreach restriction {
-        select restriction_type,
-        value as restriction_value
-        from imsld_restrictions
-        where property_id = :property_id
-    } {
-        switch $restriction_type {
-            length {
-                if { [length $value] <> $restriction_value } {
-                    return [list 0 "[_ imsld.lt_The_length_must_be_re]"]
-                }
-            }
-            minLength {
-                if { [length $value] < $restriction_value } {
-                    return [list 0 "[_ imsld.lt_The_length_must_be_gr]"]
-                }
-            }
-            maxLength {
-                if { [length $value] > $restriction_value } {
-                    return [list 0 "[_ imsld.lt_The_length_must_be_lo]"]
-                }
-            }
-            enumeration {
-                lappend enumeration_list $restriction_value
-            }
-            maxInclusive {
-                if { $value > $restriction_value } {
-                    return [list 0 "[_ imsld.lt_The_value_must_be_low]"]
-                }
-            }
-            minInclusive {
-                if {$value < $restriction_value } {
-                    return [list 0 "[_ imsld.lt_The_value_must_be_gre]"]
-                }
-            }
-            maxExclusive {
-                if { $value >= $restriction_value } {
-                    return [list 0 "[_ imsld.lt_The_value_must_be_low_1]"]
-                }
-            }
-            minExclusive {
-                if { $value <= $restriction_value } { 
-                    return [list 0 "[_ imsld.lt_The_value_must_be_gre_1]"]
-                }
-            }
-            totalDigits {
-                if { [expr int($value)] <> $restriction_value } {
-                    return [list 0 "[_ imsld.lt_The_integer_part_cant]"]
-                }
-            }
-            fractionDigits {
-                if { [expr [string length "$value"] - [string last "." "$value"] - 1] > $restriction_value } {
-                    return [list 0 "[_ imsld.lt_The_decimal_digits_ca]"]
-                }
-            }
-            pattern {
-                if { ![regexp "$restriction_value" $value] } {
-                    return [list 0 "[_ imsld.lt_The_value_value_doesn]"]
-                }
-            }
-        }
-    }
-
-    if { [llength $enumeration_list] && [lsearch -exact $enumeration_list $value] == -1 } {
-        return [list 0 "[_ imsld.lt_The_value_value_is_no]"]
-    }
-
-    
     # instance info
     set role_instance_id ""
     if { ![string eq $role_id ""] } {
@@ -150,20 +159,111 @@ ad_proc -public imsld::runtime::property::property_value_set {
     db_1row get_property_instance {
         select ins.instance_id,
         ins.value as old_value
-        from imsld_propertiesi prop,
-        imsld_property_instances ins
-        where prop.property_id = ins.property_id
+        from imsld_property_instances ins,
+	imsld_properties prop
+        where ins.property_id = prop.property_id
+	and prop.property_id = :property_id
         and ((prop.type = 'global')
              or (prop.type = 'loc' and ins.run_id = :run_id)
              or (prop.type = 'locpers' and ins.run_id = :run_id and ins.party_id = :user_id)
              or (prop.type = 'locrole' and ins.run_id = :run_id and ins.party_id = :role_instance_id)
              or (prop.type = 'globpers' and ins.party_id = :user_id))
-        and prop.property_id = :property_id
+	and content_revision__is_live(ins.instance_id) = 't'
     }
-    imsld::runtime::property::instance_value_set -instance_id $instance_id -value $value
 
-    # recursive call only if the property value has changed
+    if { ![string eq $datatype "file"] } {
+	# validate against restrictions
+	set enumeration_list [list]
+	db_foreach restriction {
+	    select restriction_type,
+	    value as restriction_value
+	    from imsld_restrictions
+	    where property_id = :property_id
+	} {
+	    switch $restriction_type {
+		length {
+		    if { [length $value] <> $restriction_value } {
+			return [list 0 "[_ imsld.lt_The_length_must_be_re]"]
+		    }
+		}
+		minLength {
+		    if { [length $value] < $restriction_value } {
+			return [list 0 "[_ imsld.lt_The_length_must_be_gr]"]
+		    }
+		}
+		maxLength {
+		    if { [length $value] > $restriction_value } {
+			return [list 0 "[_ imsld.lt_The_length_must_be_lo]"]
+		    }
+		}
+		enumeration {
+		    lappend enumeration_list $restriction_value
+		}
+		maxInclusive {
+		    if { $value > $restriction_value } {
+			return [list 0 "[_ imsld.lt_The_value_must_be_low]"]
+		    }
+		}
+		minInclusive {
+		    if {$value < $restriction_value } {
+			return [list 0 "[_ imsld.lt_The_value_must_be_gre]"]
+		    }
+		}
+		maxExclusive {
+		    if { $value >= $restriction_value } {
+			return [list 0 "[_ imsld.lt_The_value_must_be_low_1]"]
+		    }
+		}
+		minExclusive {
+		    if { $value <= $restriction_value } { 
+			return [list 0 "[_ imsld.lt_The_value_must_be_gre_1]"]
+		    }
+		}
+		totalDigits {
+		    if { [expr int($value)] <> $restriction_value } {
+			return [list 0 "[_ imsld.lt_The_integer_part_cant]"]
+		    }
+		}
+		fractionDigits {
+		    if { [expr [string length "$value"] - [string last "." "$value"] - 1] > $restriction_value } {
+			return [list 0 "[_ imsld.lt_The_decimal_digits_ca]"]
+		    }
+		}
+		pattern {
+		    if { ![regexp "$restriction_value" $value] } {
+			return [list 0 "[_ imsld.lt_The_value_value_doesn]"]
+		    }
+		}
+	    }
+	}
+	
+	if { [llength $enumeration_list] && [lsearch -exact $enumeration_list $value] == -1 } {
+	    return [list 0 "[_ imsld.lt_The_value_value_is_no]"]
+	}
+	imsld::runtime::property::instance_value_set -instance_id $instance_id -value $value
+    } else {
+	imsld::runtime::property::instance_value_set -instance_id $instance_id -upload_file $upload_file -tmpfile $tmpfile
+    }
+
+    # Recursive call only if the property value has changed
     if { $old_value != $value } {
+	
+	# There might be infinite recursive loops, so the counter recursivity_count is used to avoid crashing the server
+	if { ![exists_and_not_null recursivity_count] } {
+	    # this is the first recursive call, initialize the variable
+	    set recursivity_count 1
+	} else {
+	    incr recursivity_count
+	}
+	
+	set ConditionsRecursionLimit [parameter::get -package_id [apm_package_id_from_key imsld-portlet] -parameter ConditionsRecursionLimit]
+
+	if { $recursivity_count >= $ConditionsRecursionLimit } {
+	    ns_log error "IMSLD::imsld::runtime::property::property_value_set [_ imsld.lt_Unstable_state_reache]"
+	    ad_return_error "[_ imsld.lt_Unestable_state_reach]" "[_ imsld.lt_Unstable_state_reache]"
+	    ad_script_abort
+	}
+
         set conditions_list [db_list get_conditions_from_property {
                                                            select ici.condition_id 
                                                            from imsld_conditionsi ici, 
@@ -175,7 +275,7 @@ ad_proc -public imsld::runtime::property::property_value_set {
                                                                  and ar.object_id_two = ici.item_id
         }]
         #property conditions
-        db_foreach user_in_run { 
+        foreach member_id [db_list user_in_run { 
             select gmm.member_id 
             from group_member_map gmm,
             imsld_run_users_group_ext iruge, 
@@ -185,7 +285,7 @@ ad_proc -public imsld::runtime::property::property_value_set {
             and ar1.object_id_one=gmm.group_id 
             group by member_id
 
-        } {
+        }] {
             foreach condition_id $conditions_list {
                 set condition_xml [db_string get_xml_piece {
                                                             select condition_xml
@@ -202,15 +302,16 @@ ad_proc -public imsld::runtime::property::property_value_set {
         # foreach when-condition-true related with the property, evaluate the whole expression
         # referenced from the table when-condition-true to all the members of the referenced role (in the same table),
         # and if it's true, set the act (in the table complete-acts) completed
-
-        db_foreach when_condition_true {
+	# n.b. this won't generate endless loops
+	
+        foreach when_cond_true_item_id [db_list when_condition_true {
             select ar.object_id_two as when_cond_true_item_id
             from acs_rels ar,
             imsld_propertiesi ipi
             where ipi.property_id = :property_id
             and ipi.item_id = ar.object_id_one
             and ar.rel_type = 'imsld_prop_whct_rel'
-        } {
+        }] {
             imsld::condition::eval_when_condition_true -when_condition_true_item_id $when_cond_true_item_id -run_id $run_id
         }
 
@@ -218,20 +319,21 @@ ad_proc -public imsld::runtime::property::property_value_set {
         # foreach when-property-value-is-set related with the property, evaluete the expression
         # and compare it with the referenced property, and if they have the same value, mark the referencer
         # activity as completed
+	# n.b. this won't generate endless loops
 
-        db_foreach when_prop_value_is_set {
+        foreach complete_act_item_id [db_list when_prop_value_is_set {
             select ar.object_id_two as complete_act_item_id
             from acs_rels ar,
             imsld_propertiesi ipi
             where ipi.property_id = :property_id
             and ipi.item_id = ar.object_id_one
             and ar.rel_type = 'imsld_prop_wpv_is_rel'
-        } {
+        }] {
             imsld::condition::eval_when_prop_value_is_set -complete_act_item_id $complete_act_item_id -run_id $run_id
         }
 
-        #role conditions, time conditions...
-        imsld::condition::execute_time_role_conditions -run_id $run_id 
+        # role conditions, time conditions... the rest of conditions must be evaluated every time a property value changes
+        imsld::condition::execute_time_role_conditions -run_id $run_id
     }
 }
 
@@ -277,6 +379,7 @@ ad_proc -public imsld::runtime::property::property_value_get {
             from imsld_properties
             where component_id = :component_item_id
             and identifier = :identifier
+	    limit 1
         }
     } else {
         db_1row property_info_from_id {
@@ -285,6 +388,7 @@ ad_proc -public imsld::runtime::property::property_value_get {
             role_id
             from imsld_properties
             where property_id = :property_id
+	    limit 1
         }
     }
 
@@ -300,18 +404,18 @@ ad_proc -public imsld::runtime::property::property_value_get {
     }
 
     db_1row get_property_value {
-        select ins.property_id,
-        prop.datatype,
+        select prop.datatype,
         coalesce(ins.value, prop.initial_value) as value
-        from imsld_propertiesi prop,
-        imsld_property_instances ins
-        where prop.property_id = ins.property_id
+        from imsld_property_instances ins,
+	imsld_properties prop
+        where ins.property_id = :property_id
+	and prop.property_id = ins.property_id
         and ((prop.type = 'global')
              or (prop.type = 'loc' and ins.run_id = :run_id)
              or (prop.type = 'locpers' and ins.run_id = :run_id and ins.party_id = :user_id)
              or (prop.type = 'locrole' and ins.run_id = :run_id and ins.party_id = :role_instance_id)
              or (prop.type = 'globpers' and ins.party_id = :user_id))
-        and prop.property_id = :property_id
+	and content_revision__is_live(ins.instance_id) = 't'
     }
     return $value
 }
@@ -488,3 +592,19 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
     
 }
 
+ad_proc -public imsld::runtime::users_in_run { 
+    -run_id:required
+} { 
+    returns a list of all the user_ids associated to the run
+} {
+    return [db_list get_users_in_run {
+	select gmm.member_id 
+	from group_member_map gmm,
+	imsld_run_users_group_ext iruge, 
+	acs_rels ar1 
+	where iruge.run_id=:run_id
+	and ar1.object_id_two=iruge.group_id 
+	and ar1.object_id_one=gmm.group_id 
+	group by member_id
+    }]
+}

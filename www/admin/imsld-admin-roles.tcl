@@ -61,7 +61,7 @@ if {![info exists role]} {
 
 ad_form -name finish_management \
             -form {
-                {submit:text(submit) {label "Finish role management"}}
+                {submit:text(submit) {label "[_ imsld.lt_Finish_role_managemen]"}}
             } \
             -action imsld-finish \
             -export {imsld_id run_id}

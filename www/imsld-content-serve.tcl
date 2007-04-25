@@ -11,6 +11,8 @@ ad_page_contract {
     {owner_user_id:integer ""}
     resource_item_id
     {role_id ""}
+    upload_file:trim,optional
+    upload_file.tmpfile:tmpfile,optional
 }
 if { [string eq $owner_user_id ""] } {
     set owner_user_id [ad_conn user_id]
@@ -18,13 +20,17 @@ if { [string eq $owner_user_id ""] } {
 
 # get file info
 db_1row get_info {
-    select f.revision_id,
-    f.item_id,
-    f.file_name
-    from imsld_cp_filesi f, acs_rels ar, imsld_res_files_rels map
+    select cr.revision_id,
+    cpf.item_id,
+    cpf.file_name,
+    cr.mime_type
+    from imsld_cp_filesx cpf,
+    acs_rels ar, imsld_res_files_rels map, cr_revisions cr
     where ar.object_id_one = :resource_item_id
-    and ar.object_id_two = f.item_id
+    and ar.object_id_two = cpf.item_id
+    and cr.item_id = cpf.item_id
     and ar.rel_id = map.rel_id
+    and content_revision__is_live(cr.revision_id) = 't'
     and map.displayable_p = 't'
 }
 
@@ -43,9 +49,20 @@ db_1row context_info {
     and ir.run_id = :run_id
 }
 
+# Get file-storage root folder_id
+set fs_package_id [site_node_apm_integration::get_child_package_id \
+		       -package_id [dotlrn_community::get_package_id [dotlrn_community::get_community_id]] \
+		       -package_key "file-storage"]
+set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
+
 # Parser
 # XML => DOM document
-dom parse $xml_string dom_doc 
+if { [catch {dom parse $xml_string dom_doc} errmsg] } {
+    ns_log notice "IMSLD-CONTENT-SERVE:: ERROR: Not a valid XML file, serving without parsing!"
+    # the docuemnt is not an xml file, just return it
+    ns_return 200 $mime_type $xml_string
+    ad_script_abort
+} 
 # DOM document => DOM root
 $dom_doc documentElement dom_root
 
@@ -66,18 +83,10 @@ foreach view_property_node $view_property_nodes {
     set view [$view_property_node getAttribute view "value"]
     set property_of [$view_property_node getAttribute property-of "self"]
 
-    # get property info
-    db_1row property_info {
-        select type,
-        property_id
-        from imsld_properties
-        where component_id = :component_item_id
-        and identifier = :identifier
-    }
-
     # get the value, depending on the property type. 
     # the only different case is when viewing the proprty in the context of the role
     set role_instance_id 0
+
     # get property info
     db_1row property_info {
         select type,
@@ -101,25 +110,73 @@ foreach view_property_node $view_property_nodes {
         select ins.property_id,
         prop.datatype,
         coalesce(ins.value, prop.initial_value) as value,
-        prop.title
-        from imsld_propertiesi prop,
-        imsld_property_instances ins
-        where prop.property_id = ins.property_id
+        ins.title,
+	content_revision__get_content(cr.revision_id) as content, 
+	ins.instance_id,
+	ins.object_id,
+	ins.parent_id
+        from imsld_property_instancesx ins,
+	cr_revisions cr,
+	imsld_properties prop
+        where ins.property_id = prop.property_id
+	and prop.property_id = :property_id
         and ((prop.type = 'global')
              or (prop.type = 'loc' and ins.run_id = :run_id)
              or (prop.type = 'locpers' and ins.run_id = :run_id and ins.party_id = :owner_user_id)
              or (prop.type = 'locrole' and ins.run_id = :run_id and ins.party_id = :role_instance_id)
              or (prop.type = 'globpers' and ins.party_id = :owner_user_id))
-        and prop.property_id = :property_id
+	and cr.revision_id = ins.instance_id
+	and content_revision__is_live(ins.instance_id) = 't'
     }
 
     # prepare replacement
-    if { [string eq $view "value"] } {
-        # display only the value
-        set view_property_new_node [$dom_doc createTextNode "$value"]
-    } else {
-        # its a value-title reference, display both
-        set view_property_new_node [$dom_doc createTextNode "$title: $value"]
+    # by the moment, the only different case are the properties of type file
+    switch $datatype {
+	file {
+	    set a_node ""
+	    if { ![string eq "" $content] } {
+		set folder_path [db_exec_plsql get_folder_path {
+		select content_item__get_path(:parent_id,:root_folder_id); 
+	    }]
+		db_1row get_fs_file_url {
+		    select 
+		    case 
+		    when :folder_path is null
+		    then fs.file_upload_name
+		    else :folder_path || '/' || fs.file_upload_name
+		    end as file_url,
+		    file_upload_name
+		    from fs_objects fs
+		    where fs.live_revision = :instance_id
+		}
+		set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
+		set a_node [$dom_doc createElement a]
+		$a_node setAttribute href [export_vars -base "$file_url"]
+		$a_node appendChild [$dom_doc createTextNode "[_ imsld.view_file]"]
+
+	    } else {
+		set a_node [$dom_doc createTextNode ""]
+	    }
+	    # prepare a link to the file 
+	    if { [string eq $view "value"] } {
+		# display just the value
+		set view_property_new_node $a_node
+	    } else {
+		# its a value-title reference, display both
+		set view_property_new_node [$dom_doc createElement p] 
+		$view_property_new_node appendChild [$dom_doc createTextNode "$title:"]
+		$view_property_new_node appendChild $a_node
+	    }
+	}
+	default {
+	    if { [string eq $view "value"] } {
+		# display just the value
+		set view_property_new_node [$dom_doc createTextNode "$value"]
+	    } else {
+		# its a value-title reference, display both
+		set view_property_new_node [$dom_doc createTextNode "$title: $value"]
+	    }
+	}
     }
     
     # done... replace the node
@@ -166,33 +223,81 @@ foreach view_property_group_node $view_property_group_nodes {
         select ins.property_id,
         prop.datatype,
         coalesce(ins.value, prop.initial_value) as value,
-        prop.title,
-        prop.identifier
-        from imsld_propertiesi prop,
-        imsld_property_instances ins,
-        acs_rels map
-        where prop.property_id = ins.property_id
+        ins.title,
+	content_revision__get_content(cr.revision_id) as content, 
+	ins.instance_id,
+	ins.object_id,
+	ins.parent_id
+        from imsld_property_instancesx ins,
+	cr_revisions cr,
+        acs_rels map,
+	imsld_propertiesi prop
+        where ins.property_id = prop.property_id
+        and map.object_id_one = :property_group_item_id
         and ((prop.type = 'global')
              or (prop.type = 'loc' and ins.run_id = :run_id)
              or (prop.type = 'locpers' and ins.run_id = :run_id and ins.party_id = :owner_user_id)
              or (prop.type = 'locrole' and ins.run_id = :run_id and ins.party_id = :role_instance_id)
              or (prop.type = 'globpers' and ins.party_id = :owner_user_id))
-        and map.object_id_one = :property_group_item_id
         and map.object_id_two = prop.item_id
         and map.rel_type = 'imsld_gprop_prop_rel'
         and prop.component_id = :component_item_id
+	and cr.revision_id = ins.instance_id
+	and content_revision__is_live(ins.instance_id) = 't'
     } {
-        # prepare replacement
-        if { [string eq $view "value"] } {
-            # display only the value
-            set view_property_new_node [$dom_doc createTextNode "$value"]
-        } else {
-            # its a value-title reference, display both
-            set view_property_new_node [$dom_doc createTextNode "$title: $value"]
-        }
-        $view_property_group_new_node appendChild $view_property_new_node
+	# by the moment, the only different case are the properties of type file	
+	switch $datatype {
+	    file {
+	    set a_node ""
+		if { ![string eq "" $content] } {
+		    set folder_path [db_exec_plsql get_folder_path {
+			select content_item__get_path(:parent_id,:root_folder_id); 
+		    }]
+		    db_1row get_fs_file_url {
+			select 
+			case 
+			when :folder_path is null
+			then fs.file_upload_name
+			else :folder_path || '/' || fs.file_upload_name
+			end as file_url,
+			file_upload_name
+			from fs_objects fs
+			where fs.live_revision = :instance_id
+		    }
+		    set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
+		    set a_node [$dom_doc createElement a]
+		    $a_node setAttribute href [export_vars -base "$file_url"]
+		    $a_node appendChild [$dom_doc createTextNode "[_ imsld.view_file]"]
+		    
+		} else {
+		    set a_node [$dom_doc createTextNode ""]
+		}
+		
+		# prepare a link to the file 
+		if { [string eq $view "value"] } {
+		    # display just the value
+		    set view_property_new_node $a_node
+		} else {
+		    # its a value-title reference, display both
+		    set view_property_new_node [$dom_doc createElement p] 
+		    $view_property_new_node appendChild [$dom_doc createTextNode "$title:"]
+		    $view_property_new_node appendChild $a_node
+		}
+	    }
+	    default {
+		if { [string eq $view "value"] } {
+		    # display only the value
+		    set view_property_new_node [$dom_doc createTextNode "$value"]
+		} else {
+		    # its a value-title reference, display both
+		    set view_property_new_node [$dom_doc createTextNode "$title: $value"]
+		}
+	    }
+	}
+	# prepare replacement
+	$view_property_group_new_node appendChild [$dom_doc createElement p]
+	$view_property_group_new_node appendChild $view_property_new_node
     }
-
     # done... replace the node
     set parent_node [$view_property_group_node parentNode]
     $parent_node replaceChild $view_property_group_new_node $view_property_group_node
@@ -215,6 +320,7 @@ foreach set_property_node $set_property_nodes {
         from imsld_propertiesi
         where component_id = :component_item_id
         and identifier = :identifier
+	limit 1
     }
 
     # get the value, depending on the property type. 
@@ -229,90 +335,106 @@ foreach set_property_node $set_property_nodes {
             continue
         }
     }
-
+    
     db_1row get_property_value {
         select ins.property_id,
         prop.datatype,
+	prop.item_id as property_item_id,
         coalesce(ins.value, prop.initial_value) as value,
-        prop.title,
-        ins.instance_id
-        from imsld_propertiesi prop,
-        imsld_property_instances ins
-        where prop.property_id = ins.property_id
+        ins.title,
+	ins.instance_id
+        from imsld_property_instancesx ins,
+	cr_revisions cr,
+	imsld_propertiesi prop
+        where ins.property_id = prop.property_id
+	and prop.property_id = :property_id
         and ((prop.type = 'global')
              or (prop.type = 'loc' and ins.run_id = :run_id)
              or (prop.type = 'locpers' and ins.run_id = :run_id and ins.party_id = :owner_user_id)
              or (prop.type = 'locrole' and ins.run_id = :run_id and ins.party_id = :role_instance_id)
              or (prop.type = 'globpers' and ins.party_id = :owner_user_id))
-        and prop.property_id = :property_id
+	and cr.revision_id = ins.instance_id
+	and content_revision__is_live(ins.instance_id) = 't'
     }
-
-    # get the restrictions and translate them to HTML
-    # currently, in HTML we can only deal with the restriction types: length, 
-    # maxlength, enumeration and totaldigits. 
-    # the rest are checked after submission
-    set restriction_nodes [list]
+    
+    # if the property is of type file, we must provide a file-upload field
     set input_text_node ""
     set select_node ""
-    db_foreach restriction {
-        select restriction_type,
-        value as restriction_value
-        from imsld_restrictions
-        where property_id = :property_item_id
-        and (restriction_type='length' or  restriction_type='maxlength' or restriction_type='totaldigits' or restriction_type='enumeration')
-    } {
-        switch $restriction_type {
-            length -
-            maxlength -
-            totaldigits {
-                if { [string eq "" $input_text_node] } {
-                    set input_text_node [$dom_doc createElement "input"]
-                    $input_text_node setAttribute type "text"
-                    $input_text_node setAttribute name "instances_ids.$instance_id"
-                }
-                $input_text_node setAttribute maxlength $restriction_value
-                $input_text_node setAttribute value "$value"
-            }
-            enumeration {
-                if { [string eq "" $select_node] } {
-                    set select_node [$dom_doc createElement "select"]
-                    $select_node setAttribute name "instances_ids.$instance_id"
-                }
-                set option_node [$dom_doc createElement "option"]
-                $option_node setAttribute value "$restriction_value"
-                if { [string eq $value $restriction_value] } {
-                    $option_node setAttribute selected "selected"
-                }
-                $option_node appendChild [$dom_doc createTextNode "$restriction_value"]
-                $select_node appendChild $option_node
-            }
-        }
-    } if_no_rows {
-        # no restrictions
-        set input_text_node [$dom_doc createElement "input"]
-        $input_text_node setAttribute type "text"
-        $input_text_node setAttribute name "instances_ids.$instance_id"
-        $input_text_node setAttribute value "$value"
+    set input_file_node ""
+    switch $datatype {
+	file {
+	    set input_file_node [$dom_doc createElement "input"]
+	    $input_file_node setAttribute type "file"
+	    $input_file_node setAttribute name "instances_ids.$instance_id"
+	}
+	default {	    
+	    # get the restrictions and translate them to HTML
+	    # currently, in HTML we can only deal with the restriction types: length, 
+	    # maxlength, enumeration and totaldigits. 
+	    # the rest are checked after submission
+	    set restriction_nodes [list]
+	    db_foreach restriction {
+		select restriction_type,
+		value as restriction_value
+		from imsld_restrictions
+		where property_id = :property_item_id
+		and (restriction_type='length' or  restriction_type='maxlength' or restriction_type='totaldigits' or restriction_type='enumeration')
+	    } {
+		switch $restriction_type {
+		    length -
+		    maxlength -
+		    totaldigits {
+			if { [string eq "" $input_text_node] } {
+			    set input_text_node [$dom_doc createElement "input"]
+			    $input_text_node setAttribute type "text"
+			    $input_text_node setAttribute name "instances_ids.$instance_id"
+			}
+			$input_text_node setAttribute maxlength $restriction_value
+			$input_text_node setAttribute value "$value"
+		    }
+		    enumeration {
+			if { [string eq "" $select_node] } {
+			    set select_node [$dom_doc createElement "select"]
+			    $select_node setAttribute name "instances_ids.$instance_id"
+			}
+			set option_node [$dom_doc createElement "option"]
+			$option_node setAttribute value "$restriction_value"
+			if { [string eq $value $restriction_value] } {
+			    $option_node setAttribute selected "selected"
+			}
+			$option_node appendChild [$dom_doc createTextNode "$restriction_value"]
+			$select_node appendChild $option_node
+		    }
+		}
+	    } if_no_rows {
+		# no restrictions
+		set input_text_node [$dom_doc createElement "input"]
+		$input_text_node setAttribute type "text"
+		$input_text_node setAttribute name "instances_ids.$instance_id"
+		$input_text_node setAttribute value "$value"
+	    }
+	}
     }
-
-    # prepare replacement
+    
+    # Prepare replacement
     set form_node [$dom_doc createElement "form"]
     $form_node setAttribute name "set-properties"
+    $form_node setAttribute enctype "multipart/form-data"
     set url_prefix [ns_conn url]
     regexp (.*)/ $url_prefix url_prefix
     $form_node setAttribute action "${url_prefix}properties-value-set"
-    $form_node setAttribute method "get"
+    $form_node setAttribute method "post"
     if { [string eq $view "title-value"] } {
         $form_node appendChild [$dom_doc createTextNode "$title"] 
     }
 
     if { ![string eq "" $select_node] } {
-        $form_node appendChild $select_node
-    } 
-
-    if { ![string eq "" $input_text_node] } {
-        $form_node appendChild $input_text_node
-    } 
+	$form_node appendChild $select_node
+    } elseif { ![string eq "" $input_text_node] } {
+	$form_node appendChild $input_text_node
+    } else {
+	$form_node appendChild $input_file_node
+    }
 
     # adding owner info
     set owner_node [$dom_doc createElement "input"]
@@ -429,10 +551,11 @@ foreach set_property_group_node $set_property_group_nodes {
     # prepare replacement
     set form_node [$dom_doc createElement "form"]
     $form_node setAttribute name "set-properties"
+    $form_node setAttribute enctype "multipart/form-data"
     set url_prefix [ns_conn url]
     regexp (.*)/ $url_prefix url_prefix
     $form_node setAttribute action "${url_prefix}/properties-value-set"
-    $form_node setAttribute method "get"
+    $form_node setAttribute method "post"
 
     # add group title (according to the spec)
     set group_title [$dom_doc createTextNode "$identifier"]
@@ -463,92 +586,112 @@ foreach set_property_group_node $set_property_group_nodes {
     
     foreach properties_in_group [db_list_of_lists properties_in_group {
         select ins.property_id,
-        prop.item_id as property_item_id,
+	prop.item_id as property_item_id,
         prop.datatype,
         coalesce(ins.value, prop.initial_value) as value,
-        prop.title,
-        prop.identifier,
-        ins.instance_id
-        from imsld_propertiesi prop,
-        imsld_property_instances ins,
-        acs_rels map
-        where prop.property_id = ins.property_id
+        ins.title,
+	content_revision__get_content(cr.revision_id) as content, 
+	ins.instance_id,
+	ins.object_id,
+	ins.parent_id
+        from imsld_property_instancesx ins,
+	cr_revisions cr,
+        acs_rels map,
+	imsld_propertiesi prop
+        where ins.property_id = prop.property_id
+        and map.object_id_one = :property_group_item_id
         and ((prop.type = 'global')
              or (prop.type = 'loc' and ins.run_id = :run_id)
              or (prop.type = 'locpers' and ins.run_id = :run_id and ins.party_id = :owner_user_id)
              or (prop.type = 'locrole' and ins.run_id = :run_id and ins.party_id = :role_instance_id)
              or (prop.type = 'globpers' and ins.party_id = :owner_user_id))
-        and map.object_id_one = :property_group_item_id
         and map.object_id_two = prop.item_id
         and map.rel_type = 'imsld_gprop_prop_rel'
         and prop.component_id = :component_item_id
+	and cr.revision_id = ins.instance_id
+	and content_revision__is_live(ins.instance_id) = 't'
     }] {
         set property_id [lindex $properties_in_group 0]
         set property_item_id [lindex $properties_in_group 1]
         set datatype [lindex $properties_in_group 2]
         set value [lindex $properties_in_group 3]
         set title [lindex $properties_in_group 4]
-        set identifier [lindex $properties_in_group 5]
+        set content [lindex $properties_in_group 5]
         set instance_id [lindex $properties_in_group 6]
-        # get the restrictions and translate them to HTML
-        # currently, in HTML we can only deal with the restriction types: length, 
-        # maxlength, enumeration and totaldigits. 
-        # the rest are checked after submission
-        set input_text_node ""
-        set select_node ""
-        db_foreach restriction {
-            select restriction_type,
-            value as restriction_value
-            from imsld_restrictions
-            where property_id = :property_item_id
-        } {
-            switch $restriction_type {
-                length -
-                maxlength -
-                totaldigits {
-                    if { [string eq "" $input_text_node] } {
-                        set input_text_node [$dom_doc createElement "input"]
-                        $input_text_node setAttribute type "text"
-                        $input_text_node setAttribute name "instances_ids.$instance_id"
-                    }
-                    $input_text_node setAttribute maxlength $restriction_value
-                    $input_text_node setAttribute value "$value"
-                }
-                enumeration {
-                    if { [string eq "" $select_node] } {
-                        set select_node [$dom_doc createElement "select"]
-                        $select_node setAttribute name "instances_ids.$instance_id"
-                    }
-                    set option_node [$dom_doc createElement "option"]
-                    $option_node setAttribute value "$restriction_value"
-                    if { [string eq $value $restriction_value] } {
-                        $option_node setAttribute selected "selected"
-                    }
-                    $option_node appendChild [$dom_doc createTextNode "$restriction_value"]
-                    $select_node appendChild $option_node
-                }
-            }
-        } if_no_rows {
-            # no restrictions
-            set input_text_node [$dom_doc createElement "input"]
-            $input_text_node setAttribute type "text"
-            $input_text_node setAttribute name "instances_ids.$instance_id"
-            $input_text_node setAttribute value "$value"
+        set object_id [lindex $properties_in_group 7]
+        set parent_id [lindex $properties_in_group 8]
+
+	set input_text_node ""
+	set select_node ""
+	set input_file_node ""
+	
+	switch $datatype {
+	    file {
+		set input_file_node [$dom_doc createElement "input"]
+		$input_file_node setAttribute type "file"
+		$input_file_node setAttribute name "instances_ids.$instance_id"
+	    }
+	    default {
+		# get the restrictions and translate them to HTML
+		# currently, in HTML we can only deal with the restriction types: length, 
+		# maxlength, enumeration and totaldigits. 
+		# the rest are checked after submission
+		db_foreach restriction {
+		    select restriction_type,
+		    value as restriction_value
+		    from imsld_restrictions
+		    where property_id = :property_item_id
+		} {
+		    switch $restriction_type {
+			length -
+			maxlength -
+			totaldigits {
+			    if { [string eq "" $input_text_node] } {
+				set input_text_node [$dom_doc createElement "input"]
+				$input_text_node setAttribute type "text"
+				$input_text_node setAttribute name "instances_ids.$instance_id"
+			    }
+			    $input_text_node setAttribute maxlength $restriction_value
+			    $input_text_node setAttribute value "$value"
+			}
+			enumeration {
+			    if { [string eq "" $select_node] } {
+				set select_node [$dom_doc createElement "select"]
+				$select_node setAttribute name "instances_ids.$instance_id"
+			    }
+			    set option_node [$dom_doc createElement "option"]
+			    $option_node setAttribute value "$restriction_value"
+			    if { [string eq $value $restriction_value] } {
+				$option_node setAttribute selected "selected"
+			    }
+			    $option_node appendChild [$dom_doc createTextNode "$restriction_value"]
+			    $select_node appendChild $option_node
+			}
+		    }
+		} if_no_rows {
+		    # no restrictions
+		    set input_text_node [$dom_doc createElement "input"]
+		    $input_text_node setAttribute type "text"
+		    $input_text_node setAttribute name "instances_ids.$instance_id"
+		    $input_text_node setAttribute value "$value"
+		}
+		
+	    }
+	}
+	if { [string eq $view "title-value"] } {
+            $form_node appendChild [$dom_doc createTextNode "$title"] 
         }
 
-        if { [string eq $view "title-value"] } {
-            $form_node appendChild [$dom_doc createTextNode "$identifier"] 
-        }
-
-        if { ![string eq "" $select_node] } {
-            $form_node appendChild $select_node
-        } 
-
-        if { ![string eq "" $input_text_node] } {
-            $form_node appendChild $input_text_node
-        } 
+	if { ![string eq "" $select_node] } {
+	    $form_node appendChild $select_node
+	} elseif { ![string eq "" $input_text_node] } {
+	    $form_node appendChild $input_text_node
+	} else {
+	    $form_node appendChild $input_file_node
+	}
+	
         $form_node appendChild [$dom_doc createElement "br"]                
-    }        
+    }
 
     set parent_node [$set_property_group_node parentNode]
 
@@ -692,22 +835,17 @@ set bodies [$dom_root selectNodes "*\[local-name()='body'\]"]
 foreach body $bodies {
     $body appendChild $script
 }
-# Get file-storage root folder_id
-set community_id [dotlrn_community::get_community_id]
-set fs_package_id [site_node_apm_integration::get_child_package_id \
-                                        -package_id [dotlrn_community::get_package_id $community_id] \
-                                        -package_key "file-storage"]
-set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
 set fs_resource_info [db_1row get_fs_resource_info {
-                                        select cpf.imsld_file_id as imsld_file_id,
-                                            cpf.parent_id as parent_id
-                                        from imsld_cp_filesx cpf,
-                                            acs_rels ar, imsld_res_files_rels map
-                                        where ar.object_id_one = :resource_item_id
-                                            and ar.object_id_two = cpf.item_id
-                                            and ar.rel_id = map.rel_id
-                                            and content_revision__is_live(cpf.imsld_file_id) = 't'
-                                            and map.displayable_p = 't'
+    select cr.revision_id as imsld_file_id,
+    cpf.parent_id as parent_id
+    from imsld_cp_filesx cpf,
+    acs_rels ar, imsld_res_files_rels map, cr_revisions cr
+    where ar.object_id_one = :resource_item_id
+    and ar.object_id_two = cpf.item_id
+    and cr.item_id = cpf.item_id
+    and ar.rel_id = map.rel_id
+    and content_revision__is_live(cr.revision_id) = 't'
+    and map.displayable_p = 't'
 }]
 
 set folder_path [db_exec_plsql get_folder_path {select content_item__get_path(:parent_id,:root_folder_id); }]
@@ -724,5 +862,4 @@ if {![llength [$head_node selectNodes {/*[local-name()='base']}]]} {
 
 set xmloutput {<?xml version="1.0" encoding="UTF-8"?>}
 append xmloutput [$dom_root asXML]
-
 ns_return 200 text/html $xmloutput

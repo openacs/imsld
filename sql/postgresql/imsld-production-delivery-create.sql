@@ -81,21 +81,24 @@ This table holds the status of each user in the run of the unit of learning.
 Each entry in this table says that the user referenced by user_id(role_id) has already started or completed the event referenced by _id. Extra information like the imsld_id, play_id, etc. is stored as cache purposes.';
 
 create table imsld_property_instances (
-    instance_id     integer
-                    constraint imsld_pin_pk
-                    primary key,
-    property_id     integer
-                    constraint imsld_pin_pro_fk
-                    references imsld_properties -- since this table will only be used during run time, and because
-                    not null,                   -- of performance issues, the reference is directly to the imsld_properties table.
-    identifier      varchar(100)                -- the same identifier that the corresponding propert (cache)
-                    not null,                   
-    party_id        integer
-                    references parties,         -- for the property of type loc, locpers, locrole or globpers
-    run_id          integer
-                    constraint imsld_pin_rn_fk  
-                    references imsld_runs,
-    value           varchar(4000)
+    instance_id		integer
+                	constraint imsld_pin_fk
+			references cr_revisions
+			on delete cascade
+                	constraint imsld_pin_pk
+                    	primary key,
+    property_id     	integer                     -- since this table will only be used during run time, and because  
+                    	constraint imsld_pin_pro_fk -- of performance issues, the reference is directly to the imsld_properties table.
+                    	references imsld_properties -- besides, according to the spec, nothing can change after the run becomes active.
+                    	not null,                   
+    identifier      	varchar(100)                -- the same identifier that the corresponding propert (cache)
+                    	not null,                   
+    party_id        	integer
+                    	references parties,         -- for the property of type loc, locpers, locrole or globpers
+    run_id          	integer
+                    	constraint imsld_pin_rn_fk  
+                    	references imsld_runs,
+    value           	varchar(4000)
 );
 
 create index imsld_prop_pin_pro_idx on imsld_property_instances(property_id);
