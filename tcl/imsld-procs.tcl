@@ -2023,7 +2023,7 @@ ad_proc -public imsld::process_prerequisite_as_ul {
             set one_prerequisite_ul [imsld::process_resource_as_ul -resource_item_id $resource_item_id \
                                          -run_id $run_id \
                                          -dom_doc $dom_doc \
-                                         -dom_node $dom_node
+                                         -dom_node $dom_node]
         } if_no_rows {
             ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
         }
