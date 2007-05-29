@@ -9,6 +9,13 @@
     }
 </SCRIPT>
 
+<style type="text/css">
+.hide { 
+  display:none;
+}
+</style>
+
+
 </head>
 <body>
 
@@ -33,8 +40,8 @@
 </form>
 </if>
 
-<div style="display:none;">
-<a href="@monitor_service_url;noquote@"></a>
+<div class="hide">
+<a href="@monitor_service_url;noquote@" title="<# Monitor service #>"></a>
 </div>
 
 <iframe id="object" name="object"></iframe>

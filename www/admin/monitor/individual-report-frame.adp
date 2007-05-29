@@ -1,9 +1,20 @@
 <master>
   <property name="title">@page_title;noquote@</property>
   <property name="context">@context;noquote@</property>
+<style  type="text/css">
+.show-hide { 
+  position:absolute;
+  top:0px;
+  left:0px;
+}
+</style>
+</property>
 
-<span id="addc1" style="position:absolute;top:0px;left:0px;">
-<a href="#" onClick="return _tp(false)" title="Hide panel" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_left.png" alt="Hide" border="0" align="top" alt=" #imsld.Hide#"/></a>
+<span id="addc1" class="show-hide">
+<a href="#" onClick="return _tp(false)" title="#imsld.Hide_1#" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_left.png" alt="#imsld.Hide#" border="0" align="top"/></a>
+</span>
+<span id="addc" style="display:none;" class="show-hide">
+<a href="#" onClick="return _tp(true)" title="#imsld.Show_1#" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_right.png" alt="#imsld.Show#" border="0" align="top"/></a>
 </span>
 
 #imsld.This#
@@ -35,3 +46,4 @@ function _tp(a){
 
 
 </script>
+

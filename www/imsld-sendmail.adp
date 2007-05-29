@@ -5,7 +5,7 @@
   <ul>
         <multiple name="all_email_data">
             <li>
-                <a href="@all_email_data.send_mail_url@">@all_email_data.title@</a> 
+                <a href="@all_email_data.send_mail_url@" title="#imsld.Send#">@all_email_data.title@</a> 
                        
             <br>
         </multiple>

@@ -17,7 +17,7 @@ set member_name [party::name -party_id $member_id]
 
 set elements [list user_name \
                   [list label "[_ imsld.Activity_Name]" \
-                       display_template {<a href="activity-frame?run_id=$run_id&type=@related_activities.type@&activity_id=@related_activities.related_id@">@related_activities.activity_name@</a>}] \
+                       display_template {<a href="activity-frame?run_id=$run_id&type=@related_activities.type@&activity_id=@related_activities.related_id@" title="[_ imsld.Activity_report]">@related_activities.activity_name@</a>}] \
                   type \
                   [list label "[_ imsld.Activity_Type]"] \
                   started_time \
