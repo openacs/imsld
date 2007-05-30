@@ -7,11 +7,7 @@ ad_page_contract {
     imsld_id
     run_id
 } 
-
-set page_title "[_ imsld.lt_Confirm_roles_assignm]" 
-set context "" 
-
-# NOTE(lfuente): here there should be a check of all the input
+#aqui tengo que poner la comprobación de que todo sea correcto (errores y warnings)
 
 set roles_list_depth [imsld::roles::get_list_of_roles -imsld_id $imsld_id]
 

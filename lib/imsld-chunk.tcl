@@ -6,7 +6,7 @@ set elements [list imsld_title \
                   [list label "[_ imsld.IMS_LD_Name]" \
                        orderby_asc {imsld_title asc} \
                        orderby_desc {imsld_title desc} \
-                       display_template {<a href="@imsld_runs.imsld_url;noquote@imsld-frameset?run_id=@imsld_runs.run_id@" title="[_ imsld.Go_to_UoL_page]">@imsld_runs.imsld_title@</a>}] \
+                       display_template {<a href="@imsld_runs.imsld_url;noquote@imsld-frameset?run_id=@imsld_runs.run_id@">@imsld_runs.imsld_title@</a>}] \
                   user_roles \
                   [list label "[_ imsld.Roles_in_Run]" \
                        display_template {@imsld_runs.user_roles;noquote@}] \

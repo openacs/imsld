@@ -11,13 +11,10 @@
   <msg key="active">active</msg>
   <msg key="Activity_Identifier">Activity Identifier</msg>
   <msg key="Activity_Name">Activity Name</msg>
-  <msg key="Activity_report">Activity report</msg>
   <msg key="Activity_Structures">Activity Structures</msg>
   <msg key="Activity_Type">Activity Type</msg>
   <msg key="Acts_in_play_count">Acts in play %count%</msg>
-  <msg key="Add_Members">Add Members</msg>
   <msg key="Admin_IMS_LD">Admin IMS LD</msg>
-  <msg key="Admin_roles">Admin roles</msg>
   <msg key="Back">Back to admin</msg>
   <msg key="Calculateexpression">Calculate(expression)</msg>
   <msg key="Caluclate_Identifier">Caluclate Identifier</msg>
@@ -36,7 +33,6 @@
   <msg key="Context_info">Context info</msg>
   <msg key="Create_New">Create New?</msg>
   <msg key="create_new_run">create new run</msg>
-  <msg key="Create_role_instance">Create role instance</msg>
   <msg key="Creating_default_Run">Creating default Run...</msg>
   <msg key="Creating_new_IMS-LD">Creating new IMS-LD...</msg>
   <msg key="Creation_Date">Creation Date</msg>
@@ -64,11 +60,9 @@
   <msg key="Finished_Date">Finished Date</msg>
   <msg key="Go_back">Go back</msg>
   <msg key="go_back">go back</msg>
-  <msg key="Go_to_UoL_page">Go to UoL page</msg>
   <msg key="Group_members">Group members</msg>
   <msg key="Groups">Groups in role</msg>
   <msg key="Hide">Hide</msg>
-  <msg key="Hide_1">panel</msg>
   <msg key="Href">Href</msg>
   <msg key="Identifier">Identifier</msg>
   <msg key="Identifier_Reference">Identifier Reference</msg>
@@ -146,10 +140,8 @@
   <msg key="lt_2_Local-personal_Prop">2. Local-personal Properties</msg>
   <msg key="lt_3_Local-role_Properti">3. Local-role Properties</msg>
   <msg key="lt_4_Global-personal_Pro">4. Global-personal Properties</msg>
-  <msg key="lt___imsldcreate_new_run">[_ imsld.create_new_run]</msg>
   <msg key="lt_Activity_Description_">Activity Description Identifier</msg>
   <msg key="lt_Activity_Structure_Id">Activity Structure Identifier</msg>
-  <msg key="lt_Add_selected_members_">Add selected members to the group</msg>
   <msg key="lt_Are_all_the_students_">Are all the students asigned to the proper roles? If you confirm now, no more changes will be acepted later.</msg>
   <msg key="lt_br___________________">&lt;br&gt;\ 
                               Go to the activity &lt;a href=\&quot;%activity_url%\&quot;&gt;%activity_title%&lt;/a&gt; (of the UoL &lt;a href=\&quot;%imsld_url%\&quot;&gt;%imsld_title%&lt;/a&gt; in the community &lt;a href=\&quot;%community_url%\&quot;&gt;%community_name%&lt;/a&gt;) for further details.</msg>
@@ -160,11 +152,9 @@
   <msg key="lt_Change_Property_Value_1">Change Property Value XML</msg>
   <msg key="lt_community_name_imsld_">%community_name%: %imsld_title%</msg>
   <msg key="lt_Complete_Act_Identifi">Complete Act Identifier</msg>
-  <msg key="lt_Confirm_roles_assignm">Confirm roles assignments</msg>
   <msg key="lt_Could_not_determine_w">Could not determine whit what program uncompress the file %upload_file% has. Aborting</msg>
   <msg key="lt_Couldnt_determine_if_">Couldn't determine if this is a well formed IMS-LD: %message%</msg>
   <msg key="lt_Creaginting_new_IMS-L">Creaginting new IMS-LD</msg>
-  <msg key="lt_Create_a_new_instance">Create a new instance of a role</msg>
   <msg key="lt_Dear_recepient_name_b">Dear %recepient_name% &lt;br&gt; 
                        %sender_name has% triggered this notification. Please do not replay to this email. &lt;br&gt;</msg>
   <msg key="lt_Email_Propery_Identif">Email Propery Identifier</msg>
@@ -243,7 +233,6 @@
   <msg key="lt_Parent_Role_Identifie">Parent Role Identifier</msg>
   <msg key="lt_Please_confirm_the_in">Please, confirm the information you are uploading</msg>
   <msg key="lt_Please_submit_a_value">Please submit a value</msg>
-  <msg key="lt_Please_wait_for_other">Please wait for other users...</msg>
   <msg key="lt_Property_String_Ident">Property String Identifier</msg>
   <msg key="lt_Referenced_activity_s">Referenced activity structure %ref% does not exist</msg>
   <msg key="lt_Referenced_activity_s_1">Referenced activity structure (%activity_structure_ref_ref%) in role part %identifier% does not exist.</msg>
@@ -270,7 +259,6 @@
   <msg key="lt_Referenced_support_ac_5">Referenced support activity %support_activity_ref_ref% in role part %identifier% is actually an activity structure.</msg>
   <msg key="lt_Referenced_support_ac_6">Referenced support activity %support_activity_ref% in role part %identifier% is actually a learning activity.</msg>
   <msg key="lt_Referenced_support_ac_7">Referenced support activity (%support_activity_ref%) from notification does not exist</msg>
-  <msg key="lt_Remove_selected_membe">Remove selected members from the group</msg>
   <msg key="lt_Select_a_role_to_send">Select a role to send the email</msg>
   <msg key="lt_Select_parent_for_the">Select parent for the new instance</msg>
   <msg key="lt_Select_role_to_suppor">Select role to support...</msg>
@@ -281,7 +269,6 @@
   <msg key="lt_Sorry_that_service_ty">Sorry, that service type (%service_type%) hasn't been implemented yet.</msg>
   <msg key="lt_Sorry_your_browser_do">Sorry, your browser doesn't support JavaScript (or it is disabled). This is needed to access the course.</msg>
   <msg key="lt_Support_Activity_Iden">Support Activity Identifier</msg>
-  <msg key="lt_The_course_has_been_f">The course has been finished</msg>
   <msg key="lt_The_decimal_digits_ca">The decimal digits can't be more than %restriction_value%</msg>
   <msg key="lt_The_file_filex_href_w">The file %filex_href% was not created, it wasn't found in the manifest</msg>
   <msg key="lt_The_integer_part_cant">The integer part can't have more than %restriction_value% digits</msg>
@@ -337,7 +324,6 @@
                        %sender_name% has triggered this notification. Please do not replay to this email. &lt;br&gt;&lt;br&gt; 
                        Go to the UoL: &lt;a href=\&quot;%imsld_url%\&quot;&gt;%imsld_title%&lt;/a&gt; (in the community: &lt;a href=\&quot;%community_url%\&quot;&gt;%community_name%&lt;/a&gt; community) for further details.</msg>
   <msg key="lt_Username_Property_Ide">Username Property Identifier</msg>
-  <msg key="lt_Users_individual_repo">User's individual report</msg>
   <msg key="lt_Users_who_have_bat_le">Users who have &lt;b&gt;at least visited&lt;/b&gt; the service</msg>
   <msg key="lt_Users_who_have_bviewe">Users who have &lt;b&gt;viewed/visited all&lt;/b&gt; the referenced resources from the environment</msg>
   <msg key="lt_Users_who_have_starte">Users who have started and/or finished this activity</msg>
@@ -367,7 +353,6 @@
   <msg key="nbspnbspnbspdone">&amp;nbsp;&amp;nbsp;&amp;nbsp;done</msg>
   <msg key="New_IMS-LD">New IMS-LD</msg>
   <msg key="No">information found in the imsmanifest.xml file. Nothing to do.</msg>
-  <msg key="No_group_selected">No group selected</msg>
   <msg key="No_IMS_LD">No IMS LD</msg>
   <msg key="No_info_was_found">No info was found</msg>
   <msg key="No_properties_found">No properties found.</msg>
@@ -384,7 +369,6 @@
   <msg key="Parameter_Identifier">Parameter Identifier</msg>
   <msg key="Parameters">Parameters</msg>
   <msg key="Parent">Parent role:</msg>
-  <msg key="Parent_1">role info</msg>
   <msg key="Party_Identifier">Party Identifier</msg>
   <msg key="Path_to_File">Path to File</msg>
   <msg key="Play_Identifier">Play Identifier</msg>
@@ -400,7 +384,6 @@
   <msg key="Recipients">Recipients</msg>
   <msg key="Reference_Identifier">Reference Identifier</msg>
   <msg key="Reference_Type">Reference Type</msg>
-  <msg key="Remove_Members">Remove Members</msg>
   <msg key="Resource_Identifier">Resource Identifier</msg>
   <msg key="Restriction_Type">Restriction Type</msg>
   <msg key="Role_Identifier">Role Identifier</msg>
@@ -415,7 +398,6 @@
   <msg key="Select_a_role_1">Select a role</msg>
   <msg key="Select_role">Select role...</msg>
   <msg key="Self">Self</msg>
-  <msg key="Send">mail</msg>
   <msg key="send-mail_service">send-mail service</msg>
   <msg key="sendmail">sendmail</msg>
   <msg key="Sendmail_Identifier">Sendmail Identifier</msg>
@@ -423,7 +405,6 @@
   <msg key="Service_Identifier">Service Identifier</msg>
   <msg key="Service_Type">Service Type</msg>
   <msg key="Show">Show</msg>
-  <msg key="Show_1">panel</msg>
   <msg key="since">since</msg>
   <msg key="Sort">Sort</msg>
   <msg key="Sort_Order">Sort Order</msg>
@@ -433,7 +414,6 @@
   <msg key="Status">Status</msg>
   <msg key="stopped">stopped</msg>
   <msg key="Structure_Type">Structure Type</msg>
-  <msg key="Subrole">info</msg>
   <msg key="Support_Activities">Support Activities</msg>
   <msg key="Supporting">user: %supported_user_name%</msg>
   <msg key="The">The selected role has no parent</msg>
@@ -456,7 +436,6 @@
   <msg key="Version">Version</msg>
   <msg key="view_file">view file</msg>
   <msg key="View_members">View members</msg>
-  <msg key="View_Roles">View Roles</msg>
   <msg key="waiting">waiting</msg>
   <msg key="When_Condition_True">When Condition True</msg>
   <msg key="With_Control">With Control</msg>

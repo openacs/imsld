@@ -55,13 +55,11 @@ if { [lindex $is_imsld_list 0] } {
         -elements {
             element_name {
                 label ""
-                html {valign top}
-		class {element_title}
+                html {valign top style "background-color: #e0e0e0; font-weight: bold;"}
             }
             info {
                 label ""
-                html {valign top}
-		class {element_value}
+                html {valign top style "background-color: #f0f0f0; font-weight: bold;"}
             }
             
         }

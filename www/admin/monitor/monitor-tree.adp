@@ -4,7 +4,6 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <script src="/resources/acs-templating/mktree.js" language="javascript"></script>
     <link rel="stylesheet" href="/resources/acs-templating/mktree.css" media="all">
-    <link rel="stylesheet" href="/resources/imsld/imsld.css" media="all">
 
 <SCRIPT>
     function confirmValue(myform){
@@ -18,13 +17,45 @@
 </NOSCRIPT>
 
 <style type="text/css">
-li {
-  padding: 5px 0px 0px 0px;
+ul {
+font-family: Verdana, Arial, Helvetica, sans-serif;
+font-size: 12px;
+font-style: normal;
+font-weight: normal;
+font-variant: normal;
+text-decoration: none;
+text-transform: none;
+text-indent: -15px;
+padding: 15px 0px 0px 0px;
+margin: 0px;
 }
+div {
+    text-align: right;
+    font-size: 80%;
+} 
+a.button  {
+	text-align: center;
+	border: 3px outset #00b;
+	background-color: #007; 
+	color: #fff;
+	font-weight: bold;
+	font-size: 10px;
+	text-decoration: none;
+	padding: 0px;      
+	margin: 0px;
+    top: 0px;
+    left: 0px;
+}
+a.button:hover  {
+	color: #fff;
+	background-color: #00d;
+	border: 3px inset #00b;
+}
+
 </style>
 </head>
 <body>
-<a href="@imsld_admin_url@" class="button" target="_top" title=\"#imsld.Exit#\">#imsld.Exit#</a>
+<a href="@imsld_admin_url@"  style="display: block; position: fixed;" class="button" target="_top">#imsld.Exit#</a>
 <br />
 @properties_tree;noquote@
 @html_tree;noquote@

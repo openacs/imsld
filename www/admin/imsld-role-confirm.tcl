@@ -32,7 +32,7 @@ if {![string eq "-1" [lsearch $members_list 0]] } {
 if { ![string eq "" $min_persons] && ([llength $members_list] < $min_persons)} {
         set mensaje "<p>Number of members does not reach the minimum allowed number of users for this role.
                        There must be at least $min_persons members.</p>
-                       <a href=\"$return_url\" title=\"[_ imsld.Go_back]\">[_ imsld.Go_back]</a>"
+                       <a href=\"$return_url\">Go back</a>"
         ad_return_complaint 1 $mensaje
         ad_script_abort
 }
@@ -40,7 +40,7 @@ if { ![string eq "" $min_persons] && ([llength $members_list] < $min_persons)} {
 if {![string eq "" $max_persons] && ([llength $members_list] > $max_persons)} {
         set mensaje "<p>Number of members exceded the allowed number for this role.
                        You must not select more than $max_persons members.</p>
-                       <a href=\"$return_url\" title=\"[_ imsld.Go_back]\">[_ imsld.Go_back]</a>"
+                       <a href=\"$return_url\">Go back</a>"
         ad_return_complaint 1 $mensaje
         ad_script_abort
 }
@@ -64,7 +64,7 @@ if {[string eq "t" $match_persons_p]} {
         
         set mensaje "<p>Members $not_allowed_name are already members of other subroles of role $parent_role_name.</p>
                      <p>Current UoL does not allow to include them in more than one subroles of the role.</p>
-                       <a href=\"$return_url\" title=\"[_ imsld.Go_back]\">[_ imsld.Go_back]</a>"
+                       <a href=\"$return_url\">Go back</a>"
         ad_return_complaint 1 $mensaje
         ad_script_abort
     }

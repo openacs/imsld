@@ -22,14 +22,6 @@ document.write('<style type="text/css">.tabber{display:none;}<\/style>');
 html {margin:13px; border:15px; padding:3px;}
 body {margin:3px; border:3px; padding:5px;}
 -->
-.show-hide { 
-  position:absolute;
-  top:0px;
-  left:0px;
-}
-.hide { 
-  display:none;
-}
 </style>
 <SCRIPT>
     function confirmValue(myform){
@@ -39,18 +31,18 @@ body {margin:3px; border:3px; padding:5px;}
 </head>
 <body>
 
-<span id="addc1" class="show-hide">
-<a href="#" onClick="return _tp(false)" title="#imsld.Hide_1#" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_left.png" alt="#imsld.Hide#" border="0" align="top"/></a>
+<span id="addc1" style="position:absolute;top:0px;left:0px;">
+<a href="#" onClick="return _tp(false)" title="Hide panel" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_left.png" alt="#imsld.Hide#" border="0" align="top"/></a>
 </span>
-<span id="addc" style="display:none;" class="show-hide">
-<a href="#" onClick="return _tp(true)" title="#imsld.Show_1#" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_right.png" alt="#imsld.Show#" border="0" align="top"/></a>
+<span id="addc" style="display:none;position:absolute;top:0px;left:0px;">
+<a href="#" onClick="return _tp(true)" title="Show panel" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_right.png" alt="#imsld.Show#" border="0" align="top"/></a>
 </span>
 
 <if @roles_template_p@ eq 1>
    <include src="support-activity-roles" supported_roles="@supported_roles@" run_id=@run_id@ activity_id=@activity_id@ supported_user_id=@supported_user_id@>
 
-<div class="hide">
-<a href="@activities;noquote@" title="<# Activities #>"></a>
+<div style="display:none;">
+<a href="@activities;noquote@"></a>
 </div>
 </if>
 <else>

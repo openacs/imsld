@@ -1,3 +1,3 @@
 
-<listtemplate name="role_groups"></listtemplate>
+<blockquote><listtemplate name="role_groups"></listtemplate></blockquote>
 

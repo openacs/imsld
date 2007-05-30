@@ -1,6 +1,4 @@
 <master>
-  <property name="title">@page_title;noquote@</property>
-  <property name="context">@context;noquote@</property>
 
 <SCRIPT>
     function confirmValue(myform){
@@ -17,7 +15,7 @@
 
     <if @parent_role_name@ not nil>
         <ul>
-            <li><a href=@parent_role_link@ title="#imsld.Parent_1#">@parent_role_name@</a></li>
+            <li><a href=@parent_role_link@>@parent_role_name@</a></li>
         </ul>
     </if>
     <else>
@@ -31,7 +29,7 @@
      <h3>#imsld.Descendant#</h3>
      <ul>
        <multiple name="subroles_names">
-         <li><a href=@subroles_names.rolelink@ title="#imsld.Subrole#">@subroles_names.rolename@</a></li>
+         <li><a href=@subroles_names.rolelink@>@subroles_names.rolename@</a></li>
        </multiple>
       </ul>
       <if @subroles_names:rowcount@ eq 0>
@@ -45,7 +43,7 @@
 <h3>#imsld.Groups#</h3>
 <listtemplate name="group_table"></listtemplate>
 <br><br>
-<a href="index" title="#imsld.Back#">#imsld.Back#</a>
+<a href="index">#imsld.Back#</a>
 <SCRIPT>
   document.forms['choose_role'].elements['formbutton:ok'].style.display="none"
 </SCRIPT>

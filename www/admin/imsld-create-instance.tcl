@@ -12,8 +12,6 @@ ad_page_contract {
     run_id
     parent_group_id:optional
 }
-set page_title "[_ imsld.Create_role_instance]" 
-set context "" 
 
 db_1row get_imsld_role_info {}
 set number_of_groups [llength [db_list get_related_groups {}]]
@@ -23,7 +21,7 @@ set return_url [export_vars -base imsld-admin-roles {{role $role} {imsld_id $ims
 if { !([string eq $number_of_groups "0"] || [string eq $create_new_p  "t"] ) } {
 
         set mensaje "<p>Current Unit of Learning does not allow creation of multiple instances of this role.</p>
-            <a href=\"$return_url\" title=\"[_ imsld.Go_back]\">[_ imsld.Go_back]</a>"
+            <a href=\"$return_url\">Go back</a>"
     ad_return_complaint 1 $mensaje
     ad_script_abort
 }

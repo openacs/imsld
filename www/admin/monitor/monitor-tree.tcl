@@ -36,6 +36,7 @@ if { [db_string count_properties {
     dom createDocument ul props_doc
     set props_dom_root [$props_doc documentElement]
     $props_dom_root setAttribute class "mktree"
+    $props_dom_root setAttribute style "white-space: nowrap;"
     set props_title_node [$props_doc createElement li]
     $props_title_node setAttribute class "liOpen"
     set text [$props_doc createTextNode "[_ imsld.Monitor_properties]"] 
@@ -57,6 +58,7 @@ if { [db_string count_properties {
 dom createDocument ul doc
 set dom_root [$doc documentElement]
 $dom_root setAttribute class "mktree"
+$dom_root setAttribute style "white-space: nowrap;"
 set imsld_title_node [$doc createElement li]
 $imsld_title_node setAttribute class "liOpen"
 set text [$doc createTextNode "$imsld_title"] 
@@ -82,6 +84,7 @@ if { [db_string generated_acitivties_p {
     dom createDocument ul aux_doc
     set aux_dom_root [$aux_doc documentElement]
     $aux_dom_root setAttribute class "mktree"
+    $aux_dom_root setAttribute style "white-space: nowrap;"
     set aux_title_node [$aux_doc createElement li]
     $aux_title_node setAttribute class "liOpen"
     set text [$doc createTextNode "[_ imsld.Extra_Activities]"] 

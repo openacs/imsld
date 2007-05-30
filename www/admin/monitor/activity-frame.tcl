@@ -25,7 +25,7 @@ set context [list]
 
 set elements [list user_name \
                   [list label "[_ imsld.Name]" \
-                       display_template {<a href="individual-report-frame?run_id=${run_id}&member_id=@related_users.user_id@" title="[_ imsld.lt_Users_individual_repo]">@related_users.user_name@</a>}] \
+                       display_template {<a href="individual-report-frame?run_id=${run_id}&member_id=@related_users.user_id@">@related_users.user_name@</a>}] \
                   email \
                   [list label "[_ imsld.Email]"]]
 

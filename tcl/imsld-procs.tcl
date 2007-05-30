@@ -2123,7 +2123,6 @@ ad_proc -public imsld::process_resource_as_ul {
         set file_url [acs_sc::invoke -contract FtsContentProvider -operation url -impl $object_type -call_args [list $acs_object_id]]
         set a_node [$dom_doc createElement a]
         $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
-	$a_node setAttribute title "$object_title"
         set img_node [$dom_doc createElement img]
         $img_node setAttribute src "[imsld::object_type_image_path -object_type $object_type]"
         $img_node setAttribute border "0"
@@ -2151,7 +2150,6 @@ ad_proc -public imsld::process_resource_as_ul {
             set file_url "imsld-content-serve"
             set a_node [$dom_doc createElement a]
             $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
-	    $a_node setAttribute title "$file_name"
             set img_node [$dom_doc createElement img]
             $img_node setAttribute src "[imsld::object_type_image_path -object_type file-storage]"
             $img_node setAttribute border "0"
@@ -2179,7 +2177,6 @@ ad_proc -public imsld::process_resource_as_ul {
             set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
             set a_node [$dom_doc createElement a]
             $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
-	    $a_node setAttribute title "$file_name"
             set img_node [$dom_doc createElement img]
             $img_node setAttribute src "[imsld::object_type_image_path -object_type file-storage]"
             $img_node setAttribute border "0"
@@ -2197,7 +2194,6 @@ ad_proc -public imsld::process_resource_as_ul {
         db_foreach associated_urls { *SQL* } {
             set a_node [$dom_doc createElement a]
             $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" { {file_url "[export_vars -base $url]"} resource_item_id run_id}]"
-	    $a_node setAttribute title "$url"
             set img_node [$dom_doc createElement img]
             $img_node setAttribute src "[imsld::object_type_image_path -object_type url]"
             $img_node setAttribute border "0"
@@ -2731,6 +2727,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     if { !$completed_p } {
                         set input_node [$dom_doc createElement input]
                         $input_node setAttribute type "checkbox"
+                        $input_node setAttribute style "vertical-align: bottom;"
                         $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld\""
                         $activity_node appendChild $input_node
                     } else {
@@ -2771,6 +2768,7 @@ ad_proc -public imsld::generate_structure_activities_list {
                     if { !$completed_p } {
                         set input_node [$dom_doc createElement input]
                         $input_node setAttribute type "checkbox"
+                        $input_node setAttribute style "vertical-align: bottom;"
                         $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld\""
                         $activity_node appendChild $input_node
                     } else {
@@ -2892,6 +2890,7 @@ ad_proc -public imsld::generate_activities_tree {
                     if { !$completed_activity_p } {
                         set input_node [$dom_doc createElement input]
                         $input_node setAttribute type "checkbox"
+                        $input_node setAttribute style "vertical-align: bottom;"
                         $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld\""
                         $activity_node appendChild $input_node
                     } else {
@@ -2931,6 +2930,7 @@ ad_proc -public imsld::generate_activities_tree {
                     if { !$completed_activity_p } {
                         set input_node [$dom_doc createElement input]
                         $input_node setAttribute type "checkbox"
+                        $input_node setAttribute style "vertical-align: bottom;"
                         $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld\""
                         $activity_node appendChild $input_node
                     } else {
@@ -3043,6 +3043,7 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
                 if { !$completed_activity_p } {
                     set input_node [$dom_doc createElement input]
                     $input_node setAttribute type "checkbox"
+                    $input_node setAttribute style "vertical-align: bottom;"
                     $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld\""
                     $activity_node appendChild $input_node
                 } else {
@@ -3074,6 +3075,7 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
                 if { !$completed_activity_p } {
                     set input_node [$dom_doc createElement input]
                     $input_node setAttribute type "checkbox"
+                    $input_node setAttribute style "vertical-align: bottom;"
                     $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld\""
                     $activity_node appendChild $input_node
                 } else {
