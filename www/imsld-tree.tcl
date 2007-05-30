@@ -84,7 +84,7 @@ if {!$remaining_activities} {
             where run_id=:run_id
         }
     } else {
-         set user_message "Please wait for other users ..."
+         set user_message "[_ imsld.lt_Please_wait_for_other]"
     }
 }
 
@@ -95,13 +95,12 @@ set run_status [db_string get_run_status {
 }]
 
 if {[string eq "stopped" $run_status]} {
-    set user_message "The course has been finished"
+    set user_message "[_ imsld.lt_The_course_has_been_f]"
 }
 
 dom createDocument ul doc
 set dom_root [$doc documentElement]
 $dom_root setAttribute class "mktree"
-$dom_root setAttribute style "white-space: nowrap;"
 set imsld_title_node [$doc createElement li]
 $imsld_title_node setAttribute class "liOpen"
 set text [$doc createTextNode "$imsld_title"] 
@@ -135,7 +134,6 @@ if { $user_role_id == -1 } {
         dom createDocument ul aux_doc
         set aux_dom_root [$aux_doc documentElement]
         $aux_dom_root setAttribute class "mktree"
-        $aux_dom_root setAttribute style "white-space: nowrap;"
         set aux_title_node [$aux_doc createElement li]
         $aux_title_node setAttribute class "liOpen"
         set text [$doc createTextNode "[_ imsld.Extra_Activities]"] 

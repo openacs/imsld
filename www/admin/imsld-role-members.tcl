@@ -67,15 +67,14 @@ if {![string eq $group_instance "0"] && [db_0or1row has_role_parent_p {}]} {
 
 
 if {![db_0or1row get_group_name {}]} {
-    set group_name "No group selected"
-#    set create_instance_url [export_vars -base imsld-create-instance {{imsld_id $imsld_id} {role $role}}]
+    set group_name "[_ imsld.No_group_selected]"
     set create_instance_url imsld-create-instance 
-    set bulk_actions "{Create new instance} $create_instance_url {Create a new instance of a role}"
-    set bulk_actions_not "{Create new instance} $create_instance_url {Create a new instance of a role}"
+    set bulk_actions "{Create new instance} $create_instance_url {Create a new instance of a role #>}"
+    set bulk_actions_not "{Create new instance} $create_instance_url {[_ imsld.lt_Create_a_new_instance]}"
     set bulk_action_export_vars "{imsld_id} {role} {run_id}"
 } else {
-    set bulk_actions "{<------} {imsld-role-remove-members} {Remove selected members from the group}"
-    set bulk_actions_not "{------->} {imsld-role-add-members} {Add selected members to the group}"
+    set bulk_actions "{<------} {imsld-role-remove-members} {[_ imsld.lt_Remove_selected_membe]}"
+    set bulk_actions_not "{------->} {imsld-role-add-members} {[_ imsld.lt_Add_selected_members_]}"
                      
     set bulk_action_export_vars "{group_instance} {role} {imsld_id} {run_id} {members_list}"
 }
@@ -95,11 +94,6 @@ template::list::create \
     } \
     -bulk_actions "$bulk_actions"\
     -bulk_action_export_vars "$bulk_action_export_vars"
-
-#set orderby [template::list::orderby_clause -orderby -name asign_members]
-#if {[string equal $orderby ""]} {
-#    set orderby " order by username asc"
-#}
 
 template::list::create \
     -name asign_not_members \

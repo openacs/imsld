@@ -20,7 +20,6 @@ set text [$doc createTextNode "[_ imsld.Context_info]"]
 $environments_node_li appendChild $text
 set environments_node [$doc createElement ul]
 $environments_node setAttribute class "mktree"
-$environments_node setAttribute style "white-space: nowrap;"
 
 # FIX-ME: if the ul is empty, the browser shows the ul incorrectly   
 set text [$doc createTextNode ""]

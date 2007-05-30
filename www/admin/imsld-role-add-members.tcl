@@ -14,6 +14,9 @@ ad_page_contract {
     run_id
 } 
 
+set page_title "[_ imsld.Add_Members]" 
+set context "" 
+
 #only set required variables
    foreach user $user_id {
 

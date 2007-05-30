@@ -5,6 +5,7 @@
     <meta http-equiv="refresh" content="20">
     <script src="/resources/acs-templating/mktree.js" language="javascript"></script>
     <link rel="stylesheet" href="/resources/acs-templating/mktree.css" media="all">
+    <link rel="stylesheet" href="/resources/imsld/imsld.css" media="all">
 
 <SCRIPT>
     function confirmValue(myform){
@@ -16,50 +17,9 @@
 #imsld.lt_Sorry_your_browser_do#
 <br /><br />
 </NOSCRIPT>
-
-<style type="text/css">
-ul {
-font-family: Verdana, Arial, Helvetica, sans-serif;
-font-size: 12px;
-font-style: normal;
-font-weight: normal;
-font-variant: normal;
-text-decoration: none;
-text-transform: none;
-text-indent: -15px;
-padding: 0px;
-margin: 0px;
-}
-div.role_menu {
-    text-align: right;
-    font-size: 80%;
-	padding: 0px;      
-	margin: 0px;
-    top: 0px;
-    right: 0px;
-} 
-a.button  {
-	text-align: center;
-	border: 3px outset #00b;
-	background-color: #007; 
-	color: #fff;
-	font-weight: bold;
-	font-size: 10px;
-	text-decoration: none;
-	padding: 0px;      
-	margin: 0px;
-    top: 0px;
-    left: 0px;
-}
-a.button:hover  {
-	color: #fff;
-	background-color: #00d;
-	border: 3px inset #00b;
-}
-</style>
 </head>
 <body>
-<a href="@community_url@"  style="display: block; position: fixed;" class="button" target="_top">#imsld.Exit#</a>
+<a href="@community_url@" class="button" target="_top" title="#imsld.Exit#">#imsld.Exit#</a>
 <div class="role_menu">
 <form name="choose-role">
 <select name="current_role_id" id="roles_list" onChange="confirmValue(this.form)">

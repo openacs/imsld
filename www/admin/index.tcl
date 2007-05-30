@@ -79,11 +79,11 @@ set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
 db_multirow -extend { delete_template create_run } imslds  get_imslds { *SQL* } {
 
     if { [empty_string_p $live_revision] } {
-        set delete_template "<span style=\"font-style: italic; color: red; font-size: 9pt;\">[_ imsld.Deleted]</span> <a href=[export_vars -base "index" { {set_imsld_id_live $item_id} }]>[_ imsld.Make_it_live]</a>"
+        set delete_template "<span class=\"notice\">[_ imsld.Deleted]</span> <a href=[export_vars -base "index" { {set_imsld_id_live $item_id} }] title=\"[_ imsld.Make_it_live]\">[_ imsld.Make_it_live]</a>"
         set create_run ""
     } else {
-        set delete_template "<a href=\"[export_vars -base "imsld-delete" { imsld_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"<\#_ Delete  #>\"></a>"
-        set create_run "<a href=\"[export_vars -base "run-new" { {run_imsld_id $imsld_id} return_url }]\"> [_ imsld.create_new_run] </a>"
+        set delete_template "<a href=\"[export_vars -base "imsld-delete" { imsld_id return_url }]\" title=\"[_ imsld.Delete]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"[_ imsld.Delete]\"></a>"
+        set create_run "<a href=\"[export_vars -base "run-new" { {run_imsld_id $imsld_id} return_url }]\" title=\"[_ imsld.lt___imsldcreate_new_run]\"> [_ imsld.create_new_run] </a>"
     }
 }
 
@@ -135,31 +135,31 @@ set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
 
 db_multirow -extend { manage delete_template image_path image_alt image_title } imsld_runs get_runs { *SQL* } {
 
-    set delete_template "<a href=\"[export_vars -base "run-delete" { run_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"[_ imsld.Delte]\"></a>"
+    set delete_template "<a href=\"[export_vars -base "run-delete" { run_id return_url }]\" title=\"[_ imsld.Delte]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"[_ imsld.Delte]\"></a>"
     
     switch $status {
         deleted {
-            set delete_template "<span style=\"font-style: italic; color: red; font-size: 9pt;\">[_ imsld.Deleted]</span> <a href=[export_vars -base "index" { {set_run_id_live $run_id} }]>[_ imsld.Make_it_live]</a>"
+            set delete_template "<span class=\"notice\">[_ imsld.Deleted]</span> <a href=[export_vars -base "index" { {set_run_id_live $run_id} }] title=\"[_ imsld.Make_it_live]\">[_ imsld.Make_it_live]</a>"
         }
         active {
-            set delete_template "<a href=\"[export_vars -base "run-delete" { run_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"[_ imsld.Delete]\"></a>"
+            set delete_template "<a href=\"[export_vars -base "run-delete" { run_id return_url }]\" title=\"[_ imsld.Delete]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"[_ imsld.Delete]\"></a>"
             set image_alt "[_ imsld.active]"
             set image_title "[_ imsld.active]"
             set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/active.png"
-            set manage "<a href=\"[export_vars -base "imsld-view-roles" { run_id }]\">[_ imsld.View_members]</a> | <a href=\"[export_vars -base "monitor/" { run_id }]\">[_ imsld.Monitor]</a>" 
+            set manage "<a href=\"[export_vars -base "imsld-view-roles" { run_id }]\" title=\"[_ imsld.View_members]\">[_ imsld.View_members]</a> | <a href=\"[export_vars -base "monitor/" { run_id }]\" title=\"[_ imsld.Monitor]\">[_ imsld.Monitor]</a>" 
         }
         waiting {
             set image_alt "[_ imsld.waiting]"
             set image_title "[_ imsld.waiting]"
             set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/waiting.png"
-            set create_run "<a href=\"[export_vars -base "index" { {run_imsld_id $imsld_id} return_url }]\"> [_ imsld.create_new_run] </a>"
-            set manage "<a href=\"[export_vars -base "imsld-admin-roles" { run_id }]\">[_ imsld.Manage_Members]</a>" 
+            set create_run "<a href=\"[export_vars -base "index" { {run_imsld_id $imsld_id} return_url }]\" title=\"[_ imsld.create_new_run]\"> [_ imsld.create_new_run] </a>"
+            set manage "<a href=\"[export_vars -base "imsld-admin-roles" { run_id }]\" title=\"[_ imsld.Manage_Members]\">[_ imsld.Manage_Members]</a>" 
         }
         stopped {
             set image_alt "[_ imsld.stopped]"
             set image_title "[_ imsld.stopped]"
             set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
-            set manage "<a href=\"[export_vars -base "imsld-view-roles" { run_id }]\">[_ imsld.View_members]</a> | <a href=\"[export_vars -base "monitor/" { run_id }]\">[_ imsld.Monitor]</a>" 
+            set manage "<a href=\"[export_vars -base "imsld-view-roles" { run_id }]\" title=\"[_ imsld.View_members]\">[_ imsld.View_members]</a> | <a href=\"[export_vars -base "monitor/" { run_id }]\" title=\"[_ imsld.Monitor]\">[_ imsld.Monitor]</a>" 
         }
     }    
 }
