@@ -28,7 +28,7 @@ ad_progress_bar_begin \
     -message_1 "[_ imsld.lt_Uploading_and_process]" \
     -message_2 "[_ imsld.lt_We_will_continue_auto]"
 
-ns_write "[_ imsld.lt_h2Uploading_new_IMS_L] <blockquote>"
+ns_write "[_ imsld.lt_h2Uploading_new_IMS_L]"
 
 set community_id [dotlrn_community::get_community_id]
 # Atempting to create the new IMS LD.
@@ -64,8 +64,6 @@ if { ![string eq "" $warnings] } {
     ns_write "[_ imsld.lt_br__Warnings_ul_warni]"
     ns_sleep 5
 }
-
-ns_write "</blockquote>"
 
 # go to the roles admin page...
 ad_progress_bar_end -url [export_vars -base imsld-admin-roles {run_id}]
