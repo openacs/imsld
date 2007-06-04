@@ -11,10 +11,10 @@
 </property>
 
 <span id="addc1" class="show-hide">
-<a href="#" onClick="return _tp(false)" title="#imsld.Hide_1#" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_left.png" alt="#imsld.Hide#" border="0" align="top"/></a>
+<a href="#" onClick="return _tp(false)" title="#imsld.Hide_1#" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_left.png" alt="#imsld.Hide#" title="#imsld.Hide#" border="0" align="top"/></a>
 </span>
 <span id="addc" style="display:none;" class="show-hide">
-<a href="#" onClick="return _tp(true)" title="#imsld.Show_1#" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_right.png" alt="#imsld.Show#" border="0" align="top"/></a>
+<a href="#" onClick="return _tp(true)" title="#imsld.Show_1#" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_right.png" alt="#imsld.Show#" title="#imsld.Show#" border="0" align="top"/></a>
 </span>
 
 @list_header@

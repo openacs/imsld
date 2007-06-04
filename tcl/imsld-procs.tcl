@@ -2128,6 +2128,7 @@ ad_proc -public imsld::process_resource_as_ul {
         $img_node setAttribute src "[imsld::object_type_image_path -object_type $object_type]"
         $img_node setAttribute border "0"
         $img_node setAttribute alt "$object_title"
+        $img_node setAttribute title "$object_title"
         $a_node appendChild $img_node
         if { $li_mode_p } {
             set file_node [$dom_doc createElement li]
@@ -2156,6 +2157,7 @@ ad_proc -public imsld::process_resource_as_ul {
             $img_node setAttribute src "[imsld::object_type_image_path -object_type file-storage]"
             $img_node setAttribute border "0"
             $img_node setAttribute alt "$file_name"
+            $img_node setAttribute title "$file_name"
             $a_node appendChild $img_node
             if { $li_mode_p } {
                 set file_node [$dom_doc createElement li]
@@ -2184,6 +2186,7 @@ ad_proc -public imsld::process_resource_as_ul {
             $img_node setAttribute src "[imsld::object_type_image_path -object_type file-storage]"
             $img_node setAttribute border "0"
             $img_node setAttribute alt "$file_name"
+            $img_node setAttribute title "$file_name"
             $a_node appendChild $img_node
             if { $li_mode_p } {
                 set file_node [$dom_doc createElement li]
@@ -2202,6 +2205,7 @@ ad_proc -public imsld::process_resource_as_ul {
             $img_node setAttribute src "[imsld::object_type_image_path -object_type url]"
             $img_node setAttribute border "0"
             $img_node setAttribute alt "$url"
+            $img_node setAttribute title "$url"
             $a_node appendChild $img_node
             if { $li_mode_p } {
                 set file_node [$dom_doc createElement li]
@@ -2692,6 +2696,7 @@ ad_proc -public imsld::generate_structure_activities_list {
 
     @return A list of lists of the activities referenced from the activity structure
 } {
+    set imsld_package_id [ad_conn package_id]
     # auxiliary list to store the activities
     set completed_list [list]
     # get the structure info
@@ -2729,16 +2734,20 @@ ad_proc -public imsld::generate_structure_activities_list {
                     $activity_node appendChild $text
 
                     if { !$completed_p } {
-                        set input_node [$dom_doc createElement input]
-                        $input_node setAttribute type "checkbox"
-                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld\""
+                        set input_node [$dom_doc createElement a]
+                        $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
+			$input_node setAttribute class "finish"
+			$input_node setAttribute title "[_ imsld.finish_activity]"
+			set text [$dom_doc createTextNode "[_ imsld.finish]"]
+			$input_node appendChild $text
                         $activity_node appendChild $input_node
                     } else {
-                        set input_node [$dom_doc createElement input]
-                        $input_node setAttribute type "checkbox"
-                        $input_node setAttribute checked "true"
-                        $input_node setAttribute disabled "true"
-                        $activity_node appendChild $input_node
+			set img_node [$dom_doc createElement img]
+			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
+			$img_node setAttribute border "0"
+			$img_node setAttribute alt "[_ imsld.finished]"
+			$img_node setAttribute title "[_ imsld.finished]"
+                        $activity_node appendChild $img_node
                     }
 
                     set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
@@ -2769,16 +2778,20 @@ ad_proc -public imsld::generate_structure_activities_list {
                     $activity_node appendChild $text
                     
                     if { !$completed_p } {
-                        set input_node [$dom_doc createElement input]
-                        $input_node setAttribute type "checkbox"
-                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld\""
+                        set input_node [$dom_doc createElement a]
+                        $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
+			$input_node setAttribute class "finish"
+			$input_node setAttribute title "[_ imsld.finish_activity]"
+			set text [$dom_doc createTextNode "[_ imsld.finish]"]
+			$input_node appendChild $text
                         $activity_node appendChild $input_node
                     } else {
-                        set input_node [$dom_doc createElement input]
-                        $input_node setAttribute type "checkbox"
-                        $input_node setAttribute checked "true"
-                        $input_node setAttribute disabled "true"
-                        $activity_node appendChild $input_node
+			set img_node [$dom_doc createElement img]
+			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
+			$img_node setAttribute border "0"
+			$img_node setAttribute alt "[_ imsld.finished]"
+			$img_node setAttribute title "[_ imsld.finished]"
+                        $activity_node appendChild $img_node
                     }
 
                     set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
@@ -2846,6 +2859,7 @@ ad_proc -public imsld::generate_activities_tree {
         where run_id = :run_id
     }
     # start with the role parts
+    set imsld_package_id [ad_conn package_id]
 
     set user_role_id [db_string current_role {
         select map.active_role_id as user_role_id
@@ -2890,16 +2904,20 @@ ad_proc -public imsld::generate_activities_tree {
                     $activity_node appendChild $text
                         
                     if { !$completed_activity_p } {
-                        set input_node [$dom_doc createElement input]
-                        $input_node setAttribute type "checkbox"
-                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld\""
+                        set input_node [$dom_doc createElement a]
+                        $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
+			$input_node setAttribute class "finish"
+			$input_node setAttribute title "[_ imsld.finish_activity]"
+			set text [$dom_doc createTextNode "[_ imsld.finish]"]
+			$input_node appendChild $text
                         $activity_node appendChild $input_node
                     } else {
-                        set input_node [$dom_doc createElement input]
-                        $input_node setAttribute type "checkbox"
-                        $input_node setAttribute checked "true"
-                        $input_node setAttribute disabled "true"
-                        $activity_node appendChild $input_node
+			set img_node [$dom_doc createElement img]
+			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
+			$img_node setAttribute border "0"
+			$img_node setAttribute alt "[_ imsld.finished]"
+			$img_node setAttribute title "[_ imsld.finished]"
+                        $activity_node appendChild $img_node
                     }
 
                     $dom_node appendChild $activity_node
@@ -2929,16 +2947,20 @@ ad_proc -public imsld::generate_activities_tree {
                     $activity_node appendChild $text
                     
                     if { !$completed_activity_p } {
-                        set input_node [$dom_doc createElement input]
-                        $input_node setAttribute type "checkbox"
-                        $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld\""
+                        set input_node [$dom_doc createElement a]
+                        $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
+			$input_node setAttribute class "finish"
+			$input_node setAttribute title "[_ imsld.finish_activity]"
+			set text [$dom_doc createTextNode "[_ imsld.finish]"]
+			$input_node appendChild $text
                         $activity_node appendChild $input_node
                     } else {
-                        set input_node [$dom_doc createElement input]
-                        $input_node setAttribute type "checkbox"
-                        $input_node setAttribute checked "true"
-                        $input_node setAttribute disabled "true"
-                        $activity_node appendChild $input_node
+			set img_node [$dom_doc createElement img]
+			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
+			$img_node setAttribute border "0"
+			$img_node setAttribute alt "[_ imsld.finished]"
+			$img_node setAttribute title "[_ imsld.finished]"
+                        $activity_node appendChild $img_node
                     }
 
                     $dom_node appendChild $activity_node
@@ -3007,7 +3029,7 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
     #    NOTE: the activity will be shown only once, no matter from how many role parts it is referenced
 
     set user_role_id [db_string current_role { *SQL* }]
-
+    set imsld_package_id [ad_conn package_id]
 
     # get the referenced activities to the role, assigned at runtime (notifications, level C)
 
@@ -3041,16 +3063,20 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
                 $activity_node appendChild $text
                 
                 if { !$completed_activity_p } {
-                    set input_node [$dom_doc createElement input]
-                    $input_node setAttribute type "checkbox"
-                    $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld\""
-                    $activity_node appendChild $input_node
+		    set input_node [$dom_doc createElement a]
+		    $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
+		    $input_node setAttribute class "finish"
+		    $input_node setAttribute title "[_ imsld.finish_activity]"
+		    set text [$dom_doc createTextNode "[_ imsld.finish]"]
+		    $input_node appendChild $text
+		    $activity_node appendChild $input_node
                 } else {
-                    set input_node [$dom_doc createElement input]
-                    $input_node setAttribute type "checkbox"
-                    $input_node setAttribute checked "true"
-                    $input_node setAttribute disabled "true"
-                    $activity_node appendChild $input_node
+		    set img_node [$dom_doc createElement img]
+		    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
+		    $img_node setAttribute border "0"
+		    $img_node setAttribute alt "[_ imsld.finished]"
+		    $img_node setAttribute title "[_ imsld.finished]"
+		    $activity_node appendChild $img_node
                 }
                 
                 $dom_node appendChild $activity_node
@@ -3072,16 +3098,20 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
                 $activity_node appendChild $text
                 
                 if { !$completed_activity_p } {
-                    set input_node [$dom_doc createElement input]
-                    $input_node setAttribute type "checkbox"
-                    $input_node setAttribute onclick "window.location=\"finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld\""
-                    $activity_node appendChild $input_node
+		    set input_node [$dom_doc createElement a]
+		    $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
+		    $input_node setAttribute class "finish"
+		    $input_node setAttribute title "[_ imsld.finish_activity]"
+		    set text [$dom_doc createTextNode "[_ imsld.finish]"]
+		    $input_node appendChild $text
+		    $activity_node appendChild $input_node
                 } else {
-                        set input_node [$dom_doc createElement input]
-                    $input_node setAttribute type "checkbox"
-                    $input_node setAttribute checked "true"
-                    $input_node setAttribute disabled "true"
-                    $activity_node appendChild $input_node
+		    set img_node [$dom_doc createElement img]
+		    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
+		    $img_node setAttribute border "0"
+		    $img_node setAttribute alt "[_ imsld.finished]"
+		    $img_node setAttribute title "[_ imsld.finished]"
+		    $activity_node appendChild $img_node
                 }
                 
                 $dom_node appendChild $activity_node

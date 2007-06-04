@@ -42,8 +42,39 @@ a.button:hover  {
   border: 3px inset #00b;
 }
 
-button {	
+.button {	
   display: block; 
   position: fixed;
 }
+
+a.finish {
+  font-size:9px;
+  font-family:Tahoma,sans-serif;
+  text-align:left;
+  color:#FFFFFF;
+  background-color:#2878C0;
+  border-top-style:solid;
+  border-top-color:#2878C0;
+  border-top-width:1px;
+  border-bottom-style:solid;
+  border-bottom-color:#2878C0;
+  border-bottom-width:1px;
+  border-left-style:solid;
+  border-left-color:#1858B8;
+  border-left-width:6px;
+  border-right-style:solid;
+  border-right-color:#508CC0;
+  border-right-width:6px;
+}
+a.finish:hover  {
+  color: #fff;
+  background-color:#1858B8;
+  border-style:double;
+}
+
+.finish { 
+  padding:0px;
+  margin:0px;
+}
+
 

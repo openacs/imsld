@@ -9,6 +9,7 @@
   <msg key="_Status_The_run_is">| Status: The run is</msg>
   <msg key="Act_Identifier">Act Identifier</msg>
   <msg key="active">active</msg>
+  <msg key="Activities">Activities</msg>
   <msg key="Activity_Identifier">Activity Identifier</msg>
   <msg key="Activity_Name">Activity Name</msg>
   <msg key="Activity_report">Activity report</msg>
@@ -59,6 +60,8 @@
   <msg key="Feedbach_Title">Feedbach Title</msg>
   <msg key="Feedback">Feedback</msg>
   <msg key="File_name">File name</msg>
+  <msg key="finish">(finish)</msg>
+  <msg key="finish_activity">finish activity</msg>
   <msg key="Finish_Date">Finish Date</msg>
   <msg key="finished">finished</msg>
   <msg key="Finished_Date">Finished Date</msg>
@@ -338,8 +341,8 @@
                        Go to the UoL: &lt;a href=\&quot;%imsld_url%\&quot;&gt;%imsld_title%&lt;/a&gt; (in the community: &lt;a href=\&quot;%community_url%\&quot;&gt;%community_name%&lt;/a&gt; community) for further details.</msg>
   <msg key="lt_Username_Property_Ide">Username Property Identifier</msg>
   <msg key="lt_Users_individual_repo">User's individual report</msg>
-  <msg key="lt_Users_who_have_bat_le">Users who have &lt;b&gt;at least visited&lt;/b&gt; the service</msg>
-  <msg key="lt_Users_who_have_bviewe">Users who have &lt;b&gt;viewed/visited all&lt;/b&gt; the referenced resources from the environment</msg>
+  <msg key="lt_Users_who_have_bat_le">Users who have at least visited the service</msg>
+  <msg key="lt_Users_who_have_bviewe">Users who have viewed or visited all the referenced resources from the environment</msg>
   <msg key="lt_Users_who_have_starte">Users who have started and/or finished this activity</msg>
   <msg key="lt_Valid_types_are_learn">Valid types are learning, support and structure</msg>
   <msg key="lt_Warning_More_than_one">More than one learning object in environment %identifier%. Just one used (the first one)</msg>
@@ -364,6 +367,7 @@
   <msg key="Monitor_properties">Monitor properties</msg>
   <msg key="Monitoring">User</msg>
   <msg key="Name">Name</msg>
+  <msg key="navigate">navigate through the content using the links above</msg>
   <msg key="nbspnbspnbspdone">&amp;nbsp;&amp;nbsp;&amp;nbsp;done</msg>
   <msg key="New_IMS-LD">New IMS-LD</msg>
   <msg key="No">information found in the imsmanifest.xml file. Nothing to do.</msg>

@@ -2,7 +2,6 @@
 <html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta http-equiv="refresh" content="20">
     <script src="/resources/acs-templating/mktree.js" language="javascript"></script>
     <link rel="stylesheet" href="/resources/acs-templating/mktree.css" media="all">
     <link rel="stylesheet" href="/resources/imsld/imsld.css" media="all">
@@ -12,11 +11,6 @@
         myform.submit()
     }
 </SCRIPT>
-<NOSCRIPT>
-<br /><br />
-#imsld.lt_Sorry_your_browser_do#
-<br /><br />
-</NOSCRIPT>
 </head>
 <body>
 <a href="@community_url@" class="button" target="_top" title="#imsld.Exit#">#imsld.Exit#</a>
