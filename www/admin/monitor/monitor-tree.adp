@@ -1,30 +1,17 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
+<master src="../../../lib/imsld-master">
+<property name="header_stuff">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <script src="/resources/acs-templating/mktree.js" language="javascript"></script>
     <link rel="stylesheet" href="/resources/acs-templating/mktree.css" media="all">
     <link rel="stylesheet" href="/resources/imsld/imsld.css" media="all">
+    <link rel="stylesheet" href="/resources/theme-zen/css/main.css" media="all">
+</property>
 
-<SCRIPT>
-    function confirmValue(myform){
-        myform.submit()
-    }
-</SCRIPT>
-
-<style type="text/css">
-li {
-  padding: 5px 0px 0px 0px;
-}
-</style>
-</head>
-<body>
 <a href="@imsld_admin_url@" class="button" target="_top" title=\"#imsld.Exit#\">#imsld.Exit#</a>
 <br />
 @properties_tree;noquote@
 @html_tree;noquote@
 @aux_html_tree;noquote@
-</body>
 
 <script type="text/javascript">
 var as = document.getElementsByTagName("a");
@@ -41,4 +28,5 @@ for (var i = 0; i < as.length; i++) {
 }
 </script>
 
-</html>
+</body>
+

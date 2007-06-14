@@ -2,25 +2,13 @@
   <property name="title">@page_title;noquote@</property>
   <property name="context">@context;noquote@</property>
   <property name="header_stuff">
-<style  type="text/css">
-.table {
-  clear:both;
-  padding-right:20px;
-}
-.row {
-  float:left;
-  display:inline;
-  margin_0px;
-  padding-right:30px;
-}
-.confirm {
-  float:left;
-  text-indent:-180px;
-  margin-top:40px;
+   <link rel="stylesheet" type="text/css" media="all" href="/resources/imsld/imsld.css">
+<style type="text/css">
+ul {
+  text-indent: 0px;
 }
 </style>
-</property>
-
+  </property>
 
 <SCRIPT>
     function confirmValue(myform){
@@ -28,17 +16,17 @@
     }
 </SCRIPT>
 
-<div class="table">
-  <div class="row">
+<div class="one-row">
+  <div class="one-element">
    <formtemplate id="choose_role"></formtemplate>
   </div>
   <if @role@ not eq 0>
-  <div class="row">
+  <div class="one-element">
       <include src="imsld-groups">
   </div>
    </if> 
    <if @finishable@ not eq 0>
-  <div class="confirm">
+  <div class="roles-confirm">
      <formtemplate id="finish_management"></formtemplate>
   </div>
    </if>

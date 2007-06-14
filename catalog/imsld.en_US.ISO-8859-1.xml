@@ -35,7 +35,9 @@
   <msg key="Confirm_New_IMS-LD">Confirm: New IMS-LD</msg>
   <msg key="Confirm_this_changes">Confirm these changes</msg>
   <msg key="Context_info">Context info</msg>
+  <msg key="Create_a_new_group">Create a new group</msg>
   <msg key="Create_New">Create New?</msg>
+  <msg key="Create_new">Create new</msg>
   <msg key="create_new_run">create new run</msg>
   <msg key="Create_role_instance">Create role instance</msg>
   <msg key="Creating_default_Run">Creating default Run...</msg>
@@ -69,6 +71,7 @@
   <msg key="go_back">go back</msg>
   <msg key="Go_to_UoL_page">Go to UoL page</msg>
   <msg key="Group_members">Group members</msg>
+  <msg key="Group_name">Group name</msg>
   <msg key="Groups">Groups in role</msg>
   <msg key="Hide">Hide</msg>
   <msg key="Hide_1">panel</msg>
@@ -168,6 +171,8 @@
   <msg key="lt_Couldnt_determine_if_">Couldn't determine if this is a well formed IMS-LD: %message%</msg>
   <msg key="lt_Creaginting_new_IMS-L">Creaginting new IMS-LD</msg>
   <msg key="lt_Create_a_new_instance">Create a new instance of a role</msg>
+  <msg key="lt_Current_Unit_of_Learn">Current Unit of Learning does not allow creation of multiple instances of this role.</msg>
+  <msg key="lt_Current_UoL_does_not_">Current UoL does not allow to include them in more than one subroles of the role.</msg>
   <msg key="lt_Dear_recepient_name_b">Dear %recepient_name% &lt;br&gt; 
                        %sender_name has% triggered this notification. Please do not replay to this email. &lt;br&gt;</msg>
   <msg key="lt_Email_Propery_Identif">Email Propery Identifier</msg>
@@ -227,6 +232,7 @@
   <msg key="lt_li_desc_no_file_assoc">&lt;li&gt; desc (no file associated) &lt;/li&gt;</msg>
   <msg key="lt_manifest_namespace_is">manifest namespace is not imscp</msg>
   <msg key="lt_Max_number_of_student">Max. number of students per group: %max_persons%</msg>
+  <msg key="lt_Members_not_allowed_n">Members $not_allowed_name are already members of other subroles of role $parent_role_name.</msg>
   <msg key="lt_Min_number_of_student">Min. number of students per group: %min_persons%</msg>
   <msg key="lt_Monitoring_One_Activi">Monitoring One Activity</msg>
   <msg key="lt_More_than_one_service">More than one service in environment %identifier%. Just one used (the first one)</msg>
@@ -236,6 +242,10 @@
   <msg key="lt_No_information_found_">No information found in the manifest file</msg>
   <msg key="lt_No_parent_folder_foun">No parent folder found</msg>
   <msg key="lt_No_parent_folder_foun_1">No parent folder found for the ims-ld in the community %community_id%. Please report this error to the administrator.</msg>
+  <msg key="lt_Number_of_members_doe">Number of members does not reach the minimum allowed number of users for this role.
+                       There must be at least $min_persons members.</msg>
+  <msg key="lt_Number_of_members_exc">Number of members exceded the allowed number for this role.
+                       You must not select more than $max_persons members.</msg>
   <msg key="lt_Number_of_Organizatio">Number of Organizations:</msg>
   <msg key="lt_On_Completion_Identif">On Completion Identifier</msg>
   <msg key="lt_Organization_Identifi">Organization Identifier</msg>
@@ -415,6 +425,7 @@
   <msg key="Runinfo_Name">Run(UoL) Name:</msg>
   <msg key="Runs">Runs (IMS-LD instances)</msg>
   <msg key="Select">select user...</msg>
+  <msg key="Select_a_group">Select a group...</msg>
   <msg key="Select_a_role">Select a role...</msg>
   <msg key="Select_a_role_1">Select a role</msg>
   <msg key="Select_role">Select role...</msg>

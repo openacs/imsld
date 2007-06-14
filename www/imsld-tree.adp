@@ -1,18 +1,9 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<master src="../lib/imsld-master">
+<property name="header_stuff">
     <script src="/resources/acs-templating/mktree.js" language="javascript"></script>
     <link rel="stylesheet" href="/resources/acs-templating/mktree.css" media="all">
-    <link rel="stylesheet" href="/resources/imsld/imsld.css" media="all">
+</property>
 
-<SCRIPT>
-    function confirmValue(myform){
-        myform.submit()
-    }
-</SCRIPT>
-</head>
-<body>
 <a href="@community_url@" class="button" target="_top" title="#imsld.Exit#">#imsld.Exit#</a>
 <div class="role_menu">
 <form name="choose-role">
@@ -34,7 +25,6 @@
 <if @user_message@ not nil>
 @user_message@
 </if>
-</body>
 
 <script type="text/javascript">
 var as = document.getElementsByTagName("a");
@@ -55,6 +45,5 @@ for (var i = 0; i < as.length; i++) {
   document.forms['choose-role'].elements['ok'].style.display="none"
 </SCRIPT>
 
-</html>
 
 

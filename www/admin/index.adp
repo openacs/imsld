@@ -2,19 +2,14 @@
   <property name="title">@page_title;noquote@</property>
   <property name="context">@context;noquote@</property>
   <property name="header_stuff">
-<style  type="text/css">
-.notice { 
-  font-style: italic; 
-  color: red; 
-  font-size: 9pt;
-}
-</style>
-</property>
+    <link rel="stylesheet" type="text/css" media="all" href="/resources/imsld/imsld.css" /> 
+  </property>
+
 <p><formtemplate id="upload_file_form"></formtemplate></p>
 
 <h2>#imsld.IMS-LDs_1#</h2>
-<blockquote><listtemplate name="imslds"></listtemplate></blockquote>
+<div class="indented"><listtemplate name="imslds"></listtemplate></div>
 
 <h2>#imsld.Runs#</h2>
-<blockquote><listtemplate name="imsld_runs"></listtemplate></blockquote>
+<div class="indented"><listtemplate name="imsld_runs"></listtemplate></div>
 

@@ -2,19 +2,6 @@
    General styles used in the IMS-LD package
   --------------------------------------------------*/
 
-ul {
-  font-family: Verdana, Arial, Helvetica, sans-serif;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: normal;
-  font-variant: normal;
-  text-decoration: none;
-  text-transform: none;
-  text-indent: -15px;
-  padding: 0px 0px 5px 0px;
-  margin: 0px;
-  white-space: nowrap;
-}
 div.role_menu {
   text-align: right;
   font-size: 80%;
@@ -23,28 +10,25 @@ div.role_menu {
   top: 0px;
   right: 0px;
 } 
-a.button  {
-  text-align: center;
-  border: 3px outset #00b;
-  background-color: #007; 
-  color: #fff;
-  font-weight: bold;
-  font-size: 10px;
-  text-decoration: none;
-  padding: 0px;      
-  margin: 0px;
-  top: 0px;
-  left: 0px;
-}
-a.button:hover  {
-  color: #fff;
-  background-color: #00d;
-  border: 3px inset #00b;
+
+.indented {  
+  margin-left:20px;
 }
 
-.button {	
-  display: block; 
-  position: fixed;
+.one-row {
+  clear:both;
+  padding-right:20px;
+}
+.one-element {
+  float:left;
+  display:inline;
+  margin:0px;
+  padding-right:30px;
+}
+.roles-confirm {
+  float:left;
+  text-indent:-180px;
+  margin-top:40px;
 }
 
 a.finish {
@@ -67,14 +51,26 @@ a.finish {
   border-right-width:6px;
 }
 a.finish:hover  {
-  color: #fff;
+  color:#FFFFFF;
   background-color:#1858B8;
   border-style:double;
 }
-
 .finish { 
   padding:0px;
   margin:0px;
 }
 
+ul {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-decoration: none;
+  text-transform: none;
+  text-indent: -15px;
+  padding: 0px 0px 5px 0px;
+  margin: 0px;
+  white-space: nowrap;
+}
 

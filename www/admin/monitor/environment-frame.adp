@@ -7,7 +7,17 @@
     <link rel="stylesheet" href="/resources/imsld/imsld.css" media="all">
 <style type="text/css">
 ul {
-text-indent: 0px;
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-decoration: none;
+  text-transform: none;
+  text-indent: 0px;
+  padding: 0px;
+  margin: 0px;
+  white-space: nowrap;
 }
 </style>
 </head>
