@@ -142,7 +142,7 @@ ad_proc -public imsld::monitor::structure_activities_list {
                 set structure_node [$dom_doc createElement li]
                 $structure_node setAttribute class "liOpen"
                 set a_node [$dom_doc createElement a]
-                $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "structure"}}]"
+                $a_node setAttribute href "[export_vars -base "activity-frame" -url {structure_id run_id {type "structure"}}]"
                 $a_node setAttribute target "content"
                 set text [$dom_doc createTextNode "$activity_title"]
                 $a_node appendChild $text
@@ -152,7 +152,7 @@ ad_proc -public imsld::monitor::structure_activities_list {
                 $structure_node appendChild $text
                 
                 set info_node [$dom_doc createElement a]
-                $info_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "structure"}}]"
+                $info_node setAttribute href "[export_vars -base "activity-frame" -url {{activity_id $structure_id} run_id {type "structure"}}]"
                 $info_node setAttribute target "content"
                 set text [$dom_doc createTextNode "([imsld::monitor::number_of_visitors -run_id $run_id -revision_id $structure_id -type "activity"])"]
                 $info_node appendChild $text
