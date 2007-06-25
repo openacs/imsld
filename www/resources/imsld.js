@@ -46,17 +46,17 @@ function _tp(a){
    var ac=document.getElementById("addc1");
 
    if (a) {
-     ai=''; 
-     aj='none';
+     ai='show'; 
+     aj='hide';
      parent.document.getElementsByTagName("frameset")[0].cols='30%,*';
    } else {
-     ai='none';
-     aj='';
+     ai='hide';
+     aj='show';
      parent.document.getElementsByTagName("frameset")[0].cols='0%,*';
    }
 
-   ac.style.display=ai;
-   ab.style.display=aj;
+   ac.className=ai;
+   ab.className=aj;
    
    return false;
 }
@@ -80,5 +80,4 @@ for (var i = 0; i < as.length; i++) {
 }
 
   tabberAutomatic();
-
 }

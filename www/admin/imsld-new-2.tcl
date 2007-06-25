@@ -66,6 +66,6 @@ if { ![string eq "" $warnings] } {
 }
 
 # go to the roles admin page...
-ad_progress_bar_end -url [export_vars -base imsld-admin-roles {run_id}]
+ad_progress_bar_end -url "index"
 
 

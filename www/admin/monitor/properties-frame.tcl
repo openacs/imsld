@@ -20,19 +20,6 @@ ad_page_contract {
     }
 }
 
-# context info
-db_1row context_info {
-    select ic.item_id as component_item_id,
-    ii.imsld_id,
-    rug.group_id as run_group_id
-    from imsld_componentsi ic, imsld_imsldsi ii, imsld_runs ir, imsld_run_users_group_ext rug
-    where ic.imsld_id = ii.item_id
-    and content_revision__is_live(ii.imsld_id) = 't'
-    and ii.imsld_id = ir.imsld_id
-    and rug.run_id = ir.run_id
-    and ir.run_id = :run_id
-}
-
 # Get file-storage root folder_id
 set fs_package_id [site_node_apm_integration::get_child_package_id \
 		       -package_id [dotlrn_community::get_package_id [dotlrn_community::get_community_id]] \
@@ -98,17 +85,17 @@ if { [string eq $type "locpers"] || [string eq $type "globpers"] } {
     $form_node appendChild $select_node
 
     # adding hidden variables
-    set run_id_node [$dom_doc createElement "input"]
-    $run_id_node setAttribute name "run_id"
-    $run_id_node setAttribute type "hidden"
-    $run_id_node setAttribute value "$run_id"
-    $form_node appendChild $run_id_node
-
     set type_node [$dom_doc createElement "input"]
     $type_node setAttribute name "type"
     $type_node setAttribute type "hidden"
     $type_node setAttribute value "$type"
     $form_node appendChild $type_node
+
+    set run_id_node [$dom_doc createElement "input"]
+    $run_id_node setAttribute name "run_id"
+    $run_id_node setAttribute type "hidden"
+    $run_id_node setAttribute value "$run_id"
+    $form_node appendChild $run_id_node
 
     # adding the submit button
     set submit_node [$dom_doc createElement "input"]
@@ -153,18 +140,18 @@ if { [string eq $type "locpers"] || [string eq $type "globpers"] } {
     }
     $form_node appendChild $select_node
 
-    # adding hidden variables
-    set run_id_node [$dom_doc createElement "input"]
-    $run_id_node setAttribute name "run_id"
-    $run_id_node setAttribute type "hidden"
-    $run_id_node setAttribute value "$run_id"
-    $form_node appendChild $run_id_node
-
+    #adding hidden variables
     set type_node [$dom_doc createElement "input"]
     $type_node setAttribute name "type"
     $type_node setAttribute type "hidden"
     $type_node setAttribute value "$type"
     $form_node appendChild $type_node
+
+    set run_id_node [$dom_doc createElement "input"]
+    $run_id_node setAttribute name "run_id"
+    $run_id_node setAttribute type "hidden"
+    $run_id_node setAttribute value "$run_id"
+    $form_node appendChild $run_id_node
 
     set role_id_node [$dom_doc createElement "input"]
     $role_id_node setAttribute name "role_id"
@@ -333,6 +320,21 @@ db_foreach property "
     $owner_node setAttribute type "hidden"
     $owner_node setAttribute value "$user_id"
     $form_node appendChild $owner_node
+
+    if { ![string eq "" $role_instance_id] } {
+	set role_instance_node [$dom_doc createElement "input"]
+	$role_instance_node setAttribute name "role_instance_id"
+	$role_instance_node setAttribute type "hidden"
+	$role_instance_node setAttribute value "$role_instance_id"
+	$form_node appendChild $role_instance_node
+    }
+
+    # adding hidden variables
+    set run_id_node [$dom_doc createElement "input"]
+    $run_id_node setAttribute name "run_id"
+    $run_id_node setAttribute type "hidden"
+    $run_id_node setAttribute value "$run_id"
+    $form_node appendChild $run_id_node
 
     # adding return url
     set return_url_node [$dom_doc createElement "input"]

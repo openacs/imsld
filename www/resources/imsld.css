@@ -74,3 +74,27 @@ ul {
   white-space: nowrap;
 }
 
+/* arrow to minimize / maximize the activitie's tree window */
+
+
+/* notices / messages style */
+.notice {		
+  font-size: x-small; 
+  font-weight: bold; 
+  background-color: #bbbbff; 
+  padding:0px;
+  margin:0px;
+}
+
+.hide { 
+  position:absolute;
+  top:0px;
+  left:0px;
+  display:none;
+}
+.show { 
+  position:relative;
+  top:0px;
+  left:0px;
+}
+

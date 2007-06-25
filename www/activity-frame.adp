@@ -10,30 +10,13 @@
 document.write('<style type="text/css">.tabber{display:none;}<\/style>');
 </script>
 
-<style type="text/css">
-.show-hide { 
-  position:absolute;
-  top:0px;
-  left:0px;
-}
-.hide { 
-  display:none;
-}
-.notice {		
-  font-size: x-small; 
-  font-weight: bold; 
-  background-color: #bbbbff; 
-  padding:0px;
-  margin:0px;
-}
-</style>
 </property>
 
-<span id="addc1" class="show-hide">
-<a href="#" onClick="return _tp(false)" title="#imsld.Hide_1#" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_left.png" alt="#imsld.Hide#" title="#imsld.Hide#" border="0" align="top"/></a>
+<span id="addc1">
+<a href="#" onClick="return _tp(false)" title="#imsld.Hide_1#"><img src="/resources/acs-subsite/stock_left.png" alt="#imsld.Hide#" title="#imsld.Hide#" border="0" align="top"/></a>
 </span>
-<span id="addc" style="display:none;" class="show-hide">
-<a href="#" onClick="return _tp(true)" title="#imsld.Show_1#" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_right.png" alt="#imsld.Show#" title="#imsld.Show#" border="0" align="top"/></a>
+<span id="addc">
+<a href="#" onClick="return _tp(true)" title="#imsld.Show_1#"><img src="/resources/acs-subsite/stock_right.png" alt="#imsld.Show#" title="#imsld.Show#" border="0" align="top"/></a>
 </span>
 
 <if @roles_template_p@ eq 1>
@@ -44,14 +27,15 @@ document.write('<style type="text/css">.tabber{display:none;}<\/style>');
 </if>
 <else>
 @activities;noquote@
+<p class="notice">#imsld.navigate#</p>
 </else>
 
-<p class="notice">#imsld.navigate#</p>
 <iframe id="object" name="object"></iframe>
 
 
 
 <script type="text/javascript">
+  _tp('true');
 <if @roles_template_p@ eq 1>
                 dynamicSelect("supported-roles", "user-roles");
 </if>

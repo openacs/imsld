@@ -16,6 +16,15 @@
 <multiple name="body_script">    <script type="@body_script.type;noquote@"<if @body_script.src@ not nil> src="@body_script.src;noquote@"</if><if @body_script.charset@ not nil> charset="@body_script.charset;noquote@"</if><if @body_script.defer@ not nil> defer="@body_script.defer;noquote@"</if>><if @body_script.content@ not nil>@body_script.content;noquote@</if></script>
 </multiple>
 
+<if @user_messages:rowcount@ gt 0>
+  <div id="alert-message">
+     <ul>
+        <multiple name="user_messages">
+         <div class="alert"><strong>@user_messages.message;noquote@</strong></div>
+        </multiple>
+      </ul>
+   </div>
+</if>
 
 <if @acs_blank_master.rte@ not nil and @acs_blank_master__htmlareas@ not nil>
 <script language="JavaScript" type="text/javascript">

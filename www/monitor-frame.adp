@@ -1,23 +1,4 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-
-<SCRIPT>
-    function confirmValue(myform){
-        myform.submit()
-    }
-</SCRIPT>
-
-<style type="text/css">
-.hide { 
-  display:none;
-}
-</style>
-
-
-</head>
-<body>
+<master src="../lib/imsld-master">
 
 #imsld.Monitoring#: @monitoring_user_name@
 
@@ -45,8 +26,6 @@
 </div>
 
 <iframe id="object" name="object"></iframe>
-
-</body>
 
 <script type="text/javascript">
 function resizeobject() {
@@ -78,4 +57,3 @@ document.getElementById('object').src = as[0].getAttribute('href');
   document.forms['choose-user'].elements['ok'].style.display="none"
 </SCRIPT>
 
-</html>

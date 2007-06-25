@@ -104,26 +104,24 @@ ad_proc -public imsld::runtime::property::property_value_set {
     {-property_id ""}
     {-upload_file ""}
     {-tmpfile ""}
+    {-role_instance_id ""}
 } {
     Sets a property to the given value. If some restriction is violated returns 0 and an explanation.
 } {
     upvar recursivity_count recursivity_count
 
-    # context info
-    db_1row context_info {
-        select ic.item_id as component_item_id,
-        ii.imsld_id,
-        rug.group_id as run_group_id
-        from imsld_componentsi ic, imsld_imsldsi ii, imsld_runs ir, imsld_run_users_group_ext rug
-        where ic.imsld_id = ii.item_id
-        and content_revision__is_live(ii.imsld_id) = 't'
-        and ii.imsld_id = ir.imsld_id
-        and rug.run_id = ir.run_id
-        and ir.run_id = :run_id
-    }
-
     # property info
     if { [string eq $property_id ""] } {
+    # context info in case we need to obtain the property_id from the identifier 
+	db_1row context_info {
+	    select ic.item_id as component_item_id
+	    from imsld_componentsi ic, imsld_imsldsi ii, imsld_runs ir, imsld_run_users_group_ext rug
+	    where ic.imsld_id = ii.item_id
+	    and content_revision__is_live(ii.imsld_id) = 't'
+	    and ii.imsld_id = ir.imsld_id
+	    and rug.run_id = ir.run_id
+	    and ir.run_id = :run_id
+	}
         db_1row property_info_from_identifier {
             select type,
             property_id,
@@ -145,15 +143,18 @@ ad_proc -public imsld::runtime::property::property_value_set {
     }
 
     # instance info
-    set role_instance_id ""
-    if { ![string eq $role_id ""] } {
-        # find the role instance which the user belongs to
-        set role_instance_id [imsld::roles::get_user_role_instance -run_id $run_id -role_id $role_id -user_id $user_id]
-        if { !$role_instance_id } {
-            # runtime error... the user doesn't belong to any role instance
-            ns_log notice "User does not belong to any role instance"
-            continue
-        }
+    # there are two places where this proc is called: from run-time procs or from the monitor interface
+    # if we are inside the monitor interface, we know the role_instance_id, otherwise we have to find it out
+    if { [string eq "" $role_instance_id] && [string eq $type "locrole"] } {
+	if { ![string eq $role_id ""] } {
+	    # find the role instance we are working on
+	    set role_instance_id [imsld::roles::get_user_role_instance -run_id $run_id -role_id $role_id -user_id $user_id]
+	    if { !$role_instance_id } {
+		# runtime error... the user doesn't belong to any role instance
+		util_user_message -message "<#_ User does not belong to any role instance #>"
+		ad_script_abort
+	    }
+	}
     }
 
     db_1row get_property_instance {

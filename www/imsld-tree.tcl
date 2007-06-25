@@ -57,7 +57,7 @@ if { ![db_0or1row get_current_role {
     and iruge.run_id = :run_id
     and map.active_role_id is not null
 }] } {
-    # generate the first option
+    # no role have been selected, generate the first option
     set possible_user_roles [linsert $possible_user_roles 0 0]
     set possible_user_role_names [linsert $possible_user_role_names 0 "[_ imsld.Select_role]"]
     set user_role_id -1

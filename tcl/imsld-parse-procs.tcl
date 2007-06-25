@@ -1230,7 +1230,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
         imsld::parse::validate_multiplicity -tree $lrp_datatype -multiplicity 1 -element_name "locrole-property datatype" -equal
         set lrp_datatype [string tolower [imsld::parse::get_attribute -node $lrp_datatype -attr_name datatype]]
 
-        set role_ref [$lrp_datatype selectNodes "*\[local-name()='role-ref'\]"]
+        set role_ref [$locrole_property selectNodes "*\[local-name()='role-ref'\]"]
         imsld::parse::validate_multiplicity -tree $lrp_datatype -multiplicity 1 -element_name "locrole-property role" -equal
         set ref [imsld::parse::get_attribute -node $role_ref -attr_name ref]
         if { ![db_0or1row get_role_id {
@@ -1318,7 +1318,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
     foreach glob_property $glob_properties {
         set g_identifier [imsld::parse::get_attribute -node $glob_property -attr_name identifier]
         set g_existing [$glob_property selectNodes "*\[local-name()='existing'\]"] 
-        imsld::parse::validate_multiplicity -tree $g_exiting -multiplicity 1 -element_name "existing(glob)" -lower_than
+        imsld::parse::validate_multiplicity -tree $g_existing -multiplicity 1 -element_name "existing(glob)" -lower_than
         if { [llength $g_existing] } {
             set g_existing_href [imsld::parse::get_attribute -node $g_exiting -attr_name href]
         } else {
@@ -1326,7 +1326,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
         }
 
         set global_def [$glob_property selectNodes "*\[local-name()='global-definition'\]"]
-        set global_def_list [imsld::parse::parse_and_create_global_def -type glob \
+        set global_def_list [imsld::parse::parse_and_create_global_def -type global \
                                  -identifier $g_identifier \
                                  -existing_href $g_existing_href \
                                  -global_def_node $global_def \

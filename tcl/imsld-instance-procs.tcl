@@ -29,13 +29,14 @@ ad_proc -public imsld::instance::instantiate_imsld {
     # 2. create the run group
     set group_run_id [package_instantiate_object -creation_user [ad_conn user_id]  -creation_ip [ad_conn peeraddr]  -package_name imsld_run_users_group -start_with "group"  -var_list [list [list group_id ""] [list group_name "IMS-LD Run Group ($run_id)"]  [list run_id $run_id]]  imsld_run_users_group]
 
-    # 3. if community_id is not empty, assign the community users to the run
-    if { ![string eq $community_id ""] } {
-        foreach user [dotlrn_community::list_users $community_id] {
-            set user_id [ns_set get $user user_id]
-            relation_add imsld_run_users_group_rel $group_run_id $user_id
-        }
-    }
+# jopez: commented out so the users assigned to the run are the ones that the user actually assigns to the run...
+#     # 3. if community_id is not empty, assign the community users to the run
+#     if { ![string eq $community_id ""] } {
+#         foreach user [dotlrn_community::list_users $community_id] {
+#             set user_id [ns_set get $user user_id]
+#             relation_add imsld_run_users_group_rel $group_run_id $user_id
+#         }
+#     }
     imsld::instance::instantiate_activity_attributes -run_id $run_id
     return $run_id
 }
@@ -355,7 +356,7 @@ ad_proc -public imsld::instance::instantiate_properties {
     } {
         if { ![db_0or1row global_already_instantiated_p {
             select 1 
-            from imsld_property_instances
+            from imsld_property_instancesi
             where identifier = :identifier
         }] } {
             # not instantiated... is it already defined (existing href)? or must we use the one of the global definition?

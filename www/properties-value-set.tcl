@@ -6,6 +6,8 @@ ad_page_contract {
     instances_ids:array
     return_url
     owner_id
+    run_id
+    {role_instance_id ""}
 } -validate {
     no_instance {
         if { [array size instances_ids] == 0 } {
@@ -19,7 +21,6 @@ foreach instance_id [array names instances_ids -regexp {[^[:alpha:]]$}] {
         # avoiding hacks
         db_1row instance_info_id {
             select ins.property_id,
-            ins.run_id,
 	    prop.datatype
             from imsld_property_instances ins,
 	    imsld_properties prop
@@ -30,6 +31,7 @@ foreach instance_id [array names instances_ids -regexp {[^[:alpha:]]$}] {
 	if { [string eq "file" $datatype] } {
 	    imsld::runtime::property::property_value_set -run_id $run_id \
 		-user_id $owner_id \
+		-role_instance_id $role_instance_id \
 		-value $instances_ids($instance_id) \
 		-property_id $property_id \
 		-upload_file $instances_ids($instance_id) \
@@ -37,6 +39,7 @@ foreach instance_id [array names instances_ids -regexp {[^[:alpha:]]$}] {
 	} else {
 	    imsld::runtime::property::property_value_set -run_id $run_id \
 		-user_id $owner_id \
+		-role_instance_id $role_instance_id \
 		-value $instances_ids($instance_id) \
 		-property_id $property_id
 	}
