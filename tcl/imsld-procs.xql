@@ -1602,7 +1602,8 @@
         la.learning_objective_id as learning_objective_item_id,
         la.activity_id,
         la.title as activity_title
-        from imsld_learning_activitiesi la, imsld_attribute_instances attr
+        from imsld_attribute_instances attr,
+        imsld_learning_activitiesi la
         where la.item_id = :activity_item_id
         and content_revision__is_live(la.activity_id) = 't'
         and attr.owner_id = la.activity_id
@@ -1664,6 +1665,14 @@
         and related_id = :activity_id
         and run_id = :run_id
         and status = 'finished'
+
+   		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::process_learning_activity_as_ul.is_feedback">
+		<querytext>
+    
+	select 1 from acs_rels where object_id_one = :on_completion_item_id and rel_type = 'imsld_feedback_rel'
 
    		</querytext>
 	</fullquery>

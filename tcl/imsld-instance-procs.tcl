@@ -426,7 +426,8 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         }
         
         # 1. items --> learning objectives, prerequisites, roles, 
-        #      learning objects, activity description, information(activity structures)
+        #      learning objects, activity description, information(activity structures),
+	#      feedback
         
         # 1.1 learning objectives items
         set linear_item_list [db_list item_in_imsld_loi {
@@ -510,6 +511,16 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
             where ar.object_id_one = ast.item_id
             and ar.object_id_two = ii.item_id
             and ast.component_id = :component_item_id
+        }]]
+
+        # 1.8. feedbak (learning activities)
+        set linear_item_list [concat $linear_item_list [db_list item_in_la_feedback {
+            select ii.imsld_item_id
+            from acs_rels ar, imsld_itemsi ii, imsld_learning_activitiesi la
+            where ar.object_id_one = la.on_completion_id
+            and ar.object_id_two = ii.item_id
+            and ar.rel_type = 'imsld_feedback_rel'
+            and la.component_id = :component_item_id
         }]]
 
         foreach imsld_item_id $linear_item_list {
