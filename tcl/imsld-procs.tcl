@@ -2496,7 +2496,7 @@ ad_proc -public imsld::process_learning_activity_as_ul {
     $feedback_head_node appendChild $text
     $feedback_node appendChild $feedback_head_node
     if { [db_0or1row completed_activity { *SQL* }] } {
-        if { ![string eq "" $on_completion_item_id] && [db_0or1row is_feedback { *SQL* }] } {
+        if { ![string eq "" $on_completion_item_id] && [db_string is_feedback { *SQL* }] > 0 } {
             # the feedback is not processed to ckeck if all the activity resources have been finished
             # so we don't need to store the result
             imsld::process_feedback_as_ul -on_completion_item_id $on_completion_item_id \

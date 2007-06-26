@@ -169,7 +169,7 @@ ad_proc -public imsld::instance::instantiate_properties {
             where property_id = :property_id
 	    and identifier = :identifier
 	    and run_id = :run_id
-	    and content_revision__is_live(property_id) = 't'
+	    and content_revision__is_live(instance_id) = 't'
         }] } {
             set instance_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
 								       [list value $initial_value] \
@@ -217,7 +217,7 @@ ad_proc -public imsld::instance::instantiate_properties {
 		and identifier = :identifier
                 and party_id = :party_id
 		and run_id = :run_id
-		and content_revision__is_live(property_id) = 't'
+		and content_revision__is_live(instance_id) = 't'
             }] } {
 		set instance_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
 									   [list value $initial_value] \
@@ -266,7 +266,7 @@ ad_proc -public imsld::instance::instantiate_properties {
 		and identifier = :identifier
                 and party_id = :party_id
 		and run_id = :run_id
-		and content_revision__is_live(property_id) = 't'
+		and content_revision__is_live(instance_id) = 't'
             }] } {
 		
 		set instance_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
@@ -322,7 +322,7 @@ ad_proc -public imsld::instance::instantiate_properties {
                 from imsld_property_instances
                 where identifier = :identifier
                 and party_id = :party_id
-		and content_revision__is_live(property_id) = 't'
+		and content_revision__is_live(instance_id) = 't'
             }] } {
                 # not instantiated... is it already defined (existing href)? or must we use the one of the global definition?
                 if { ![string eq $existing_href ""] } {
@@ -367,7 +367,7 @@ ad_proc -public imsld::instance::instantiate_properties {
             select 1 
             from imsld_property_instances
             where identifier = :identifier
-	    and content_revision__is_live(property_id) = 't'
+	    and content_revision__is_live(instance_id) = 't'
         }] } {
             # not instantiated... is it already defined (existing href)? or must we use the one of the global definition?
             if { ![string eq $existing_href ""] } {

@@ -40,7 +40,7 @@ ad_proc -public imsld::runtime::property::instance_value_set {
 	imsld_properties prop
 	where ins.instance_id = :instance_id
 	and ins.property_id = prop.property_id
-	and content_revision__is_live(ins.property_id) = 't'
+	and content_revision__is_live(ins.instance_id) = 't'
     }
 
     #	db_dml update_instance_value { *SQL* }

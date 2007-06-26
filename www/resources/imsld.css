@@ -15,22 +15,6 @@ div.role_menu {
   margin-left:20px;
 }
 
-.one-row {
-  clear:both;
-  padding-right:20px;
-}
-.one-element {
-  float:left;
-  display:inline;
-  margin:0px;
-  padding-right:30px;
-}
-.roles-confirm {
-  float:left;
-  text-indent:-180px;
-  margin-top:40px;
-}
-
 a.finish {
   font-size:9px;
   font-family:Tahoma,sans-serif;

@@ -31,7 +31,7 @@ if { [db_string count_properties {
     from imsld_property_instances
     where run_id = :run_id
     or run_id is null
-    and content_revision__is_live(property_id) = 't'
+    and content_revision__is_live(instance_id) = 't'
 }] } {
     # there is at least one property
     dom createDocument ul props_doc

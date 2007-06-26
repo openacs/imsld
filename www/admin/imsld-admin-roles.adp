@@ -2,8 +2,23 @@
   <property name="title">@page_title;noquote@</property>
   <property name="context">@context;noquote@</property>
   <property name="header_stuff">
-   <link rel="stylesheet" type="text/css" media="all" href="/resources/imsld/imsld.css">
 <style type="text/css">
+
+.one-row {
+  clear:both;
+  padding-right:20px;
+}
+.one-element {
+  float:left;
+  display:inline;
+  margin:0px;
+  padding-right:30px;
+}
+.roles-confirm {
+  float:left;
+  text-indent:-180px;
+  margin-top:40px;
+}
 ul {
   text-indent: 0px;
 }

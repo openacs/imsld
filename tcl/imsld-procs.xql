@@ -1672,7 +1672,7 @@
 	<fullquery name="imsld::process_learning_activity_as_ul.is_feedback">
 		<querytext>
     
-	select 1 from acs_rels where object_id_one = :on_completion_item_id and rel_type = 'imsld_feedback_rel'
+	select count(*) from acs_rels where object_id_one = :on_completion_item_id and rel_type = 'imsld_feedback_rel'
 
    		</querytext>
 	</fullquery>

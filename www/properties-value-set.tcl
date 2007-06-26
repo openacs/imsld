@@ -26,7 +26,7 @@ foreach instance_id [array names instances_ids -regexp {[^[:alpha:]]$}] {
 	    imsld_properties prop
             where ins.instance_id = :instance_id
 	    and ins.property_id = prop.property_id
-	    and content_revision__is_live(ins.property_id) = 't'
+	    and content_revision__is_live(ins.instance_id) = 't'
         }
 	
 	if { [string eq "file" $datatype] } {
