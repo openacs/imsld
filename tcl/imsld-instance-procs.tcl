@@ -161,13 +161,15 @@ ad_proc -public imsld::instance::instantiate_properties {
         from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'loc'
+	and content_revision__is_live(property_id) = 't'
     } {
         if { ![db_0or1row loc_already_instantiated_p {
             select 1
-            from imsld_property_instancesi
+            from imsld_property_instances
             where property_id = :property_id
 	    and identifier = :identifier
 	    and run_id = :run_id
+	    and content_revision__is_live(property_id) = 't'
         }] } {
             set instance_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
 								       [list value $initial_value] \
@@ -195,6 +197,7 @@ ad_proc -public imsld::instance::instantiate_properties {
         from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'locpers'
+	and content_revision__is_live(property_id) = 't'
     }] {
         set property_id [lindex $property_list 0]
         set identifier [lindex $property_list 1]
@@ -209,11 +212,12 @@ ad_proc -public imsld::instance::instantiate_properties {
         } { 
             if { ![db_0or1row locrole_already_instantiated_p {
                 select 1
-                from imsld_property_instancesi
+                from imsld_property_instances
                 where property_id = :property_id
 		and identifier = :identifier
                 and party_id = :party_id
 		and run_id = :run_id
+		and content_revision__is_live(property_id) = 't'
             }] } {
 		set instance_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
 									   [list value $initial_value] \
@@ -242,6 +246,7 @@ ad_proc -public imsld::instance::instantiate_properties {
         from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'locrole'
+	and content_revision__is_live(property_id) = 't'
     } {
         db_foreach roles_instances_in_run {
             select ar1.object_id_two as party_id
@@ -256,11 +261,12 @@ ad_proc -public imsld::instance::instantiate_properties {
         } { 
             if { ![db_0or1row locrole_already_instantiated_p {
                 select 1
-                from imsld_property_instancesi
+                from imsld_property_instances
                 where property_id = :property_id
 		and identifier = :identifier
                 and party_id = :party_id
 		and run_id = :run_id
+		and content_revision__is_live(property_id) = 't'
             }] } {
 		
 		set instance_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
@@ -296,6 +302,7 @@ ad_proc -public imsld::instance::instantiate_properties {
         from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'globpers'
+	and content_revision__is_live(property_id) = 't'
     }] {
         set property_id [lindex $property_list 0]
         set identifier [lindex $property_list 1]
@@ -315,6 +322,7 @@ ad_proc -public imsld::instance::instantiate_properties {
                 from imsld_property_instances
                 where identifier = :identifier
                 and party_id = :party_id
+		and content_revision__is_live(property_id) = 't'
             }] } {
                 # not instantiated... is it already defined (existing href)? or must we use the one of the global definition?
                 if { ![string eq $existing_href ""] } {
@@ -353,11 +361,13 @@ ad_proc -public imsld::instance::instantiate_properties {
         from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'global'
+	and content_revision__is_live(property_id) = 't'
     } {
         if { ![db_0or1row global_already_instantiated_p {
             select 1 
-            from imsld_property_instancesi
+            from imsld_property_instances
             where identifier = :identifier
+	    and content_revision__is_live(property_id) = 't'
         }] } {
             # not instantiated... is it already defined (existing href)? or must we use the one of the global definition?
             if { ![string eq $existing_href ""] } {
