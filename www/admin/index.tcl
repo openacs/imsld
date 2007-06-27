@@ -169,3 +169,4 @@ db_multirow -extend { manage delete_template image_path image_alt image_title } 
         }
     }    
 }
+

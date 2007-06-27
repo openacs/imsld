@@ -8,12 +8,52 @@ ad_page_contract {
     @creation-date Dic 2006
 } -query {
     run_id:integer,notnull
-    member_id:integer,notnull
+    {member_id:integer ""}
 }
 
 set page_title "[_ imsld.Individual_Report]"
 set context [list]
-set member_name [party::name -party_id $member_id]
+set frame_header "[_ imsld.This]: "
+
+# Fetch the users that are active in the run
+set users_in_run [imsld::runtime::users_in_run -run_id $run_id]
+
+if { [llength $users_in_run] == 1 } {
+    set member_id [lindex $users_in_run 0]
+}
+
+template::multirow create item_select item_id item_name
+
+set select_name "member_id"
+set select_id "users_in_run"
+set post_text ""
+set selected_item ""
+set select_string ""
+    
+# If no member_id has been given, add the option pull-down menu
+if { [string eq "" $member_id] } {
+    set select_string "[_ imsld.Select]"
+} else {
+    # Set variable portrait_revision if user has portrait
+    if { [db_0or1row get_member_portrait {
+	select c.live_revision
+	from acs_rels a, cr_items c
+	where a.object_id_two = c.item_id
+	and a.object_id_one = :member_id
+	and a.rel_type = 'user_portrait_rel'}]} {
+	
+	set post_text "<img style=\"height: 100px; vertical-align: middle\" src=\"/shared/portrait-bits.tcl?user_id=$member_id\" alt=\"Portrait\"/>"
+    }
+}
+
+foreach user_id_in_run $users_in_run {
+    template::multirow append item_select $user_id_in_run \
+	"[person::name -person_id $user_id_in_run]"
+    
+    if { $member_id == $user_id_in_run} {
+	set selected_item $member_id
+    }
+}
 
 set elements [list user_name \
                   [list label "[_ imsld.Activity_Name]" \

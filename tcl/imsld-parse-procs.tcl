@@ -1231,7 +1231,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
         set lrp_datatype [string tolower [imsld::parse::get_attribute -node $lrp_datatype -attr_name datatype]]
 
         set role_ref [$locrole_property selectNodes "*\[local-name()='role-ref'\]"]
-        imsld::parse::validate_multiplicity -tree $lrp_datatype -multiplicity 1 -element_name "locrole-property role" -equal
+        imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name "locrole-property role" -equal
         set ref [imsld::parse::get_attribute -node $role_ref -attr_name ref]
         if { ![db_0or1row get_role_id {
             select item_id as role_id 
@@ -1320,7 +1320,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
         set g_existing [$glob_property selectNodes "*\[local-name()='existing'\]"] 
         imsld::parse::validate_multiplicity -tree $g_existing -multiplicity 1 -element_name "existing(glob)" -lower_than
         if { [llength $g_existing] } {
-            set g_existing_href [imsld::parse::get_attribute -node $g_exiting -attr_name href]
+            set g_existing_href [imsld::parse::get_attribute -node $g_existing -attr_name href]
         } else {
             set g_existing_href ""
         }
@@ -1649,7 +1649,8 @@ ad_proc -public imsld::parse::parse_and_create_service {
                                                                   [list parameters $parameters] \
                                                                   [list service_type send-mail]] \
                             -content_type imsld_service \
-                            -parent_id $parent_id]
+                            -parent_id $parent_id \
+                            -title $title]
         # create the send mail service
         set send_mail_id [imsld::item_revision_new -attributes [list [list service_id $service_id] \
                                                                     [list is_visible_p $is_visible_p] \
@@ -1754,19 +1755,20 @@ ad_proc -public imsld::parse::parse_and_create_service {
                                                                   [list parameters $parameters] \
                                                                   [list service_type conference]] \
                             -content_type imsld_service \
-                            -parent_id $parent_id]
+                            -parent_id $parent_id \
+                            -title $title]
         
         if { [string eq $conference_type "asynchronous"] } {
 
-        set moderator_list [$conference selectNodes "*\[local-name()='moderator'\]"]
-        if { [llength $moderator_list] } {
-            set acs_object_id [imsld::parse::parse_and_create_forum -name $title -is_moderated]            
-        
-        } else {
-            set acs_object_id [imsld::parse::parse_and_create_forum -name $title]            
-        }
+	    set moderator_list [$conference selectNodes "*\[local-name()='moderator'\]"]
+	    if { [llength $moderator_list] } {
+		set acs_object_id [imsld::parse::parse_and_create_forum -name $title -is_moderated]            
+		
+	    } else {
+		set acs_object_id [imsld::parse::parse_and_create_forum -name $title]            
+	    }
             
-
+	    
             set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
                                  -identifier "forumresource-$service_id" \
                                  -type "forum" \
@@ -1785,7 +1787,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
             
             # map item with resource
             relation_add imsld_item_res_rel $imsld_item_id $resource_id
-
+	    
         } else {
             # item
             set conference_item [$conference selectNodes "*\[local-name()='item'\]"]
@@ -1902,7 +1904,8 @@ ad_proc -public imsld::parse::parse_and_create_service {
                                                                   [list service_type monitor]] \
                             -title $title \
                             -content_type imsld_service \
-                            -parent_id $parent_id]
+                            -parent_id $parent_id \
+			    -title $title]
 
         # monitor: role-ref
         set role_ref [$monitor_service selectNodes "*\[local-name()='role-ref'\]"]

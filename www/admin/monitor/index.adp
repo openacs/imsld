@@ -5,10 +5,10 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>@course_name@</title>
 </head>
-<frameset rows="%30,*">
+<frameset rows="%20,*">
   <frame src="run-info?run_id=@run_id@" name="run-info" title="run-info">
   <frameset cols="30%,*">
-    <frameset rows="60%,*">
+    <frameset rows="70%,*">
     <frame src="monitor-tree?run_id=@run_id@" name="toc" title="toc">
       <frame src="" name="environment">
     </frameset>  

@@ -260,7 +260,7 @@ ad_proc -public imsld::condition::eval_when_prop_value_is_set {
             where complete_act_id = :complete_act_item_id
             and content_revision__is_live(activity_id) = 't'
         }] } {
-            # mark the act completed for all the users in the run
+            # mark the learning activity completed for all the users in the run
             set role_part_id_list [imsld::get_role_part_from_activity -activity_type learning -leaf_id $activity_item_id]
 
             set users_in_run [db_list get_users_in_run {
@@ -302,7 +302,7 @@ ad_proc -public imsld::condition::eval_when_prop_value_is_set {
             where complete_act_id = :complete_act_item_id
             and content_revision__is_live(activity_id) = 't'
         }] } {
-            # mark the act completed for all the users in the run
+            # mark the support activity completed for all the users in the run
             set role_part_id_list [imsld::get_role_part_from_activity -activity_type learning -leaf_id $activity_item_id]
 
             set users_in_run [db_list get_users_in_run {
@@ -373,7 +373,7 @@ ad_proc -public imsld::condition::eval_when_prop_value_is_set {
             where complete_act_id = :complete_act_item_id
             and content_revision__is_live(play_id) = 't'
         }] } {
-            # mark the act completed for all the users in the run
+            # mark the play completed for all the users in the run
             set users_in_run [db_list get_users_in_run {
                 select gmm.member_id 
                 from group_member_map gmm,

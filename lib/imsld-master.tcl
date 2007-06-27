@@ -14,11 +14,20 @@ if { ![info exists header_stuff] } {
 }
 
 if { [string match /dotlrn/clubs/* [ad_conn url]] } {
-    set css_url [parameter::get_from_package_key -package_key "theme-zen" -parameter "communityCssUrl" -default "/resources/theme-zen/css/color/purple.css"]
+    set css_url [parameter::get_from_package_key \
+		     -package_key "theme-zen" \
+		     -parameter "communityCssUrl" \
+		     -default "/resources/theme-zen/css/color/purple.css"]
 } elseif { [string match /dotlrn/classes/* [ad_conn url]] } {
-    set css_url [parameter::get_from_package_key -package_key "theme-zen" -parameter "courseCssUrl" -default "/resources/theme-zen/css/color/green.css"]
+    set css_url [parameter::get_from_package_key \
+		     -package_key "theme-zen" \
+		     -parameter "courseCssUrl" \
+		     -default "/resources/theme-zen/css/color/green.css"]
 } else {
-    set css_url [parameter::get_from_package_key -package_key "theme-zen" -parameter "cssUrl" -default "/resources/theme-zen/css/color/blue.css"]
+    set css_url [parameter::get_from_package_key \
+		     -package_key "theme-zen" \
+		     -parameter "cssUrl" \
+		     -default "/resources/theme-zen/css/color/blue.css"]
 }
 
 set header_stuff "[subst {
@@ -47,11 +56,11 @@ if {![info exists onload]} {
 }
 
 set translations [list \
-    doc_type doc(type) \
-    title doc(title) \
-    header_stuff head \
-    onload body(onload) \
-]
+		      doc_type doc(type) \
+		      title doc(title) \
+		      header_stuff head \
+		      onload body(onload) \
+		     ]
 
 foreach {from to} $translations {
     if {[info exists $from]} {
@@ -62,7 +71,6 @@ foreach {from to} $translations {
 }
 
 if { ![template::util::is_nil focus] } {
-
     # Handle elements where the name contains a dot
     if { [regexp {^([^.]*)\.(.*)$} $focus match form_name element_name] } {
         lappend body(onload) "acs_Focus('${form_name}', '${element_name}');"
@@ -98,11 +106,14 @@ if {![template::multirow exists link]} {
     template::multirow create link rel type href title lang media
 }
 
-# DRB: this shouldn't really be in blank master, there should be some way for the templating
-# package to associate a particular css file with pages that use particular form or list
-# templates.  Therefore I'll put the hard-wired values in blank-compat for the moment.
-multirow append link stylesheet text/css /resources/acs-templating/lists.css "" [ad_conn language] all
-multirow append link stylesheet text/css /resources/acs-templating/forms.css "" [ad_conn language] all
+# DRB: this shouldn't really be in blank master, there should be some way for
+# the templating package to associate a particular css file with pages that use
+# particular form or list templates.  Therefore I'll put the hard-wired values
+# in blank-compat for the moment.
+multirow append link stylesheet text/css /resources/acs-templating/lists.css \
+    "" [ad_conn language] all
+multirow append link stylesheet text/css /resources/acs-templating/forms.css \
+    "" [ad_conn language] all
 
 if {![template::multirow exists script]} {
     template::multirow create script type src charset defer content
@@ -115,20 +126,19 @@ global acs_blank_master__htmlareas acs_blank_master
 
 if {[info exists acs_blank_master__htmlareas]
     && [llength $acs_blank_master__htmlareas] > 0} {
-    
     # 
     # Add RTE scripts if we are using RTE
     #
     if {[info exists acs_blank_master(rte)]} {
         foreach htmlarea_id [lsort -unique $acs_blank_master__htmlareas] {
-          lappend body(onload) "acs_rteInit('${htmlarea_id}')"
+	    lappend body(onload) "acs_rteInit('${htmlarea_id}')"
         }
-
+	
         template::multirow append script \
             "text/javascript" \
             "/resources/acs-templating/rte/richtext.js" 
     }
-
+    
     # 
     # Add Xinha scripts if we are using Xinha
     #
@@ -146,15 +156,12 @@ if {[info exists acs_blank_master__htmlareas]
         template::multirow append script "text/javascript" {} {} {} "
             _editor_url = \"$xinha_dir\";
             _editor_lang = \"$xinha_lang\";"
-
+	
         template::multirow append script \
             "text/javascript" \
             "${xinha_dir}htmlarea.js"
     }
 }
-
-
-
 
 #ad_page_contract { blank-master
 #}
@@ -167,9 +174,9 @@ if {[template::util::is_nil doc(charset)]} {
     set doc(charset) [ad_conn charset]
 }
 
-# The document language is always set from [ad_conn lang] which by default 
-# returns the language setting for the current user.  This is probably
-# not a bad guess, but the rest of OpenACS must override this setting when
+# The document language is always set from [ad_conn lang] which by default
+# returns the language setting for the current user.  This is probably not a
+# bad guess, but the rest of OpenACS must override this setting when
 # appropriate and set the lang attribute of tags which differ from the language
 # of the page.  Otherwise we are lying to the browser.
 set doc(lang) [ad_conn language]
@@ -184,7 +191,8 @@ if {![template::multirow exists meta]} {
 if {![template::multirow exists script]} {
     template::multirow create script type src charset defer content
 }
-template::multirow append script text/javascript /resources/acs-subsite/core.js "" "" ""
+template::multirow append script text/javascript \
+    /resources/acs-subsite/core.js "" "" ""
 
 if {![template::multirow exists body_script]} {
     template::multirow create body_script type src charset defer content
@@ -234,14 +242,16 @@ if {[dotlrn::user_p -user_id $user_id]} {
 if { [ad_conn untrusted_user_id] == 0 } {
     set user_name {}
 } else {
-    set user_name [acs_user::get_element -user_id [ad_conn untrusted_user_id] -element name]
+    set user_name [acs_user::get_element -user_id [ad_conn untrusted_user_id] \
+		       -element name]
 }
 
 if {![exists_and_not_null title]} {
     set title [ad_system_name]
 }
 
-if {[empty_string_p [dotlrn_community::get_parent_community_id -package_id [ad_conn package_id]]]} {
+if {[empty_string_p [dotlrn_community::get_parent_community_id \
+			 -package_id [ad_conn package_id]]]} {
     set parent_comm_p 0
 } else {
     set parent_comm_p 1
@@ -261,11 +271,11 @@ multirow create attribute key value
 if { ![template::util::is_nil focus] } {
     # Handle elements wohse name contains a dot
     if { [regexp {^([^.]*)\.(.*)$} $focus match form_name element_name] } {
-
+	
         # Add safety code to test that the element exists '
         append header_stuff "
           <script language=\"JavaScript\" type=\"text/javascript\">
-            function acs_focus( form_name, element_name ){
+            function acs_focus( form_name, element_name ) {
                 if (document.forms == null) return;
                 if (document.forms\[form_name\] == null) return;
                 if (document.forms\[form_name\].elements\[element_name\] == null) return;
@@ -273,11 +283,10 @@ if { ![template::util::is_nil focus] } {
 
                 document.forms\[form_name\].elements\[element_name\].focus();
             }
-          </script>
-        "
-        
+          </script>"
         template::multirow append \
-                attribute onload "javascript:acs_focus('${form_name}', '${element_name}')"
+	    attribute onload \
+	    "javascript:acs_focus('${form_name}', '${element_name}')"
     }
 }
 

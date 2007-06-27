@@ -26,153 +26,102 @@ set fs_package_id [site_node_apm_integration::get_child_package_id \
 		       -package_key "file-storage"]
 set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
 
-dom createDocument html dom_doc
-set dom_root [$dom_doc documentElement]
-set head_node [$dom_doc createElement head]
-set link_node [$dom_doc createElement link]
-$link_node setAttribute rel "stylesheet"
-$link_node setAttribute type "text/css"
-$link_node setAttribute href "/resources/acs-templating/lists.css"
-$link_node setAttribute media "all"
-$head_node appendChild $link_node
-
-set script_node [$dom_doc createElement script]
-$script_node appendChild [$dom_doc createTextNode {
-    function confirmValue(myform){ 
-        myform.submit() 
-    } 
-}]
-
-$head_node appendChild $script_node
-$dom_root appendChild $head_node
-
-set body_node [$dom_doc createElement body]
-
-# prepare final output... a little bit tedious to get it "pretty"
-# using the default css of openacs
-
 # if the property type is of type locpers or globpers
 # we first need to specify which user will be monitorized
 
 if { [string eq $type "locpers"] || [string eq $type "globpers"] } {
-    set form_node [$dom_doc createElement form]
-    $form_node setAttribute name "choose"
-    $form_node setAttribute action ""
-    set select_node [$dom_doc createElement select]
-    $select_node setAttribute name "user_id"
-    $select_node setAttribute id "users_in_run"
-    $select_node setAttribute onChange "confirmValue(this.form)"
+    # Fetch the users that are active in the run
+    set users_in_run [imsld::runtime::users_in_run -run_id $run_id]
 
+    template::multirow create item_select item_id item_name
+
+    # Add the frame main title depending on the type of property
+    if { [string eq $type "locpers"] } {
+	set frame_header "[_ imsld.lt_Local-personal_Prop]: "
+    } else {
+	set frame_header "[_ imsld.lt_Global-personal_Pro]: "
+    }
+
+    if { [llength $users_in_run] == 1 } {
+	set user_id [lindex $users_in_run 0]
+    }
+
+    set select_name "user_id"
+    set select_id "users_in_run"
+    set post_text ""
+    set selected_item ""
+    set select_string ""
+
+    # If no user has been given, add the option pull-down menu
     if { [string eq "" $user_id] } {
-	set option_node [$dom_doc createElement option]
-	$option_node setAttribute value "select"
-	set text [$dom_doc createTextNode "[_ imsld.Select]"]
-	$option_node appendChild $text
-	$select_node appendChild $option_node
-    }
+	set select_string "[_ imsld.Select]"
+    } else {
+	# Set variable portrait_revision if user has portrait
+	if { [db_0or1row get_member_portrait {
+	    select c.live_revision
+	    from acs_rels a, cr_items c
+	    where a.object_id_two = c.item_id
+	    and a.object_id_one = :user_id
+	    and a.rel_type = 'user_portrait_rel'}]} {
 
-    foreach user_id_in_run [imsld::runtime::users_in_run -run_id $run_id] {
-	set option_node [$dom_doc createElement option]
-	$option_node setAttribute value $user_id_in_run
-	set text [$dom_doc createTextNode "[person::name -person_id $user_id_in_run]"]
-	$option_node appendChild $text
-
-	if { $user_id == $user_id_in_run} {
-	    $option_node setAttribute selected "selected"
+	    set post_text "<img style=\"height: 100px; vertical-align: middle\" src=\"/shared/portrait-bits.tcl?user_id=$user_id\" alt=\"Portrait\"/>"
 	}
-	$select_node appendChild $option_node
     }
-    $form_node appendChild $select_node
-
-    # adding hidden variables
-    set type_node [$dom_doc createElement "input"]
-    $type_node setAttribute name "type"
-    $type_node setAttribute type "hidden"
-    $type_node setAttribute value "$type"
-    $form_node appendChild $type_node
-
-    set run_id_node [$dom_doc createElement "input"]
-    $run_id_node setAttribute name "run_id"
-    $run_id_node setAttribute type "hidden"
-    $run_id_node setAttribute value "$run_id"
-    $form_node appendChild $run_id_node
-
-    # adding the submit button
-    set submit_node [$dom_doc createElement "input"]
-    $submit_node setAttribute type "submit"
-    $submit_node setAttribute value "ok"
-    $submit_node setAttribute name "ok"
-    $form_node appendChild $submit_node
-
-    # done... add the form to the document
-    $body_node appendChild $form_node
-
+    
+    foreach user_id_in_run $users_in_run {
+	template::multirow append item_select $user_id_in_run \
+	    "[person::name -person_id $user_id_in_run]"
+	
+	if { $user_id == $user_id_in_run} {
+	    set selected_item $user_id
+	}
+    }
 } elseif { [string eq $type "locrole"] } {
-
     # first, the role instance must be selected
+    set role_instance_ids [imsld::roles::get_role_instances \
+			       -role_id $role_id \
+			       -run_id $run_id]
 
-    set form_node [$dom_doc createElement form]
-    $form_node setAttribute name "choose"
-    $form_node setAttribute action ""
-    set select_node [$dom_doc createElement select]
-    $select_node setAttribute name "role_instance_id"
-    $select_node setAttribute id "roles_in_run"
-    $select_node setAttribute onChange "confirmValue(this.form)"
+    template::multirow create item_select item_id item_name
+
+    set frame_header "[_ imsld.lt_Local-role_Properti]: "
+    set page_title $frame_header
+
+    if { [llength $role_instance_ids] == 1 } {
+	set role_instance_id [lindex $role_instance_ids 0]
+	set role_name "[db_string role_instance_name { select acs_group__name(:role_instance_id) }]"
+    }
+
+    set select_name "role_instance_id"
+    set select_id "roles_in_run"
+    set post_text ""
+    set selected_item ""
+    set select_string ""
 
     if { [string eq "" $role_instance_id] } {
-	set option_node [$dom_doc createElement option]
-	$option_node setAttribute value "select"
-	set text [$dom_doc createTextNode "[_ imsld.Select_role]"]
-	$option_node appendChild $text
-	$select_node appendChild $option_node
+	set select_string "[_ imsld.Select_role]"
     }
-
-    foreach role_instance_id_in_role [imsld::roles::get_role_instances -role_id $role_id -run_id $run_id] {
-	set option_node [$dom_doc createElement option]
-	$option_node setAttribute value $role_instance_id_in_role
-	set text [$dom_doc createTextNode "[db_string role_instance_name { select acs_group__name(:role_instance_id_in_role) }]"]
-	$option_node appendChild $text
-	
-	if { $role_instance_id == $role_instance_id_in_role } {
-	    $option_node setAttribute selected "selected"
-	}
-	$select_node appendChild $option_node
-    }
-    $form_node appendChild $select_node
-
-    #adding hidden variables
-    set type_node [$dom_doc createElement "input"]
-    $type_node setAttribute name "type"
-    $type_node setAttribute type "hidden"
-    $type_node setAttribute value "$type"
-    $form_node appendChild $type_node
-
-    set run_id_node [$dom_doc createElement "input"]
-    $run_id_node setAttribute name "run_id"
-    $run_id_node setAttribute type "hidden"
-    $run_id_node setAttribute value "$run_id"
-    $form_node appendChild $run_id_node
-
-    set role_id_node [$dom_doc createElement "input"]
-    $role_id_node setAttribute name "role_id"
-    $role_id_node setAttribute type "hidden"
-    $role_id_node setAttribute value "$role_id"
-    $form_node appendChild $role_id_node
-
-    # adding the submit button
-    set submit_node [$dom_doc createElement "input"]
-    $submit_node setAttribute type "submit"
-    $submit_node setAttribute value "ok"
-    $submit_node setAttribute name "ok"
-    $form_node appendChild $submit_node
-
-    # done... add the form to the document
-    $body_node appendChild $form_node
     
-}
+    foreach role_instance_id_in_role $role_instance_ids {
+	template::multirow append item_select $role_instance_id_in_role \
+	    "[db_string role_instance_name {select
+	acs_group__name(:role_instance_id_in_role) }]" 
 
-set table_node [$dom_doc createElement table]
-$table_node setAttribute class list
+	if { $role_instance_id == $role_instance_id_in_role } {
+	    set selected_item $role_instance_id
+	}
+    }
+
+} elseif { [string eq $type "glob"] } {
+    set frame_header "[_ imsld.Global_Properties]"
+} elseif { [string eq $type "loc"] } {
+    set frame_header "[_ imsld.Local_Properties]"
+} 
+
+# Create the table with the properties
+dom createDocument table dom_doc
+set table_node [$dom_doc documentElement]
+$table_node setAttribute class list-table
 $table_node setAttribute cellpadding 3
 $table_node setAttribute cellspacing 1
 
@@ -217,7 +166,7 @@ db_foreach property "
     prop.datatype,
     prop.item_id as property_item_id,
     coalesce(ins.value, prop.initial_value) as value,
-    ins.title,
+    coalesce(ins.title, ins.identifier) as title,
     ins.instance_id
     from imsld_property_instancesx ins,
     cr_revisions cr,
@@ -226,6 +175,7 @@ db_foreach property "
     and $where_clause
     and cr.revision_id = ins.instance_id
     and content_revision__is_live(ins.instance_id) = 't'
+    order by title
 " {
     # if the property is of type file, we must provide a file-upload field
     set input_text_node ""
@@ -348,6 +298,7 @@ db_foreach property "
     $submit_node setAttribute type "submit"
     $submit_node setAttribute value "ok"
     $form_node appendChild $submit_node
+
     # done... add the form to the table
     set td_node [$dom_doc createElement td] 
     $td_node setAttribute class list
@@ -368,14 +319,13 @@ db_foreach property "
     $table_node  appendChild $tr_node
 }
 
-$body_node appendChild $table_node
-$dom_root appendChild $body_node
+# Render table only if user_id or role_instance_id is set
+if { ![string eq "" $user_id] || ![string eq "" $role_instance_id] 
+     || [string eq $type "glob"] || [string eq $type "loc"]} {
+    set table_node [$table_node asXML]
+} else {
+    set table_node ""
+}
 
-set script_node [$dom_doc createElement script]
-$script_node appendChild [$dom_doc createTextNode {document.forms['choose'].elements['ok'].style.display="none"}]
+set page_title $frame_header
 
-$dom_root appendChild $script_node
-
-set xmloutput {<?xml version="1.0" encoding="UTF-8"?>}
-append xmloutput [$dom_root asXML]
-ns_return 200 text/html $xmloutput

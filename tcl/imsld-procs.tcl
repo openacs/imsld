@@ -511,6 +511,7 @@ ad_proc -public imsld::mark_act_finished {
     mark the act as finished, as well as all the referenced role_parts
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+
     if { [imsld::act_finished_p -run_id $run_id -act_id $act_id -user_id $user_id] } {
         return
     }
@@ -530,6 +531,7 @@ ad_proc -public imsld::mark_act_finished {
         and content_revision__is_live(rp.role_part_id) = 't'
     }] {
         set role_part_id [lindex $referenced_role_part 0]
+
         imsld::mark_role_part_finished -role_part_id $role_part_id \
             -act_id $act_id \
             -play_id $play_id \
@@ -775,10 +777,10 @@ ad_proc -public imsld::do_notification {
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     
-    # notifications
-    # according to the spec: "The implementation should ensure that a user receives one notification only, 
-    # even if the user is a member of several roles targeted by the notification", that's why we use the list
-    # notified_users_list and check before sending the notification.
+    # notifications according to the spec: "The implementation should ensure
+    # that a user receives one notification only, even if the user is a member
+    # of several roles targeted by the notification", that's why we use the
+    # list notified_users_list and check before sending the notification.
     set community_id [dotlrn_community::get_community_id]
     set community_name [dotlrn_community::get_community_name $community_id]
     set community_url [ns_conn location][dotlrn_community::get_community_url $community_id]
@@ -919,10 +921,12 @@ ad_proc -public imsld::finish_component_element {
         regexp {finish-component-element-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([a-z]+).imsld$} $url match imsld_id run_id play_id act_id role_part_id element_id type
     }
     if { ![db_0or1row marked_as_started { *SQL* }] } {
-        # NOTE: this should not happen... UNLESS the activity is marked as finished automatically
+        # NOTE: this should not happen... UNLESS the activity is marked as
+        # finished automatically
         db_dml mark_element_started { *SQL* }
     }
-    # now that we have the necessary info, mark the finished element completed and return
+    # now that we have the necessary info, mark the finished element completed
+    # and return
     db_dml insert_element_entry { *SQL* }
 
     switch $type {
@@ -1064,13 +1068,19 @@ ad_proc -public imsld::finish_component_element {
         }
     }
 
-    # we continue with A LOT of validations (in order to support the when-xxx-finished tag of the spec 
+    # we continue with A LOT of validations (in order to support the
+    # when-xxx-finished tag of the spec
     # -- with xxx in (role_part,act,play)):
-    # 1. let's see if the finished activity triggers the ending of the role_part
-    # 2. let's see if the finished role_part triggers the ending of the act which references it.
-    # 3. let's see if the finished act triggers the ending the play which references it
-    # 4. let's see if the finished play triggers the ending of the method which references it.
+    # 1. let's see if the finished activity triggers the ending of the
+    # role_part
+    # 2. let's see if the finished role_part triggers the ending of the act
+    # which references it.
+    # 3. let's see if the finished act triggers the ending the play which
+    # references it
+    # 4. let's see if the finished play triggers the ending of the method which
+    # references it.
     set role_part_id_list [imsld::get_role_part_from_activity -activity_type $type -leaf_id [db_string get_item_id { select item_id from cr_revisions where revision_id = :element_id}]]
+
     foreach role_part_id $role_part_id_list {
         db_1row context_info {
             select acts.act_id,
@@ -2254,6 +2264,7 @@ ad_proc -public imsld::process_activity_as_ul {
             -resource_mode $resource_mode \
             -dom_node $dom_node \
             -dom_doc $dom_doc
+
     } elseif { [db_0or1row is_support {
         select 1 from imsld_support_activitiesi where item_id = :activity_item_id
     }] } {
@@ -2446,7 +2457,9 @@ ad_proc -public imsld::process_learning_activity_as_ul {
             }
         }
     }
-    if { [llength $linear_item_list ] > 0 } { $dom_node appendChild $description_node }
+    if { [llength $linear_item_list ] > 0 } { 
+	$dom_node appendChild $description_node 
+    }
 
     # prerequisites
     set prerequisites_node [$dom_doc createElement div]
@@ -2879,6 +2892,7 @@ ad_proc -public imsld::generate_activities_tree {
         set role_part_id [lindex $role_part_list 2]
         set act_id [lindex $role_part_list 3]        
         set play_id [lindex $role_part_list 4]
+
         switch $type {
             learning {
                 # add the learning activity to the tree
@@ -3909,5 +3923,6 @@ ad_proc -public imsld::grant_permissions {
             }
    }
 }
+
 ad_register_proc GET /finish-component-element* imsld::finish_component_element
 ad_register_proc POST /finish-component-element* imsld::finish_component_element

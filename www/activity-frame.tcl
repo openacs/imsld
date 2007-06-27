@@ -74,7 +74,6 @@ if { !$roles_template_p } {
     set activity_item_id [content::revision::item_id -revision_id $activity_id]
     imsld::process_activity_as_ul -activity_item_id $activity_item_id -run_id $run_id -dom_doc $doc -dom_node $dom_root
     
-
     if { ![string eq $activity_id ""] && [db_0or1row get_table_name {
         select 
         case 

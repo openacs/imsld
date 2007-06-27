@@ -30,7 +30,8 @@ foreach instance_id [array names instances_ids -regexp {[^[:alpha:]]$}] {
         }
 	
 	if { [string eq "file" $datatype] } {
-	    imsld::runtime::property::property_value_set -run_id $run_id \
+	    imsld::runtime::property::property_value_set \
+		-run_id $run_id \
 		-user_id $owner_id \
 		-role_instance_id $role_instance_id \
 		-value $instances_ids($instance_id) \
@@ -38,7 +39,8 @@ foreach instance_id [array names instances_ids -regexp {[^[:alpha:]]$}] {
 		-upload_file $instances_ids($instance_id) \
 		-tmpfile $instances_ids(${instance_id}.tmpfile)
 	} else {
-	    imsld::runtime::property::property_value_set -run_id $run_id \
+	    imsld::runtime::property::property_value_set \
+		-run_id $run_id \
 		-user_id $owner_id \
 		-role_instance_id $role_instance_id \
 		-value $instances_ids($instance_id) \

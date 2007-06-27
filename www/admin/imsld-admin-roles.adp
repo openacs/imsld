@@ -19,7 +19,7 @@
   text-indent:-180px;
   margin-top:40px;
 }
-ul {
+.one-element ul {
   text-indent: 0px;
 }
 </style>

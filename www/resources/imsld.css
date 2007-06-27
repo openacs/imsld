@@ -44,7 +44,7 @@ a.finish:hover  {
   margin:0px;
 }
 
-ul {
+ul.mktree, ul.mktree ul {
   font-family: Verdana, Arial, Helvetica, sans-serif;
   font-size: 12px;
   font-style: normal;
@@ -82,3 +82,7 @@ ul {
   left:0px;
 }
 
+.centered-table table { 
+  margin-right: auto; 
+  margin-left: auto 
+}

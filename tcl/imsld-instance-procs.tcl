@@ -156,8 +156,7 @@ ad_proc -public imsld::instance::instantiate_properties {
         identifier,
         datatype,
         initial_value,
-	title,
-	item_id as property_item_id
+	title
         from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'loc'
@@ -176,7 +175,7 @@ ad_proc -public imsld::instance::instantiate_properties {
 								       [list identifier $identifier] \
 								       [list property_id $property_id]] \
 				 -content_type imsld_property_instance \
-				 -title $identifier \
+				 -title $title \
 				 -parent_id [expr [string eq $datatype "file"] ? $run_folder_id : $cr_folder_id]]
 
 	    if { [string eq $datatype "file"] } {
@@ -192,8 +191,7 @@ ad_proc -public imsld::instance::instantiate_properties {
         identifier,
         datatype,
         initial_value,
-	title,
-	item_id as property_item_id
+	title
         from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'locpers'
@@ -203,7 +201,7 @@ ad_proc -public imsld::instance::instantiate_properties {
         set identifier [lindex $property_list 1]
         set datatype [lindex $property_list 2]
         set initial_value [lindex $property_list 3]
-        set property_item_id [lindex $property_list 4]
+	set title [lindex $property_list 4]
         db_foreach user_in_run {
             select ar.object_id_two as party_id
             from acs_rels ar
@@ -225,7 +223,7 @@ ad_proc -public imsld::instance::instantiate_properties {
 									   [list party_id $party_id] \
 									   [list property_id $property_id]] \
 				     -content_type imsld_property_instance \
-				     -title $identifier \
+				     -title $title \
 				     -parent_id [expr [string eq $datatype "file"] ? $run_folder_id : $cr_folder_id]]
 		if { [string eq $datatype "file"] } {
 		    # initialize the file to an empty one so the fs doesn't generate an error when requesting the file
@@ -235,14 +233,14 @@ ad_proc -public imsld::instance::instantiate_properties {
         }
     }
 
-    # 3. locrole-property: Instantiate the property for each role associated to the run
+    # 3. locrole-property: Instantiate the property for each role associated to
+    # the run
     db_foreach locrole_property {
         select property_id,
         identifier,
         datatype,
         initial_value,
-	title,
-	item_id as property_item_id
+	title
         from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'locrole'
@@ -275,7 +273,7 @@ ad_proc -public imsld::instance::instantiate_properties {
 									   [list party_id $party_id] \
 									   [list property_id $property_id]] \
 				     -content_type imsld_property_instance \
-				     -title $identifier \
+				     -title $title \
 				     -parent_id [expr [string eq $datatype "file"] ? $run_folder_id : $cr_folder_id]]
 		if { [string eq $datatype "file"] } {
 		    # initialize the file to an empty one so the fs doesn't generate an error when requesting the file
@@ -297,8 +295,7 @@ ad_proc -public imsld::instance::instantiate_properties {
         initial_value,
         existing_href,
         uri,
-	title,
-	item_id as property_item_id
+	title
         from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'globpers'
@@ -310,7 +307,7 @@ ad_proc -public imsld::instance::instantiate_properties {
         set initial_value [lindex $property_list 3]
         set existing_href [lindex $property_list 4]
         set uri [lindex $property_list 5]
-        set property_item_id [lindex $property_list 6]
+	set title [lindex $property_list 6]
         db_foreach user_in_run {
             select ar.object_id_two as party_id
             from acs_rels ar
@@ -337,7 +334,7 @@ ad_proc -public imsld::instance::instantiate_properties {
 									   [list party_id $party_id] \
 									   [list property_id $property_id]] \
 				     -content_type imsld_property_instance \
-				     -title $identifier \
+				     -title $title \
 				     -parent_id [expr [string eq $datatype "file"] ? $global_folder_id : $cr_folder_id]]
 		if { [string eq $datatype "file"] } {
 		    # initialize the file to an empty one so the fs doesn't generate an error when requesting the file
@@ -347,8 +344,8 @@ ad_proc -public imsld::instance::instantiate_properties {
         }
     }
 
-    # 5. glob-property: Special case, just like the one above but with the difference that the checking
-    #                   is not done for all the users
+    # 5. glob-property: Special case, just like the one above but with the
+    # difference that the checking is not done for all the users
     db_foreach global_property {
         select property_id,
         identifier,
@@ -356,8 +353,7 @@ ad_proc -public imsld::instance::instantiate_properties {
         initial_value,
         existing_href,
         uri,
-	title,
-	item_id as property_item_id
+	title
         from imsld_propertiesi
         where component_id = :component_item_id
         and type = 'global'
@@ -369,20 +365,25 @@ ad_proc -public imsld::instance::instantiate_properties {
             where identifier = :identifier
 	    and content_revision__is_live(instance_id) = 't'
         }] } {
-            # not instantiated... is it already defined (existing href)? or must we use the one of the global definition?
+            # not instantiated... is it already defined (existing href)? or
+	    # must we use the one of the global definition? 
             if { ![string eq $existing_href ""] } {
                 # it is already defined
-                # NOTE: there must be a better way to deal with this, but by the moment we treat the href as the property value
+                # NOTE: there must be a better way to deal with this, but by
+		# the moment we treat the href as the property value 
                 set initial_value $existing_href
             } 
-            # TODO: the property must be somehow instantiated in the given URI also
+            # TODO: the property must be somehow instantiated in the given URI
+	    # also
 	    set instance_id [imsld::item_revision_new -attributes [list [list value $initial_value] \
 								       [list identifier $identifier] \
 								       [list property_id $property_id]] \
 				 -content_type imsld_property_instance \
+				 -title $title \
 				 -parent_id [expr [string eq $datatype "file"] ? $global_folder_id : $cr_folder_id]]
 	    if { [string eq $datatype "file"] } {
-		# initialize the file to an empty one so the fs doesn't generate an error when requesting the file
+		# initialize the file to an empty one so the fs doesn't
+		# generate an error when requesting the file
 		imsld::fs::empty_file -revision_id [content::item::get_live_revision -item_id $instance_id]
 	    }
 	}

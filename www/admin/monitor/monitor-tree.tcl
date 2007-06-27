@@ -12,7 +12,8 @@ set community_id [dotlrn_community::get_community_id]
 set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
 set user_id [ad_conn user_id]
 set imsld_package_id [site_node_apm_integration::get_child_package_id \
-                          -package_id [dotlrn_community::get_package_id $community_id] \
+                          -package_id [dotlrn_community::get_package_id \
+					   $community_id] \
                           -package_key "[imsld::package_key]"]
 
 set imsld_admin_url [export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]admin/"]
@@ -55,6 +56,25 @@ if { [db_string count_properties {
     set properties_tree ""
 }
 
+# Create the link to the page to monitor user activity
+dom createDocument ul doc
+set dom_root [$doc documentElement]
+$dom_root setAttribute class "mktree"
+
+set li_node [$doc createElement li]
+$dom_root appendChild $li_node
+$li_node setAttribute class "liBullet"
+
+set a_node [$doc createElement a]
+$a_node setAttribute href \
+    "[export_vars -base "individual-report-frame" -url {run_id}]"
+$a_node setAttribute target "content"
+$a_node appendChild [$doc createTextNode "[_ imsld.User_activity_reports]"]
+$li_node appendChild $a_node
+
+set user_activity [$dom_root asXML]
+
+# Create the activity tree
 dom createDocument ul doc
 set dom_root [$doc documentElement]
 $dom_root setAttribute class "mktree"

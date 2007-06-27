@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 <message_catalog package_key="imsld" package_version="1.1d" locale="en_US" charset="ISO-8859-1">
 
-  <msg key="1_Local_Properties">1. Local Properties</msg>
-  <msg key="5_Global_Properties">5. Global Properties</msg>
   <msg key="_Assigned_users">| Assigned users:</msg>
   <msg key="_Component">Component Identifier</msg>
   <msg key="_Creation_Date">| Creation Date:</msg>
@@ -34,7 +32,7 @@
   <msg key="Confirm">Confirm</msg>
   <msg key="Confirm_New_IMS-LD">Confirm: New IMS-LD</msg>
   <msg key="Confirm_this_changes">Confirm these changes</msg>
-  <msg key="Context_info">Context info</msg>
+  <msg key="Context_info">Environment</msg>
   <msg key="Create_a_new_group">Create a new group</msg>
   <msg key="Create_New">Create New?</msg>
   <msg key="Create_new">Create new</msg>
@@ -57,6 +55,7 @@
   <msg key="Error_parsing_file">Error parsing file</msg>
   <msg key="Existing_href">Existing href</msg>
   <msg key="Exit">Exit UoL</msg>
+  <msg key="Exit_Monitor">Exit Monitor</msg>
   <msg key="Expression">Expression</msg>
   <msg key="Extra_Activities">Extra Activities</msg>
   <msg key="Feedbach_Title">Feedbach Title</msg>
@@ -67,6 +66,7 @@
   <msg key="Finish_Date">Finish Date</msg>
   <msg key="finished">finished</msg>
   <msg key="Finished_Date">Finished Date</msg>
+  <msg key="Global_Properties">Global Properties</msg>
   <msg key="Go_back">Go back</msg>
   <msg key="go_back">go back</msg>
   <msg key="Go_to_UoL_page">Go to UoL page</msg>
@@ -146,12 +146,13 @@
   <msg key="Learning_Object">Learning Object</msg>
   <msg key="Learning_Objects">Learning Objects</msg>
   <msg key="Level">Level</msg>
+  <msg key="Local_Properties">Local Properties</msg>
   <msg key="li_activity_title_li">&lt;li&gt; %activity_title% &lt;/li&gt;</msg>
   <msg key="li_file_name_li">&lt;li&gt; %file_name% &lt;/li&gt;</msg>
   <msg key="li_impozzible_li">&lt;li&gt; impozzible &lt;/li&gt;</msg>
-  <msg key="lt_2_Local-personal_Prop">2. Local-personal Properties</msg>
-  <msg key="lt_3_Local-role_Properti">3. Local-role Properties</msg>
-  <msg key="lt_4_Global-personal_Pro">4. Global-personal Properties</msg>
+  <msg key="lt_Local-personal_Prop">Local-personal Properties</msg>
+  <msg key="lt_Local-role_Properti">Local-role Properties</msg>
+  <msg key="lt_Global-personal_Pro">Global-personal Properties</msg>
   <msg key="lt___imsldcreate_new_run">[_ imsld.create_new_run]</msg>
   <msg key="lt_Activity_Description_">Activity Description Identifier</msg>
   <msg key="lt_Activity_Structure_Id">Activity Structure Identifier</msg>
@@ -159,8 +160,8 @@
   <msg key="lt_Are_all_the_students_">Are all the students asigned to the proper roles? If you confirm now, no more changes will be acepted later.</msg>
   <msg key="lt_br___________________">&lt;br&gt;\ 
                               Go to the activity &lt;a href=\&quot;%activity_url%\&quot;&gt;%activity_title%&lt;/a&gt; (of the UoL &lt;a href=\&quot;%imsld_url%\&quot;&gt;%imsld_title%&lt;/a&gt; in the community &lt;a href=\&quot;%community_url%\&quot;&gt;%community_name%&lt;/a&gt;) for further details.</msg>
-  <msg key="lt_br____________________1">&lt;br&gt;\
-                              Go to the UoL &lt;a href=\&quot;%imsld_url%\&quot;&gt;$imsld_title&lt;/a&gt; (in the &lt;a href=\&quot;%community_url%\&quot;&gt;%community_name%&lt;/a&gt; community) for further details.</msg>
+  <msg key="lt_br____________________1">&lt;br&gt;
+                              Go to the Learning Unit &lt;a href=\&quot;%imsld_url%\&quot;&gt;$imsld_title&lt;/a&gt; (in the &lt;a href=\&quot;%community_url%\&quot;&gt;%community_name%&lt;/a&gt; community) for further details.</msg>
   <msg key="lt_br__Warnings_ul_warni">&lt;br /&gt; Warnings: &lt;ul&gt; %warnings% &lt;/ul&gt;</msg>
   <msg key="lt_Change_Property_Value">Change Property Value Identifier</msg>
   <msg key="lt_Change_Property_Value_1">Change Property Value XML</msg>
@@ -173,8 +174,8 @@
   <msg key="lt_Create_a_new_instance">Create a new instance of a role</msg>
   <msg key="lt_Current_Unit_of_Learn">Current Unit of Learning does not allow creation of multiple instances of this role.</msg>
   <msg key="lt_Current_UoL_does_not_">Current UoL does not allow to include them in more than one subroles of the role.</msg>
-  <msg key="lt_Dear_recepient_name_b">Dear %recepient_name% &lt;br&gt; 
-                       %sender_name has% triggered this notification. Please do not replay to this email. &lt;br&gt;</msg>
+  <msg key="lt_Dear_recepient_name_b">Dear %recepient_name%. &lt;br&gt; 
+                       %sender_name% has triggered this notification. Please do not replay to this email. &lt;br&gt;</msg>
   <msg key="lt_Email_Propery_Identif">Email Propery Identifier</msg>
   <msg key="lt_Environment_Identifie">Environment Identifier</msg>
   <msg key="lt_Error_creating_folder">Error creating folder</msg>
@@ -352,8 +353,8 @@
   <msg key="lt_Username_Property_Ide">Username Property Identifier</msg>
   <msg key="lt_Users_individual_repo">User's individual report</msg>
   <msg key="lt_Users_who_have_bat_le">Users who have at least visited the service</msg>
-  <msg key="lt_Users_who_have_bviewe">Users who have viewed or visited all the referenced resources from the environment</msg>
-  <msg key="lt_Users_who_have_starte">Users who have started and/or finished this activity</msg>
+  <msg key="lt_Users_who_have_bviewe">Users who have viewed or visited all resources in the learning object</msg>
+  <msg key="lt_Users_who_have_starte">Users who have started and/or finished activity</msg>
   <msg key="lt_Valid_types_are_learn">Valid types are learning, support and structure</msg>
   <msg key="lt_Warning_More_than_one">More than one learning object in environment %identifier%. Just one used (the first one)</msg>
   <msg key="lt_We_will_continue_auto">We will continue automatically when processing is complete.</msg>
@@ -385,6 +386,8 @@
   <msg key="No_IMS_LD">No IMS LD</msg>
   <msg key="No_info_was_found">No info was found</msg>
   <msg key="No_properties_found">No properties found.</msg>
+  <msg key="No_users">No users</msg>
+  <msg key="No_user_selected">No user selected.</msg>
   <msg key="None">None</msg>
   <msg key="None_please_select">None, please select</msg>
   <msg key="Not_defined">Not defined</msg>
@@ -454,7 +457,7 @@
   <msg key="The">The selected role has no parent</msg>
   <msg key="Then_Identifier">Then Identifier</msg>
   <msg key="There">There are no descendant roles</msg>
-  <msg key="This">is the list of activities started (and finished) by %member_name%</msg>
+  <msg key="This">Activity report for user </msg>
   <msg key="Time_in_Seconds">Time in Seconds</msg>
   <msg key="Total_Activities">Total Activities</msg>
   <msg key="Total_Roles">Parent Roles</msg>
@@ -467,6 +470,10 @@
   <msg key="Uploading_IMS_LD">Uploading IMS LD</msg>
   <msg key="URI">URI</msg>
   <msg key="User_Choice">User Choice?</msg>
+  <msg key="User_activity_reports">User activity reports</msg>
+  <msg key="user">user</msg>
+  <msg key="Users">Users</msg>
+  <msg key="users">users</msg>
   <msg key="Value">Value</msg>
   <msg key="Version">Version</msg>
   <msg key="view_file">view file</msg>

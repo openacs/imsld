@@ -1,38 +1,16 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <script src="/resources/acs-templating/mktree.js" language="javascript"></script>
-    <link rel="stylesheet" href="/resources/acs-templating/mktree.css" media="all">
-    <link rel="stylesheet" href="/resources/imsld/imsld.css" media="all">
-<style type="text/css">
-ul {
-  font-family: Verdana, Arial, Helvetica, sans-serif;
-  font-size: 12px;
-  font-style: normal;
-  font-weight: normal;
-  font-variant: normal;
-  text-decoration: none;
-  text-transform: none;
-  text-indent: 0px;
-  padding: 0px;
-  margin: 0px;
-  white-space: nowrap;
-}
-</style>
-</head>
-<body>
+<master src="../../../lib/imsld-master">
+  <property name="title">@page_title;noquote@</property>
+  <property name="context">@context;noquote@</property>
+  <property name="imsld_include_mktree">1</property>
 
-@environments;noquote@
+  <div class="center">@frame_header@</div>
 
-</body>
+  <if @environments@ not nil>@environments;noquote@</if>
 
-<script type="text/javascript">
-var as = document.getElementsByTagName("a");
-for (var i = 0; i < as.length; i++) {
-  var a = as[i];
-  a.setAttribute('target', 'content');
-}
-</script>
-
-</html>
+  <script type="text/javascript">
+    var as = document.getElementsByTagName("a");
+    for (var i = 0; i < as.length; i++) {
+      var a = as[i];
+      a.setAttribute('target', 'content');
+    }
+  </script>

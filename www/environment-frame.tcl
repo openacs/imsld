@@ -31,7 +31,6 @@ imsld::process_activity_environments_as_ul -activity_item_id $activity_item_id \
     -run_id $run_id \
     -dom_node $environments_node \
     -dom_doc $doc
-$dom_root appendChild $environments_node_li
 
 $environments_node_li appendChild $environments_node
 $dom_root appendChild $environments_node_li
