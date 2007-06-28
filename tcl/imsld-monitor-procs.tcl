@@ -604,9 +604,9 @@ ad_proc -public imsld::monitor::environment_as_ul {
         where ar.object_id_one = :environment_item_id
         and ar.rel_type = 'imsld_env_env_rel'
     }] {
-        imsld::monitor::process_environment_as_ul -environment_item_id $nested_environment_item_id \
+        imsld::monitor::environment_as_ul \
+	    -environment_item_id $nested_environment_item_id \
             -run_id $run_id \
-            -resource_mode $resource_mode \
             -dom_node $environment_node \
             -dom_doc $dom_doc
     }
