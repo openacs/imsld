@@ -244,7 +244,7 @@
   <msg key="lt_No_parent_folder_foun">No parent folder found</msg>
   <msg key="lt_No_parent_folder_foun_1">No parent folder found for the ims-ld in the community %community_id%. Please report this error to the administrator.</msg>
   <msg key="lt_Number_of_members_doe">Number of members does not reach the minimum allowed number of users for this role.
-                       There must be at least $min_persons members.</msg>
+                       There must be at least %min_persons% members.</msg>
   <msg key="lt_Number_of_members_exc">Number of members exceded the allowed number for this role.
                        You must not select more than $max_persons members.</msg>
   <msg key="lt_Number_of_Organizatio">Number of Organizations:</msg>

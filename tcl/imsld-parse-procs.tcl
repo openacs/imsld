@@ -605,10 +605,6 @@ ad_proc -public imsld::parse::parse_and_create_resource {
         #revoke permissions until first usage of resources
         if {[info exist acs_object_id]} {
             permission::set_not_inherit -object_id $acs_object_id
-            set party_id [db_list get_allowed_parties {}]
-            foreach parti $party_id {
-                permission::revoke -party_id $parti -object_id $acs_object_id -privilege "read"
-            }
         }
         
         set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
@@ -646,12 +642,6 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             }
 
             permission::set_not_inherit -object_id $filex_id
-            
-            set acs_object_id $filex_id 
-            set party_id_list [db_list get_allowed_parties {}]
-            foreach party_id $party_id_list {
-                permission::revoke -party_id $party_id -object_id $filex_id -privilege "read"
-            }
             
             # map resource with file
             relation_add -extra_vars $extra_vars imsld_res_files_rel $resource_id $filex_id
@@ -1590,11 +1580,6 @@ ad_proc -public imsld::parse::parse_and_create_forum {
     #revoke read permissions until first usage
     if {[info exist acs_object_id]} {
         permission::set_not_inherit -object_id $acs_object_id
-
-        set party_id [db_list get_allowed_parties {}]
-        foreach parti $party_id {
-            permission::revoke -party_id $parti -object_id $acs_object_id -privilege "read"
-        }
     }
     return $acs_object_id
 }
