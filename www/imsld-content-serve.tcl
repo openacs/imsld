@@ -1,7 +1,8 @@
 # packages/imsld/www/imsld-content-serve.tcl
 
 ad_page_contract {
-    Process an imsldcontent resource, changing the view and set properties tags with their respective HTML
+    Process an imsldcontent resource, changing the view and set properties tags
+    with their respective HTML
 
     @creation-date Jun 2006
     @author jopez@inv.it.uc3m.s
@@ -41,7 +42,10 @@ db_1row context_info {
     select ic.item_id as component_item_id,
     ii.imsld_id,
     rug.group_id as run_group_id
-    from imsld_componentsi ic, imsld_imsldsi ii, imsld_runs ir, imsld_run_users_group_ext rug
+    from imsld_componentsi ic, 
+    imsld_imsldsi ii, 
+    imsld_runs ir, 
+    imsld_run_users_group_ext rug
     where ic.imsld_id = ii.item_id
     and content_revision__is_live(ii.imsld_id) = 't'
     and ii.imsld_id = ir.imsld_id
@@ -51,7 +55,8 @@ db_1row context_info {
 
 # Get file-storage root folder_id
 set fs_package_id [site_node_apm_integration::get_child_package_id \
-		       -package_id [dotlrn_community::get_package_id [dotlrn_community::get_community_id]] \
+		       -package_id [dotlrn_community::get_package_id \
+					[dotlrn_community::get_community_id]] \
 		       -package_key "file-storage"]
 set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
 
@@ -67,12 +72,17 @@ if { [catch {dom parse $xml_string dom_doc} errmsg] } {
 $dom_doc documentElement dom_root
 
 # procedure:
-# currently we only deliver properties of one user at the same time in one given role
+# currently we only deliver properties of one user at the same time in one
+# given role
 # 1. replace the view-property tags with the property title(optional) and value
-# 2. replace the view-property-group tags with the properties titles(optional) and value of all the referenced properties
-# 3. replace the set-property tags with input fields depending on the property type
-# 4. replace the set-groperty-group tags with one input field per each referenced property in the group 
-# 5. if there was at least one set-property* tag, add a submit button (FIX ME: currently for each set-property* a new form is added)
+# 2. replace the view-property-group tags with the properties titles(optional)
+# and value of all the referenced properties
+# 3. replace the set-property tags with input fields depending on the property
+# type
+# 4. replace the set-groperty-group tags with one input field per each
+# referenced property in the group 
+# 5. if there was at least one set-property* tag, add a submit button (FIX ME:
+# currently for each set-property* a new form is added)
 # 6. for each class, check the visibility value in the database
 
 # 1. view-property nodes
@@ -443,6 +453,13 @@ foreach set_property_node $set_property_nodes {
     $owner_node setAttribute value "$owner_user_id"
     $form_node appendChild $owner_node
 
+    # adding run_id
+    set run_id_node [$dom_doc createElement "input"]
+    $run_id_node setAttribute name "run_id"
+    $run_id_node setAttribute type "hidden"
+    $run_id_node setAttribute value "$run_id"
+    $form_node appendChild $run_id_node
+
     # adding return url
     set return_url_node [$dom_doc createElement "input"]
     $return_url_node setAttribute name "return_url"
@@ -455,6 +472,7 @@ foreach set_property_node $set_property_nodes {
     $submit_node setAttribute type "submit"
     $submit_node setAttribute value "ok"
     $form_node appendChild $submit_node
+
     # done... add the form to the root
     set parent_node [$set_property_node parentNode]
     # first, replace property node with the form node
@@ -702,6 +720,13 @@ foreach set_property_group_node $set_property_group_nodes {
     $owner_node setAttribute value "$owner_user_id"
     $form_node appendChild $owner_node
 
+    # adding run_id
+    set run_id_node [$dom_doc createElement "input"]
+    $run_id_node setAttribute name "run_id"
+    $run_id_node setAttribute type "hidden"
+    $run_id_node setAttribute value "$run_id"
+    $form_node appendChild $run_id_node
+
     # adding return url
     set return_url_node [$dom_doc createElement "input"]
     $return_url_node setAttribute name "return_url"
@@ -714,6 +739,7 @@ foreach set_property_group_node $set_property_group_nodes {
     $submit_node setAttribute type "submit"
     $submit_node setAttribute value "ok"
     $form_node appendChild $submit_node
+
     # finally, replace property node with the form node
     $parent_node replaceChild $form_node $set_property_group_node
     # FIXME: tDOME apparently adds automathically  the attribute xmlns when replacing a node...
