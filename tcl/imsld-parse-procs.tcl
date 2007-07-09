@@ -957,7 +957,7 @@ ad_proc -public imsld::parse::parse_and_create_global_def {
         set title [imsld::parse::get_title -node $global_def_node -prefix imsld]
         set datatype [$global_def_node selectNodes "*\[local-name()='datatype'\]" ] 
         imsld::parse::validate_multiplicity -tree $global_def_node -multiplicity 1 -element_name "global-definition datatype" -equal
-        set datatype [string tolower [imsld::parse::get_attribute -node $global_def_node -attr_name datatype]]
+        set datatype [string tolower [imsld::parse::get_attribute -node $datatype -attr_name datatype]]
         set initial_value [$global_def_node selectNodes "*\[local-name()='initial-value'\]"] 
         imsld::parse::validate_multiplicity -tree $initial_value -multiplicity 1 -element_name "global-definition initial-value" -lower_than
         if { [llength $initial_value] } {
@@ -3358,11 +3358,13 @@ ad_proc -public imsld::parse::parse_and_create_act {
             }
         }
         
-        set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
-                                                                       [list when_condition_true_id $when_condition_true_id] \
-                                                                       [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
-                                 -content_type imsld_complete_act \
-                                 -parent_id $parent_id]
+	if { ![string eq "" $time_in_seconds] || ![string eq "" $when_prop_value_is_set_xml] ||![string eq "" $when_condition_true_id]  } {
+	    set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
+									   [list when_condition_true_id $when_condition_true_id] \
+									   [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
+				     -content_type imsld_complete_act \
+				     -parent_id $parent_id]
+	}
 
         if { [llength $when_prop_value_is_set] } {
             #search properties in expression 

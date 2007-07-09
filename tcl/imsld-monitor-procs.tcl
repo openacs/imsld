@@ -480,7 +480,6 @@ ad_proc -public imsld::monitor::environment_as_ul {
 } { 
     @param environment_item_id
     @param run_id
-    @option resource_mode
     @param dom_node
     @param dom_doc
 

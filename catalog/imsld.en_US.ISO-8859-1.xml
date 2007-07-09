@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<message_catalog package_key="imsld" package_version="1.1d" locale="en_US" charset="ISO-8859-1">
+<message_catalog package_key="imsld" package_version="1.2d" locale="en_US" charset="ISO-8859-1">
 
   <msg key="_Assigned_users">| Assigned users:</msg>
   <msg key="_Component">Component Identifier</msg>
@@ -146,13 +146,10 @@
   <msg key="Learning_Object">Learning Object</msg>
   <msg key="Learning_Objects">Learning Objects</msg>
   <msg key="Level">Level</msg>
-  <msg key="Local_Properties">Local Properties</msg>
   <msg key="li_activity_title_li">&lt;li&gt; %activity_title% &lt;/li&gt;</msg>
   <msg key="li_file_name_li">&lt;li&gt; %file_name% &lt;/li&gt;</msg>
   <msg key="li_impozzible_li">&lt;li&gt; impozzible &lt;/li&gt;</msg>
-  <msg key="lt_Local-personal_Prop">Local-personal Properties</msg>
-  <msg key="lt_Local-role_Properti">Local-role Properties</msg>
-  <msg key="lt_Global-personal_Pro">Global-personal Properties</msg>
+  <msg key="Local_Properties">Local Properties</msg>
   <msg key="lt___imsldcreate_new_run">[_ imsld.create_new_run]</msg>
   <msg key="lt_Activity_Description_">Activity Description Identifier</msg>
   <msg key="lt_Activity_Structure_Id">Activity Structure Identifier</msg>
@@ -186,6 +183,7 @@
   <msg key="lt_Expression_One_Identi">Expression One Identifier</msg>
   <msg key="lt_Expression_Two_Identi">Expression Two Identifer</msg>
   <msg key="lt_Finish_role_managemen">Finish role management</msg>
+  <msg key="lt_Global-personal_Pro">Global-personal Properties</msg>
   <msg key="lt_h2Uploading_new_IMS_L">&lt;h2&gt;Uploading new IMS Learning Design&lt;/h2&gt;</msg>
   <msg key="lt_If_you_are_not_sure_t">If you are not sure that everything is OK, please</msg>
   <msg key="lt_Import_IMS-LD_ZIP_Fil">Import IMS-LD ZIP File</msg>
@@ -231,6 +229,8 @@
   <msg key="lt_Learning_Objectives_I">Learning Objectives ID</msg>
   <msg key="lt_Learning_Unit_finishe">Learning Unit finished</msg>
   <msg key="lt_li_desc_no_file_assoc">&lt;li&gt; desc (no file associated) &lt;/li&gt;</msg>
+  <msg key="lt_Local-personal_Prop">Local-personal Properties</msg>
+  <msg key="lt_Local-role_Properti">Local-role Properties</msg>
   <msg key="lt_manifest_namespace_is">manifest namespace is not imscp</msg>
   <msg key="lt_Max_number_of_student">Max. number of students per group: %max_persons%</msg>
   <msg key="lt_Members_not_allowed_n">Members $not_allowed_name are already members of other subroles of role $parent_role_name.</msg>
@@ -347,6 +347,7 @@
   <msg key="lt_Unestable_state_reach">Unestable state reached</msg>
   <msg key="lt_Unstable_state_reache">Unstable state reached when evaluating conditions (An infinite loop was detected). Please, contact the administrator and review the conditions of the UoL.</msg>
   <msg key="lt_Uploading_and_process">Uploading and processing your course, please wait...</msg>
+  <msg key="lt_User_does_not_belong_">User does not belong to any role instance</msg>
   <msg key="lt_username_br__________">%username% &lt;br&gt; 
                        %sender_name% has triggered this notification. Please do not replay to this email. &lt;br&gt;&lt;br&gt; 
                        Go to the UoL: &lt;a href=\&quot;%imsld_url%\&quot;&gt;%imsld_title%&lt;/a&gt; (in the community: &lt;a href=\&quot;%community_url%\&quot;&gt;%community_name%&lt;/a&gt; community) for further details.</msg>
@@ -386,8 +387,8 @@
   <msg key="No_IMS_LD">No IMS LD</msg>
   <msg key="No_info_was_found">No info was found</msg>
   <msg key="No_properties_found">No properties found.</msg>
-  <msg key="No_users">No users</msg>
   <msg key="No_user_selected">No user selected.</msg>
+  <msg key="No_users">No users</msg>
   <msg key="None">None</msg>
   <msg key="None_please_select">None, please select</msg>
   <msg key="Not_defined">Not defined</msg>
@@ -469,9 +470,9 @@
   <msg key="units-of-learning_Administration">Units of Learning Administration</msg>
   <msg key="Uploading_IMS_LD">Uploading IMS LD</msg>
   <msg key="URI">URI</msg>
-  <msg key="User_Choice">User Choice?</msg>
-  <msg key="User_activity_reports">User activity reports</msg>
   <msg key="user">user</msg>
+  <msg key="User_activity_reports">User activity reports</msg>
+  <msg key="User_Choice">User Choice?</msg>
   <msg key="Users">Users</msg>
   <msg key="users">users</msg>
   <msg key="Value">Value</msg>
@@ -479,6 +480,7 @@
   <msg key="view_file">view file</msg>
   <msg key="View_members">View members</msg>
   <msg key="View_Roles">View Roles</msg>
+  <msg key="Viewed">Viewed</msg>
   <msg key="waiting">waiting</msg>
   <msg key="When_Condition_True">When Condition True</msg>
   <msg key="With_Control">With Control</msg>

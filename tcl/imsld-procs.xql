@@ -898,7 +898,8 @@
 	<fullquery name="imsld::structure_next_activity.get_la_info">
 		<querytext>
     
-                    select la.activity_id as learning_activity_id
+                    select la.activity_id as learning_activity_id,
+		    complete_act_id
                     from imsld_learning_activitiesi la
                     where la.item_id = :object_id_two
                     and content_revision__is_live(la.activity_id) = 't'
@@ -1905,13 +1906,25 @@
 		</querytext>
 	</fullquery>
 
-	<fullquery name="imsld::generate_structure_activities_list.as_completed_p">
+	<fullquery name="imsld::generate_structure_activities_list.as_started_p">
 		<querytext>
 
                     select 1 from imsld_status_user
                     where related_id = :structure_id 
                     and user_id = :user_id 
                     and status = 'started'
+                    and run_id = :run_id
+                
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_structure_activities_list.as_completed_p">
+		<querytext>
+
+                    select 1 from imsld_status_user
+                    where related_id = :structure_id 
+                    and user_id = :user_id 
+                    and status = 'finish'
                     and run_id = :run_id
                 
 		</querytext>
@@ -1947,6 +1960,7 @@
         content_item__get_live_revision(coalesce(rp.learning_activity_id,rp.support_activity_id,rp.activity_structure_id)) as activity_id,
         rp.role_part_id,
         ia.act_id,
+        ia.item_id as act_item_id,
         ip.play_id
         from imsld_role_partsi rp, imsld_actsi ia, imsld_playsi ip, imsld_imsldsi ii, imsld_attribute_instances attr,
         imsld_methodsi im,imsld_rolesi iri
@@ -2017,13 +2031,25 @@
 		</querytext>
 	</fullquery>
 
-	<fullquery name="imsld::generate_activities_tree.as_completed_p">
+	<fullquery name="imsld::generate_activities_tree.as_started_p">
 		<querytext>
 
                     select 1 from imsld_status_user
                     where related_id = :activity_id 
                     and user_id = :user_id 
                     and status = 'started'
+                    and run_id = :run_id
+                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_activities_tree.as_completed_p">
+		<querytext>
+
+                    select 1 from imsld_status_user
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and status = 'finished'
                     and run_id = :run_id
                     
 		</querytext>

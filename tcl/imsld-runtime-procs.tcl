@@ -160,7 +160,7 @@ ad_proc -public imsld::runtime::property::property_value_set {
 	    set role_instance_id [imsld::roles::get_user_role_instance -run_id $run_id -role_id $role_id -user_id $user_id]
 	    if { !$role_instance_id } {
 		# runtime error... the user doesn't belong to any role instance
-		util_user_message -message "<#_ User does not belong to any role instance #>"
+		util_user_message -message "[_ imsld.lt_User_does_not_belong_]"
 		ad_script_abort
 	    }
 	}
@@ -411,7 +411,7 @@ ad_proc -public imsld::runtime::property::property_value_get {
         set role_instance_id [imsld::roles::get_user_role_instance -run_id $run_id -role_id $role_id -user_id $user_id]
         if { !$role_instance_id } {
             # runtime error... the user doesn't belong to any role instance
-	    util_user_message -message "<#_ User does not belong to any role instance #>" 
+	    util_user_message -message "[_ imsld.lt_User_does_not_belong_]" 
 	    ad_script_abort 
         }
     }

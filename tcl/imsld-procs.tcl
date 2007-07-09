@@ -488,9 +488,9 @@ ad_proc -public imsld::mark_role_part_finished {
 
         dom createDocument foo foo_doc
         set foo_node [$foo_doc documentElement]
-        if { [string eq $$type "learning"] } {
+        if { [string eq $type "learning"] } {
             set resources_activities_list [imsld::process_learning_activity_as_ul -run_id $run_id -activity_item_id $activity_item_id -resource_mode "t" -dom_node $foo_node -dom_doc $foo_doc]
-        } elseif { [string eq $$type "support"] } {
+        } elseif { [string eq $type "support"] } {
             set resources_activities_list [imsld::process_support_activity_as_ul -run_id $run_id -activity_item_id $activity_item_id -resource_mode "t" -dom_node $foo_node -dom_doc $foo_doc]
         } else {
             set resources_activities_list [imsld::process_activity_structure_as_ul -run_id $run_id -structure_item_id $activity_item_id -resource_mode "t" -dom_node $foo_node -dom_doc $foo_doc]
@@ -1030,7 +1030,7 @@ ad_proc -public imsld::finish_component_element {
             }
         }
     }
-    
+
     if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $type "structure"] } {
         foreach referencer_structure_list [db_list_of_lists referencer_structure { *SQL* }] {
             set structure_id [lindex $referencer_structure_list 0]
@@ -1049,6 +1049,7 @@ ad_proc -public imsld::finish_component_element {
                 if { ![db_string completed_p { *SQL* }] } {
                     # there is at leas one no-completed activity, so we can't mark this activity structure yet
                     set scturcture_finished_p 0
+		    break
                 } else {
                     incr total_completed
                 }
@@ -1080,7 +1081,6 @@ ad_proc -public imsld::finish_component_element {
     # 4. let's see if the finished play triggers the ending of the method which
     # references it.
     set role_part_id_list [imsld::get_role_part_from_activity -activity_type $type -leaf_id [db_string get_item_id { select item_id from cr_revisions where revision_id = :element_id}]]
-
     foreach role_part_id $role_part_id_list {
         db_1row context_info {
             select acts.act_id,
@@ -1182,6 +1182,7 @@ ad_proc -public imsld::finish_component_element {
                         }
                     }
                 }
+
                 imsld::mark_act_finished -act_id $act_id \
                     -play_id $play_id \
                     -imsld_id $imsld_id \
@@ -1405,28 +1406,58 @@ ad_proc -public imsld::structure_finished_p {
         set object_id_two [lindex $referenced_activity 0]
         set rel_type [lindex $referenced_activity 1]
         switch $rel_type {
-            imsld_as_la_rel -
-            imsld_as_sa_rel {
-                # is the activity finished ?
-                if { ![db_0or1row completed_p {
-                    select 1 from imsld_status_user 
+            imsld_as_la_rel {
+		set complete_act_id [db_string completion_restriction {
+		    select complete_act_id 
+		    from imsld_learning_activities
+		    where activity_id = content_item__get_live_revision(:object_id_two)
+		} -default ""]
+		
+		if { (![string eq [db_string finished_p {                    
+		    select status from imsld_status_user 
                     where related_id = content_item__get_live_revision(:object_id_two) 
                     and user_id = :user_id 
                     and status = 'finished'
                     and run_id = :run_id
-                }] } {
-                    set all_completed 0
-                }
+		} -default ""] "finished"] && ![string eq $complete_act_id ""]) \
+			 || (![string eq [db_string started_p {
+			     select status from imsld_status_user 
+			     where related_id = content_item__get_live_revision(:object_id_two) 
+			     and user_id = :user_id 
+			     and status = 'started'
+			     and run_id = :run_id
+			 } -default ""] "started"] && [string eq $complete_act_id ""]) } {
+		    set all_completed 0
+		    break
+		}
+	    }
+            imsld_as_sa_rel {
+		set complete_act_id [db_string completion_restriction {
+		    select complete_act_id 
+		    from imsld_support_activities
+		    where activity_id = content_item__get_live_revision(:object_id_two)
+		} -default ""]
+		
+		if { (![string eq [db_string finished_p {                    
+		    select status from imsld_status_user 
+                    where related_id = content_item__get_live_revision(:object_id_two) 
+                    and user_id = :user_id 
+                    and status = 'finished'
+                    and run_id = :run_id
+		} -default ""] "finished"] && ![string eq $complete_act_id ""]) \
+			 || (![string eq [db_string started_p {
+			     select status from imsld_status_user 
+			     where related_id = content_item__get_live_revision(:object_id_two) 
+			     and user_id = :user_id 
+			     and status = 'started'
+			     and run_id = :run_id
+			 } -default ""] "started"] && [string eq $complete_act_id ""]) } {
+		    set all_completed 0
+		    break
+		}
             }
             imsld_as_as_rel {
-                # search recursively trough the referenced 
-                db_1row get_activity_structure_info {
-                    select structure_id
-                    from imsld_activity_structuresi
-                    where item_id = :object_id_two
-                    and content_revision__is_live(structure_id) = 't'
-                }
-                # is the activity finished ?
+		# the activity structure must be marked as finished
                 if { ![db_0or1row completed_p {
                     select 1 from imsld_status_user 
                     where related_id = :structure_id 
@@ -1435,15 +1466,13 @@ ad_proc -public imsld::structure_finished_p {
                     and run_id = :run_id
                 }] } {
                     set all_completed 0
-                }
-                if { ![imsld::structure_finished_p -run_id $run_id -structure_id $structure_id -user_id $user_id] } {
-                    set all_completed 0
+		    break
                 }
             }
         }
     }
     return $all_completed
-} 
+}
 
 ad_proc -public imsld::role_part_finished_p { 
     -role_part_id:required
@@ -2714,6 +2743,12 @@ ad_proc -public imsld::generate_structure_activities_list {
     set completed_list [list]
     # get the structure info
     db_1row structure_info { *SQL* }
+
+    # if any of the referenced activities from the activity structure doesn't have a completion restriction
+    # and the activity structure is of type "sequence", there wouldn't be a way to advance in the structure,
+    # so, if this is the case, the structure is treated as of type "selection"
+    set completion_restriction [imsld::structure_completion_resctriction_p -run_id $run_id -structure_item_id $structure_item_id]
+
     # get the referenced activities which are referenced from the structure
     foreach referenced_activity [db_list_of_lists struct_referenced_activities { *SQL* }] {
         # get all the directly referenced activities (from the activity structure)
@@ -2728,41 +2763,93 @@ ad_proc -public imsld::generate_structure_activities_list {
                     select sort_order from imsld_as_la_rels where rel_id = :rel_id
                 }
                 set completed_p [db_0or1row completed_p { *SQL* }]
+                set started_activity_p [db_0or1row already_started {
+                    select 1 from imsld_status_user 
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and run_id = :run_id
+                    and status = 'started'
+                }]
+		set user_choice_p [db_string user_choice_p {select user_choice_p from imsld_complete_actsi where item_id = :complete_act_id and content_revision__is_live(complete_act_id) = 't'} -default "f"]
                 # show the activity only if:
+		# 0. the activity is visible
                 # 1. it has been already completed
                 # 2. if the structure-type is "selection"
-                # 3. if it is the next activity to be done (and structure-type is "sequence") 
-                if { $completed_p || [string eq $complete_act_id ""] || [string eq $structure_type "selection"] || ([string eq $is_visible_p "t"] && [lsearch -exact $next_activity_id_list $activity_id] != -1) } {
-                    set activity_node [$dom_doc createElement li]
-                    $activity_node setAttribute class "liOpen"
+		# 3. if the activity has no completion restriction
+                # 4. if it is the next activity to be done (and structure-type is "sequence") 
 
-                    set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
-                    $a_node setAttribute target "content"
-                    set text [$dom_doc createTextNode "$activity_title"]
-                    $a_node appendChild $text
-                    $activity_node appendChild $a_node
+                if { $completed_p || [string eq $complete_act_id ""] || [string eq $structure_type "selection"] || (([lsearch -exact $next_activity_id_list $activity_id] != -1) || !$completion_restriction) && [string eq $is_visible_p "t"] } {
 
-                    set text [$dom_doc createTextNode " "]
-                    $activity_node appendChild $text
+		    if { !$started_activity_p && [string eq $is_visible_p "t"] } {
+			set activity_node [$dom_doc createElement li]
+			$activity_node setAttribute class "liOpen"
+			set b_node [$dom_doc createElement b]
+			set a_node [$dom_doc createElement a]
+			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute target "content"
+			set text [$dom_doc createTextNode "$activity_title"]
+			$a_node appendChild $text
+			$b_node appendChild $a_node
+			$activity_node appendChild $b_node
+			
+			set text [$dom_doc createTextNode " "]
+			$activity_node appendChild $text
+		    } else {
+			# bold letters
+			set activity_node [$dom_doc createElement li]
+			$activity_node setAttribute class "liOpen"
+			set a_node [$dom_doc createElement a]
+			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute target "content"
+			set text [$dom_doc createTextNode "$activity_title"]
+			$a_node appendChild $text
+			$activity_node appendChild $a_node
+			
+			set text [$dom_doc createTextNode " "]
+			$activity_node appendChild $text
+		    }
 
-                    if { !$completed_p } {
-                        set input_node [$dom_doc createElement a]
-                        $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
-			$input_node setAttribute class "finish"
-			$input_node setAttribute title "[_ imsld.finish_activity]"
-			set text [$dom_doc createTextNode "[_ imsld.finish]"]
-			$input_node appendChild $text
-                        $activity_node appendChild $input_node
-                    } else {
-			set img_node [$dom_doc createElement img]
-			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
-			$img_node setAttribute border "0"
-			$img_node setAttribute alt "[_ imsld.finished]"
-			$img_node setAttribute title "[_ imsld.finished]"
-                        $activity_node appendChild $img_node
-                    }
+		    if { $completed_p } {
 
+			if { [string eq $user_choice_p "t"] } {
+			    # the activity is finished
+			    set img_node [$dom_doc createElement img]
+			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
+			    $img_node setAttribute border "0"
+			    $img_node setAttribute alt "[_ imsld.finished]"
+			    $img_node setAttribute title "[_ imsld.finished]"
+			    $activity_node appendChild $img_node
+			} else {
+			    # the activity has been viewed
+			    set img_node [$dom_doc createElement img]
+			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
+			    $img_node setAttribute border "0"
+			    $img_node setAttribute alt "[_ imsld.Viewed]"
+			    $img_node setAttribute title "[_ imsld.Viewed]"
+			    $activity_node appendChild $img_node
+			}
+		    } else {
+
+			if { [string eq $user_choice_p "t"] } {
+			    
+			    # show the finish button
+			    set input_node [$dom_doc createElement a]
+			    $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
+			    $input_node setAttribute class "finish"
+			    $input_node setAttribute title "[_ imsld.finish_activity]"
+			    set text [$dom_doc createTextNode "[_ imsld.finish]"]
+			    $input_node appendChild $text
+			    $activity_node appendChild $input_node
+			} elseif { $started_activity_p } {
+			    # the activity has been viewed
+			    set img_node [$dom_doc createElement img]
+			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
+			    $img_node setAttribute border "0"
+			    $img_node setAttribute alt "[_ imsld.Viewed]"
+			    $img_node setAttribute title "[_ imsld.Viewed]"
+			    $activity_node appendChild $img_node
+			}
+		    }
                     set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
                 }
             }
@@ -2772,41 +2859,93 @@ ad_proc -public imsld::generate_structure_activities_list {
                 db_1row get_sort_order {
                     select sort_order from imsld_as_sa_rels where rel_id = :rel_id
                 }
+                set started_activity_p [db_0or1row already_started {
+                    select 1 from imsld_status_user 
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and run_id = :run_id
+                    and status = 'started'
+                }]
                 set completed_p [db_0or1row completed_p { *SQL* }]
+		set user_choice_p [db_string user_choice_p {select user_choice_p from imsld_complete_actsi where item_id = :complete_act_id and content_revision__is_live(complete_act_id) = 't'} -default "f"]
+
                 # show the activity only if:
+		# 0. the activity is visible
                 # 1. it has been already completed
                 # 2. if the structure-type is "selection"
                 # 3. if it is the next activity to be done (and structure-type is "sequence") 
-                if { $completed_p || [string eq $complete_act_id ""] || [string eq $structure_type "selection"] || ([string eq $is_visible_p "t"] && [lsearch -exact $next_activity_id_list $activity_id] != -1) } {
-                    set activity_node [$dom_doc createElement li]
-                    $activity_node setAttribute class "liOpen"
-                    set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
-                    $a_node setAttribute target "content"
-                    set text [$dom_doc createTextNode "$activity_title"]
-                    $a_node appendChild $text
-                    $activity_node appendChild $a_node
+		# 4. if the activity has no completion restriction
+                if { [string eq $is_visible_p "t"] && ($completed_p || [string eq $complete_act_id ""] || [string eq $structure_type "selection"] || (([lsearch -exact $next_activity_id_list $activity_id] != -1) || !$completion_restriction) && [string eq $is_visible_p "t"] } {
 
-                    set text [$dom_doc createTextNode " "]
-                    $activity_node appendChild $text
-                    
-                    if { !$completed_p } {
-                        set input_node [$dom_doc createElement a]
-                        $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
-			$input_node setAttribute class "finish"
-			$input_node setAttribute title "[_ imsld.finish_activity]"
-			set text [$dom_doc createTextNode "[_ imsld.finish]"]
-			$input_node appendChild $text
-                        $activity_node appendChild $input_node
-                    } else {
-			set img_node [$dom_doc createElement img]
-			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
-			$img_node setAttribute border "0"
-			$img_node setAttribute alt "[_ imsld.finished]"
-			$img_node setAttribute title "[_ imsld.finished]"
-                        $activity_node appendChild $img_node
-                    }
+		    if { !$started_activity_p && [string eq $is_visible_p "t"] } {
+			set activity_node [$dom_doc createElement li]
+			$activity_node setAttribute class "liOpen"
+			set b_node [$dom_doc createElement b]
+			set a_node [$dom_doc createElement a]
+			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute target "content"
+			set text [$dom_doc createTextNode "$activity_title"]
+			$a_node appendChild $text
+			$b_node appendChild $a_node
+			$activity_node appendChild $b_node
+			
+			set text [$dom_doc createTextNode " "]
+			$activity_node appendChild $text
+		    } else {
+			# bold letters
+			set activity_node [$dom_doc createElement li]
+			$activity_node setAttribute class "liOpen"
+			set a_node [$dom_doc createElement a]
+			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute target "content"
+			set text [$dom_doc createTextNode "$activity_title"]
+			$a_node appendChild $text
+			$activity_node appendChild $a_node
+			
+			set text [$dom_doc createTextNode " "]
+			$activity_node appendChild $text
+			
+		    }
 
+		    if { $completed_p } {
+			if { [string eq $user_choice_p "t"] } {
+			    # the activity is finished
+			    set img_node [$dom_doc createElement img]
+			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
+			    $img_node setAttribute border "0"
+			    $img_node setAttribute alt "[_ imsld.finished]"
+			    $img_node setAttribute title "[_ imsld.finished]"
+			    $activity_node appendChild $img_node
+			} else {
+			    # the activity has been viewed
+			    set img_node [$dom_doc createElement img]
+			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
+			    $img_node setAttribute border "0"
+			    $img_node setAttribute alt "[_ imsld.Viewed]"
+			    $img_node setAttribute title "[_ imsld.Viewed]"
+			    $activity_node appendChild $img_node
+			}
+		    } else {
+			if { [string eq $user_choice_p "t"] } {
+			    
+			    # show the finish button
+			    set input_node [$dom_doc createElement a]
+			    $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
+			    $input_node setAttribute class "finish"
+			    $input_node setAttribute title "[_ imsld.finish_activity]"
+			    set text [$dom_doc createTextNode "[_ imsld.finish]"]
+			    $input_node appendChild $text
+			    $activity_node appendChild $input_node
+			} elseif { $started_activity_p } {
+			    # the activity has been viewed
+			    set img_node [$dom_doc createElement img]
+			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
+			    $img_node setAttribute border "0"
+			    $img_node setAttribute alt "[_ imsld.Viewed]"
+			    $img_node setAttribute title "[_ imsld.Viewed]"
+			    $activity_node appendChild $img_node
+			}
+		    }
                     set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
                 }
             }
@@ -2820,16 +2959,32 @@ ad_proc -public imsld::generate_structure_activities_list {
                 db_1row get_sort_order {
                     select sort_order from imsld_as_as_rels where rel_id = :rel_id
                 }
-                set started_p [db_0or1row as_completed_p { *SQL* }]
+                set started_p [db_0or1row as_started_p { *SQL* }]
+		set completed_p [db_0or1row as_completed_p { *SQL* }]
+
+
                 if { $started_p || [string eq $structure_type "selection"] } {
-                    set structure_node [$dom_doc createElement li]
-                    $structure_node setAttribute class "liOpen"
-                    set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[imsld::activity_url -activity_id $structure_id -run_id $run_id -user_id $user_id]"
-                    $a_node setAttribute target "content"
-                    set text [$dom_doc createTextNode "$activity_title"]
-                    $a_node appendChild $text
-                    $structure_node appendChild $a_node
+		    if { $completed_p } {
+			set structure_node [$dom_doc createElement li]
+			$structure_node setAttribute class "liOpen"
+			set a_node [$dom_doc createElement a]
+			$a_node setAttribute href "[imsld::activity_url -activity_id $structure_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute target "content"
+			set text [$dom_doc createTextNode "$activity_title"]
+			$a_node appendChild $text
+			$structure_node appendChild $a_node
+		    } else {
+			set structure_node [$dom_doc createElement li]
+			$structure_node setAttribute class "liOpen"
+			set b_node [$dom_doc createElement b]
+			set a_node [$dom_doc createElement a]
+			$a_node setAttribute href "[imsld::activity_url -activity_id $structure_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute target "content"
+			set text [$dom_doc createTextNode "$activity_title"]
+			$a_node appendChild $text
+			$b_node appendChild $a_node
+			$structure_node appendChild $b_node
+		    }
 
                     set nested_activities_list [imsld::generate_structure_activities_list -imsld_id $imsld_id \
                                                     -run_id $run_id \
@@ -2884,19 +3039,28 @@ ad_proc -public imsld::generate_activities_tree {
         and ar.object_id_two = :user_id
         and iruge.run_id = :run_id
     }]
+    set active_acts_list [imsld::active_acts -run_id $run_id -user_id $user_id]
 
     # get the referenced role parts
     foreach role_part_list [db_list_of_lists referenced_role_parts { *SQL* }] {
         set type [lindex $role_part_list 0]
         set activity_id [lindex $role_part_list 1]
         set role_part_id [lindex $role_part_list 2]
-        set act_id [lindex $role_part_list 3]        
-        set play_id [lindex $role_part_list 4]
+        set act_id [lindex $role_part_list 3]      
+	set act_item_id [lindex $role_part_list 4]
+        set play_id [lindex $role_part_list 5]
 
         switch $type {
             learning {
                 # add the learning activity to the tree
                 db_1row get_learning_activity_info { *SQL* }
+                set started_activity_p [db_0or1row already_started {
+                    select 1 from imsld_status_user 
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and run_id = :run_id
+                    and status = 'started'
+                }]
                 set completed_activity_p [db_0or1row already_completed {
                     select 1 from imsld_status_user 
                     where related_id = :activity_id 
@@ -2904,35 +3068,80 @@ ad_proc -public imsld::generate_activities_tree {
                     and run_id = :run_id
                     and status = 'finished'
                 }]
-                if { $completed_activity_p || [lsearch -exact $next_activity_id_list $activity_id] != -1 && ([string eq $complete_act_id ""] || [string eq $is_visible_p "t"]) } {
-                    set activity_node [$dom_doc createElement li]
-                    $activity_node setAttribute class "liOpen"
-                    set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
-                    $a_node setAttribute target "content"
-                    set text [$dom_doc createTextNode "$activity_title"]
-                    $a_node appendChild $text
-                    $activity_node appendChild $a_node
+		set user_choice_p [db_string user_choice_p {select user_choice_p from imsld_complete_actsi where item_id = :complete_act_id and content_revision__is_live(complete_act_id) = 't'} -default "f"]
+                if { $completed_activity_p || ([lsearch -exact $next_activity_id_list $activity_id] != -1) || ([string eq $complete_act_id ""] && [string eq $is_visible_p "t"] && [lsearch -exact $active_acts_list $act_item_id] != -1) } {
 
-                    set text [$dom_doc createTextNode " "]
-                    $activity_node appendChild $text
-                        
-                    if { !$completed_activity_p } {
-                        set input_node [$dom_doc createElement a]
-                        $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
-			$input_node setAttribute class "finish"
-			$input_node setAttribute title "[_ imsld.finish_activity]"
-			set text [$dom_doc createTextNode "[_ imsld.finish]"]
-			$input_node appendChild $text
-                        $activity_node appendChild $input_node
-                    } else {
-			set img_node [$dom_doc createElement img]
-			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
-			$img_node setAttribute border "0"
-			$img_node setAttribute alt "[_ imsld.finished]"
-			$img_node setAttribute title "[_ imsld.finished]"
-                        $activity_node appendChild $img_node
-                    }
+		    if { !$started_activity_p && [string eq $is_visible_p "t"] } {
+			# bold letters
+			set activity_node [$dom_doc createElement li]
+			$activity_node setAttribute class "liOpen"
+			set b_node [$dom_doc createElement b]
+			set a_node [$dom_doc createElement a]
+			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute target "content"
+			set text [$dom_doc createTextNode "$activity_title"]
+			$a_node appendChild $text
+			$b_node appendChild $a_node
+			$activity_node appendChild $b_node
+			
+			set text [$dom_doc createTextNode " "]
+			$activity_node appendChild $text
+		    } else {
+			set activity_node [$dom_doc createElement li]
+			$activity_node setAttribute class "liOpen"
+			set a_node [$dom_doc createElement a]
+			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute target "content"
+			set text [$dom_doc createTextNode "$activity_title"]
+			$a_node appendChild $text
+			$activity_node appendChild $a_node
+			
+			set text [$dom_doc createTextNode " "]
+			$activity_node appendChild $text
+			
+		    }
+
+		    if { $completed_activity_p } {
+
+			if { [string eq $user_choice_p "t"] } {
+			    # the activity is finished
+			    set img_node [$dom_doc createElement img]
+			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
+			    $img_node setAttribute border "0"
+			    $img_node setAttribute alt "[_ imsld.finished]"
+			    $img_node setAttribute title "[_ imsld.finished]"
+			    $activity_node appendChild $img_node
+			} else {
+			    # the activity has been viewed
+			    set img_node [$dom_doc createElement img]
+			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
+			    $img_node setAttribute border "0"
+			    $img_node setAttribute alt "[_ imsld.Viewed]"
+			    $img_node setAttribute title "[_ imsld.Viewed]"
+			    $activity_node appendChild $img_node
+			}
+		    } elseif { [string eq $is_visible_p "t"] } {
+
+			if { [string eq $user_choice_p "t"] } {
+			    
+			    # show the finish button
+			    set input_node [$dom_doc createElement a]
+			    $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
+			    $input_node setAttribute class "finish"
+			    $input_node setAttribute title "[_ imsld.finish_activity]"
+			    set text [$dom_doc createTextNode "[_ imsld.finish]"]
+			    $input_node appendChild $text
+			    $activity_node appendChild $input_node
+			} elseif { $started_activity_p } {
+			    # the activity has been viewed
+			    set img_node [$dom_doc createElement img]
+			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
+			    $img_node setAttribute border "0"
+			    $img_node setAttribute alt "[_ imsld.Viewed]"
+			    $img_node setAttribute title "[_ imsld.Viewed]"
+			    $activity_node appendChild $img_node
+			}
+		    }
 
                     $dom_node appendChild $activity_node
                 }
@@ -2940,6 +3149,13 @@ ad_proc -public imsld::generate_activities_tree {
             support {
                 # add the support activity to the tree
                 db_1row get_support_activity_info { *SQL* }
+                set started_activity_p [db_0or1row already_started {
+                    select 1 from imsld_status_user 
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and run_id = :run_id
+                    and status = 'started'
+                }]
                 set completed_activity_p [db_0or1row already_completed {
                     select 1 from imsld_status_user 
                     where related_id = :activity_id 
@@ -2947,42 +3163,82 @@ ad_proc -public imsld::generate_activities_tree {
                     and run_id = :run_id
                     and status = 'finished'
                 }]
-                if { $completed_activity_p || [lsearch -exact $next_activity_id_list $activity_id] != -1 && ([string eq $complete_act_id ""] || [string eq $is_visible_p "t"]) } {
-                    set activity_node [$dom_doc createElement li]
-                    $activity_node setAttribute class "liOpen"
-                    set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
-                    $a_node setAttribute target "content"
-                    set text [$dom_doc createTextNode "$activity_title"]
-                    $a_node appendChild $text
-                    $activity_node appendChild $a_node
+		set user_choice_p [db_string user_choice_p {select user_choice_p from imsld_complete_actsi where item_id = :complete_act_id and content_revision__is_live(complete_act_id) = 't'} -default "f"]
 
-                    set text [$dom_doc createTextNode " "]
-                    $activity_node appendChild $text
-                    
-                    if { !$completed_activity_p } {
-                        set input_node [$dom_doc createElement a]
-                        $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
-			$input_node setAttribute class "finish"
-			$input_node setAttribute title "[_ imsld.finish_activity]"
-			set text [$dom_doc createTextNode "[_ imsld.finish]"]
-			$input_node appendChild $text
-                        $activity_node appendChild $input_node
-                    } else {
-			set img_node [$dom_doc createElement img]
-			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
-			$img_node setAttribute border "0"
-			$img_node setAttribute alt "[_ imsld.finished]"
-			$img_node setAttribute title "[_ imsld.finished]"
-                        $activity_node appendChild $img_node
-                    }
+                if { $completed_activity_p || ([lsearch -exact $next_activity_id_list $activity_id] != -1) || ([string eq $complete_act_id ""] && [string eq $is_visible_p "t"] && [lsearch -exact $active_acts_list $act_item_id] != -1) } {
+		    set activity_node [$dom_doc createElement li]
+		    $activity_node setAttribute class "liOpen"
+		    if { !$started_activity_p && [string eq $is_visible_p "t"] } {
+			# bold letters
+			set b_node [$dom_doc createElement b]
+			set a_node [$dom_doc createElement a]
+			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute target "content"
+			set text [$dom_doc createTextNode "$activity_title"]
+			$a_node appendChild $text
+			$b_node appendChild $a_node
+			$activity_node appendChild $b_node
+			
+			set text [$dom_doc createTextNode " "]
+			$activity_node appendChild $text
+		    } else {
+			# bold letters
+			set a_node [$dom_doc createElement a]
+			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute target "content"
+			set text [$dom_doc createTextNode "$activity_title"]
+			$a_node appendChild $text
+			$activity_node appendChild $a_node
+			
+			set text [$dom_doc createTextNode " "]
+			$activity_node appendChild $text
+		    }
 
+		    if { $completed_activity_p } {
+
+			if { [string eq $user_choice_p "t"] } {
+			    # the activity is finished
+			    set img_node [$dom_doc createElement img]
+			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
+			    $img_node setAttribute border "0"
+			    $img_node setAttribute alt "[_ imsld.finished]"
+			    $img_node setAttribute title "[_ imsld.finished]"
+			    $activity_node appendChild $img_node
+			} else {
+			    # the activity has been viewed
+			    set img_node [$dom_doc createElement img]
+			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
+			    $img_node setAttribute border "0"
+			    $img_node setAttribute alt "[_ imsld.Viewed]"
+			    $img_node setAttribute title "[_ imsld.Viewed]"
+			    $activity_node appendChild $img_node
+			}
+		    } else {
+			if { [string eq $user_choice_p "t"] } {
+			    # show the finish button
+			    set input_node [$dom_doc createElement a]
+			    $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
+			    $input_node setAttribute class "finish"
+			    $input_node setAttribute title "[_ imsld.finish_activity]"
+			    set text [$dom_doc createTextNode "[_ imsld.finish]"]
+			    $input_node appendChild $text
+			    $activity_node appendChild $input_node
+			} elseif { $started_activity_p } {
+			    # the activity has been viewed
+			    set img_node [$dom_doc createElement img]
+			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
+			    $img_node setAttribute border "0"
+			    $img_node setAttribute alt "[_ imsld.Viewed]"
+			    $img_node setAttribute title "[_ imsld.Viewed]"
+			    $activity_node appendChild $img_node
+			}
+		    }
                     $dom_node appendChild $activity_node
                 }
             }
             structure {
                 # this is a special case since there are some conditions to check
-                # in order to determine if the referenced activities have to be shown
+                # in order to determine if the referenced activities have to be shown.
                 # because of that the proc generate_structure_activities_list is called,
                 # which returns a tcl list in tDOM format.
                 
@@ -2992,16 +3248,31 @@ ad_proc -public imsld::generate_activities_tree {
                 # (if it is the next activity to be done then it should had been marked as started 
                 #  in the "structure_next_activity" function. which is the case when structure-type is "sequence")
                 db_1row get_activity_structure_info { *SQL* }
-                set started_p [db_0or1row as_completed_p { *SQL* }]
+                set started_p [db_0or1row as_started_p { *SQL* }]
+                set completed_p [db_0or1row as_completed_p { *SQL* }]
                 if { $started_p } {
-                    set structure_node [$dom_doc createElement li]
-                    $structure_node setAttribute class "liOpen"
-                    set a_node [$dom_doc createElement a]
-                    $a_node setAttribute href "[imsld::activity_url -activity_id $structure_id -run_id $run_id -user_id $user_id]"
-                    $a_node setAttribute target "content"
-                    set text [$dom_doc createTextNode "$activity_title"]
-                    $a_node appendChild $text
-                    $structure_node appendChild $a_node
+		    if { $completed_p } {
+			set structure_node [$dom_doc createElement li]
+			$structure_node setAttribute class "liOpen"
+			set a_node [$dom_doc createElement a]
+			$a_node setAttribute href "[imsld::activity_url -activity_id $structure_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute target "content"
+			set text [$dom_doc createTextNode "$activity_title"]
+			$a_node appendChild $text
+			$structure_node appendChild $a_node
+		    } else {
+			set structure_node [$dom_doc createElement li]
+			$structure_node setAttribute class "liOpen"
+			set b_node [$dom_doc createElement b]
+			set a_node [$dom_doc createElement a]
+			$a_node setAttribute href "[imsld::activity_url -activity_id $structure_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute target "content"
+			set text [$dom_doc createTextNode "$activity_title"]
+			$a_node appendChild $text
+			$b_node appendChild $a_node
+			$structure_node appendChild $b_node
+		    }
+
                     set nested_list [imsld::generate_structure_activities_list -imsld_id $imsld_id \
                                          -run_id $run_id \
                                          -structure_item_id $structure_item_id \
@@ -3063,75 +3334,365 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
             learning {
                 # add the learning activity to the tree
                 db_1row get_learning_activity_info { *SQL* }
+                set started_activity_p [db_0or1row already_started {
+                    select 1 from imsld_status_user 
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and run_id = :run_id
+                    and status = 'started'
+                }]
                 set completed_activity_p [db_0or1row la_already_completed { *SQL* }]
-                set activity_node [$dom_doc createElement li]
-                $activity_node setAttribute class "liOpen"
-                set a_node [$dom_doc createElement a]
-                $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
-                $a_node setAttribute target "content"
-                set text [$dom_doc createTextNode "$activity_title"]
-                $a_node appendChild $text
-                $activity_node appendChild $a_node
-                
-                set text [$dom_doc createTextNode " "]
-                $activity_node appendChild $text
-                
-                if { !$completed_activity_p } {
-		    set input_node [$dom_doc createElement a]
-		    $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
-		    $input_node setAttribute class "finish"
-		    $input_node setAttribute title "[_ imsld.finish_activity]"
-		    set text [$dom_doc createTextNode "[_ imsld.finish]"]
-		    $input_node appendChild $text
-		    $activity_node appendChild $input_node
-                } else {
-		    set img_node [$dom_doc createElement img]
-		    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
-		    $img_node setAttribute border "0"
-		    $img_node setAttribute alt "[_ imsld.finished]"
-		    $img_node setAttribute title "[_ imsld.finished]"
-		    $activity_node appendChild $img_node
+		set user_choice_p [db_string user_choice_p {select user_choice_p from imsld_complete_actsi where item_id = :complete_act_id and content_revision__is_live(complete_act_id) = 't'} -default "f"]
+
+		if { !$started_activity_p } {
+		    set activity_node [$dom_doc createElement li]
+		    $activity_node setAttribute class "liOpen"
+		    set b_node [$dom_doc createElement b]
+		    set a_node [$dom_doc createElement a]
+		    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+		    $a_node setAttribute target "content"
+		    set text [$dom_doc createTextNode "$activity_title"]
+		    $a_node appendChild $text
+		    $b_node appendChild $a_node
+		    $activity_node appendChild $b_node
+		    
+		    set text [$dom_doc createTextNode " "]
+		    $activity_node appendChild $text
+		} else {
+		    # bold letters
+		    set activity_node [$dom_doc createElement li]
+		    $activity_node setAttribute class "liOpen"
+		    set a_node [$dom_doc createElement a]
+		    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+		    $a_node setAttribute target "content"
+		    set text [$dom_doc createTextNode "$activity_title"]
+		    $a_node appendChild $text
+		    $activity_node appendChild $a_node
+		    
+		    set text [$dom_doc createTextNode " "]
+		    $activity_node appendChild $text
+		}
+		
+
+		if { $completed_activity_p } {
+
+		    if { [string eq $user_choice_p "t"] } {
+			set img_node [$dom_doc createElement img]
+			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
+			$img_node setAttribute border "0"
+			$img_node setAttribute alt "[_ imsld.finished]"
+			$img_node setAttribute title "[_ imsld.finished]"
+			$activity_node appendChild $img_node
+		  
+		    } else {
+			# the activity has been viewed
+			set img_node [$dom_doc createElement img]
+			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
+			$img_node setAttribute border "0"
+			$img_node setAttribute alt "[_ imsld.Viewed]"
+			$img_node setAttribute title "[_ imsld.Viewed]"
+			$activity_node appendChild $img_node
+		    }
+		} else {
+
+		    if { [string eq $user_choice_p "t"] } {
+		    
+			# show the button to finish the activity
+			set input_node [$dom_doc createElement a]
+			$input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-learning.imsld"
+			$input_node setAttribute class "finish"
+			$input_node setAttribute title "[_ imsld.finish_activity]"
+			set text [$dom_doc createTextNode "[_ imsld.finish]"]
+			$input_node appendChild $text
+			$b_node appendChild $input_node 
+		    
+		    } elseif { $started_activity_p } {
+			
+			# the activity has been viewed
+			set img_node [$dom_doc createElement img]
+			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
+			$img_node setAttribute border "0"
+			$img_node setAttribute alt "[_ imsld.Viewed]"
+			$img_node setAttribute title "[_ imsld.Viewed]"
+			$activity_node appendChild $img_node
+		    }
                 }
-                
                 $dom_node appendChild $activity_node
             }
             support {
                 # add the support activity to the tree
                 db_1row get_support_activity_info { *SQL* }
+                set started_activity_p [db_0or1row already_started {
+                    select 1 from imsld_status_user 
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and run_id = :run_id
+                    and status = 'started'
+                }]
+		set user_choice_p [db_string user_choice_p {select user_choice_p from imsld_complete_actsi where item_id = :complete_act_id and content_revision__is_live(complete_act_id) = 't'} -default "f"]
                 set completed_activity_p [db_0or1row sa_already_completed { *SQL* }]
-                set activity_node [$dom_doc createElement li]
-                $activity_node setAttribute class "liOpen"
-                set a_node [$dom_doc createElement a]
-                $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
-                $a_node setAttribute target "content"
-                set text [$dom_doc createTextNode "$activity_title"]
-                $a_node appendChild $text
-                $activity_node appendChild $a_node
-                
-                set text [$dom_doc createTextNode " "]
-                $activity_node appendChild $text
-                
-                if { !$completed_activity_p } {
-		    set input_node [$dom_doc createElement a]
-		    $input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
-		    $input_node setAttribute class "finish"
-		    $input_node setAttribute title "[_ imsld.finish_activity]"
-		    set text [$dom_doc createTextNode "[_ imsld.finish]"]
-		    $input_node appendChild $text
-		    $activity_node appendChild $input_node
-                } else {
-		    set img_node [$dom_doc createElement img]
-		    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
-		    $img_node setAttribute border "0"
-		    $img_node setAttribute alt "[_ imsld.finished]"
-		    $img_node setAttribute title "[_ imsld.finished]"
-		    $activity_node appendChild $img_node
+
+		if { !$started_activity_p } {
+		    set activity_node [$dom_doc createElement li]
+		    $activity_node setAttribute class "liOpen"
+		    set b_node [$dom_doc createElement b]
+		    set a_node [$dom_doc createElement a]
+		    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+		    $a_node setAttribute target "content"
+		    set text [$dom_doc createTextNode "$activity_title"]
+		    $a_node appendChild $text
+		    $b_node appendChild $a_node
+		    $activity_node appendChild $b_node
+		    
+		    set text [$dom_doc createTextNode " "]
+		    $activity_node appendChild $text
+		} else {
+		    # bold letters
+		    set activity_node [$dom_doc createElement li]
+		    $activity_node setAttribute class "liOpen"
+		    set a_node [$dom_doc createElement a]
+		    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+		    $a_node setAttribute target "content"
+		    set text [$dom_doc createTextNode "$activity_title"]
+		    $a_node appendChild $text
+		    $activity_node appendChild $a_node
+		    
+		    set text [$dom_doc createTextNode " "]
+		    $activity_node appendChild $text
+		}
+		
+		if { $completed_activity_p } {
+
+		    if { [string eq $user_choice_p "t"] } {
+			set img_node [$dom_doc createElement img]
+			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
+			$img_node setAttribute border "0"
+			$img_node setAttribute alt "[_ imsld.finished]"
+			$img_node setAttribute title "[_ imsld.finished]"
+			$activity_node appendChild $img_node
+		  
+		    } else {
+			# the activity has been viewed
+			set img_node [$dom_doc createElement img]
+			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
+			$img_node setAttribute border "0"
+			$img_node setAttribute alt "[_ imsld.Viewed]"
+			$img_node setAttribute title "[_ imsld.Viewed]"
+			$activity_node appendChild $img_node
+		    }
+		} else {
+		    if { [string eq $user_choice_p "t"] } {
+		    
+			# show the button to finish the activity
+			set b_node [$dom_doc createElement b]
+			set input_node [$dom_doc createElement a]
+			$input_node setAttribute href "finish-component-element-${imsld_id}-${run_id}-${play_id}-${act_id}-${role_part_id}-${activity_id}-support.imsld"
+			$input_node setAttribute class "finish"
+			$input_node setAttribute title "[_ imsld.finish_activity]"
+			set text [$dom_doc createTextNode "[_ imsld.finish]"]
+			$input_node appendChild $text
+			$b_node appendChild $input_node 
+			$activity_node appendChild $b_node
+		    
+		    } elseif { $started_activity_p } {
+			
+			# the activity has been viewed
+			set img_node [$dom_doc createElement img]
+			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
+			$img_node setAttribute border "0"
+			$img_node setAttribute alt "[_ imsld.Viewed]"
+			$img_node setAttribute title "[_ imsld.Viewed]"
+			$activity_node appendChild $img_node
+		    }
                 }
-                
                 $dom_node appendChild $activity_node
             }
         }
     }
+}
+
+ad_proc -public imsld::structure_completion_resctriction_p { 
+    -run_id:required
+    -structure_item_id:required
+} {
+    @param run_id
+    @param structure_item_id
+    
+    @return Returns 0 if any of the referenced activities from the structure_id doesn't have a completion restriction
+} {
+
+    foreach referenced_activity [db_list_of_lists struct_referenced_activities {
+        select ar.object_id_two,
+        ar.rel_type
+        from acs_rels ar, imsld_activity_structuresi ias
+        where ar.object_id_one = ias.item_id
+        and ias.item_id = :structure_item_id
+	and content_revision__is_live(ias.structure_id) = 't'
+        order by ar.object_id_two
+    }] {
+        # get all the directly referenced activities (from the activity structure)
+        set object_id_two [lindex $referenced_activity 0]
+        set rel_type [lindex $referenced_activity 1]
+        switch $rel_type {
+            imsld_as_la_rel {
+		if { [string eq "" [db_string la_completion_restriction {
+		    select complete_act_id 
+		    from imsld_learning_activitiesi
+		    where item_id = :object_id_two
+		    and content_revision__is_live(activity_id) = 't'
+		}]] } {
+		    # no restriction found, break
+		    return 0
+		}
+	    }
+            imsld_as_sa_rel {
+		if { [string eq "" [db_string sa_completion_restriction {
+		    select complete_act_id 
+		    from imsld_support_activitiesi
+		    where item_id = :object_id_two
+		    and content_revision__is_live(activity_id) = 't'
+		}]] } {
+		    # no restriction found, break
+		    return 0
+		}
+            }
+            imsld_as_as_rel {
+                # search recursively trough the referenced activities
+                return [imsld::structure_completion_resctriction_p -run_id $run_id -structure_item_id $object_id_two]
+            }
+        }
+    }
+    # every referenced activity has a completion restriction
+    return 1
+}
+
+ad_proc -public imsld::active_acts { 
+    -run_id:required
+    -user_id:required
+    {-previous_list {}}
+} {
+    @param run_id
+    @param user
+    @param previous_list
+    
+    @return Returns the list of possible active acts for the user
+} {
+    set active_acts_list [list]
+
+    set all_acts_list [db_list get_acts_in_run {
+	select iai.act_id
+	from imsld_runs ir, 
+	imsld_imsldsi iii,
+	imsld_methodsi imi,
+	imsld_playsi ipi,
+	imsld_actsi iai 
+	where ir.run_id=:run_id
+	and iii.imsld_id=ir.imsld_id 
+	and imi.imsld_id=iii.item_id 
+	and imi.item_id=ipi.method_id 
+	and iai.play_id=ipi.item_id
+	order by ipi.sort_order, iai.sort_order
+    }]
+    set i 0
+    set continue 1
+    while { $i < [llength $all_acts_list] && $continue == 1 } {
+	set act_in_run [lindex $all_acts_list $i]
+	incr i
+	# let's see if the user participates in the act
+	if { [imsld::user_participate_p -run_id $run_id -act_id $act_in_run -user_id $user_id] \
+		 && ![imsld::act_finished_p -run_id $run_id -act_id $act_in_run -user_id $user_id] } {
+	    # let's see if the act doesn't have any completion restriction:
+	    # 1. time-limit
+	    # 2. when-property-is-set
+	    # 3. when-condition-true
+	    # 4. when role-part-is-completed
+	    # 5. any referenced activity structure (which by default have a completion restriction)
+	    set act_in_run_item_id [content::revision::item_id -revision_id $act_in_run] 
+
+	    # 1. time-limit, 2. when-property-is-set, 3. when-condition-true: all the info is stored via complete_act_id in the acts table
+		if { ![string eq "" [db_string complete_act_id {select complete_act_id from imsld_acts where act_id = :act_in_run}]] && [lsearch -exact $previous_list $act_in_run_item_id] == -1 } {
+		# there is a completion restriction, stop here
+		lappend active_acts_list $act_in_run_item_id
+		break
+	    }
+
+	    # 4. when role-part-is-completed, 5. referenced activity structures
+	    #    This is a special case, since if any of the activities referenced by the role part doesn't have a completion restriction
+	    #    then the act has to be appended to the list
+	    #    Note: The role parts that finish the act are mapped to the act via imsld_act_rp_completed_rel (acs_rels)
+
+	    set role_parts_list [db_list related_role_parts {
+		select item_id
+		from imsld_role_partsi
+		where act_id = :act_in_run_item_id
+		and content_revision__is_live(role_part_id) = 't'
+		order by sort_order
+	    }]
+	    foreach role_part_item_id $role_parts_list {
+		# get all the activities in the role part and see if none has any compleion resctriction 
+
+		db_1row get_role_part_activity {
+		    select case
+		    when learning_activity_id is not null
+		    then 'learning'
+		    when support_activity_id is not null
+		    then 'support'
+		    when activity_structure_id is not null
+		    then 'structure'
+		    else 'none'
+		    end as type,
+		    learning_activity_id,
+		    support_activity_id,
+		    activity_structure_id
+		    from imsld_role_partsi
+		    where item_id = :role_part_item_id
+		    and content_revision__is_live(role_part_id) = 't'
+		}
+		set continue 0
+		# check if the referenced activities have been finished
+		switch $type {
+		    learning {
+			if { [string eq "" [db_string la_completion_restriction {
+			    select complete_act_id 
+			    from imsld_learning_activitiesi
+			    where item_id = :learning_activity_id
+			    and content_revision__is_live(activity_id) = 't'
+			}]] } {
+			    # activity without restriction found, 
+			    # append the act to the list of active acts
+			    set continue 1
+			    break
+			}
+		    }
+		    support {
+			if { [string eq "" [db_string sa_completion_restriction {
+			    select complete_act_id 
+			    from imsld_support_activitiesi
+			    where item_id = :support_activity_id
+			    and content_revision__is_live(activity_id) = 't'
+			}]] } {
+			    # activity without restriction found, 
+			    # append the act to the list of active acts
+			    set continue 1
+			    break
+			}
+		    }
+		    structure {
+			# every activity structure has a completion restriction (at leat, every activity must be visited)
+			# so we can stop here
+			set continue 0
+			break
+		    }
+		}
+	    }
+	    # if we reached this point, the act must be shown
+	    if { [lsearch -exact $previous_list $act_in_run_item_id] == -1 } {
+		# add the act to the list only if it wasn't in the list already
+		lappend active_acts_list $act_in_run_item_id
+	    }
+	}   
+    }
+    return [concat $previous_list $active_acts_list]
 }
 
 ad_proc -public imsld::get_next_activity_list { 
@@ -3234,6 +3795,7 @@ ad_proc -public imsld::get_next_activity_list {
             }
             continue
         }
+
         if { ![imsld::act_finished_p -run_id $run_id -act_id $act_id -user_id $user_id] } {
             if {[imsld::user_participate_p -run_id $run_id -act_id $act_id -user_id $user_id]} {
                 lappend next_act_item_id_list [content::revision::item_id -revision_id $act_id]
@@ -3285,6 +3847,9 @@ ad_proc -public imsld::get_next_activity_list {
         }
     }
 
+    # append to the list of "active acts" those which don't have any "completion" restrictions
+    set next_act_item_id_list [imsld::active_acts -run_id $run_id -user_id $user_id -previous_list $next_act_item_id_list]
+
     # 1. for each act in the next_act_id_list
     # 1.2. for each role_part in the act
     # 1.2.1 find the next activity referenced by the role_part
@@ -3292,7 +3857,6 @@ ad_proc -public imsld::get_next_activity_list {
     # 1.2.1.1 if it is a learning or support activity, no problem, find the associated files and return the lists
     # 2.2.1.2 if it is an activity structure we have verify which activities are already completed and return the next
     #         activity in the activity structure, handling the case when the next activity is also an activity structure
-
 
     set user_roles_list [imsld::roles::get_user_roles -user_id $user_id -run_id $run_id]
     set next_activity_id_list [list]
@@ -3561,7 +4125,7 @@ ad_proc -public imsld::finish_resource {
         set activity_id [lindex $activity_list 0]
         set activity_item_id [lindex $activity_list 1]
         set activity_type [lindex $activity_list 2]
-        
+
         #get info
         set role_part_id_list [imsld::get_role_part_from_activity -activity_type $activity_type -leaf_id $activity_item_id]
         set imsld_id [imsld::get_imsld_from_activity -activity_id $activity_id -activity_type $activity_type]
