@@ -41,6 +41,7 @@ function objecturl(url) {
 
 /*==================================================*/
 
+right_frame_width_percentage = "30%,*"
 function _tp(a){
    var ab=document.getElementById("addc");
    var ac=document.getElementById("addc1");
@@ -48,11 +49,13 @@ function _tp(a){
    if (a) {
      ai='show'; 
      aj='hide';
-     parent.document.getElementsByTagName("frameset")[0].cols='30%,*';
+     parent.document.getElementById("right-column").cols= right_frame_width_percentage;
    } else {
+     /* collapse the left panel */
      ai='hide';
      aj='show';
-     parent.document.getElementsByTagName("frameset")[0].cols='0%,*';
+     right_frame_width_percentage = parent.document.getElementById("right-column").cols;
+     parent.document.getElementById("right-column").cols= '0%, *';
    }
 
    ac.className=ai;
@@ -64,20 +67,20 @@ function _tp(a){
 /*==================================================*/
 
 function init_activity() {
-resizeobject();
-window.onresize = resizeobject;
+  resizeobject();
+  window.onresize = resizeobject;
 
-var as = document.getElementsByTagName("a");
-for (var i = 0; i < as.length; i++) {
-  var a = as[i];
-  a.setAttribute('target', 'object');
-}
-for (var i = 0; i < as.length; i++) {
-  if (!as[i].getAttribute('href').match(/#/i)) {
-    document.getElementById('object').src = as[i].getAttribute('href');
-    break;
+  var as = document.getElementsByTagName("a");
+  for (var i = 0; i < as.length; i++) {
+    var a = as[i];
+    a.setAttribute('target', 'object');
   }
-}
+  for (var i = 0; i < as.length; i++) {
+    if (!as[i].getAttribute('href').match(/#/i)) {
+      document.getElementById('object').src = as[i].getAttribute('href');
+      break;
+    }
+  }
 
   tabberAutomatic();
 }

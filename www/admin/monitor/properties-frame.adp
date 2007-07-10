@@ -2,9 +2,9 @@
   <property name="title">@page_title;noquote@</property>
   <property name="imsld_content_frame">1</property>
 
-  <div class="center">
+  <div class="frame-header">
     <if @item_select:rowcount@ not nil>
-      <include src="choice-select" &="item_select"
+      <include src="../../../lib/choice-select" &="item_select"
         select_name=@select_name@
         select_id=@select_id@
         selected_item=@selected_item@
@@ -15,7 +15,6 @@
         role_id=@role_id@
         type=@type@>
     </if><else>@frame_header;noquote@</else>
-    
   </div>
 
   <br />

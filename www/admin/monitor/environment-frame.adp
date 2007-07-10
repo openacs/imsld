@@ -3,7 +3,7 @@
   <property name="context">@context;noquote@</property>
   <property name="imsld_include_mktree">1</property>
 
-  <div class="center">@frame_header@</div>
+  <div class="frame-header">@frame_header@</div>
 
   <if @environments@ not nil>@environments;noquote@</if>
 

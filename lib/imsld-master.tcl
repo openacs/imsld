@@ -31,25 +31,25 @@ if { [string match /dotlrn/clubs/* [ad_conn url]] } {
 }
 
 set header_stuff "[subst {
-<meta http-equiv="content-type" content="text/html; charset=[ad_conn charset]">
-<meta name="robots" content="all">
-<meta name="keywords" content="accessibility, portals, elearning, design">
-<link rel="stylesheet" type="text/css" href="/resources/acs-subsite/default-master.css" media="screen">
-<link rel="stylesheet" type="text/css" href="/resources/theme-zen/css/main.css" media="screen">
-<link rel="stylesheet" type="text/css" href="/resources/theme-zen/css/print.css" media="print">
-<link rel="stylesheet" type="text/css" href="/resources/theme-zen/css/handheld.css" media="handheld">
-<link rel="stylesheet" type="text/css" href="$css_url" media="all">
-<link rel="alternate stylesheet" type="text/css" href="/resources/theme-zen/css/highContrast.css" title="highContrast">
-<link rel="alternate stylesheet" type="text/css" href="/resources/theme-zen/css/508.css" title="508">
-<link rel="stylesheet" href="/resources/imsld/example.css" TYPE="text/css" MEDIA="screen">
-<link rel="stylesheet" href="/resources/imsld/example-print.css" TYPE="text/css" MEDIA="print">
-<link rel="stylesheet" type="text/css" href="/resources/imsld/imsld.css" media="all">
-<script type="text/javascript" src="/resources/theme-zen/js/styleswitcher.js"></script>
-<script type="text/javascript" src="/resources/imsld/imsld.js"></script>
-<script type="text/javascript" src="/resources/imsld/tabber.js"></script>
-<script type="text/javascript" src="/resources/imsld/dynamicselect.js"></script>
-}]
-$header_stuff"
+  <meta http-equiv="content-type" content="text/html; charset=[ad_conn charset]">
+  <meta name="robots" content="all">
+  <meta name="keywords" content="accessibility, portals, elearning, design">
+  <link rel="stylesheet" type="text/css" href="/resources/acs-subsite/default-master.css" media="screen">
+  <link rel="stylesheet" type="text/css" href="/resources/theme-zen/css/main.css" media="screen">
+  <link rel="stylesheet" type="text/css" href="/resources/theme-zen/css/print.css" media="print">
+  <link rel="stylesheet" type="text/css" href="/resources/theme-zen/css/handheld.css" media="handheld">
+  <link rel="stylesheet" type="text/css" href="$css_url" media="all">
+  <link rel="alternate stylesheet" type="text/css" href="/resources/theme-zen/css/highContrast.css" title="highContrast">
+  <link rel="alternate stylesheet" type="text/css" href="/resources/theme-zen/css/508.css" title="508">
+  <link rel="stylesheet" href="/resources/imsld/example.css" TYPE="text/css" MEDIA="screen">
+  <link rel="stylesheet" href="/resources/imsld/example-print.css" TYPE="text/css" MEDIA="print">
+  <link rel="stylesheet" type="text/css" href="/resources/imsld/imsld.css" media="all">
+  <script type="text/javascript" src="/resources/theme-zen/js/styleswitcher.js"></script>
+  <script type="text/javascript" src="/resources/imsld/imsld.js"></script>
+  <script type="text/javascript" src="/resources/imsld/tabber.js"></script>
+  <script type="text/javascript" src="/resources/imsld/dynamicselect.js"></script>
+  }]
+  $header_stuff"
 
 if {![info exists onload]} {
     set onload ""

@@ -3,10 +3,14 @@
   <property name="context">@context;noquote@</property>
   <property name="imsld_include_mktree">1</property>
 
-  <a href="@imsld_admin_url@" class="button" target="_top" 
-    title="#imsld.Exit_Monitor#">#imsld.Exit_Monitor#</a>
-  <div class="center">#imsld.Activities#</div>
+  <div class="float-left">
+    <a href="@imsld_admin_url@" class="button" target="_top" 
+      title="#imsld.Exit_Monitor#">#imsld.Exit_Monitor#</a>
+  </div>
+  <div class="frame-header">#imsld.Activities#</div>
   
+  <br />
+
   @properties_tree;noquote@
   
   @user_activity;noquote@

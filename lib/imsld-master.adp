@@ -90,7 +90,7 @@
 
     <if @imsld_content_frame@ not nil>
       <!-- Include the arrow icon and JS for collapsing the left frames -->
-      <span id="addc1" class="show-hide" style="display:none">
+      <span id="addc1" class="show">
         <a href="#" onClick="return _tp(false)" title="#imsld.Hide_1#" 
            class="show-hide-icon_link">
           <img src="/resources/acs-subsite/stock_left.png" 
@@ -98,7 +98,7 @@
                align="top"/>
         </a>
       </span>
-      <span id="addc" style="display:none;" class="show-hide">
+      <span id="addc" class="hide">
         <a href="#" onClick="return _tp(true)" title="#imsld.Show_1#" 
            class="show-hide-icon_link">
           <img src="/resources/acs-subsite/stock_right.png" 
@@ -106,29 +106,6 @@
                align="top"/>
         </a>
       </span>
-      <script type="text/javascript">
-	document.getElementById("addc1").style.display="";
-
-        function _tp(a){
-          var ab=document.getElementById("addc");
-          var ac=document.getElementById("addc1");
-
-          if (a) {
-            ai=''; 
-            aj='none';
-            parent.document.getElementsByTagName("frameset")[1].cols='30%,*';
-          } else {
-            ai='none';
-            aj='';
-            parent.document.getElementsByTagName("frameset")[1].cols='0%,*';
-          }
-  
-          ac.style.display=ai;
-          ab.style.display=aj;
-   
-          return false;
-        }
-      </script>
     </if>
 
     <slave>

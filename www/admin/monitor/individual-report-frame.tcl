@@ -57,7 +57,8 @@ foreach user_id_in_run $users_in_run {
 
 set elements [list user_name \
                   [list label "[_ imsld.Activity_Name]" \
-                       display_template {<a href="activity-frame?run_id=$run_id&type=@related_activities.type@&activity_id=@related_activities.related_id@" title="[_ imsld.Activity_report]">@related_activities.activity_name@</a>}] \
+                       display_template \
+		       {<a href="activity-frame?run_id=$run_id&type=@related_activities.type@&activity_id=@related_activities.related_id@" title="[_ imsld.Activity_report]">@related_activities.activity_name@</a>}] \
                   type \
                   [list label "[_ imsld.Activity_Type]"] \
                   started_time \
@@ -84,20 +85,36 @@ db_foreach related_resources {
         # the elemen exists, replace the list element
         switch $status {
             started {
-                set activities_list [lreplace $activities_list [lsearch -regexp $activities_list $related_id] [lsearch -regexp $activities_list $related_id] \
-                                         [list $related_id \
-                                              [content::item::get_title -item_id [content::revision::item_id -revision_id $related_id]] \
-                                              $type \
-                                              $status_date \
-                                              [lindex [lindex $activities_list [lsearch -regexp $activities_list $related_id]] 4]]]
+                set activities_list \
+		    [lreplace $activities_list \
+			 [lsearch -regexp $activities_list $related_id] \
+			 [lsearch -regexp $activities_list $related_id] \
+			 [list $related_id \
+			      [content::item::get_title \
+				   -item_id \
+				   [content::revision::item_id \
+					-revision_id $related_id]] \
+			      $type \
+			      $status_date \
+			      [lindex [lindex $activities_list \
+					   [lsearch -regexp $activities_list \
+						$related_id]] 4]]]
             }
             finished {
-                set activities_list [lreplace $activities_list [lsearch -regexp $activities_list $related_id] [lsearch -regexp $activities_list $related_id] \
-                                         [list $related_id \
-                                              [content::item::get_title -item_id [content::revision::item_id -revision_id $related_id]] \
-                                              $type \
-                                              [lindex [lindex $activities_list [lsearch -regexp $activities_list $related_id]] 3] \
-                                              $status_date]]
+                set activities_list \
+		    [lreplace $activities_list \
+			 [lsearch -regexp $activities_list $related_id] \
+			 [lsearch -regexp $activities_list $related_id] \
+			 [list $related_id \
+			      [content::item::get_title \
+				   -item_id \
+				   [content::revision::item_id \
+					-revision_id $related_id]] \
+			      $type \
+			      [lindex [lindex $activities_list \
+					   [lsearch -regexp $activities_list \
+						$related_id]] 3] \
+			      $status_date]]
             }
         } 
     } else {
@@ -106,7 +123,9 @@ db_foreach related_resources {
             started {
                 lappend activities_list \
                     [list $related_id \
-                         [content::item::get_title -item_id [content::revision::item_id -revision_id $related_id]] \
+                         [content::item::get_title \
+			      -item_id [content::revision::item_id \
+					    -revision_id $related_id]] \
                          $type \
                          $status_date \
                          {}]
@@ -114,12 +133,14 @@ db_foreach related_resources {
             finished {
                 lappend activities_list \
                     [list $related_id \
-                         [content::item::get_title -item_id [content::revision::item_id -revision_id $related_id]] \
+                         [content::item::get_title \
+			      -item_id [content::revision::item_id \
+					    -revision_id $related_id]] \
                          $type \
                          {} \
                          $status_date]
             }
-        } 
+        }
     }
 }
 

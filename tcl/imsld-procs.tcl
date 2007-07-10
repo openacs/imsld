@@ -30,12 +30,14 @@ ad_proc -public imsld::package_key {
 ad_proc -public imsld::object_type_image_path {
     -object_type
 } { 
-    returns the path to the image representing the given object_type in the imsld package
+    returns the path to the image representing the given object_type in the
+    imsld package
 } { 
     set community_id [dotlrn_community::get_community_id]
-    set imsld_package_id [site_node_apm_integration::get_child_package_id \
-                              -package_id [dotlrn_community::get_package_id $community_id] \
-                              -package_key "[imsld::package_key]"]
+    set imsld_package_id \
+	[site_node_apm_integration::get_child_package_id \
+	     -package_id [dotlrn_community::get_package_id $community_id] \
+	     -package_key "[imsld::package_key]"]
     switch $object_type {
         forums_forum {
             set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/forums.png"
@@ -382,13 +384,20 @@ ad_proc -public imsld::sweep_expired_activities {
 ad_proc -public imsld::global_folder_id { 
     {-community_id ""}
 } {
-    Returns the global folder id where the global properties of type file are stored.
-    This folder is a subfolder of the dotlrn root folder and there must be only one in the .LRN installation
+    Returns the global folder id where the global properties of type file are
+    stored. 
+    This folder is a subfolder of the dotlrn root folder and there must be only
+    one in the .LRN installation
 } {
-    set community_id [expr { [empty_string_p $community_id] ? [dotlrn_community::get_community_id] : $community_id }]
+    set community_id [expr { [empty_string_p $community_id] ? \
+				 [dotlrn_community::get_community_id] : \
+				 $community_id }]
 
     set dotlrn_root_folder_id [dotlrn_fs::get_dotlrn_root_folder_id]
-    set global_folder_id [content::item::get_id -item_path "imsld_global_folder" -root_folder_id $dotlrn_root_folder_id -resolve_index f] 
+    set global_folder_id [content::item::get_id \
+			      -item_path "imsld_global_folder" \
+			      -root_folder_id $dotlrn_root_folder_id \
+			      -resolve_index f] 
 
     if { [empty_string_p $global_folder_id] } {
         db_transaction {
@@ -399,11 +408,15 @@ ad_proc -public imsld::global_folder_id {
 
             # create the root cr dir
 
-            set global_folder_id [imsld::cr::folder_new -parent_id $dotlrn_root_folder_id -folder_name $folder_name -folder_label "IMS-LD"]
+            set global_folder_id [imsld::cr::folder_new \
+				      -parent_id $dotlrn_root_folder_id \
+				      -folder_name $folder_name \
+				      -folder_label "IMS-LD"]
 
             # PERMISSIONS FOR FILE-STORAGE
 
-            # Before we go about anything else, lets just set permissions straight.
+            # Before we go about anything else, lets just set permissions
+            # straight. 
             # Disable folder permissions inheritance
             permission::toggle_inherit -object_id $global_folder_id
             
@@ -693,6 +706,7 @@ ad_proc -public imsld::rel_type_delete {
 ad_proc -public imsld::item_revision_new {
     {-attributes ""}
     {-item_id ""}
+    {-name ""}
     {-title ""}
     {-package_id ""}
     {-user_id ""}
@@ -703,10 +717,17 @@ ad_proc -public imsld::item_revision_new {
     -parent_id
 } {
     Creates a new revision of a content item, calling the cr functions. 
-    If editing, only a new revision is created, otherwise an item is created too.
+    If editing, only a new revision is created, otherwise an item is created
+    too.
 
-    @option attributes A list of lists of pairs of additional attributes and their values.
+    @option attributes A list of lists of pairs of additional attributes and
+    their values.
     @option title 
+    @option name When given this parameter is to set the field name of the
+    newly created item. This field is important for two reasons. First, in the
+    absence of title in the corresponding cr_revision object, it is the string
+    shown when the item is a file and is visible in the FS. Second, it is the
+    ONLY name that appears when browsing the FS through WebDAV.
     @option package_id 
     @option user_id 
     @option creation_ip 
@@ -715,16 +736,34 @@ ad_proc -public imsld::item_revision_new {
     @param parent_id Identifier of the parent folder
 } {
 
-    set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
-    set creation_ip [expr { [string eq "" $creation_ip] ? [ad_conn peeraddr] : $creation_ip }]
-    set creation_date [expr { [string eq "" $creation_date] ? [dt_sysdate] : $creation_date }]
-    set package_id [expr { [string eq "" $package_id] ? [ad_conn package_id] : $package_id }]
-    
+    set user_id \
+	[expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
+    set creation_ip [expr { [string eq "" $creation_ip] ? \
+				[ad_conn peeraddr] : $creation_ip }]
+    set creation_date [expr { [string eq "" $creation_date] ? \
+				  [dt_sysdate] : $creation_date }]
+    set package_id [expr { [string eq "" $package_id] ? \
+			       [ad_conn package_id] : $package_id }]
+
     if { [string eq $item_id ""] } {
         # create the item
 	set item_id [db_nextval "acs_object_id_seq"]
+
+	# Decide the name
+	if { [string eq "" $name] } {
+	    set name "${item_id}_content_type"
+	} else {
+	    # If the given name collides with another item, it needs to be
+	    # modified as to make it unique (parent_id, name) is what it needs
+	    # to be made unique
+	    if { ![string eq "" [content::item::get_id_by_name \
+				     -name $name -parent_id $parent_id]] } {
+		set name "${name}.${item_id}"
+	    }
+	}
+
         set item_id [content::item::new -item_id $item_id \
-                         -name "${item_id}_content_type" \
+                         -name $name \
                          -content_type $content_type \
                          -parent_id $parent_id \
                          -creation_user $user_id \

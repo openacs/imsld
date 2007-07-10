@@ -938,13 +938,16 @@ ad_proc -public imsld::parse::parse_and_create_global_def {
 } {
     Parse a global definition and stores all the information in the database.
 
-    Returns a list with the new global_definition_id (item_id, actually a property_id) created if there were no errors, or 0 and an explanation messge if there was an error.
+    Returns a list with the new global_definition_id (item_id, actually a
+    property_id) created if there were no errors, or 0 and an explanation
+    messge if there was an error.
     
     @option global_def_node global_def node to parse
     @param identifier
     @param existing_href
     @param component_id Comoponent id of the one which owns the property
-    @param type Type of the property defined by this global definition, which can be globpers or glob
+    @param type Type of the property defined by this global definition, which
+    can be globpers or glob
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
@@ -953,13 +956,25 @@ ad_proc -public imsld::parse::parse_and_create_global_def {
     upvar files_struct_list files_struct_list
 
     if { ![empty_string_p $global_def_node] } {
-        set uri [imsld::parse::get_attribute -node $global_def_node -attr_name uri]
-        set title [imsld::parse::get_title -node $global_def_node -prefix imsld]
-        set datatype [$global_def_node selectNodes "*\[local-name()='datatype'\]" ] 
-        imsld::parse::validate_multiplicity -tree $global_def_node -multiplicity 1 -element_name "global-definition datatype" -equal
-        set datatype [string tolower [imsld::parse::get_attribute -node $datatype -attr_name datatype]]
-        set initial_value [$global_def_node selectNodes "*\[local-name()='initial-value'\]"] 
-        imsld::parse::validate_multiplicity -tree $initial_value -multiplicity 1 -element_name "global-definition initial-value" -lower_than
+        set uri [imsld::parse::get_attribute -node $global_def_node \
+		     -attr_name uri]
+        set title [imsld::parse::get_title \
+		       -node $global_def_node -prefix imsld]
+        set datatype \
+	    [$global_def_node selectNodes "*\[local-name()='datatype'\]" ] 
+        imsld::parse::validate_multiplicity \
+	    -tree $global_def_node \
+	    -multiplicity 1 \
+	    -element_name "global-definition datatype" -equal
+        set datatype [string tolower \
+			  [imsld::parse::get_attribute \
+			       -node $datatype -attr_name datatype]]
+        set initial_value [$global_def_node selectNodes \
+			       "*\[local-name()='initial-value'\]"] 
+        imsld::parse::validate_multiplicity \
+	    -tree $initial_value \
+	    -multiplicity 1 \
+	    -element_name "global-definition initial-value" -lower_than
         if { [llength $initial_value] } {
             set initial_value [imsld::parse::get_element_text -node $initial_value]
         } else {
@@ -973,26 +988,31 @@ ad_proc -public imsld::parse::parse_and_create_global_def {
     }
 
 
-    set globpers_property_id [imsld::item_revision_new -attributes [list [list component_id $component_id] \
-                                                                  [list identifier $identifier] \
-                                                                  [list existing_href $existing_href] \
-                                                                  [list uri $uri] \
-                                                                  [list type $type] \
-                                                                  [list datatype $datatype] \
-                                                                  [list initial_value $initial_value]] \
-				  -content_type imsld_property \
-				  -title $title \
-				  -parent_id $parent_id]
+    set globpers_property_id \
+	[imsld::item_revision_new \
+	     -attributes [list [list component_id $component_id] \
+			      [list identifier $identifier] \
+			      [list existing_href $existing_href] \
+			      [list uri $uri] \
+			      [list type $type] \
+			      [list datatype $datatype] \
+			      [list initial_value $initial_value]] \
+	     -content_type imsld_property \
+	     -title $title \
+	     -parent_id $parent_id]
 
     if { ![empty_string_p $global_def_node] } {
-        set restrictions [$global_def_node selectNodes "*\[local-name()='restriction'\]"]
+        set restrictions \
+	    [$global_def_node selectNodes "*\[local-name()='restriction'\]"]
         foreach restriction $restrictions {
-            set restriction_list [imsld::parse::parse_and_create_restriction -manifest $manifest \
-                                      -property_id $globpers_property_id \
-                                      -manifest_id $manifest_id \
-                                      -restriction_node $restriction \
-                                      -parent_id $parent_id \
-                                      -tmp_dir $tmp_dir]
+            set restriction_list \
+		[imsld::parse::parse_and_create_restriction \
+		     -manifest $manifest \
+		     -property_id $globpers_property_id \
+		     -manifest_id $manifest_id \
+		     -restriction_node $restriction \
+		     -parent_id $parent_id \
+		     -tmp_dir $tmp_dir]
             
             set restriction_id [lindex $restriction_list 0]
             if { !$restriction_id } {
@@ -3997,13 +4017,13 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     # get the files structure
     set files_struct_list [imsld::parse::get_files_structure -tmp_dir $tmp_dir]
 
-	# Parser
-	# XML => DOM document
-	dom parse [::tDOM::xmlReadFile $xmlfile] document
-
-	# DOM document => DOM root
-	$document documentElement manifest
-
+    # Parser
+    # XML => DOM document
+    dom parse [::tDOM::xmlReadFile $xmlfile] document
+    
+    # DOM document => DOM root
+    $document documentElement manifest
+    
     # manifest
     set manifest_identifier [imsld::parse::get_attribute -node $manifest -attr_name identifier]
     set manifest_version [imsld::parse::get_attribute -node $manifest -attr_name version]
@@ -4343,7 +4363,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                 relation_add imsld_feedback_rel $on_completion_id $item_id
             }
         } else {
-            set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
+	    set on_completion_id [imsld::item_revision_new -parent_id $parent_id \
                                       -content_type imsld_on_completion]
         }
         
@@ -4554,8 +4574,12 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         if { ![db_0or1row already_created_p {
             select 1 from imsld_cp_resources where identifier = :resource_identifier and manifest_id = :manifest_id
         }] } {
-            imsld::parse::validate_multiplicity -tree $resource_left -multiplicity 1 -element_name "resources (cp resources)" -equal
-            set resource_list [imsld::parse::parse_and_create_resource -resource_node $resource_left \
+            imsld::parse::validate_multiplicity \
+		-tree $resource_left \
+		-multiplicity 1 \
+		-element_name "resources (cp resources)" -equal
+            set resource_list [imsld::parse::parse_and_create_resource \
+				   -resource_node $resource_left \
                                    -manifest $manifest \
                                    -manifest_id $manifest_id \
                                    -parent_id $cr_folder_id \
@@ -4568,6 +4592,13 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         }
     }
     
+    # At this point files_struct_list contain the list of all the files in the
+    # UoL. Those that were stored in the FS have an object_id attached to
+    # them. Those that still have a zero as object_id are files that are not
+    # referenced as resources by the manifest, but they are in the ZIP,
+    # therefore, they need to be moved to the FS.
+    imsld::fs::traverse_zip -dir $tmp_dir -pattern "*"
+
     if { ![empty_string_p $warnings] } {
         set warnings "[_ imsld.lt_br__Warnings_ul_warni]"
     }

@@ -19,6 +19,22 @@ if { [string eq $owner_user_id ""] } {
     set owner_user_id [ad_conn user_id]
 }
 
+# If no role_id is given, take the active role
+if { [string eq $role_id ""] } {
+    #get the user active role
+    db_1row get_active_role {
+	select iruns.active_role_id as role_id
+	from imsld_run_users_group_rels iruns,
+	acs_rels ar,
+	imsld_run_users_group_ext iruge 
+	where iruge.run_id=:run_id 
+	and ar.object_id_one=iruge.group_id 
+	and ar.object_id_two=:owner_user_id 
+	and ar.rel_type='imsld_run_users_group_rel' 
+	and ar.rel_id=iruns.rel_id
+    }
+}
+
 # get file info
 db_1row get_info {
     select cr.revision_id,
@@ -58,7 +74,6 @@ set fs_package_id [site_node_apm_integration::get_child_package_id \
 		       -package_id [dotlrn_community::get_package_id \
 					[dotlrn_community::get_community_id]] \
 		       -package_key "file-storage"]
-set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
 
 # Parser
 # XML => DOM document
@@ -93,8 +108,8 @@ foreach view_property_node $view_property_nodes {
     set view [$view_property_node getAttribute view "value"]
     set property_of [$view_property_node getAttribute property-of "self"]
 
-    # get the value, depending on the property type. 
-    # the only different case is when viewing the proprty in the context of the role
+    # get the value, depending on the property type.  the only different case
+    # is when viewing the proprty in the context of the role
     set role_instance_id 0
 
     # get property info
@@ -106,9 +121,14 @@ foreach view_property_node $view_property_nodes {
         and identifier = :identifier
     }
 
-    if { ![string eq $property_of "self"] } {
+    if { ![string eq $property_of "self"] ||
+	 [string eq $type "locrole"] } {
         # find the role instance which the user belongs to
-        set role_instance_id [imsld::roles::get_user_role_instance -run_id $run_id -role_id $role_id -user_id $owner_user_id]
+        set role_instance_id \
+	    [imsld::roles::get_user_role_instance \
+		 -run_id $run_id \
+		 -role_id $role_id \
+		 -user_id $owner_user_id]
         if { !$role_instance_id } {
             # runtime error... the user doesn't belong to any role instance
             ns_log notice "User does not belong to any role instance"
@@ -120,34 +140,54 @@ foreach view_property_node $view_property_nodes {
         select ins.property_id,
         prop.datatype,
         coalesce(ins.value, prop.initial_value) as value,
-        ins.title,
+        coalesce(ins.title, ins.identifier) as title,
 	content_revision__get_content(cr.revision_id) as content, 
 	ins.instance_id,
 	ins.object_id,
-	ins.parent_id
+	ins.parent_id,
+	prop.type as property_type
         from imsld_property_instancesx ins,
 	cr_revisions cr,
-	imsld_properties prop
+	imsld_propertiesi prop
         where ins.property_id = prop.property_id
 	and prop.property_id = :property_id
         and ((prop.type = 'global')
              or (prop.type = 'loc' and ins.run_id = :run_id)
-             or (prop.type = 'locpers' and ins.run_id = :run_id and ins.party_id = :owner_user_id)
-             or (prop.type = 'locrole' and ins.run_id = :run_id and ins.party_id = :role_instance_id)
+             or (prop.type = 'locpers' and 
+		 ins.run_id = :run_id and ins.party_id = :owner_user_id)
+             or (prop.type = 'locrole' and 
+		 ins.run_id = :run_id and ins.party_id = :role_instance_id)
              or (prop.type = 'globpers' and ins.party_id = :owner_user_id))
 	and cr.revision_id = ins.instance_id
 	and content_revision__is_live(ins.instance_id) = 't'
     }
 
-    # prepare replacement
-    # by the moment, the only different case are the properties of type file
+    # prepare replacement by the moment, the only different case are the
+    # properties of type file
     switch $datatype {
 	file {
 	    set a_node ""
 	    if { ![string eq "" $content] } {
-		set folder_path [db_exec_plsql get_folder_path {
-		select content_item__get_path(:parent_id,:root_folder_id); 
-	    }]
+		# This is incorrect for global properties. It only works for
+		# local ones because root_folder_id is always obtained for the
+		# package
+		if { [string eq $property_type "global"] ||
+		     [string eq $property_type "globpers"] } {
+		    # global or globpers properties
+		    set root_folder_id [dotlrn_fs::get_dotlrn_root_folder_id]
+		    set url_prefix \
+			[site_node_object_map::get_url \
+			     -object_id $root_folder_id]
+		} else {
+		    set root_folder_id \
+			[fs::get_root_folder -package_id $fs_package_id]
+		    set url_prefix [apm_package_url_from_id $fs_package_id]
+		}
+
+		set folder_path \
+		    [content::item::get_path -item_id $parent_id \
+			 -root_folder_id $root_folder_id]
+
 		db_1row get_fs_file_url {
 		    select 
 		    case 
@@ -159,7 +199,7 @@ foreach view_property_node $view_property_nodes {
 		    from fs_objects fs
 		    where fs.live_revision = :instance_id
 		}
-		set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
+		set file_url "${url_prefix}view/${file_url}"
 		set a_node [$dom_doc createElement a]
 		$a_node setAttribute href [export_vars -base "$file_url"]
 		$a_node appendChild [$dom_doc createTextNode "[_ imsld.view_file]"]
@@ -233,7 +273,7 @@ foreach view_property_group_node $view_property_group_nodes {
         select ins.property_id,
         prop.datatype,
         coalesce(ins.value, prop.initial_value) as value,
-        ins.title,
+        coalesce(ins.title, ins.identifier) as title,
 	content_revision__get_content(cr.revision_id) as content, 
 	ins.instance_id,
 	ins.object_id,
@@ -336,7 +376,8 @@ foreach set_property_node $set_property_nodes {
     # get the value, depending on the property type. 
     # the only different case is when viewing the proprty in the context of the role
     set role_instance_id 0
-    if { ![string eq $property_of "self"] } {
+    if { ![string eq $property_of "self"] ||
+	 [string eq $type "locrole"] } {
         # find the role instance which the user belongs to
         set role_instance_id [imsld::roles::get_user_role_instance -run_id $run_id -role_id $role_id -user_id $owner_user_id]
         if { !$role_instance_id } {
@@ -351,7 +392,7 @@ foreach set_property_node $set_property_nodes {
         prop.datatype,
 	prop.item_id as property_item_id,
         coalesce(ins.value, prop.initial_value) as value,
-        ins.title,
+        coalesce(ins.title, ins.identifier) as title,
 	ins.instance_id
         from imsld_property_instancesx ins,
 	cr_revisions cr,
@@ -459,6 +500,15 @@ foreach set_property_node $set_property_nodes {
     $run_id_node setAttribute type "hidden"
     $run_id_node setAttribute value "$run_id"
     $form_node appendChild $run_id_node
+
+    if { [string eq $type "locrole"] } {
+	# adding role_instance_id
+	set role_instance_id_node [$dom_doc createElement "input"]
+	$role_instance_id_node setAttribute name "role_instance_id"
+	$role_instance_id_node setAttribute type "hidden"
+	$role_instance_id_node setAttribute value "$role_instance_id"
+	$form_node appendChild $role_instance_id_node
+    }
 
     # adding return url
     set return_url_node [$dom_doc createElement "input"]
@@ -607,7 +657,7 @@ foreach set_property_group_node $set_property_group_nodes {
 	prop.item_id as property_item_id,
         prop.datatype,
         coalesce(ins.value, prop.initial_value) as value,
-        ins.title,
+        coalesce(ins.title, ins.identifier) as title,
 	content_revision__get_content(cr.revision_id) as content, 
 	ins.instance_id,
 	ins.object_id,
@@ -874,16 +924,20 @@ set fs_resource_info [db_1row get_fs_resource_info {
     and map.displayable_p = 't'
 }]
 
-set folder_path [db_exec_plsql get_folder_path {select content_item__get_path(:parent_id,:root_folder_id); }]
-set file_url "[apm_package_url_from_id $fs_package_id]view/${folder_path}"
+# It doesn't make sense to have a base attribute defined, since there could be
+# multiple properties to be shown in the page, and therefore, the base URL is
+# not so easy to compute.
 
-set head_node [$dom_root selectNodes {//*[local-name()='head']}]
-if {![llength [$head_node selectNodes {/*[local-name()='base']}]]} {
-    set base_node [$dom_doc createElement "base"]
-    set base_prefix [ns_conn location]
-    $base_node setAttribute href "$base_prefix/$file_url/"
-    $head_node appendChild $base_node
-}
+# set folder_path [db_exec_plsql get_folder_path {select content_item__get_path(:parent_id,:root_folder_id); }]
+# set file_url "[apm_package_url_from_id $fs_package_id]view/${folder_path}"
+
+# set head_node [$dom_root selectNodes {//*[local-name()='head']}]
+# if {![llength [$head_node selectNodes {/*[local-name()='base']}]]} {
+#     set base_node [$dom_doc createElement "base"]
+#     set base_prefix [ns_conn location]
+#     $base_node setAttribute href "$base_prefix/$file_url/"
+#     $head_node appendChild $base_node
+# }
 
 
 set xmloutput {<?xml version="1.0" encoding="UTF-8"?>}

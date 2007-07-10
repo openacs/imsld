@@ -3,7 +3,7 @@
   <property name="context">@context;noquote@</property>
   <property name="imsld_content_frame">1</property>
 
-  <div class="center">@frame_header@</div>
+  <div class="frame-header">@frame_header@</div>
   
   <br />
   

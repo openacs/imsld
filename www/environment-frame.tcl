@@ -11,31 +11,28 @@ ad_page_contract {
 
 set user_id [ad_conn user_id]
 
+set frame_header "[_ imsld.Context_info]"
+set page_title $frame_header
+set context [list]
+
 dom createDocument ul doc
 set dom_root [$doc documentElement]
+
+# Create the ul element which will hold all the environment info
 $dom_root setAttribute class "mktree"
-set environments_node_li [$doc createElement li]
-$environments_node_li setAttribute class "liOpen"
-set text [$doc createTextNode "[_ imsld.Context_info]"]
-$environments_node_li appendChild $text
+$dom_root setAttribute style "white-space: nowrap;"
 
-set environments_node [$doc createElement ul]
-
-# FIX-ME: if the ul is empty, the browser shows the ul incorrectly   
-set text [$doc createTextNode ""]
-$environments_node appendChild $text
-
+# Create the li nodes for each environment
 set activity_item_id [content::revision::item_id -revision_id $activity_id]
-
-imsld::process_activity_environments_as_ul -activity_item_id $activity_item_id \
+imsld::process_activity_environments_as_ul \
+    -activity_item_id $activity_item_id \
     -run_id $run_id \
-    -dom_node $environments_node \
+    -dom_node $dom_root \
     -dom_doc $doc
 
-$environments_node_li appendChild $environments_node
-$dom_root appendChild $environments_node_li
+# Set the result only if it is not empty
+if { [$dom_root hasChildNodes]} {
+    # Set the result
+    set environments [$dom_root asXML]
+}
 
-set environments [$dom_root asXML]   
-
-set page_title {}
-set context [list]
