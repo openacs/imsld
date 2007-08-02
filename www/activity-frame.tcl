@@ -97,6 +97,7 @@ if { ![string eq "" $referencer_structure_item_id] } {
 	and status = 'finished'
     }] } {
 	set mark_structure_finished_p 1
+	set total_completed 0
 	foreach referenced_activity [db_list_of_lists struct_referenced_activities {
 	    select ar.object_id_two,
 	    ar.rel_type
