@@ -2713,24 +2713,26 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
     set structure_information [$activity_node selectNodes "*\[local-name()='information'\]"]
     if { [llength $structure_information] } {
         # parse the item, create it and map it to the activity structure
-        set information_item [$structure_information selectNodes "*\[local-name()='item'\]"]
-        if { ![llength $information_item] } {
+        set information_item_list [$structure_information selectNodes "*\[local-name()='item'\]"]
+        if { ![llength $information_item_list] } {
             return [list 0 "[_ imsld.lt_Information_given_but_1]"]
         }
 
-        set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
-                           -manifest_id $manifest_id \
-                           -item_node $information_item \
-                           -parent_id $parent_id \
-                           -tmp_dir $tmp_dir]
-        
-        set information_id [lindex $item_list 0]
-        if { !$information_id } {
-            # an error happened, abort and return the list whit the error
-            return $item_list
-        }
-        # map information item with the activity structure
-        relation_add imsld_as_info_i_rel $activity_structure_id $information_id
+	foreach information_item $information_item_list {
+	    set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
+			       -manifest_id $manifest_id \
+			       -item_node $information_item \
+			       -parent_id $parent_id \
+			       -tmp_dir $tmp_dir]
+	    
+	    set information_id [lindex $item_list 0]
+	    if { !$information_id } {
+		# an error happened, abort and return the list whit the error
+		return $item_list
+	    }
+	    # map information item with the activity structure
+	    relation_add imsld_as_info_i_rel $activity_structure_id $information_id
+	}
     }
 
     # store the order of the activities to display them later in the correct order
