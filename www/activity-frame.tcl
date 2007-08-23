@@ -86,7 +86,7 @@ if { ![string eq "" $referencer_structure_item_id] } {
 	where item_id = :referencer_structure_item_id
 	and content_revision__is_live(structure_id) = 't'
     }
-    
+
     # if the structure hasn't been finished
     if { ![db_0or1row already_finished {
 	select 1
@@ -137,7 +137,7 @@ if { ![string eq "" $referencer_structure_item_id] } {
 			incr total_completed
 		    } else {
 			set mark_structure_finished_p 0
-			break
+			continue
 		    }
 		}
 		imsld_as_sa_rel {
@@ -164,7 +164,7 @@ if { ![string eq "" $referencer_structure_item_id] } {
 			incr total_completed
 		    } else {
 			set mark_structure_finished_p 0
-			break
+			continue
 		    }
 		} imsld_as_as_rel {
 		    # if the referenced activity structure hasn't been finished, don't finish the activity structure
@@ -178,7 +178,7 @@ if { ![string eq "" $referencer_structure_item_id] } {
 			and status = 'finished'
 		    }] } {
 			set mark_structure_finished_p 0
-			break
+			continue
 		    } else {
 			incr total_completed
 		    }
@@ -190,23 +190,24 @@ if { ![string eq "" $referencer_structure_item_id] } {
 
 	    set role_part_id_list [imsld::get_role_part_from_activity -activity_type structure -leaf_id $referencer_structure_item_id]
 	    foreach role_part_id $role_part_id_list {
-	    db_1row context_info {
-		select acts.act_id,
-		plays.play_id
-		from imsld_actsi acts, imsld_playsi plays, imsld_role_parts rp
-		where rp.role_part_id = :role_part_id
-		and rp.act_id = acts.item_id
-		and acts.play_id = plays.item_id
-	    }
+		db_1row context_info {
+		    select acts.act_id,
+		    plays.play_id
+		    from imsld_actsi acts, imsld_playsi plays, imsld_role_parts rp
+		    where rp.role_part_id = :role_part_id
+		    and rp.act_id = acts.item_id
+		    and acts.play_id = plays.item_id
+		}
+		
 		imsld::finish_component_element -imsld_id $imsld_id \
-		-run_id $run_id \
-		-play_id $play_id \
-		-act_id $act_id \
-		-role_part_id $role_part_id \
-		-element_id $structure_id \
-		-type structure \
-		-user_id $user_id \
-		-code_call
+		    -run_id $run_id \
+		    -play_id $play_id \
+		    -act_id $act_id \
+		    -role_part_id $role_part_id \
+		    -element_id $structure_id \
+		    -type structure \
+		    -user_id $user_id \
+		    -code_call
 	    }
 	}
     }
@@ -319,7 +320,6 @@ if { !$roles_template_p } {
     
     set activities [export_vars -base "imsld-content-serve" -url { run_id resource_item_id role_id {owner_user_id $supported_user_id} }]
 }
-
 
 set page_title {}
 set context [list]

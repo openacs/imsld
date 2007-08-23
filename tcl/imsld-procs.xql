@@ -750,7 +750,7 @@
 		<querytext>
             select ias.structure_id,
             ias.item_id as structure_item_id,
-            ias.number_to_select
+            coalesce(ias.number_to_select, 0) as number_to_select
             from acs_rels ar, imsld_activity_structuresi ias, cr_items cri
             where ar.object_id_one = ias.item_id
             and ar.object_id_two = cri.item_id

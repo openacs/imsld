@@ -1071,42 +1071,95 @@ ad_proc -public imsld::finish_component_element {
     }
 
     if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $type "structure"] } {
+	# if the activity is referenced from an activity strucutre, that activity structure must be checked
+	# in order to know if the structure must be also marked as completed
         foreach referencer_structure_list [db_list_of_lists referencer_structure { *SQL* }] {
             set structure_id [lindex $referencer_structure_list 0]
             set structure_item_id [lindex $referencer_structure_list 1]
             set number_to_select [lindex $referencer_structure_list 2]
-            # if this activity is part of an activity structure, let's check if the rest of referenced 
-            # activities are finished too, so we can mark finished the activity structure as well
-            set scturcture_finished_p 1
-            set total_completed 0
-            db_foreach referenced_activity {
-                select content_item__get_live_revision(ar.object_id_two) as activity_id
-                from acs_rels ar
-                where ar.object_id_one = :structure_item_id
-                and ar.rel_type in ('imsld_as_la_rel','imsld_as_sa_rel','imsld_as_as_rel')
-            } {
-                if { ![db_string completed_p { *SQL* }] } {
-                    # there is at leas one no-completed activity, so we can't mark this activity structure yet
-                    set scturcture_finished_p 0
-		    break
-                } else {
-                    incr total_completed
-                }
-            }
-            # If the structure has the flag number-to-select
-            if { $scturcture_finished_p || (![string eq $number_to_select ""] && ($total_completed >= $number_to_select)) } {
-                imsld::finish_component_element -imsld_id $imsld_id \
-                    -run_id $run_id \
-                    -play_id $play_id \
-                    -act_id $act_id \
-                    -role_part_id $role_part_id \
-                    -element_id $structure_id \
-                    -type structure \
-                    -user_id $user_id \
-                    -code_call
+	    set already_marked_p [db_0or1row not_marked {
+		select 1
+		from imsld_status_user
+		where user_id = :user_id
+		and run_id = :run_id
+		and related_id = :structure_id
+		and status = 'finished'
+	    }]
+	    if { ![imsld::structure_finished_p -structure_id $structure_id -run_id $run_id -user_id $user_id] || !$already_marked_p } { 
+		# if this activity is part of an activity structure, let's check if the rest of referenced 
+		# activities are finished too, so we can mark finished the activity structure as well
+		set scturcture_finished_p 1
+		set total_completed 0
+		db_foreach referenced_activity {
+		    select content_item__get_live_revision(ar.object_id_two) as activity_id
+		    from acs_rels ar
+		    where ar.object_id_one = :structure_item_id
+		    and ar.rel_type in ('imsld_as_la_rel','imsld_as_sa_rel','imsld_as_as_rel')
+		} {
+		    if { ![db_string completed_p { *SQL* }] } {
+			# there is at leas one no-completed activity, so we can't mark this activity structure yet
+			set scturcture_finished_p 0
+			continue
+		    } else {
+			incr total_completed
+		    }
+		}
+		# If the structure has the flag number-to-select
+		if { $scturcture_finished_p && (($number_to_select > 0 && ($total_completed >= $number_to_select)) || !$already_marked_p) } {
+		    imsld::finish_component_element -imsld_id $imsld_id \
+			-run_id $run_id \
+			-play_id $play_id \
+			-act_id $act_id \
+			-role_part_id $role_part_id \
+			-element_id $structure_id \
+			-type structure \
+			-user_id $user_id \
+			-code_call
+		}
             }
         }
     }
+
+    if { [string eq $type "structure"] } {
+	# mark as finished all the referenced activities
+	foreach referenced_activities_list [db_list_of_lists referenced_activities {
+	    select case when ar.rel_type = 'imsld_as_la_rel'
+	    then 'learning'
+	    when ar.rel_type = 'imsld_as_sa_rel'
+	    then 'support'
+	    when ar.rel_type = 'imsld_as_as_rel'
+	    then 'structure'
+	    end as ref_type,
+	    content_item__get_live_revision(ar.object_id_two) as activity_id
+	    from acs_rels ar, imsld_activity_structuresi ias
+	    where ar.object_id_one = ias.item_id
+	    and ias.structure_id = :element_id
+	    and ar.rel_type in ('imsld_as_la_rel','imsld_as_sa_rel','imsld_as_as_rel')
+	}] {
+	    set ref_type [lindex $referenced_activities_list 0]
+	    set activity_id [lindex $referenced_activities_list 1]
+	    if { ![db_0or1row already_finished_p {
+		select 1 
+		from imsld_status_user
+		where user_id = :user_id
+		and status = 'finished'
+		and run_id = :run_id
+		and related_id = :activity_id
+	    }] } {
+		imsld::finish_component_element -imsld_id $imsld_id \
+		    -run_id $run_id \
+		    -play_id $play_id \
+		    -act_id $act_id \
+		    -role_part_id $role_part_id \
+		    -element_id $activity_id \
+		    -type $ref_type \
+		    -user_id $user_id \
+		    -code_call
+	    }
+	}
+    }
+
+
 
     # we continue with A LOT of validations (in order to support the
     # when-xxx-finished tag of the spec
@@ -1451,7 +1504,6 @@ ad_proc -public imsld::structure_finished_p {
 		    from imsld_learning_activities
 		    where activity_id = content_item__get_live_revision(:object_id_two)
 		} -default ""]
-		
 		if { (![string eq [db_string finished_p {                    
 		    select status from imsld_status_user 
                     where related_id = content_item__get_live_revision(:object_id_two) 
@@ -2850,7 +2902,7 @@ ad_proc -public imsld::generate_structure_activities_list {
 
 		    if { $completed_p } {
 
-			if { [string eq $user_choice_p "t"] } {
+			if { ![string eq $complete_act_id ""] } {
 			    # the activity is finished
 			    set img_node [$dom_doc createElement img]
 			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
@@ -2947,7 +2999,7 @@ ad_proc -public imsld::generate_structure_activities_list {
 		    }
 
 		    if { $completed_p } {
-			if { [string eq $user_choice_p "t"] } {
+			if { ![string eq $complete_act_id ""] } {
 			    # the activity is finished
 			    set img_node [$dom_doc createElement img]
 			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
@@ -3126,6 +3178,7 @@ ad_proc -public imsld::generate_activities_tree {
 			set text [$dom_doc createTextNode " "]
 			$activity_node appendChild $text
 		    } else {
+			# the activity has been started
 			set activity_node [$dom_doc createElement li]
 			$activity_node setAttribute class "liOpen"
 			set a_node [$dom_doc createElement a]
@@ -3142,7 +3195,7 @@ ad_proc -public imsld::generate_activities_tree {
 
 		    if { $completed_activity_p } {
 
-			if { [string eq $user_choice_p "t"] } {
+			if { ![string eq $complete_act_id ""] } {
 			    # the activity is finished
 			    set img_node [$dom_doc createElement img]
 			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
@@ -3235,7 +3288,7 @@ ad_proc -public imsld::generate_activities_tree {
 
 		    if { $completed_activity_p } {
 
-			if { [string eq $user_choice_p "t"] } {
+			if { ![string eq $complete_act_id ""] } {
 			    # the activity is finished
 			    set img_node [$dom_doc createElement img]
 			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
@@ -4181,12 +4234,23 @@ ad_proc -public imsld::finish_resource {
         switch $activity_type {
             learning {
                 set first_resources_item_list [imsld::process_learning_activity_as_ul -run_id $run_id -activity_item_id $activity_item_id -resource_mode "t" -dom_node $foo_node -dom_doc $foo_doc]
+		set completion_restriction [db_string la_completion_restriction {
+		    select complete_act_id 
+		    from imsld_learning_activities
+		    where activity_id = :activity_id 
+		} -default ""]
             }
             support {
                 set first_resources_item_list [imsld::process_support_activity_as_ul -run_id $run_id -activity_item_id $activity_item_id -resource_mode "t" -dom_node $foo_node -dom_doc $foo_doc]
+		set completion_restriction [db_string la_completion_restriction {
+		    select complete_act_id 
+		    from imsld_support_activities
+		    where activity_id = :activity_id 
+		} -default ""]
             }
             structure {
                 set first_resources_item_list [imsld::process_activity_structure_as_ul -run_id $run_id -structure_item_id $activity_item_id -resource_mode "t" -dom_node $foo_node -dom_doc $foo_doc]
+		set completion_restriction t
             }
         }
 
@@ -4216,7 +4280,7 @@ ad_proc -public imsld::finish_resource {
         }
 
         #if all are finished, tag the activity as finished
-        if { $all_finished_p && ![db_0or1row already_finished { *SQL* }] } {
+        if { $all_finished_p && ![db_0or1row already_finished { *SQL* }] && [string eq $completion_restriction ""] } {
             foreach role_part_id $role_part_id_list {
                 db_1row context_info {
                     select acts.act_id,
