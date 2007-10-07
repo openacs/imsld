@@ -1,0 +1,93 @@
+/*--------------------------------------------------
+   General styles used in the IMS-LD package
+  --------------------------------------------------*/
+
+div.role_menu {
+  text-align: right;
+  font-size: 80%;
+  margin: 0px;
+  top: 0px;
+  right: 0px;
+  padding: 4px 4px;
+  float: right;
+} 
+
+.indented {  
+  margin-left:20px;
+}
+
+a.finish {
+  font-size:9px;
+  font-family:Tahoma,sans-serif;
+  text-align:left;
+  color:#FFFFFF;
+  background-color:#2878C0;
+  border-top-style:solid;
+  border-top-color:#2878C0;
+  border-top-width:1px;
+  border-bottom-style:solid;
+  border-bottom-color:#2878C0;
+  border-bottom-width:1px;
+  border-left-style:solid;
+  border-left-color:#1858B8;
+  border-left-width:6px;
+  border-right-style:solid;
+  border-right-color:#508CC0;
+  border-right-width:6px;
+}
+a.finish:hover  {
+  color:#FFFFFF;
+  background-color:#1858B8;
+  border-style:double;
+}
+.finish { 
+  padding:0px;
+  margin:0px;
+}
+
+ul.mktree, ul.mktree ul {
+  font-family: Verdana, Arial, Helvetica, sans-serif;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-decoration: none;
+  text-transform: none;
+  text-indent: -15px;
+  padding: 0px 0px 5px 0px;
+  margin: 0px;
+  white-space: nowrap;
+}
+
+/* arrow to minimize / maximize the activitie's tree window */
+
+
+/* notices / messages style */
+.notice {		
+  font-size: x-small; 
+  font-weight: bold; 
+  background-color: #bbbbff; 
+  padding:0px;
+  margin:0px;
+}
+
+.hide { 
+  position:absolute;
+  top:0px;
+  left:0px;
+  display:none;
+}
+.show { 
+  position:relative;
+  top:0px;
+  left:0px;
+}
+
+.centered-table table { 
+  margin-right: auto; 
+  margin-left: auto 
+}
+
+.float-left { float: left; }
+
+.frame-header { text-align: center; padding: 6px 8px }
