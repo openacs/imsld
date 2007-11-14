@@ -1954,7 +1954,9 @@ ad_proc -public imsld::parse::parse_and_create_service {
             # an error happened, abort and return the list whit the error
             return $item_list
         }
-    
+        if { ![info exist role_id] } {
+            set role_id "";
+        }
         # create the monitor service
         set monitor_service_id [imsld::item_revision_new -attributes [list [list service_id $service_id] \
                                                                     [list role_id $role_id] \
