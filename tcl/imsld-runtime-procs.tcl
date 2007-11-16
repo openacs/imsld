@@ -266,10 +266,11 @@ ad_proc -public imsld::runtime::property::property_value_set {
 	} else {
 	    incr recursivity_count
 	}
+#FIXME: the parameter has to be set as a package parameter. Meanwhile, I use a constant	
+	set ConditionsRecursionLimit [parameter::get -package_id [apm_package_id_from_key imsld-portlet] -parameter ConditionsRecursionLimit	]
+	set ConditionsRecursionLimit 20 
 	
-	set ConditionsRecursionLimit [parameter::get -package_id [apm_package_id_from_key imsld-portlet] -parameter ConditionsRecursionLimit]
-
-	if { $recursivity_count >= $ConditionsRecursionLimit } {
+    if { $recursivity_count >= $ConditionsRecursionLimit } {
 	    ns_log error "IMSLD::imsld::runtime::property::property_value_set [_ imsld.lt_Unstable_state_reache]"
 	    ad_return_error "[_ imsld.lt_Unestable_state_reach]" "[_ imsld.lt_Unstable_state_reache]"
 	    ad_script_abort
