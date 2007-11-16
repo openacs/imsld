@@ -16,7 +16,14 @@ ad_page_contract {
 
 set user_id [ad_conn user_id]
 
-db_1row monitor_service_info { *SQL* }
+ns_log Notice "role_id: $role_id"
+if { ![ string eq $role_id ""] } {
+    db_1row monitor_service_info { *SQL* }
+} else {
+    db_1row monitor_service_info_no_role_id { *SQL* }
+}
+
+
 
 template::multirow create users_in_role role_user_id user_name
 set monitoring_user_name "[_ imsld.None]"
