@@ -812,16 +812,11 @@ ad_proc -public imsld::do_notification {
 
         set body_html "[_ imsld.lt_username_br__________]"
 
-        set message_data [build_mime_message [ad_html_to_text $body_html] $body_html]
-        ns_set put $extra_headers MIME-Version [ns_set get $message_data MIME-Version]
-        ns_set put $extra_headers Content-ID [ns_set get $message_data Content-ID]
-        ns_set put $extra_headers Content-Type [ns_set get $message_data Content-Type]
-        set content [ns_set get $message_data body]
-        
         acs_mail_lite::send -to_addr $email_address \
             -from_addr $sender_email \
             -subject $subject \
-            -body $content \
+            -body $body_html \
+            -mime_type "text/html" \
             -extraheaders $extra_headers
 
         lappend notified_users_list $email_address
@@ -865,22 +860,17 @@ ad_proc -public imsld::do_notification {
             # This should disable most auto-replies.
             ns_set put $extra_headers Precedence list
 
-            set message_data [build_mime_message [ad_html_to_text $body_html] $body_html]
-            ns_set put $extra_headers MIME-Version [ns_set get $message_data MIME-Version]
-            ns_set put $extra_headers Content-ID [ns_set get $message_data Content-ID]
-            ns_set put $extra_headers Content-Type [ns_set get $message_data Content-Type]
-            set content [ns_set get $message_data body]
-            
             acs_mail_lite::send -to_addr $recipient_email \
                 -from_addr $sender_email \
                 -subject $subject \
-                -body $content \
+                -body $body_html \
+                -mime_type "text/html" \
                 -extraheaders $extra_headers
 
             lappend notified_users_list $recipient_email
         }
     }
-        
+    
     # log the notification
     db_dml log_notification { *SQL* }
 
