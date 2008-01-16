@@ -13,9 +13,24 @@
         where ims.monitor_id = :monitor_id
         and cr.item_id = ims.imsld_item_id
         and content_revision__is_live(cr.live_revision) = 't'
-        and ims.role_id = cr2.item_id    
+        and ims.role_id = cr2.item_id   
       </querytext>
 	</fullquery>
+
+    <fullquery name="monitor_service_info_no_role_id">
+      <querytext>
+        select ims.title as monitor_service_title,
+        ims.monitor_id,
+        ims.item_id as monitor_item_id,
+        ims.self_p,
+        cr.live_revision as imsld_item_id
+        from imsld_monitor_servicesi ims, cr_items cr
+        where ims.monitor_id = :monitor_id
+        and cr.item_id = ims.imsld_item_id
+        and content_revision__is_live(cr.live_revision) = 't'
+      </querytext>
+	</fullquery>
+
 
     <fullquery name="monitor_associated_item">
       <querytext>
