@@ -66,4 +66,3 @@ ad_proc -public imsld::apm_callback::before_uninstall {
 
     return 1
 }
-
