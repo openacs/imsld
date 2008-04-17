@@ -67,30 +67,20 @@ ad_proc -public imsld::monitor::structure_activities_list {
                 db_1row get_sort_order {
                     select sort_order from imsld_as_la_rels where rel_id = :rel_id
                 }
-                set activity_node [$dom_doc createElement li]
-                $activity_node setAttribute class "liOpen"
 
-                set a_node [$dom_doc createElement a]
-                $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "learning"}}]"
-                $a_node setAttribute target "content"
-                set text [$dom_doc createTextNode "$activity_title"]
-                $a_node appendChild $text
-                $activity_node appendChild $a_node
-                
-                set text [$dom_doc createTextNode " "]
-                $activity_node appendChild $text
+                set activity_node [imsld::monitor::link_to_visitors_info \
+				       -dom_doc $dom_doc \
+				       -title $activity_title \
+				       -href "[export_vars -base "activity-frame" -url {activity_id run_id {type "learning"}}]" \
+				       -run_id $run_id \
+				       -revision_id $activity_id \
+				       -type "activity"]
 
-                set info_node [$dom_doc createElement a]
-                $info_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "learning"}}]"
-                $info_node setAttribute target "content"
-                set text [$dom_doc createTextNode "([imsld::monitor::number_of_visitors -run_id $run_id -revision_id $activity_id -type "activity"])"]
-                $info_node appendChild $text
-                $activity_node appendChild $info_node
-
-                set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
+                set completed_list [linsert $completed_list \
+					$sort_order [$activity_node asList]]
             }
             imsld_as_sa_rel {
-                # add the activiti to the TCL list
+                # add the activity to the TCL list
                 db_1row get_support_activity_info {
                     select sa.title as activity_title,
                     sa.item_id as activity_item_id,
@@ -104,24 +94,13 @@ ad_proc -public imsld::monitor::structure_activities_list {
                     select sort_order from imsld_as_sa_rels where rel_id = :rel_id
                 }
 
-                set activity_node [$dom_doc createElement li]
-                $activity_node setAttribute class "liOpen"
-                set a_node [$dom_doc createElement a]
-                $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "support"}}]"
-                $a_node setAttribute target "content"
-                set text [$dom_doc createTextNode "$activity_title"]
-                $a_node appendChild $text
-                $activity_node appendChild $a_node
-
-                set text [$dom_doc createTextNode " "]
-                $activity_node appendChild $text
-
-                set info_node [$dom_doc createElement a]
-                $info_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "support"}}]"
-                $info_node setAttribute target "content"
-                set text [$dom_doc createTextNode "([imsld::monitor::number_of_visitors -run_id $run_id -revision_id $activity_id -type "activity"])"]
-                $info_node appendChild $text
-                $activity_node appendChild $info_node
+                set activity_node [imsld::monitor::link_to_visitors_info \
+				       -dom_doc $dom_doc \
+				       -title $activity_title \
+				       -href "[export_vars -base "activity-frame" -url {activity_id run_id {type "support"}}]" \
+				       -run_id $run_id \
+				       -revision_id $activity_id \
+				       -type "activity"]
 
                 set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
             }
@@ -139,24 +118,14 @@ ad_proc -public imsld::monitor::structure_activities_list {
                     select sort_order from imsld_as_as_rels where rel_id = :rel_id
                 }
 
-                set structure_node [$dom_doc createElement li]
-                $structure_node setAttribute class "liOpen"
-                set a_node [$dom_doc createElement a]
-                $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "structure"}}]"
-                $a_node setAttribute target "content"
-                set text [$dom_doc createTextNode "$activity_title"]
-                $a_node appendChild $text
-                $structure_node appendChild $a_node
-
-                set text [$dom_doc createTextNode " "]
-                $structure_node appendChild $text
-                
-                set info_node [$dom_doc createElement a]
-                $info_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "structure"}}]"
-                $info_node setAttribute target "content"
-                set text [$dom_doc createTextNode "([imsld::monitor::number_of_visitors -run_id $run_id -revision_id $structure_id -type "activity"])"]
-                $info_node appendChild $text
-                $structure_node appendChild $info_node
+                set structure_node [imsld::monitor::link_to_visitors_info \
+					-dom_doc $dom_doc \
+					-title $activity_title \
+					-href "[export_vars -base "activity-frame" \
+                              -url {{activity_id "$structure_id"} run_id {type "structure"}}]" \
+					-run_id $run_id \
+					-revision_id $structure_id \
+					-type "activity"]
 
                 set nested_activities_list [imsld::monitor::structure_activities_list -imsld_id $imsld_id \
                                                 -run_id $run_id \
@@ -236,24 +205,14 @@ ad_proc -public imsld::monitor::activities_tree {
                     from imsld_learning_activitiesi la
                     where activity_id = :activity_id
                 }
-                set activity_node [$dom_doc createElement li]
-                $activity_node setAttribute class "liOpen"
-                set a_node [$dom_doc createElement a]
-                $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "learning"}}]"
-                $a_node setAttribute target "content"
-                set text [$dom_doc createTextNode "$activity_title"]
-                $a_node appendChild $text
-                $activity_node appendChild $a_node
-
-                set text [$dom_doc createTextNode " "]
-                $activity_node appendChild $text
-                
-                set info_node [$dom_doc createElement a]
-                $info_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "learning"}}]"
-                $info_node setAttribute target "content"
-                set text [$dom_doc createTextNode "([imsld::monitor::number_of_visitors -run_id $run_id -revision_id $activity_id -type "activity"])"]
-                $info_node appendChild $text
-                $activity_node appendChild $info_node
+                set activity_node [imsld::monitor::link_to_visitors_info \
+				       -dom_doc $dom_doc \
+				       -title $activity_title \
+				       -href "[export_vars -base "activity-frame" \
+                              -url {activity_id run_id {type "learning"}}]" \
+				       -run_id $run_id \
+				       -revision_id $activity_id \
+				       -type "activity"]
                 
                 $dom_node appendChild $activity_node
             }
@@ -267,24 +226,14 @@ ad_proc -public imsld::monitor::activities_tree {
                     from imsld_support_activitiesi sa
                     where sa.activity_id = :activity_id
                 }
-                set activity_node [$dom_doc createElement li]
-                $activity_node setAttribute class "liOpen"
-                set a_node [$dom_doc createElement a]
-                $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "support"}}]"
-                $a_node setAttribute target "content"
-                set text [$dom_doc createTextNode "$activity_title"]
-                $a_node appendChild $text
-                $activity_node appendChild $a_node
-                
-                set text [$dom_doc createTextNode " "]
-                $activity_node appendChild $text
-                    
-                set info_node [$dom_doc createElement a]
-                $info_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "support"}}]"
-                $info_node setAttribute target "content"
-                set text [$dom_doc createTextNode "([imsld::monitor::number_of_visitors -run_id $run_id -revision_id $activity_id -type "activity"])"]
-                $info_node appendChild $text
-                $activity_node appendChild $info_node
+                set activity_node [imsld::monitor::link_to_visitors_info \
+				       -dom_doc $dom_doc \
+				       -title $activity_title \
+				       -href "[export_vars -base "activity-frame" \
+                              -url {activity_id run_id {type "support"}}]"\
+				       -run_id $run_id \
+				       -revision_id $activity_id \
+				       -type "activity"]
                 
                 $dom_node appendChild $activity_node
             }
@@ -298,24 +247,14 @@ ad_proc -public imsld::monitor::activities_tree {
                     where structure_id = :activity_id
                 }
 
-                set structure_node [$dom_doc createElement li]
-                $structure_node setAttribute class "liOpen"
-                set a_node [$dom_doc createElement a]
-                $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "structure"}}]"
-                $a_node setAttribute target "content"
-                set text [$dom_doc createTextNode "$activity_title"]
-                $a_node appendChild $text
-                $structure_node appendChild $a_node
-
-                set text [$dom_doc createTextNode " "]
-                $structure_node appendChild $text
-
-                set info_node [$dom_doc createElement a]
-                $info_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "structure"}}]"
-                $info_node setAttribute target "content"
-                set text [$dom_doc createTextNode "([imsld::monitor::number_of_visitors -run_id $run_id -revision_id $structure_id -type "activity"])"]
-                $info_node appendChild $text
-                $structure_node appendChild $info_node
+                set structure_node [imsld::monitor::link_to_visitors_info \
+					-dom_doc $dom_doc \
+					-title $activity_title \
+					-href "[export_vars -base "activity-frame" \
+                                -url {activity_id run_id {type "structure"}}]" \
+					-run_id $run_id \
+					-revision_id $structure_id \
+					-type "activity"]
 
                 set nested_list [imsld::monitor::structure_activities_list -imsld_id $imsld_id \
                                      -run_id $run_id \
@@ -357,7 +296,7 @@ ad_proc -public imsld::monitor::properties_tree {
     set a_node [$dom_doc createElement a]
     $a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id {type "loc"}}]"
     $a_node setAttribute target "content"
-    set text [$dom_doc createTextNode "[_ imsld.1_Local_Properties]"]
+    set text [$dom_doc createTextNode "1. [_ imsld.Local_Properties]"]
     $a_node appendChild $text
     $local_node appendChild $a_node
 
@@ -370,7 +309,7 @@ ad_proc -public imsld::monitor::properties_tree {
     set a_node [$dom_doc createElement a]
     $a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id {type "locpers"}}]"
     $a_node setAttribute target "content"
-    set text [$dom_doc createTextNode "[_ imsld.lt_2_Local-personal_Prop]"]
+    set text [$dom_doc createTextNode "2. [_ imsld.lt_Local-personal_Prop]"]
     $a_node appendChild $text
     $locpers_node appendChild $a_node
 
@@ -379,8 +318,8 @@ ad_proc -public imsld::monitor::properties_tree {
     # 3. loc-role properties: associated to each role in the run
 
     set locrole_node [$dom_doc createElement li]
-    $locrole_node setAttribute class "liClosed"
-    set text [$dom_doc createTextNode "[_ imsld.lt_3_Local-role_Properti]"]
+    $locrole_node setAttribute class "liOpen"
+    set text [$dom_doc createTextNode "3. [_ imsld.lt_Local-role_Properti]"]
     $a_node appendChild $text
     $locrole_node appendChild $text
 
@@ -410,7 +349,7 @@ ad_proc -public imsld::monitor::properties_tree {
     set a_node [$dom_doc createElement a]
     $a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id {type "globpers"}}]"
     $a_node setAttribute target "content"
-    set text [$dom_doc createTextNode "[_ imsld.lt_4_Global-personal_Pro]"]
+    set text [$dom_doc createTextNode "4. [_ imsld.lt_Global-personal_Pro]"]
     $a_node appendChild $text
     $globpers_node appendChild $a_node
 
@@ -423,7 +362,7 @@ ad_proc -public imsld::monitor::properties_tree {
     set a_node [$dom_doc createElement a]
     $a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id {type "glob"}}]"
     $a_node setAttribute target "content"
-    set text [$dom_doc createTextNode "[_ imsld.5_Global_Properties]"]
+    set text [$dom_doc createTextNode "5. [_ imsld.Global_Properties]"]
     $a_node appendChild $text
     $globpers_node appendChild $a_node
 
@@ -496,23 +435,14 @@ ad_proc -public imsld::monitor::runtime_assigned_activities_tree {
                     where activity_id = :activity_id
                 }
 
-                set activity_node [$dom_doc createElement li]
-                $activity_node setAttribute class "liOpen"
-                set a_node [$dom_doc createElement a]
-                $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "learning"}}]"
-                $a_node setAttribute target "content"
-                set text [$dom_doc createTextNode "$activity_title"]
-                $a_node appendChild $text
-                $activity_node appendChild $a_node
-                
-                set text [$dom_doc createTextNode " "]
-                $activity_node appendChild $text
-                set info_node [$dom_doc createElement a]
-                $info_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "learning"}}]"
-                $info_node setAttribute target "content"
-                set text [$dom_doc createTextNode "([imsld::monitor::number_of_visitors -run_id $run_id -revision_id $activity_id -type "activity"])"]
-                $info_node appendChild $text
-                $activity_node appendChild $info_node                
+                set activity_node [imsld::monitor::link_to_visitors_info \
+				       -dom_doc $dom_doc \
+				       -title $activity_title \
+				       -href "[export_vars -base "activity-frame" \
+                              -url {activity_id run_id {type "learning"}}]"\
+				       -run_id $run_id \
+				       -revision_id $activity_id \
+				       -type "activity"]
 
                 $dom_node appendChild $activity_node
             }
@@ -527,24 +457,14 @@ ad_proc -public imsld::monitor::runtime_assigned_activities_tree {
                     where sa.activity_id = :activity_id
                 }
 
-                set activity_node [$dom_doc createElement li]
-                $activity_node setAttribute class "liOpen"
-                set a_node [$dom_doc createElement a]
-                $a_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "support"}}]"
-                $a_node setAttribute target "content"
-                set text [$dom_doc createTextNode "$activity_title"]
-                $a_node appendChild $text
-                $activity_node appendChild $a_node
-                
-                set text [$dom_doc createTextNode " "]
-                $activity_node appendChild $text
-                
-                set info_node [$dom_doc createElement a]
-                $info_node setAttribute href "[export_vars -base "activity-frame" -url {activity_id run_id {type "support"}}]"
-                $info_node setAttribute target "content"
-                set text [$dom_doc createTextNode "([imsld::monitor::number_of_visitors -run_id $run_id -revision_id $activity_id -type "activity"])"]
-                $info_node appendChild $text
-                $activity_node appendChild $info_node
+                set activity_node [imsld::monitor::link_to_visitors_info \
+				       -dom_doc $dom_doc \
+				       -title $activity_title \
+				       -href "[export_vars -base "activity-frame" \
+                               -url {activity_id run_id {type "support"}}]"\
+				       -run_id $run_id \
+				       -revision_id $activity_id \
+				       -type "activity"]
                 
                 $dom_node appendChild $activity_node
             }
@@ -560,7 +480,6 @@ ad_proc -public imsld::monitor::environment_as_ul {
 } { 
     @param environment_item_id
     @param run_id
-    @option resource_mode
     @param dom_node
     @param dom_doc
 
@@ -630,24 +549,15 @@ ad_proc -public imsld::monitor::environment_as_ul {
                 set resource_item_id [lindex $environments_list 1]
                 set resource_type [lindex $environments_list 2]
 
-                set lo_node [$dom_doc createElement li]
-                $lo_node setAttribute class "liOpen"
-                set a_node [$dom_doc createElement a]
-                $a_node setAttribute href "[export_vars -base "activity-frame" -url {run_id learning_object_id {type learning_object}}]"
-                $a_node setAttribute target "content"
-                set text [$dom_doc createTextNode "$lo_title"]
-                $a_node appendChild $text
-                $lo_node appendChild $a_node
-                
-                set text [$dom_doc createTextNode " "]
-                $lo_node appendChild $text
-                
-                set info_node [$dom_doc createElement a]
-                $info_node setAttribute href "[export_vars -base "activity-frame" -url {run_id learning_object_id {type learning_object}}]"
-                $info_node setAttribute target "content"
-                set text [$dom_doc createTextNode "([imsld::monitor::number_of_visitors -run_id $run_id -revision_id $learning_object_id -item_id $learning_object_item_id -type "learning_object"])"]
-                $info_node appendChild $text
-                $lo_node appendChild $info_node
+                set lo_node [imsld::monitor::link_to_visitors_info \
+				 -dom_doc $dom_doc \
+				 -title $lo_title \
+				 -href "[export_vars -base "activity-frame" \
+                           -url {run_id learning_object_id {type learning_object}}]"\
+				 -run_id $run_id \
+				 -revision_id $learning_object_id \
+				 -item_id $learning_object_item_id \
+				 -type "learning_object"]
                 
                 $environment_node appendChild $lo_node
             } 
@@ -673,24 +583,14 @@ ad_proc -public imsld::monitor::environment_as_ul {
         set service_title [expr { [string eq [lindex $services_list 4] ""] ? $environment_title : [lindex $services_list 4] }]
         set class_name [lindex $services_list 5]
 
-        set service_node [$dom_doc createElement li]
-        $service_node setAttribute class "liOpen"
-        set a_node [$dom_doc createElement a]
-        $a_node setAttribute href "[export_vars -base "activity-frame" -url {run_id service_id {type service}}]"
-        $a_node setAttribute target "content"
-        set text [$dom_doc createTextNode "$service_title"]
-        $a_node appendChild $text
-        $service_node appendChild $a_node
-        
-        set text [$dom_doc createTextNode " "]
-        $service_node appendChild $text
-        
-        set info_node [$dom_doc createElement a]
-        $info_node setAttribute href "[export_vars -base "activity-frame" -url {run_id service_id {type service}}]"
-        $info_node setAttribute target "content"
-        set text [$dom_doc createTextNode "([imsld::monitor::number_of_visitors -run_id $run_id -revision_id $service_id -type "service"])"]
-        $info_node appendChild $text
-        $service_node appendChild $info_node
+        set service_node [imsld::monitor::link_to_visitors_info \
+			      -dom_doc $dom_doc \
+			      -title $service_title \
+			      -href "[export_vars -base "activity-frame" \
+                       -url {run_id service_id {type service}}]" \
+			      -run_id $run_id \
+			      -revision_id $service_id \
+			      -type "service"]
         
         $environment_node appendChild $service_node
 
@@ -703,9 +603,9 @@ ad_proc -public imsld::monitor::environment_as_ul {
         where ar.object_id_one = :environment_item_id
         and ar.rel_type = 'imsld_env_env_rel'
     }] {
-        imsld::monitor::process_environment_as_ul -environment_item_id $nested_environment_item_id \
+        imsld::monitor::environment_as_ul \
+	    -environment_item_id $nested_environment_item_id \
             -run_id $run_id \
-            -resource_mode $resource_mode \
             -dom_node $environment_node \
             -dom_doc $dom_doc
     }
@@ -927,4 +827,62 @@ ad_proc -public imsld::monitor::number_of_visitors {
         }
     }
     return $number_of_visitors
+}
+
+ad_proc -public imsld::monitor::link_to_visitors_info {
+    -dom_doc:required
+    -title:required
+    -href:required
+    -run_id:required
+    -revision_id:required
+    -type:required
+    -item_id
+} {
+    @param dom_doc:required
+    @param href:required
+    @param run_id:required
+    @param revision_id:required
+    @param type:required
+    @param item_id
+
+    <p>
+    Adds to the given lo_node a link to the number of users visiting the
+    activity in activity_id/run_id
+    </p>
+} {
+    set result [$dom_doc createElement li]
+    $result setAttribute class "liOpen"
+
+    set a_node [$dom_doc createElement a]
+    $a_node setAttribute href $href
+    $a_node setAttribute target "content"
+    $result appendChild $a_node
+
+    set text [$dom_doc createTextNode "$title "]
+    $a_node appendChild $text
+
+    if { $type == "learning_object" } {
+	set visitors [imsld::monitor::number_of_visitors \
+			  -run_id $run_id \
+			  -revision_id $revision_id \
+			  -item_id $item_id \
+			  -type $type]
+    } else {
+	set visitors [imsld::monitor::number_of_visitors \
+			  -run_id $run_id \
+			  -revision_id $revision_id \
+			  -type $type]
+    }
+
+    if { $visitors > 1 } {
+	set text [$dom_doc createTextNode "($visitors  [_ imsld.users ])"]
+    } elseif { $visitors > 0 } {
+	set text [$dom_doc createTextNode "($visitors  [_ imsld.user ])"]
+    } else {
+	set text [$dom_doc createTextNode "([_ imsld.No_users ])"]
+    }
+
+    $result appendChild $text
+
+    return $result
 }

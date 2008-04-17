@@ -1,37 +1,25 @@
-<master>
+<master src="../../../lib/imsld-master">
   <property name="title">@page_title;noquote@</property>
   <property name="context">@context;noquote@</property>
+  <property name="imsld_content_frame">1</property>
 
-<span id="addc1" style="position:absolute;top:0px;left:0px;">
-<a href="#" onClick="return _tp(false)" title="Hide panel" class="show-hide-icon_link"><img src="/resources/acs-subsite/stock_left.png" alt="Hide" border="0" align="top" alt=" #imsld.Hide#"/></a>
-</span>
+  <div class="frame-header">
+    <if @item_select:rowcount@ not nil>
+      <include src="../../../lib/choice-select" &="item_select"
+        select_name=@select_name@
+        select_id=@select_id@
+        selected_item=@selected_item@
+        select_string=@select_string@
+        aux_pre_text=@frame_header@
+        aux_post_text=@post_text;noquote@
+        run_id=@run_id@>
+    </if><else>@frame_header;noquote@</else>
+  </div>
 
-#imsld.This#
+  <br />
 
-<br /><br />
-
-<listtemplate name="activities"></listtemplate>
-
-<script type="text/javascript">
-function _tp(a){
-   var ab=document.getElementById("addc");
-   var ac=document.getElementById("addc1");
-
-   if (a) {
-     ai=''; 
-     aj='none';
-     parent.document.getElementsByTagName("frameset")[1].cols='30%,*';
-   } else {
-     ai='none';
-     aj='';
-     parent.document.getElementsByTagName("frameset")[1].cols='0%,*';
-   }
-
-   ac.style.display=ai;
-   ab.style.display=aj;
-   
-   return false;
-}
-
-
-</script>
+  <if @member_id@ not nil>
+    <div class="centered-table">
+      <listtemplate name="activities"></listtemplate>
+    </div>
+  </if>

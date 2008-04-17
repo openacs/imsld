@@ -750,7 +750,7 @@
 		<querytext>
             select ias.structure_id,
             ias.item_id as structure_item_id,
-            ias.number_to_select
+            coalesce(ias.number_to_select, 0) as number_to_select
             from acs_rels ar, imsld_activity_structuresi ias, cr_items cri
             where ar.object_id_one = ias.item_id
             and ar.object_id_two = cri.item_id
@@ -898,7 +898,8 @@
 	<fullquery name="imsld::structure_next_activity.get_la_info">
 		<querytext>
     
-                    select la.activity_id as learning_activity_id
+                    select la.activity_id as learning_activity_id,
+		    complete_act_id
                     from imsld_learning_activitiesi la
                     where la.item_id = :object_id_two
                     and content_revision__is_live(la.activity_id) = 't'
@@ -1602,7 +1603,8 @@
         la.learning_objective_id as learning_objective_item_id,
         la.activity_id,
         la.title as activity_title
-        from imsld_learning_activitiesi la, imsld_attribute_instances attr
+        from imsld_attribute_instances attr,
+        imsld_learning_activitiesi la
         where la.item_id = :activity_item_id
         and content_revision__is_live(la.activity_id) = 't'
         and attr.owner_id = la.activity_id
@@ -1664,6 +1666,14 @@
         and related_id = :activity_id
         and run_id = :run_id
         and status = 'finished'
+
+   		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::process_learning_activity_as_ul.is_feedback">
+		<querytext>
+    
+	select count(*) from acs_rels where object_id_one = :on_completion_item_id and rel_type = 'imsld_feedback_rel'
 
    		</querytext>
 	</fullquery>
@@ -1896,13 +1906,25 @@
 		</querytext>
 	</fullquery>
 
-	<fullquery name="imsld::generate_structure_activities_list.as_completed_p">
+	<fullquery name="imsld::generate_structure_activities_list.as_started_p">
 		<querytext>
 
                     select 1 from imsld_status_user
                     where related_id = :structure_id 
                     and user_id = :user_id 
                     and status = 'started'
+                    and run_id = :run_id
+                
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_structure_activities_list.as_completed_p">
+		<querytext>
+
+                    select 1 from imsld_status_user
+                    where related_id = :structure_id 
+                    and user_id = :user_id 
+                    and status = 'finish'
                     and run_id = :run_id
                 
 		</querytext>
@@ -1938,6 +1960,7 @@
         content_item__get_live_revision(coalesce(rp.learning_activity_id,rp.support_activity_id,rp.activity_structure_id)) as activity_id,
         rp.role_part_id,
         ia.act_id,
+        ia.item_id as act_item_id,
         ip.play_id
         from imsld_role_partsi rp, imsld_actsi ia, imsld_playsi ip, imsld_imsldsi ii, imsld_attribute_instances attr,
         imsld_methodsi im,imsld_rolesi iri
@@ -2008,13 +2031,25 @@
 		</querytext>
 	</fullquery>
 
-	<fullquery name="imsld::generate_activities_tree.as_completed_p">
+	<fullquery name="imsld::generate_activities_tree.as_started_p">
 		<querytext>
 
                     select 1 from imsld_status_user
                     where related_id = :activity_id 
                     and user_id = :user_id 
                     and status = 'started'
+                    and run_id = :run_id
+                    
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::generate_activities_tree.as_completed_p">
+		<querytext>
+
+                    select 1 from imsld_status_user
+                    where related_id = :activity_id 
+                    and user_id = :user_id 
+                    and status = 'finished'
                     and run_id = :run_id
                     
 		</querytext>

@@ -7,14 +7,14 @@
     <initial-install-p>f</initial-install-p>
     <singleton-p>f</singleton-p>
     
-    <version name="1.1d" url="http://openacs.org/repository/download/apm/imsld-1.1d.apm">
+    <version name="1.2d" url="http://openacs.org/repository/download/apm/imsld-1.2d.apm">
         <owner url="mailto:jopez@galileo.edu">Jose Pablo Escobedo Del Cid</owner>
         <summary>IMS LD integration with dotLRN.</summary>
-        <release-date>2006-10-20</release-date>
+        <release-date>2007-06-25</release-date>
         <description format="text/html">This package is the implementation of IMS LD in dotLRN. The course admin can create a sequence of activities for the students, as well as decide who does what, when and using what resources.</description>
         <maturity>0</maturity>
 
-        <provides url="imsld" version="1.1d"/>
+        <provides url="imsld" version="1.2d"/>
         <requires url="acs-content-repository" version="5.2.2"/>
         <requires url="acs-kernel" version="5.2.2"/>
         <requires url="acs-templating" version="5.2.2"/>

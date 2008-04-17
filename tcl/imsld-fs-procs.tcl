@@ -26,9 +26,14 @@ ad_proc -public imsld::fs::file_new {
     -edit:boolean
     -complete_path
 } {
-    Creates a file (file or directory) in the fs. If the type is file, the file is created with its attributes, which are: href, file_name, path_to_file and parent_id.
+    Creates a file (file or directory) in the fs. If the type is file, the file
+    is created with its attributes, which are: href, file_name, path_to_file
+    and parent_id.
 
-    All the parent dirs (lindex 0) of the corresponding file (path_to_file) that are found in the files_struct_list are created too (if they haven't been created yet). The file structure is the one created with the imsld::parse::get_files_structure proc.
+    All the parent dirs (lindex 0) of the corresponding file (path_to_file)
+    that are found in the files_struct_list are created too (if they haven't
+    been created yet). The file structure is the one created with the
+    imsld::parse::get_files_structure proc.
 
     Returns the file_id of the created file.
 
@@ -186,15 +191,17 @@ ad_proc -public imsld::fs::empty_file {
     -revision_id
     {-string ""}
 } { 
-    Create an empty file and stores in the given revision id.
-    this is helpful for the property of type file (for instance), because when the properties are instantiated, there is no
-    file associated to them and the fs shows an error message.
+    Create an empty file and stores in the given revision id. This is helpful
+    for the property of type file (for instance), because when the properties
+    are instantiated, there is no file associated to them and the fs shows an
+    error message.
 
     @param revision_id
     @param string Optional string that will be written into the file
 
 } {  
-    set string [expr { [string eq "" $string] ? "[_ imsld.Empty_property_value]" : "$string" }]
+    set string [expr { [string eq "" $string] ? \
+			   "[_ imsld.Empty_property_value]" : "$string" }]
     set tmpfile [ns_mktemp "/tmp/imsld_emtpyXXXXXX"]
     set file [open $tmpfile a]
     puts $file "$string"
@@ -203,14 +210,21 @@ ad_proc -public imsld::fs::empty_file {
 
     set mime_type "text/plain"
     # database_p according to the file storage parameter
-    set fs_package_id [site_node_apm_integration::get_child_package_id \
-			   -package_id [dotlrn_community::get_package_id [dotlrn_community::get_community_id]] \
-			   -package_key "file-storage"]
-    set database_p [parameter::get -parameter "StoreFilesInDatabaseP" -package_id $fs_package_id]
+    set fs_package_id \
+	[site_node_apm_integration::get_child_package_id \
+	     -package_id [dotlrn_community::get_package_id \
+			      [dotlrn_community::get_community_id]] \
+	     -package_key "file-storage"]
+    set database_p [parameter::get \
+			-parameter "StoreFilesInDatabaseP" \
+			-package_id $fs_package_id]
     set content_length [file size $tmpfile]
     if { !$database_p } {
 	# create the new item
-	set filename [cr_create_content_file [content::revision::item_id -revision_id $revision_id] $revision_id $tmpfile]
+	set filename [cr_create_content_file \
+			  [content::revision::item_id \
+			       -revision_id $revision_id] \
+			  $revision_id $tmpfile]
 	db_dml set_file_content {
 	    update cr_revisions
 	    set content = :filename,
@@ -220,16 +234,84 @@ ad_proc -public imsld::fs::empty_file {
 	}
     } else {
 	# create the new item
-	db_dml lob_content "
-                            update cr_revisions  
-                            set lob = [set __lob_id [db_string get_lob_id "select empty_lob()"]] 
-                            where revision_id = :revision_id" -blob_files [list $tmpfile]
+	db_dml lob_content \
+	    "update cr_revisions  
+              set lob = [set __lob_id [db_string get_lob_id "select empty_lob()"]] 
+              where revision_id = :revision_id" -blob_files [list $tmpfile]
 	
-	# Unfortunately, we can only calculate the file size after the lob is uploaded 
+	# Unfortunately, we can only calculate the file size after the lob is
+	# uploaded
 	db_dml lob_size {
 	    update cr_revisions
 	    set content_length = :content_length
 	    where revision_id = :revision_id
 	}
     }
-} 
+}
+
+ad_proc -public imsld::fs::traverse_zip {
+    -dir:required
+    -pattern:required
+} {
+    Function to recursively traverse the files in a ZIP to then detect those
+    that are not reerenced in a resource, but still need to be in the file
+    storate.
+} {
+    upvar files_struct_list files_struct_list
+    # Iterate over all the files in the given directory
+    foreach fname [glob -nocomplain -tail -types f -directory $dir $pattern] {
+	# See if the file was already created
+	if { [imsld::fs::find_file_not_created \
+		  -file_name $fname \
+		  -file_list $files_struct_list \
+		  -path_prefix $dir] } {
+	    # Create the new file
+	    imsld::fs::file_new \
+		-path_to_file $fname \
+		-type file \
+		-complete_path "[ns_urldecode ${dir}/${fname}]"
+	}
+    }
+    
+    # Recur over the directories
+    foreach subd [glob -tail -nocomplain -types d -directory $dir $pattern] {
+	imsld::fs::traverse_zip -dir $dir -pattern "$subd/*"
+    }
+}
+
+ad_proc -public imsld::fs::find_file_not_created {
+    -file_name:required
+    -file_list:required
+    -path_prefix:required
+} {
+    Procedure to search for a given file name in the given file list. This list
+    is assumed to have the structure derived from the parsing. It returns a
+    boolean encoding if the given file_name is in the list with an object_id
+    equal to zero. The files are supposed to be in the list with the given
+    path_prefix.
+
+    @param file_name File to search for
+    @param file_list List of files contained in a UoL
+    @param path_prefix Prefix present in all the files
+} {
+    while { [llength $file_list] > 0 } {
+	set dirx [lindex $file_list 0]
+	foreach content [lindex $dirx 1] {
+	    if { [lsearch -exact [string tolower $content] \
+		      [string tolower "$path_prefix/$file_name"]] >=0 && \
+		     [lindex $content 1] eq "file" } {
+		# If the object_id is zero, the file was found
+		if { [lindex $content 2] == 0 } {
+		    return 1
+		} else {
+		    # In this case, the file is already in the fs
+		    return 0
+		}
+	    }
+	}
+	# Advance the processing
+	set file_list [lrange $file_list 1 [ expr [llength $file_list] -1]]
+    }
+    return 0
+}
+

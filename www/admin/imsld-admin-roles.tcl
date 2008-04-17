@@ -13,6 +13,9 @@ ad_page_contract {
     {finishable 0}
 } 
 
+set page_title "[_ imsld.Admin_roles]" 
+set context "" 
+
 #check if the run is waiting
 if { [db_0or1row get_run_status {
     select run_id

@@ -18,8 +18,7 @@ create table imsld_notifications (
                         not null,
     activity_id         integer
                         constraint imsld_notif_act_fk
-                        references cr_items     --imsld_learning_activities/imsld_support_activities
-                        not null,
+                        references cr_items,    --imsld_learning_activities/imsld_support_activities
     subject             text
 );
 

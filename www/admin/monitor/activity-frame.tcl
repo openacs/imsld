@@ -23,15 +23,42 @@ ad_page_contract {
 set page_title "[_ imsld.lt_Monitoring_One_Activi]"
 set context [list]
 
-set elements [list user_name \
+set elements [list portrait \
+                  [list label "" \
+                       display_template {<img style="height:75px;"
+                  src="/shared/portrait-bits.tcl?user_id=@related_users.user_id@"
+                  alt="No Portrait"/>}] \
+                  user_name \
                   [list label "[_ imsld.Name]" \
-                       display_template {<a href="individual-report-frame?run_id=${run_id}&member_id=@related_users.user_id@">@related_users.user_name@</a>}] \
+                       display_template {<a href="individual-report-frame?run_id=${run_id}&member_id=@related_users.user_id@" title="[_ imsld.lt_Users_individual_repo]">@related_users.user_name@</a>}] \
                   email \
                   [list label "[_ imsld.Email]"]]
 
 if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $type "structure"] } {
+    set frame_header "[_ imsld.lt_Users_who_have_starte] "
+
     # status directly recorded in the status table, get the info
-    set list_header "[_ imsld.lt_Users_who_have_starte]"
+    if { [string eq $type "structure"] } {
+	db_1row activity_info {
+	    select title as activity_title
+	    from imsld_activity_structuresi
+	    where structure_id = :activity_id
+	}
+    } elseif { [string eq $type "support"] } {
+	db_1row activity_info {
+	    select title as activity_title
+	    from imsld_support_activitiesi
+	    where activity_id = :activity_id
+	}
+    } else {
+	db_1row activity_info {
+	    select title as activity_title
+	    from imsld_learning_activitiesi
+	    where activity_id = :activity_id
+	}
+    }
+    append frame_header " \"$activity_title\""
+
     template::multirow create related_users user_id user_name email role start_date finish_date
     lappend elements start_date \
         [list label "[_ imsld.Start_Date]"]
@@ -104,18 +131,20 @@ if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $
     foreach user $users_list {
         template::multirow append related_users [lindex $user 0] [lindex $user 1] [lindex $user 2] [lindex $user 3] [lindex $user 4] [lindex $user 5]
     }
-    
 } elseif { [string eq $type "learning_object"] } {
-    # the environment has been viwed (finished) if the user have seen the referenced resources
-    set list_header "[_ imsld.lt_Users_who_have_bviewe]"
+    # the environment has been viwed (finished) if the user have seen the
+    # referenced resources
+    set frame_header "[_ imsld.lt_Users_who_have_bviewe]"
     template::multirow create related_users user_name email user_id
 
     db_1row lo_info {
         select item_id as learning_object_item_id,
-        environment_id as environment_item_id
+        environment_id as environment_item_id,
+	title as lo_title
         from imsld_learning_objectsi
         where learning_object_id = :learning_object_id
     }
+    append frame_header " \"$lo_title\""
 
     set item_list [db_list item_linear_list {
         select ii.imsld_item_id
@@ -154,10 +183,11 @@ if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $
     }
 
 } elseif { [string eq $type "service"] } {
-    # currently, we support there are three types of services: 1. conference, 2. monitory and 3. send-mail
-    # the first two types have resources associated whereas the last one doesn't and has to be treated as a separate case
-
-    set list_header "[_ imsld.lt_Users_who_have_bat_le]"
+    # currently, we support there are three types of services: 1. conference,
+    # 2. monitory and 3. send-mail the first two types have resources
+    # associated whereas the last one doesn't and has to be treated as a
+    # separate case
+    set frame_header "[_ imsld.lt_Users_who_have_bat_le]"
 
     template::multirow create related_users user_name email user_id
 
@@ -171,7 +201,7 @@ if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $
     
     switch $service_type {
         conference {
-            append list_header "[_ imsld.conference]"
+            append frame_header " [_ imsld.conference]"
             db_1row conference_info {
                 select conf.conference_id,
                 conf.conference_type,
@@ -183,6 +213,7 @@ if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $
                 and cr.item_id = conf.imsld_item_id
                 and content_revision__is_live(cr.live_revision) = 't'
             }
+            append frame_header " \"$conf_title\""
 
             set related_resources [db_list conf_resources_list {
                 select cpr.resource_id
@@ -208,7 +239,7 @@ if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $
                 template::multirow append related_users [person::name -person_id $user_id] [party::email -party_id $user_id] $user_id
             }            
         } monitor {
-            append list_header "[_ imsld.monitor]"
+            append frame_header "[_ imsld.monitor]"
             db_1row monitor_info {
                 select ims.title as monitor_service_title,
                 ims.monitor_id,
@@ -249,9 +280,9 @@ if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $
         } send-mail {
             # 1. get the users associated to the run
             # 2. get the users IN the run who have sent a bulk-mail message
-            append list_header "[_ imsld.sendmail]"
+            append frame_header "[_ imsld.sendmail]"
 
-            append list_header "<br />[_ imsld.lt_This_is_a_special_cas]"
+            append frame_header "<br />[_ imsld.lt_This_is_a_special_cas]"
             
             db_foreach user_in_run {
                 select gmm.member_id,

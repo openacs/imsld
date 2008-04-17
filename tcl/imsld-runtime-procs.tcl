@@ -40,21 +40,25 @@ ad_proc -public imsld::runtime::property::instance_value_set {
 	imsld_properties prop
 	where ins.instance_id = :instance_id
 	and ins.property_id = prop.property_id
+	and content_revision__is_live(ins.instance_id) = 't'
     }
 
     #	db_dml update_instance_value { *SQL* }
     
-    set instance_item_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
-								    [list value $value] \
-								    [list identifier $identifier] \
-								    [list party_id $party_id] \
-								    [list property_id $property_id]] \
-			      -content_type imsld_property_instance \
-			      -title $title \
-			      -item_id $item_id]
+    set instance_item_id \
+	[imsld::item_revision_new -attributes \
+	     [list [list run_id $run_id] \
+		  [list value $value] \
+		  [list identifier $identifier] \
+		  [list party_id $party_id] \
+		  [list property_id $property_id]] \
+	     -content_type imsld_property_instance \
+	     -title $title \
+	     -item_id $item_id]
         
     if { [string eq "file" $datatype] } {
-	set instance_id [content::item::get_live_revision -item_id $instance_item_id]
+	set instance_id \
+	    [content::item::get_live_revision -item_id $instance_item_id]
 	
 	# Get the filename part of the upload file
 	if { ![regexp {[^//\\]+$} $upload_file file_name] } {
@@ -64,10 +68,13 @@ ad_proc -public imsld::runtime::property::instance_value_set {
 
 	set mime_type [cr_filename_to_mime_type -create $file_name]
 	# database_p according to the file storage parameter
-	set fs_package_id [site_node_apm_integration::get_child_package_id \
-			       -package_id [dotlrn_community::get_package_id [dotlrn_community::get_community_id]] \
-			       -package_key "file-storage"]
-	set database_p [parameter::get -parameter "StoreFilesInDatabaseP" -package_id $fs_package_id]
+	set fs_package_id \
+	    [site_node_apm_integration::get_child_package_id \
+		 -package_id [dotlrn_community::get_package_id \
+				  [dotlrn_community::get_community_id]] \
+		 -package_key "file-storage"]
+	set database_p [parameter::get -parameter \
+			    "StoreFilesInDatabaseP" -package_id $fs_package_id]
 	set content_length [file size $tmpfile]
 	if { !$database_p } {
 	    # create the new item
@@ -86,7 +93,8 @@ ad_proc -public imsld::runtime::property::instance_value_set {
                             set lob = [set __lob_id [db_string get_lob_id "select empty_lob()"]] 
                             where revision_id = :instance_id" -blob_files [list $tmpfile]
 	    
-	    # Unfortunately, we can only calculate the file size after the lob is uploaded 
+	    # Unfortunately, we can only calculate the file size after the lob
+	    # is uploaded
 	    db_dml lob_size {
 		update cr_revisions
 		set content_length = :content_length
@@ -104,26 +112,25 @@ ad_proc -public imsld::runtime::property::property_value_set {
     {-property_id ""}
     {-upload_file ""}
     {-tmpfile ""}
+    {-role_instance_id ""}
 } {
-    Sets a property to the given value. If some restriction is violated returns 0 and an explanation.
+    Sets a property to the given value. If some restriction is violated returns
+    0 and an explanation.
 } {
     upvar recursivity_count recursivity_count
 
-    # context info
-    db_1row context_info {
-        select ic.item_id as component_item_id,
-        ii.imsld_id,
-        rug.group_id as run_group_id
-        from imsld_componentsi ic, imsld_imsldsi ii, imsld_runs ir, imsld_run_users_group_ext rug
-        where ic.imsld_id = ii.item_id
-        and content_revision__is_live(ii.imsld_id) = 't'
-        and ii.imsld_id = ir.imsld_id
-        and rug.run_id = ir.run_id
-        and ir.run_id = :run_id
-    }
-
     # property info
     if { [string eq $property_id ""] } {
+    # context info in case we need to obtain the property_id from the identifier 
+	db_1row context_info {
+	    select ic.item_id as component_item_id
+	    from imsld_componentsi ic, imsld_imsldsi ii, imsld_runs ir, imsld_run_users_group_ext rug
+	    where ic.imsld_id = ii.item_id
+	    and content_revision__is_live(ii.imsld_id) = 't'
+	    and ii.imsld_id = ir.imsld_id
+	    and rug.run_id = ir.run_id
+	    and ir.run_id = :run_id
+	}
         db_1row property_info_from_identifier {
             select type,
             property_id,
@@ -144,16 +151,19 @@ ad_proc -public imsld::runtime::property::property_value_set {
         }
     }
 
-    # instance info
-    set role_instance_id ""
-    if { ![string eq $role_id ""] } {
-        # find the role instance which the user belongs to
-        set role_instance_id [imsld::roles::get_user_role_instance -run_id $run_id -role_id $role_id -user_id $user_id]
-        if { !$role_instance_id } {
-            # runtime error... the user doesn't belong to any role instance
-            ns_log notice "User does not belong to any role instance"
-            continue
-        }
+    # instance info there are two places where this proc is called: from
+    # run-time procs or from the monitor interface if we are inside the monitor
+    # interface, we know the role_instance_id, otherwise we have to find it out
+    if { [string eq "" $role_instance_id] && [string eq $type "locrole"] } {
+	if { ![string eq $role_id ""] } {
+	    # find the role instance we are working on
+	    set role_instance_id [imsld::roles::get_user_role_instance -run_id $run_id -role_id $role_id -user_id $user_id]
+	    if { !$role_instance_id } {
+		# runtime error... the user doesn't belong to any role instance
+		util_user_message -message "[_ imsld.lt_User_does_not_belong_]"
+		ad_script_abort
+	    }
+	}
     }
 
     db_1row get_property_instance {
@@ -248,7 +258,8 @@ ad_proc -public imsld::runtime::property::property_value_set {
     # Recursive call only if the property value has changed
     if { $old_value != $value } {
 	
-	# There might be infinite recursive loops, so the counter recursivity_count is used to avoid crashing the server
+	# There might be infinite recursive loops, so the counter
+	# recursivity_count is used to avoid crashing the server
 	if { ![exists_and_not_null recursivity_count] } {
 	    # this is the first recursive call, initialize the variable
 	    set recursivity_count 1
@@ -266,14 +277,14 @@ ad_proc -public imsld::runtime::property::property_value_set {
 	}
 
         set conditions_list [db_list get_conditions_from_property {
-                                                           select ici.condition_id 
-                                                           from imsld_conditionsi ici, 
-                                                                acs_rels ar, 
-                                                                imsld_propertiesi ipi 
-                                                           where ipi.property_id = :property_id
-                                                                 and ipi.item_id = ar.object_id_one 
-                                                                 and ar.rel_type = 'imsld_prop_cond_rel' 
-                                                                 and ar.object_id_two = ici.item_id
+	    select ici.condition_id 
+	    from imsld_conditionsi ici, 
+	    acs_rels ar, 
+	    imsld_propertiesi ipi 
+	    where ipi.property_id = :property_id
+	    and ipi.item_id = ar.object_id_one 
+	    and ar.rel_type = 'imsld_prop_cond_rel' 
+	    and ar.object_id_two = ici.item_id
         }]
         #property conditions
         foreach member_id [db_list user_in_run { 
@@ -300,11 +311,11 @@ ad_proc -public imsld::runtime::property::property_value_set {
         }
 
         # when-condition-true:
-        # foreach when-condition-true related with the property, evaluate the whole expression
-        # referenced from the table when-condition-true to all the members of the referenced role (in the same table),
-        # and if it's true, set the act (in the table complete-acts) completed
-	# n.b. this won't generate endless loops
-	
+        # foreach when-condition-true related with the property, evaluate the
+        # whole expression referenced from the table when-condition-true to all
+        # the members of the referenced role (in the same table), and if it's
+        # true, set the act (in the table complete-acts) completed # n.b. this
+        # won't generate endless loops
         foreach when_cond_true_item_id [db_list when_condition_true {
             select ar.object_id_two as when_cond_true_item_id
             from acs_rels ar,
@@ -317,10 +328,10 @@ ad_proc -public imsld::runtime::property::property_value_set {
         }
 
         # when-property-vale-is-set:
-        # foreach when-property-value-is-set related with the property, evaluete the expression
-        # and compare it with the referenced property, and if they have the same value, mark the referencer
-        # activity as completed
-	# n.b. this won't generate endless loops
+        # foreach when-property-value-is-set related with the property,
+        # evaluete the expression and compare it with the referenced property,
+        # and if they have the same value, mark the referencer activity as
+        # completed # n.b. this won't generate endless loops
 
         foreach complete_act_item_id [db_list when_prop_value_is_set {
             select ar.object_id_two as complete_act_item_id
@@ -330,10 +341,12 @@ ad_proc -public imsld::runtime::property::property_value_set {
             and ipi.item_id = ar.object_id_one
             and ar.rel_type = 'imsld_prop_wpv_is_rel'
         }] {
-            imsld::condition::eval_when_prop_value_is_set -complete_act_item_id $complete_act_item_id -run_id $run_id
+            imsld::condition::eval_when_prop_value_is_set \
+		-complete_act_item_id $complete_act_item_id -run_id $run_id
         }
 
-        # role conditions, time conditions... the rest of conditions must be evaluated every time a property value changes
+        # role conditions, time conditions... the rest of conditions must be
+        # evaluated every time a property value changes
         imsld::condition::execute_time_role_conditions -run_id $run_id
     }
 }
@@ -399,8 +412,8 @@ ad_proc -public imsld::runtime::property::property_value_get {
         set role_instance_id [imsld::roles::get_user_role_instance -run_id $run_id -role_id $role_id -user_id $user_id]
         if { !$role_instance_id } {
             # runtime error... the user doesn't belong to any role instance
-            ns_log notice "User does not belong to any role instance"
-            continue
+	    util_user_message -message "[_ imsld.lt_User_does_not_belong_]" 
+	    ad_script_abort 
         }
     }
 
@@ -602,7 +615,7 @@ ad_proc -public imsld::runtime::users_in_run {
 	select gmm.member_id 
 	from group_member_map gmm,
 	imsld_run_users_group_ext iruge, 
-	acs_rels ar1 
+	acs_rels ar1
 	where iruge.run_id=:run_id
 	and ar1.object_id_two=iruge.group_id 
 	and ar1.object_id_one=gmm.group_id 

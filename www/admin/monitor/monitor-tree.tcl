@@ -12,7 +12,8 @@ set community_id [dotlrn_community::get_community_id]
 set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
 set user_id [ad_conn user_id]
 set imsld_package_id [site_node_apm_integration::get_child_package_id \
-                          -package_id [dotlrn_community::get_package_id $community_id] \
+                          -package_id [dotlrn_community::get_package_id \
+					   $community_id] \
                           -package_key "[imsld::package_key]"]
 
 set imsld_admin_url [export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]admin/"]
@@ -31,12 +32,12 @@ if { [db_string count_properties {
     from imsld_property_instances
     where run_id = :run_id
     or run_id is null
+    and content_revision__is_live(instance_id) = 't'
 }] } {
     # there is at least one property
     dom createDocument ul props_doc
     set props_dom_root [$props_doc documentElement]
     $props_dom_root setAttribute class "mktree"
-    $props_dom_root setAttribute style "white-space: nowrap;"
     set props_title_node [$props_doc createElement li]
     $props_title_node setAttribute class "liOpen"
     set text [$props_doc createTextNode "[_ imsld.Monitor_properties]"] 
@@ -55,10 +56,28 @@ if { [db_string count_properties {
     set properties_tree ""
 }
 
+# Create the link to the page to monitor user activity
 dom createDocument ul doc
 set dom_root [$doc documentElement]
 $dom_root setAttribute class "mktree"
-$dom_root setAttribute style "white-space: nowrap;"
+
+set li_node [$doc createElement li]
+$dom_root appendChild $li_node
+$li_node setAttribute class "liBullet"
+
+set a_node [$doc createElement a]
+$a_node setAttribute href \
+    "[export_vars -base "individual-report-frame" -url {run_id}]"
+$a_node setAttribute target "content"
+$a_node appendChild [$doc createTextNode "[_ imsld.User_activity_reports]"]
+$li_node appendChild $a_node
+
+set user_activity [$dom_root asXML]
+
+# Create the activity tree
+dom createDocument ul doc
+set dom_root [$doc documentElement]
+$dom_root setAttribute class "mktree"
 set imsld_title_node [$doc createElement li]
 $imsld_title_node setAttribute class "liOpen"
 set text [$doc createTextNode "$imsld_title"] 
@@ -84,7 +103,6 @@ if { [db_string generated_acitivties_p {
     dom createDocument ul aux_doc
     set aux_dom_root [$aux_doc documentElement]
     $aux_dom_root setAttribute class "mktree"
-    $aux_dom_root setAttribute style "white-space: nowrap;"
     set aux_title_node [$aux_doc createElement li]
     $aux_title_node setAttribute class "liOpen"
     set text [$doc createTextNode "[_ imsld.Extra_Activities]"] 
