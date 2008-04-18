@@ -1693,13 +1693,19 @@ ad_proc -public imsld::user_participate_p {
     @return 0 if the user does not participate in the act. 1 otherwise
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
-    set involved_roles [db_list get_roles_in_act {select irolei.role_id 
-                                                  from imsld_role_parts ir, 
-                                                       imsld_actsi iai, 
-                                                       imsld_rolesi irolei
-                                                  where iai.act_id=:act_id 
-                                                        and iai.item_id=ir.act_id
-                                                        and ir.role_id=irolei.item_id}]
+    set involved_roles [db_list get_roles_in_act {
+	select ir.role_id 
+	from   imsld_role_parts irp, 
+	       imsld_acts ia,
+	       cr_items ca,
+	       imsld_roles ir,
+	       cr_items cr
+	where ia.act_id = :act_id
+	and   ia.act_id = ca.live_revision
+	and   ca.item_id = irp.act_id
+	and   irp.role_id = cr.item_id
+	and   cr.live_revision = ir.role_id
+    }]
     set involved_users [list]
     foreach role $involved_roles {
         set involved_users [concat $involved_users [imsld::roles::get_users_in_role -role_id $role -run_id $run_id ]]
@@ -2900,14 +2906,6 @@ ad_proc -public imsld::generate_structure_activities_list {
 			    $img_node setAttribute alt "[_ imsld.finished]"
 			    $img_node setAttribute title "[_ imsld.finished]"
 			    $activity_node appendChild $img_node
-			} else {
-			    # the activity has been viewed
-			    set img_node [$dom_doc createElement img]
-			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
-			    $img_node setAttribute border "0"
-			    $img_node setAttribute alt "[_ imsld.Viewed]"
-			    $img_node setAttribute title "[_ imsld.Viewed]"
-			    $activity_node appendChild $img_node
 			}
 		    } else {
 
@@ -2921,14 +2919,6 @@ ad_proc -public imsld::generate_structure_activities_list {
 			    set text [$dom_doc createTextNode "[_ imsld.finish]"]
 			    $input_node appendChild $text
 			    $activity_node appendChild $input_node
-			} elseif { $started_activity_p } {
-			    # the activity has been viewed
-			    set img_node [$dom_doc createElement img]
-			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
-			    $img_node setAttribute border "0"
-			    $img_node setAttribute alt "[_ imsld.Viewed]"
-			    $img_node setAttribute title "[_ imsld.Viewed]"
-			    $activity_node appendChild $img_node
 			}
 		    }
                     set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
@@ -2997,14 +2987,6 @@ ad_proc -public imsld::generate_structure_activities_list {
 			    $img_node setAttribute alt "[_ imsld.finished]"
 			    $img_node setAttribute title "[_ imsld.finished]"
 			    $activity_node appendChild $img_node
-			} else {
-			    # the activity has been viewed
-			    set img_node [$dom_doc createElement img]
-			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
-			    $img_node setAttribute border "0"
-			    $img_node setAttribute alt "[_ imsld.Viewed]"
-			    $img_node setAttribute title "[_ imsld.Viewed]"
-			    $activity_node appendChild $img_node
 			}
 		    } else {
 			if { [string eq $user_choice_p "t"] } {
@@ -3017,14 +2999,6 @@ ad_proc -public imsld::generate_structure_activities_list {
 			    set text [$dom_doc createTextNode "[_ imsld.finish]"]
 			    $input_node appendChild $text
 			    $activity_node appendChild $input_node
-			} elseif { $started_activity_p } {
-			    # the activity has been viewed
-			    set img_node [$dom_doc createElement img]
-			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
-			    $img_node setAttribute border "0"
-			    $img_node setAttribute alt "[_ imsld.Viewed]"
-			    $img_node setAttribute title "[_ imsld.Viewed]"
-			    $activity_node appendChild $img_node
 			}
 		    }
                     set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
@@ -3193,14 +3167,6 @@ ad_proc -public imsld::generate_activities_tree {
 			    $img_node setAttribute alt "[_ imsld.finished]"
 			    $img_node setAttribute title "[_ imsld.finished]"
 			    $activity_node appendChild $img_node
-			} else {
-			    # the activity has been viewed
-			    set img_node [$dom_doc createElement img]
-			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
-			    $img_node setAttribute border "0"
-			    $img_node setAttribute alt "[_ imsld.Viewed]"
-			    $img_node setAttribute title "[_ imsld.Viewed]"
-			    $activity_node appendChild $img_node
 			}
 		    } elseif { [string eq $is_visible_p "t"] } {
 
@@ -3214,14 +3180,6 @@ ad_proc -public imsld::generate_activities_tree {
 			    set text [$dom_doc createTextNode "[_ imsld.finish]"]
 			    $input_node appendChild $text
 			    $activity_node appendChild $input_node
-			} elseif { $started_activity_p } {
-			    # the activity has been viewed
-			    set img_node [$dom_doc createElement img]
-			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
-			    $img_node setAttribute border "0"
-			    $img_node setAttribute alt "[_ imsld.Viewed]"
-			    $img_node setAttribute title "[_ imsld.Viewed]"
-			    $activity_node appendChild $img_node
 			}
 		    }
 
@@ -3286,14 +3244,6 @@ ad_proc -public imsld::generate_activities_tree {
 			    $img_node setAttribute alt "[_ imsld.finished]"
 			    $img_node setAttribute title "[_ imsld.finished]"
 			    $activity_node appendChild $img_node
-			} else {
-			    # the activity has been viewed
-			    set img_node [$dom_doc createElement img]
-			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
-			    $img_node setAttribute border "0"
-			    $img_node setAttribute alt "[_ imsld.Viewed]"
-			    $img_node setAttribute title "[_ imsld.Viewed]"
-			    $activity_node appendChild $img_node
 			}
 		    } else {
 			if { [string eq $user_choice_p "t"] } {
@@ -3305,14 +3255,6 @@ ad_proc -public imsld::generate_activities_tree {
 			    set text [$dom_doc createTextNode "[_ imsld.finish]"]
 			    $input_node appendChild $text
 			    $activity_node appendChild $input_node
-			} elseif { $started_activity_p } {
-			    # the activity has been viewed
-			    set img_node [$dom_doc createElement img]
-			    $img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
-			    $img_node setAttribute border "0"
-			    $img_node setAttribute alt "[_ imsld.Viewed]"
-			    $img_node setAttribute title "[_ imsld.Viewed]"
-			    $activity_node appendChild $img_node
 			}
 		    }
                     $dom_node appendChild $activity_node
@@ -3466,14 +3408,6 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
 			$img_node setAttribute title "[_ imsld.finished]"
 			$activity_node appendChild $img_node
 		  
-		    } else {
-			# the activity has been viewed
-			set img_node [$dom_doc createElement img]
-			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
-			$img_node setAttribute border "0"
-			$img_node setAttribute alt "[_ imsld.Viewed]"
-			$img_node setAttribute title "[_ imsld.Viewed]"
-			$activity_node appendChild $img_node
 		    }
 		} else {
 
@@ -3488,15 +3422,6 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
 			$input_node appendChild $text
 			$b_node appendChild $input_node 
 		    
-		    } elseif { $started_activity_p } {
-			
-			# the activity has been viewed
-			set img_node [$dom_doc createElement img]
-			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
-			$img_node setAttribute border "0"
-			$img_node setAttribute alt "[_ imsld.Viewed]"
-			$img_node setAttribute title "[_ imsld.Viewed]"
-			$activity_node appendChild $img_node
 		    }
                 }
                 $dom_node appendChild $activity_node
@@ -3553,14 +3478,6 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
 			$img_node setAttribute title "[_ imsld.finished]"
 			$activity_node appendChild $img_node
 		  
-		    } else {
-			# the activity has been viewed
-			set img_node [$dom_doc createElement img]
-			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
-			$img_node setAttribute border "0"
-			$img_node setAttribute alt "[_ imsld.Viewed]"
-			$img_node setAttribute title "[_ imsld.Viewed]"
-			$activity_node appendChild $img_node
 		    }
 		} else {
 		    if { [string eq $user_choice_p "t"] } {
@@ -3576,15 +3493,6 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
 			$b_node appendChild $input_node 
 			$activity_node appendChild $b_node
 		    
-		    } elseif { $started_activity_p } {
-			
-			# the activity has been viewed
-			set img_node [$dom_doc createElement img]
-			$img_node setAttribute src "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/viewed.ico"
-			$img_node setAttribute border "0"
-			$img_node setAttribute alt "[_ imsld.Viewed]"
-			$img_node setAttribute title "[_ imsld.Viewed]"
-			$activity_node appendChild $img_node
 		    }
                 }
                 $dom_node appendChild $activity_node
@@ -3662,18 +3570,24 @@ ad_proc -public imsld::active_acts {
     set active_acts_list [list]
 
     set all_acts_list [db_list get_acts_in_run {
-	select iai.act_id
+	select ia.act_id
 	from imsld_runs ir, 
-	imsld_imsldsi iii,
-	imsld_methodsi imi,
-	imsld_playsi ipi,
-	imsld_actsi iai 
-	where ir.run_id=:run_id
-	and iii.imsld_id=ir.imsld_id 
-	and imi.imsld_id=iii.item_id 
-	and imi.item_id=ipi.method_id 
-	and iai.play_id=ipi.item_id
-	order by ipi.sort_order, iai.sort_order
+	imsld_imslds ii,
+	cr_items ci,
+	imsld_methods im,
+	cr_items cm,
+	imsld_plays ip,
+	cr_items cp,
+	imsld_acts ia 
+	where ir.run_id = :run_id
+	and ii.imsld_id = ir.imsld_id 
+	and ii.imsld_id = ci.live_revision
+	and ci.item_id = im.imsld_id 
+	and im.method_id = cm.live_revision
+	and cm.item_id = ip.method_id 
+	and ip.play_id = cp.live_revision
+	and cp.item_id = ia.play_id
+	order by ip.sort_order, ia.sort_order
     }]
     set i 0
     set continue 1

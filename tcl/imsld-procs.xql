@@ -1166,14 +1166,16 @@
 	<fullquery name="imsld::process_service_as_ul.monitor_associated_items">
 		<querytext>
 
-                select cpr.resource_id,
-                cpr.item_id as resource_item_id,
-                cpr.type as resource_type
-                from imsld_cp_resourcesi cpr, imsld_itemsi ii,
+                select icr.resource_id,
+                cr.item_id as resource_item_id,
+                icr.type as resource_type
+                from imsld_cp_resources icr, imsld_items ii, cr_items ci, cr_items cr,
                 acs_rels ar
-                where ar.object_id_one = ii.item_id
-                and ar.object_id_two = cpr.item_id
-                and content_revision__is_live(cpr.resource_id) = 't'
+                where ar.object_id_one = ci.item_id
+		and ci.live_revision = ii.imsld_item_id
+                and ar.object_id_two = cr.item_id
+		and cr.live_revision = icr.resource_id
+                and content_revision__is_live(icr.resource_id) = 't'
                 and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
                      or ii.imsld_item_id = :imsld_item_id)
@@ -1598,20 +1600,24 @@
 	<fullquery name="imsld::process_learning_activity_as_ul.activity_info">
 		<querytext>
 
-        select la.on_completion_id as on_completion_item_id,
-        la.prerequisite_id as prerequisite_item_id,
-        la.learning_objective_id as learning_objective_item_id,
-        la.activity_id,
-        la.title as activity_title
-        from imsld_attribute_instances attr,
-        imsld_learning_activitiesi la
-        where la.item_id = :activity_item_id
-        and content_revision__is_live(la.activity_id) = 't'
-        and attr.owner_id = la.activity_id
-        and attr.run_id = :run_id
-        and attr.user_id = :user_id
-        and attr.type = 'isvisible'
-        and attr.is_visible_p = 't'
+		  select la.on_completion_id as on_completion_item_id,
+		  la.prerequisite_id as prerequisite_item_id,
+		  la.learning_objective_id as learning_objective_item_id,
+		  la.activity_id,
+		  rla.title as activity_title
+		  from imsld_attribute_instances attr,
+		  imsld_learning_activities la,
+		  cr_items cla,
+		  cr_revisions rla
+		  where cla.item_id = :activity_item_id
+		  and cla.live_revision = la.activity_id
+		  and cla.live_revision = rla.revision_id
+		  and content_revision__is_live(la.activity_id) = 't'
+		  and attr.owner_id = la.activity_id
+		  and attr.run_id = :run_id
+		  and attr.user_id = :user_id
+		  and attr.type = 'isvisible'
+		  and attr.is_visible_p = 't'
         
 		</querytext>
 	</fullquery>
@@ -1637,22 +1643,24 @@
 	<fullquery name="imsld::process_learning_activity_as_ul.la_nested_associated_items">
 		<querytext>
 
-            select cpr.resource_id,
-            cpr.item_id as resource_item_id,
-            cpr.type as resource_type
-            from imsld_cp_resourcesi cpr, imsld_itemsi ii, imsld_attribute_instances attr,
-            acs_rels ar
-            where ar.object_id_one = ii.item_id
-            and ar.object_id_two = cpr.item_id
-            and content_revision__is_live(cpr.resource_id) = 't'
-            and (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
-                 and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
-                 or ii.imsld_item_id = :imsld_item_id)
-            and attr.owner_id = ii.imsld_item_id
-            and attr.run_id = :run_id
-            and attr.user_id = :user_id
-            and attr.type = 'isvisible'
-            and attr.is_visible_p = 't'
+		  select icr.resource_id,
+		         cp.item_id as resource_item_id,
+		         icr.type as resource_type
+		  from imsld_cp_resources icr, imsld_items ii, imsld_attribute_instances iai, cr_items ci, cr_items cp,
+		       acs_rels ar
+		  where ii.imsld_item_id = ci.live_revision
+		  and   ar.object_id_one = ci.item_id
+		  and   icr.resource_id = cp.live_revision
+		  and   ar.object_id_two = cp.item_id
+		  and   content_revision__is_live(icr.resource_id) = 't'
+		  and   (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+		  and   tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
+		  or    ii.imsld_item_id = :imsld_item_id)
+		  and   iai.owner_id = ii.imsld_item_id
+		  and   iai.run_id = :run_id
+		  and   iai.user_id = :user_id
+		  and   iai.type = 'isvisible'
+		  and   iai.is_visible_p = 't'
 
 		</querytext>
 	</fullquery>
@@ -1844,19 +1852,20 @@
 	<fullquery name="imsld::generate_structure_activities_list.get_learning_activity_info">
 		<querytext>
 
-                    select la.title as activity_title,
-                    la.item_id as activity_item_id,
-                    la.activity_id,
-                    la.complete_act_id,
-                    attr.is_visible_p
-                    from imsld_learning_activitiesi la, imsld_attribute_instances attr
-                    where la.item_id = :object_id_two
-                    and content_revision__is_live(la.activity_id) = 't'
-                    and attr.owner_id = la.activity_id
-                    and attr.run_id = :run_id
-                    and attr.user_id = :user_id
-                    and attr.type = 'isvisible'
-
+		  select cr.title as activity_title,
+		  ci.item_id as activity_item_id,
+		  la.activity_id,
+		  la.complete_act_id,
+		  attr.is_visible_p
+		  from imsld_learning_activities la, imsld_attribute_instances attr, cr_items ci, cr_revisions cr
+		  where ci.item_id = :object_id_two
+		  and ci.live_revision = cr.revision_id
+		  and ci.live_revision = la.activity_id
+		  and content_revision__is_live(la.activity_id) = 't'
+		  and attr.owner_id = la.activity_id
+		  and attr.run_id = :run_id
+		  and attr.user_id = :user_id
+		  and attr.type = 'isvisible'
 
 		</querytext>
 	</fullquery>
@@ -1948,36 +1957,41 @@
 	<fullquery name="imsld::generate_activities_tree.referenced_role_parts">
 		<querytext>
 
-        select case
-        when rp.learning_activity_id is not null
-        then 'learning'
-        when rp.support_activity_id is not null
-        then 'support'
-        when rp.activity_structure_id is not null
-        then 'structure'
-        else 'none'
-        end as type,
-        content_item__get_live_revision(coalesce(rp.learning_activity_id,rp.support_activity_id,rp.activity_structure_id)) as activity_id,
-        rp.role_part_id,
-        ia.act_id,
-        ia.item_id as act_item_id,
-        ip.play_id
-        from imsld_role_partsi rp, imsld_actsi ia, imsld_playsi ip, imsld_imsldsi ii, imsld_attribute_instances attr,
-        imsld_methodsi im,imsld_rolesi iri
-        where  rp.act_id = ia.item_id
-        and ia.play_id = ip.item_id
-        and ip.method_id = im.item_id
-        and im.imsld_id = ii.item_id
-        and ii.imsld_id = :imsld_id
-        and rp.role_id = iri.item_id
-        and iri.role_id = :user_role_id
-        and content_revision__is_live(rp.role_part_id) = 't'
-        and attr.owner_id = ip.play_id
-        and attr.run_id = :run_id
-        and attr.user_id = :user_id
-        and attr.type = 'isvisible'
-        and attr.is_visible_p = 't'
-        order by ip.sort_order, ia.sort_order, rp.sort_order
+		  select case
+		  when irp.learning_activity_id is not null
+		  then 'learning'
+		  when irp.support_activity_id is not null
+		  then 'support'
+		  when irp.activity_structure_id is not null
+		  then 'structure'
+		  else 'none'
+		  end as type,
+		  content_item__get_live_revision(coalesce(irp.learning_activity_id, irp.support_activity_id, irp.activity_structure_id)) as activity_id,
+		  irp.role_part_id,
+		  ia.act_id,
+		  ca.item_id as act_item_id,
+		  ip.play_id
+		  from imsld_role_parts irp, imsld_acts ia, imsld_plays ip, imsld_imslds ii, imsld_attribute_instances iai,
+		  imsld_methods im, imsld_roles ir, cr_items ca, cr_items cp, cr_items cm, cr_items ci, cr_items cr
+		  where irp.act_id = ca.item_id
+		  and ca.live_revision = ia.act_id
+		  and ia.play_id = cp.item_id
+		  and cp.live_revision = ip.play_id
+		  and ip.method_id = cm.item_id
+		  and cm.live_revision = im.method_id
+		  and im.imsld_id = ci.item_id
+		  and ci.live_revision = ii.imsld_id
+		  and ii.imsld_id = :imsld_id
+		  and irp.role_id = cr.item_id
+		  and cr.live_revision = ir.role_id
+		  and ir.role_id = :user_role_id
+		  and content_revision__is_live(irp.role_part_id) = 't'
+		  and iai.owner_id = ip.play_id
+		  and iai.run_id = :run_id
+		  and iai.user_id = :user_id
+		  and iai.type = 'isvisible'
+		  and iai.is_visible_p = 't'
+		  order by ip.sort_order, ia.sort_order, irp.sort_order
         
 		</querytext>
 	</fullquery>
