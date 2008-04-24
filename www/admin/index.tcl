@@ -23,7 +23,12 @@ if { ![string eq "" $set_imsld_id_live] } {
     content::item::set_live_revision -revision_id [content::item::get_best_revision -item_id $set_imsld_id_live]
 }
 if { ![string eq "" $set_run_id_live] } {
-    db_dml make_run_live { *SQL* }
+    # if there are no users assigned to the run, we mark it as waiting, otherwise mark it active
+    if { ![llength [imsld::runtime::users_in_run -run_id $set_run_id_live]] } {
+	db_dml make_run_waiting { *SQL* }
+    } else {
+	db_dml make_run_live { *SQL* }
+    }
 }
 
 set package_id [ad_conn package_id]
@@ -47,6 +52,7 @@ template::list::create \
     -name imslds \
     -multirow imslds \
     -key imsld_id \
+    -pass_properties { return_url } \
     -orderby_name imsld_orderby \
     -orderby { default_value imsld_title } \
     -elements {
@@ -62,12 +68,19 @@ template::list::create \
         }
         create_run {
             label {}
-            display_template {@imslds.create_run;noquote@} 
+            display_template {<if @imslds.live_revision@ not nil>
+		<a href="run-new?run_imsld_id=@imslds.imsld_id@&return_url=@return_url@" title="[_ imsld.lt___imsldcreate_new_run]"> [_ imsld.create_new_run] </a>
+		</if>} 
         }
         delete {
             label {}
             sub_class narrow
-            display_template {@imslds.delete_template;noquote@} 
+            display_template {<if @imslds.live_revision@ nil>
+		<span class="alert">[_ imsld.Deleted]</span> <a href="index?set_imsld_id_live=@imslds.item_id@" title="[_ imsld.Make_it_live]">[_ imsld.Make_it_live]</a>
+		</if>
+		<else>
+		<a href="imsld-delete?imsld_id=@imslds.imsld_id@&return_url=@return_url@" title="[_ imsld.Delete]"><img src="/resources/acs-subsite/Delete16.gif" width="16" height="16" border="0" alt="[_ imsld.Delete]" title="[_ imsld.Delete]"></a>
+		</else>} 
             link_html { title "[_ imsld.Delete_IMS_LD]" }
         }
     }
@@ -76,16 +89,7 @@ set imsld_orderby [template::list::orderby_clause -orderby -name imslds]
 
 set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
 
-db_multirow -extend { delete_template create_run } imslds  get_imslds { *SQL* } {
-
-    if { [empty_string_p $live_revision] } {
-        set delete_template "<span style=\"font-style: italic; color: red; font-size: 9pt;\">[_ imsld.Deleted]</span> <a href=[export_vars -base "index" { {set_imsld_id_live $item_id} }]>[_ imsld.Make_it_live]</a>"
-        set create_run ""
-    } else {
-        set delete_template "<a href=\"[export_vars -base "imsld-delete" { imsld_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"<\#_ Delete  #>\"></a>"
-        set create_run "<a href=\"[export_vars -base "run-new" { {run_imsld_id $imsld_id} return_url }]\"> [_ imsld.create_new_run] </a>"
-    }
-}
+db_multirow -extend { delete_template create_run } imslds  get_imslds { *SQL* } {}
 
 set imsld_package_id [site_node_apm_integration::get_child_package_id \
                           -package_id [dotlrn_community::get_package_id $community_id] \
@@ -95,6 +99,7 @@ set imsld_url "[lindex [site_node::get_url_from_object_id -object_id $imsld_pack
 template::list::create \
     -name imsld_runs \
     -multirow imsld_runs \
+    -pass_properties { return_url } \
     -key run_id \
     -elements {
         imsld_title {
@@ -115,13 +120,25 @@ template::list::create \
             orderby_desc {creation_date desc}
         }
         manage {
-            label ""
-            display_template {@imsld_runs.manage;noquote@}
+            label {}
+            display_template {<if @imsld_runs.status@ eq "active" or @imsld_runs.status@ eq "stopped">
+		<a href="imsld-view-roles?run_id=@imsld_runs.run_id@" title="[_ imsld.View_members]">[_ imsld.View_members]</a> | <a href="monitor?run_id=@imsld_runs.run_id@" title="[_ imsld.Monitor]">[_ imsld.Monitor]</a>
+		</if>
+		<else>
+		 <if @imsld_runs.status@ eq "waiting">
+		  <a href="imsld-admin-roles?run_id=@imsld_runs.run_id@" title="[_ imsld.Manage_Members]">[_ imsld.Manage_Members]</a>
+ 		 </if>
+		</else>}
         }
         delete {
             label {}
             sub_class narrow
-            display_template {@imsld_runs.delete_template;noquote@} 
+            display_template {<if @imsld_runs.status@ eq "deleted">
+		<span class="alert">[_ imsld.Deleted]</span> <a href="index?set_run_id_live=@imsld_runs.run_id@" title="[_ imsld.Make_it_live]">[_ imsld.Make_it_live]</a>
+		</if>
+		<else>
+		<a href="run-delete?run_id=@imsld_runs.run_id@&return_url=@return_url@" title="[_ imsld.Delte]"><img src="/resources/acs-subsite/Delete16.gif" width="16" height="16" border="0" alt="[_ imsld.Delte]" title="[_ imsld.Delte]"></a>
+		</else>}
             link_html { title "[_ imsld.Delete_Run]" }
         }
     } \
@@ -134,32 +151,22 @@ set run_orderby [template::list::orderby_clause -orderby -name imsld_runs]
 set cr_root_folder_id [imsld::cr::get_root_folder -community_id $community_id]
 
 db_multirow -extend { manage delete_template image_path image_alt image_title } imsld_runs get_runs { *SQL* } {
-
-    set delete_template "<a href=\"[export_vars -base "run-delete" { run_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"[_ imsld.Delte]\"></a>"
-    
     switch $status {
-        deleted {
-            set delete_template "<span style=\"font-style: italic; color: red; font-size: 9pt;\">[_ imsld.Deleted]</span> <a href=[export_vars -base "index" { {set_run_id_live $run_id} }]>[_ imsld.Make_it_live]</a>"
-        }
         active {
-            set delete_template "<a href=\"[export_vars -base "run-delete" { run_id return_url }]\"><img src=\"/resources/acs-subsite/Delete16.gif\" width=\"16\" height=\"16\" border=\"0\" alt=\"[_ imsld.Delete]\"></a>"
             set image_alt "[_ imsld.active]"
             set image_title "[_ imsld.active]"
             set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/active.png"
-            set manage "<a href=\"[export_vars -base "imsld-view-roles" { run_id }]\">[_ imsld.View_members]</a> | <a href=\"[export_vars -base "monitor/" { run_id }]\">[_ imsld.Monitor]</a>" 
         }
         waiting {
             set image_alt "[_ imsld.waiting]"
             set image_title "[_ imsld.waiting]"
             set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/waiting.png"
-            set create_run "<a href=\"[export_vars -base "index" { {run_imsld_id $imsld_id} return_url }]\"> [_ imsld.create_new_run] </a>"
-            set manage "<a href=\"[export_vars -base "imsld-admin-roles" { run_id }]\">[_ imsld.Manage_Members]</a>" 
         }
         stopped {
             set image_alt "[_ imsld.stopped]"
             set image_title "[_ imsld.stopped]"
             set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/completed.png"
-            set manage "<a href=\"[export_vars -base "imsld-view-roles" { run_id }]\">[_ imsld.View_members]</a> | <a href=\"[export_vars -base "monitor/" { run_id }]\">[_ imsld.Monitor]</a>" 
         }
     }    
 }
+

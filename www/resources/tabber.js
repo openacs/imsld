@@ -471,7 +471,6 @@ function tabberAutomaticOnLoad(tabberArgs)
 
 
 /* Run tabberAutomaticOnload() unless the "manualStartup" option was specified */
-
 if (typeof tabberOptions == 'undefined') {
 
     tabberAutomaticOnLoad();
@@ -482,4 +481,4 @@ if (typeof tabberOptions == 'undefined') {
     tabberAutomaticOnLoad(tabberOptions);
   }
 
-}
+} 

@@ -25,8 +25,10 @@ db_1row imslds_in_class {
 
 # current role information.
 # the user must have an active role in the run
-set possible_user_roles [imsld::roles::get_user_roles -user_id $user_id -run_id $run_id]
-set possible_user_role_names [imsld::roles::get_roles_names -roles_list $possible_user_roles]
+set possible_user_roles [imsld::roles::get_user_roles -user_id $user_id \
+			     -run_id $run_id]
+set possible_user_role_names [imsld::roles::get_roles_names \
+				  -roles_list $possible_user_roles]
 # remove &nbsp; added in the previous proc
 regsub -all "&nbsp;" $possible_user_role_names "" $possible_user_role_names
 
@@ -57,21 +59,22 @@ if { ![db_0or1row get_current_role {
     and iruge.run_id = :run_id
     and map.active_role_id is not null
 }] } {
-    # generate the first option
+    # no role have been selected, generate the first option
     set possible_user_roles [linsert $possible_user_roles 0 0]
     set possible_user_role_names [linsert $possible_user_role_names 0 "[_ imsld.Select_role]"]
     set user_role_id -1
 }
 
-template::multirow create possible_roles role_id role_name
+template::multirow create possible_roles item_id item_name
 
 foreach role $possible_user_roles {
-    template::multirow append possible_roles $role [lindex $possible_user_role_names [lsearch -exact $possible_user_roles $role]]
+    template::multirow append possible_roles \
+	$role [lindex $possible_user_role_names \
+		   [lsearch -exact $possible_user_roles $role]]
 }
 
 set user_message ""
 set next_activity_id [imsld::get_next_activity_list -run_id $run_id -user_id $user_id]
-
 
 set remaining_activities [llength [join $next_activity_id]] 
 
@@ -84,7 +87,7 @@ if {!$remaining_activities} {
             where run_id=:run_id
         }
     } else {
-         set user_message "Please wait for other users ..."
+         set user_message "[_ imsld.lt_Please_wait_for_other]"
     }
 }
 
@@ -95,13 +98,12 @@ set run_status [db_string get_run_status {
 }]
 
 if {[string eq "stopped" $run_status]} {
-    set user_message "The course has been finished"
+    set user_message "[_ imsld.lt_The_course_has_been_f]"
 }
 
 dom createDocument ul doc
 set dom_root [$doc documentElement]
 $dom_root setAttribute class "mktree"
-$dom_root setAttribute style "white-space: nowrap;"
 set imsld_title_node [$doc createElement li]
 $imsld_title_node setAttribute class "liOpen"
 set text [$doc createTextNode "$imsld_title"] 
@@ -114,7 +116,6 @@ if { $user_role_id == -1 } {
     set html_tree ""
     set aux_html_tree ""
 } else {
-    
     imsld::generate_activities_tree -run_id $run_id \
         -user_id $user_id \
         -next_activity_id_list $next_activity_id \
@@ -135,7 +136,6 @@ if { $user_role_id == -1 } {
         dom createDocument ul aux_doc
         set aux_dom_root [$aux_doc documentElement]
         $aux_dom_root setAttribute class "mktree"
-        $aux_dom_root setAttribute style "white-space: nowrap;"
         set aux_title_node [$aux_doc createElement li]
         $aux_title_node setAttribute class "liOpen"
         set text [$doc createTextNode "[_ imsld.Extra_Activities]"] 
@@ -156,3 +156,5 @@ if { $user_role_id == -1 } {
     }
     
 }
+
+set select_string "[_ imsld.Select_role]"

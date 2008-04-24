@@ -1,4 +1,4 @@
-#/packages/imsld/www/admin/imsld-role-add-members.tcl
+#/packages/imsld/www/admin/imsld-role-remove-members.tcl
 
 ad_page_contract {
     Remove members from an specified group
@@ -13,6 +13,9 @@ ad_page_contract {
     imsld_id
     run_id
 } 
+set page_title "[_ imsld.Remove_Members]" 
+set context "" 
+
 #only set required variables
    set temp_list [list]
    foreach member $members_list {

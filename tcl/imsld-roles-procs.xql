@@ -189,24 +189,27 @@
 
 	<fullquery name="imsld::roles::get_user_roles.get_user_roles_list">
 		<querytext>
- select iri.role_id 
- from imsld_rolesi iri,
-      group_member_map gmm,
-      acs_objects ao,
-      acs_rels ar,
-      acs_rels ar2 ,
-      imsld_run_users_group_ext iruge 
- where ao.object_id=gmm.group_id 
-       and ao.object_type='imsld_role_group' 
-       and ar.object_id_one=gmm.group_id 
-       and ar.rel_type='imsld_roleinstance_run_rel' 
-       and gmm.member_id=:user_id 
-       and iruge.group_id=ar.object_id_two 
-       and iruge.run_id=:run_id
-       and gmm.container_id = gmm.group_id
-       and ar2.object_id_two=gmm.group_id 
-       and ar2.rel_type='imsld_role_group_rel' 
-       and ar2.object_id_one=iri.item_id
+
+		  select ir.role_id 
+		  from imsld_roles ir,
+		       group_member_map gmm,
+		       acs_objects ao,
+		       acs_rels ar,
+		       acs_rels ar2 ,
+		       imsld_run_users_group_ext iruge,
+		       cr_items cr
+		  where ao.object_id=gmm.group_id 
+		    and ao.object_type='imsld_role_group' 
+		    and ar.object_id_one=gmm.group_id 
+		    and ar.rel_type='imsld_roleinstance_run_rel' 
+		    and gmm.member_id=:user_id
+		    and iruge.group_id=ar.object_id_two 
+		    and iruge.run_id=:run_id
+		    and gmm.container_id = gmm.group_id
+		    and ar2.object_id_two=gmm.group_id 
+		    and ar2.rel_type='imsld_role_group_rel' 
+		    and ar2.object_id_one=cr.item_id
+		    and cr.live_revision=ir.role_id
         
         </querytext>
 	</fullquery>

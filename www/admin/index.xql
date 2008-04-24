@@ -56,5 +56,15 @@
 		</querytext>
 	</fullquery>
 
+	<fullquery name="make_run_waiting">
+		<querytext>
+
+        update imsld_runs
+        set status = 'waiting'
+        where run_id = :set_run_id_live
+    
+		</querytext>
+	</fullquery>
+
 </queryset>
 

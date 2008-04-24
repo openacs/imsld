@@ -9,9 +9,6 @@ ad_page_contract {
 } 
 
 
-# instantiating properties and activity attributes for the run
-imsld::instance::instantiate_properties -run_id $run_id
-imsld::instance::instantiate_activity_attributes -run_id $run_id
 # NOTE: we should verify the permissions here
 set conditions 1
 if {$conditions == 1} {
@@ -28,7 +25,23 @@ set users_list [list]
 foreach role_id [imsld::roles::get_list_of_roles -imsld_id $imsld_id] {
    set users_list [concat $users_list [imsld::roles::get_users_in_role -role_id [lindex $role_id 0] -run_id $run_id]]
 }
-   
+  
+set group_run_id [db_string get_run_group_id {
+    select group_id
+    from imsld_run_users_group_ext
+    where run_id = :run_id
+}]
+
+# add the users to the run_group 
+foreach user_id $users_list {
+    relation_add imsld_run_users_group_rel $group_run_id $user_id
+}
+
+# instantiating properties and activity attributes for the run
+imsld::instance::instantiate_properties -run_id $run_id
+imsld::instance::instantiate_activity_attributes -run_id $run_id
+
+# execute the conditions
 foreach user_id $users_list {
     imsld::condition::execute_all -run_id $run_id -user_id $user_id
 }
