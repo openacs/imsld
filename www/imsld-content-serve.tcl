@@ -928,16 +928,24 @@ set fs_resource_info [db_1row get_fs_resource_info {
 # multiple properties to be shown in the page, and therefore, the base URL is
 # not so easy to compute.
 
-# set folder_path [db_exec_plsql get_folder_path {select content_item__get_path(:parent_id,:root_folder_id); }]
-# set file_url "[apm_package_url_from_id $fs_package_id]view/${folder_path}"
+set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
 
-# set head_node [$dom_root selectNodes {//*[local-name()='head']}]
-# if {![llength [$head_node selectNodes {/*[local-name()='base']}]]} {
-#     set base_node [$dom_doc createElement "base"]
-#     set base_prefix [ns_conn location]
-#     $base_node setAttribute href "$base_prefix/$file_url/"
-#     $head_node appendChild $base_node
-# }
+set folder_path [db_exec_plsql get_folder_path {select content_item__get_path(:parent_id,:root_folder_id); }]
+set file_url "[apm_package_url_from_id $fs_package_id]view/${folder_path}"
+
+set head_node [$dom_root selectNodes {//*[local-name()='head']}]
+if {$head_node eq ""} {
+    set head_node [$dom_doc createElement "head"]
+    $dom_root insertBefore $head_node [$dom_root firstChild]
+}
+
+if {![llength [$head_node selectNodes {/*[local-name()='base']}]]} {
+    set base_node [$dom_doc createElement "base"]
+    set base_prefix [ns_conn location]
+    $base_node setAttribute href "$base_prefix/$file_url/"
+    $head_node appendChild $base_node
+}
+
 
 
 set xmloutput {<?xml version="1.0" encoding="UTF-8"?>}
