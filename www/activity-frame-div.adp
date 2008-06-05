@@ -1,4 +1,4 @@
-<master src="../lib/imsld-master">
+<master src="../lib/imsld-master-div">
   <property name="onload">init_activity()</property>
   <property name="header_stuff">
     <script type="text/javascript">
@@ -27,7 +27,7 @@
     <p class="notice">#imsld.navigate#</p>
   </else>
 
-  <iframe id="object" name="object" src="@iframe_activity_url@" width="98%" height="60%"></iframe>
+  <iframe id="object" name="object"></iframe>
 
   <script type="text/javascript">
     <if @roles_template_p@ eq 1>

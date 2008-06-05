@@ -4,6 +4,9 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>@course_name@</title>
+    <script type="text/javascript" language="javascript">
+      //window.location = 'imsld-divset?run_id=@run_id@';
+    </script>
   </head>
   <frameset id="right-column" cols="30%,*">
     <frameset rows="50%,*">

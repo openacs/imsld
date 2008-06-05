@@ -53,8 +53,8 @@ ul.mktree, ul.mktree ul {
   font-variant: normal;
   text-decoration: none;
   text-transform: none;
-  text-indent: -15px;
-  padding: 0px 0px 5px 0px;
+  text-indent: 0px;
+  padding: 0px 0px 5px 5px;
   margin: 0px;
   white-space: nowrap;
 }
@@ -91,3 +91,29 @@ ul.mktree, ul.mktree ul {
 .float-left { float: left; }
 
 .frame-header { text-align: center; padding: 6px 8px }
+
+div.frame {
+  position:absolute;
+  overflow: auto;
+}
+
+div#tree {
+  left:0;
+  padding:0;
+  width:30%;
+  height:50%;
+}
+
+div#environment {
+  left:0;
+  padding:0;
+  width:30%;
+  height:50%;
+  top:50%;
+}
+
+div#content {
+  width:70%;
+  height:99%;
+  left:30%;
+}
