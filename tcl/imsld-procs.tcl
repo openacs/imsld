@@ -381,6 +381,283 @@ ad_proc -public imsld::sweep_expired_activities {
     }
 }
 
+ad_proc -public imsld::finish_expired_activity {
+    -activity_id:required    
+} { 
+    Expire a given activity (method, play, act or learning/support
+    activity). This is based on imsld::sweep_expired_activities but
+    intended to be faster, callsed on a scheduled way.
+} {
+    set imsld_type [content::item::get_content_type \
+		  -item_id [content::revision::item_id -revision_id $activity_id]]
+
+    switch $imsld_type {
+
+	imsld_method {
+	    ns_log notice "imsld::sweep_expired_activities Sweeping methods.."
+	    # 1. methods
+	    if {[db_0or1row possible_expired_method { *SQL* }]} {
+		if { [db_0or1row compre_times {
+		    select 1
+		    where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
+		}] } {
+		    # the method has been expired, let's mark it as finished 
+		    db_foreach user_in_run { *SQL* } {
+			imsld::mark_method_finished -imsld_id $imsld_id \
+			    -run_id $run_id \
+			    -method_id $method_id \
+			    -user_id $user_id
+		    }
+		}
+	    }
+	}
+
+	imsld_play {
+	    ns_log notice "imsld::sweep_expired_activities Sweeping plays..."
+	    # 2. plays
+	    if {[db_0or1row possible_expired_play { *SQL* }]} {
+		if { [db_0or1row compre_times {
+		    select 1
+		    where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
+		}] } {
+		    # the play has been expired, let's mark it as finished 
+		    db_foreach user_in_run { *SQL* } {
+			imsld::mark_play_finished -imsld_id $imsld_id \
+			    -run_id $run_id \
+			    -play_id $play_id \
+			    -user_id $user_id
+		    }
+		    foreach condition_xml [db_list search_related_conditions {
+			select ici.condition_xml 
+			from imsld_conditionsi ici,
+			acs_rels ar, 
+			imsld_playsi ilai 
+			where ilai.item_id=ar.object_id_one 
+			and ar.rel_type='imsld_ilm_cond_rel' 
+			and ilai.play_id=:play_id
+			and ici.item_id=ar.object_id_two
+		    }] { 
+			dom parse $condition_xml document
+			$document documentElement condition_node
+			imsld::condition::execute -run_id $run_id -condition $condition_node
+		    }
+		    #role conditions, time conditions...
+		    imsld::condition::execute_time_role_conditions -run_id $run_id
+		}
+	    }
+	}
+
+	imsld_act {
+	    ns_log notice "imsld::sweep_expired_activities Sweeping acts..."
+	    # 3. acts
+	    if {[db_0or1row possible_expired_act { *SQL* }]} {
+		if { [db_0or1row compre_times {
+		    select 1
+		    where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
+		}] } {
+		    # the act has been expired, let's mark it as finished 
+		    db_foreach user_in_run { *SQL* } {
+			imsld::mark_act_finished -imsld_id $imsld_id \
+			    -run_id $run_id \
+			    -play_id $play_id \
+			    -act_id $act_id \
+			    -user_id $user_id
+		    }
+		    foreach condition_xml [db_list search_related_conditions {
+			select ici.condition_xml 
+			from imsld_conditionsi ici,
+			acs_rels ar, 
+			imsld_actsi ilai 
+			where ilai.item_id=ar.object_id_one 
+			and ar.rel_type='imsld_ilm_cond_rel' 
+			and ilai.act_id=:act_id
+			and ici.item_id=ar.object_id_two
+		    }] { 
+			dom parse $condition_xml document
+			$document documentElement condition_node
+			imsld::condition::execute -run_id $run_id -condition $condition_node
+		    }
+		    #role conditions, time conditions...
+		    imsld::condition::execute_time_role_conditions -run_id $run_id 
+		}
+	    }
+	}
+
+	imsld_support_activity {
+	    ns_log notice "imsld::sweep_expired_activities Sweeping support activities..."
+	    # 4. support activities
+	    if {[db_0or1row referenced_sas { *SQL* }]} {
+		set role_part_id_list [imsld::get_role_part_from_activity -activity_type support -leaf_id $sa_item_id]
+		set community_id [imsld::community_id_from_manifest_id -manifest_id $manifest_id]
+		foreach role_part_id $role_part_id_list {
+		    foreach referencer_list [db_list_of_lists sa_referencer { *SQL* }] {
+			set manifest_id [lindex $referencer_list 0]
+			set role_part_id [lindex $referencer_list 1]
+			set imsld_id [lindex $referencer_list 2]
+			set play_id  [lindex $referencer_list 3]
+			set act_id [lindex $referencer_list 4]
+			set creation_date [lindex $referencer_list 5]
+			set run_id [lindex $referencer_list 6]
+
+			if { [db_0or1row compre_times {
+			    select 1
+			    where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
+			}] } {
+			    # the act has been expired, let's mark it as finished 
+			    db_foreach user_in_run { *SQL* } {
+				imsld::finish_component_element -imsld_id $imsld_id \
+				    -run_id $run_id \
+				    -play_id $play_id \
+				    -act_id $act_id \
+				    -role_part_id $role_part_id \
+				    -element_id $activity_id \
+				    -type support \
+				    -user_id $user_id \
+				    -code_call
+			    }
+			    foreach condition_xml [db_list search_related_conditions {
+				select ici.condition_xml 
+				from imsld_conditionsi ici,
+				acs_rels ar, 
+				imsld_support_activitiesi ilai 
+				where ilai.item_id=ar.object_id_one 
+				and ar.rel_type='imsld_ilm_cond_rel' 
+				and ilai.activity_id=:activity_id
+				and ici.item_id=ar.object_id_two
+			    }] { 
+				dom parse $condition_xml document
+				$document documentElement condition_node
+				imsld::condition::execute -run_id $run_id -condition $condition_node
+			    }
+			    #role conditions, time conditions...
+			    imsld::condition::execute_time_role_conditions -run_id $run_id
+			}
+		    }
+		}
+	    }
+	}
+
+	imsld_learning_activity {
+	    ns_log notice "imsld::sweep_expired_activities Sweeping learning activities..."
+	    # 5. learning activities
+	    if {[db_0or1row referenced_las { *SQL* }]} {
+		set role_part_id_list [imsld::get_role_part_from_activity -activity_type learning -leaf_id $la_item_id]
+		foreach role_part_id $role_part_id_list {
+		    foreach referencer_list [db_list_of_lists la_referencer { *SQL* }] {
+			set manifest_id [lindex $referencer_list 0]
+			set role_part_id [lindex $referencer_list 1]
+			set imsld_id [lindex $referencer_list 2]
+			set play_id  [lindex $referencer_list 3]
+			set act_id [lindex $referencer_list 4]
+			set creation_date [lindex $referencer_list 5]
+			set run_id [lindex $referencer_list 6]
+
+			if { [db_0or1row compre_times {
+			    select 1
+			    where (extract(epoch from now()) - extract(epoch from timestamp :creation_date) - :time_in_seconds > 0)
+			}] } {
+			    # the act has been expired, let's mark it as finished 
+			    #                set community_id [imsld::community_id_from_manifest_id -manifest_id $manifest_id]
+			    db_foreach user_in_run { *SQL* } {
+				imsld::finish_component_element -imsld_id $imsld_id \
+				    -run_id $run_id \
+				    -play_id $play_id \
+				    -act_id $act_id \
+				    -role_part_id $role_part_id \
+				    -element_id $activity_id \
+				    -type learning \
+				    -user_id $user_id \
+				    -code_call
+			    }
+			    foreach condition_xml [db_list search_related_conditions {
+				select ici.condition_xml 
+				from imsld_conditionsi ici,
+				acs_rels ar, 
+				imsld_learning_activitiesi ilai 
+				where ilai.item_id=ar.object_id_one 
+				and ar.rel_type='imsld_ilm_cond_rel' 
+				and ilai.activity_id=:activity_id
+				and ici.item_id=ar.object_id_two
+			    }] { 
+				dom parse $condition_xml document
+				$document documentElement condition_node
+				imsld::condition::execute -run_id $run_id -condition $condition_node
+			    }
+			    #role conditions, time conditions...
+			    imsld::condition::execute_time_role_conditions -run_id $run_id
+			}
+			#end foreach
+		    }
+		}
+	    }
+	}
+
+    }
+    # end switch
+}
+
+
+ad_proc -public imsld::schedule_finish {
+    -activity_id:required
+    -time:required
+    -store:boolean
+} {
+    Schedule and log the finish of a process
+    
+    @author Derick Leony (derick@inv.it.uc3m.es)
+    @creation-date 2008-05-26
+    
+    @param activity_id
+    @param time
+
+    @return 
+    
+    @error 
+} {
+
+    set date [clock format $time -format "%D"]
+    set today [clock format [clock seconds] -format "%D"]
+
+    if { $date eq $today } {
+	set hour [clock format $time -format "%H"]
+	set minute [clock format $time -format "%M"]
+	ad_schedule_proc -thread t -once t -schedule_proc ns_schedule_daily [list $hour $minute] \
+	    imsld::finish_expired_process -activity_id $activity_id
+    }
+
+    if { $store_p } {
+	set due_date [clock format $time -format "%m-%d-%Y"]
+	db_dml insert_scheduled_complete {
+	    insert into imsld_scheduled_completes
+	    (activity_id, time, due_date)
+	    values
+	    (:activity_id, :time, :due_date)
+	}
+    }    
+}
+
+
+ad_proc -public imsld::daily_schedule {
+} {   
+    Re-schedule old finished activities that correspond to today
+    
+    @author Derick Leony (derick@inv.it.uc3m.es)
+    @creation-date 2008-05-26
+    
+    @return 
+    
+    @error 
+} {
+    db_foreach {
+	select item_id, time
+	from imsld_scheduled_complete
+	where due_date = current_date()
+    } {
+	imsld::schedule_finish -activity_id $item_id -time $time
+    }    
+}
+
+
 ad_proc -public imsld::global_folder_id { 
     {-community_id ""}
 } {
@@ -780,6 +1057,35 @@ ad_proc -public imsld::item_revision_new {
                              -is_live "t" \
                              -attributes $attributes \
                              -package_id $package_id]
+	set index [lsearch $attributes [list complete_act_id *]]
+	if { $index > -1} {
+	    set complete_act_id [lindex $attributes $index 1]
+	    set time_in_seconds [db_string select_complete_act {
+		select ica.time_in_seconds
+		from imsld_complete_acts ica, cr_revisions cr
+		where cr.item_id = :complete_act_id
+		and ica.complete_act_id = cr.revision_id
+		and content_revision__is_live(cr.revision_id)
+	    } -default ""]
+
+	    if {$time_in_seconds ne ""} {
+		set creation_date [acs_object::get_element -object_id $revision_id -element creation_date_ansi]
+		array set offset [imsld::parse::convert_time_to_array -time $time_in_seconds]
+		
+		
+		set creation_time [clock scan $creation_date]
+		
+		# hack to enable setting a specific date, this will be
+		# done for years greater than 2000
+		if { $offset(year) >= 2000 } {
+		    set time_in_seconds \
+			[clock scan "$offset(year)-$offset(month)-$offset(day) $offset(hour):$offset(minute):$offset(second)"]
+		} else {
+		    set time_in_seconds [expr $creation_time + $time_in_seconds]
+		}
+		imsld::schedule_finish -activity_id $item_id -time $time_in_seconds -store
+	    }
+	}
     } else {
         set revision_id [content::revision::new -item_id $item_id \
                              -title $title \
@@ -1927,6 +2233,7 @@ ad_proc -public imsld::process_environment_as_ul {
     -dom_node:required
     -dom_doc:required
     {-user_id ""}
+    {-target ""}
 } { 
     @param environment_item_id
     @param run_id
@@ -2191,6 +2498,7 @@ ad_proc -public imsld::process_feedback_as_ul {
 }
 
 ad_proc -public imsld::activity_url {
+    -div:boolean
     -activity_id:required
     -run_id:required
     {-user_id ""}
@@ -2204,7 +2512,14 @@ ad_proc -public imsld::activity_url {
 
     set user_id [expr { [string eq $user_id ""] ? [ad_conn user_id] : $user_id }]
 
-    return "[export_vars -base "activity-frame" -url {activity_id run_id user_id}]"
+    set url "activity-frame"
+    if { $div_p } {
+	append url "-div"
+    }
+
+    ns_log notice "div_p: $div_p, url: $url"
+
+    return "[export_vars -base $url -url {activity_id run_id user_id}]"
 
 }
 
@@ -2216,6 +2531,7 @@ ad_proc -public imsld::process_resource_as_ul {
     -dom_doc
     -li_mode:boolean
     {-user_id ""}
+    {-target ""}
 } {
     @param resource_item_id
     @param run_id
@@ -2250,6 +2566,9 @@ ad_proc -public imsld::process_resource_as_ul {
         set a_node [$dom_doc createElement a]
         $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
 	$a_node setAttribute title "$object_title"
+	if { $target ne "" } {
+	    $a_node setAttribute target "$target"	    
+	}
         set img_node [$dom_doc createElement img]
         $img_node setAttribute src "[imsld::object_type_image_path -object_type $object_type]"
         $img_node setAttribute border "0"
@@ -2410,6 +2729,7 @@ ad_proc -public imsld::process_activity_environments_as_ul {
     -dom_node
     -dom_doc
     {-user_id ""}
+    {-target ""}
 } {
     @param activity_item_id
     @param run_id
@@ -2454,7 +2774,8 @@ ad_proc -public imsld::process_activity_environments_as_ul {
         imsld::process_environment_as_ul -environment_item_id $environment_item_id \
             -run_id $run_id \
             -dom_node $dom_node \
-            -dom_doc $dom_doc
+            -dom_doc $dom_doc \
+	    -target $target
     }
 }
 
@@ -3023,7 +3344,7 @@ ad_proc -public imsld::generate_structure_activities_list {
 			set structure_node [$dom_doc createElement li]
 			$structure_node setAttribute class "liOpen"
 			set a_node [$dom_doc createElement a]
-			$a_node setAttribute href "[imsld::activity_url -activity_id $structure_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
 			$a_node setAttribute target "content"
 			set text [$dom_doc createTextNode "$activity_title"]
 			$a_node appendChild $text
@@ -3033,7 +3354,7 @@ ad_proc -public imsld::generate_structure_activities_list {
 			$structure_node setAttribute class "liOpen"
 			set b_node [$dom_doc createElement b]
 			set a_node [$dom_doc createElement a]
-			$a_node setAttribute href "[imsld::activity_url -activity_id $structure_id -run_id $run_id -user_id $user_id]"
+			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
 			$a_node setAttribute target "content"
 			set text [$dom_doc createTextNode "$activity_title"]
 			$a_node appendChild $text
@@ -3065,6 +3386,7 @@ ad_proc -public imsld::generate_structure_activities_list {
 }
 
 ad_proc -public imsld::generate_activities_tree {
+    -div:boolean
     -run_id:required
     -user_id
     {-next_activity_id_list ""}
@@ -3076,6 +3398,7 @@ ad_proc -public imsld::generate_activities_tree {
 
     @return A list of lists of the activities 
 } {
+    ns_log notice "div_p @ 1st: $div_p"
     db_1row imsld_info {
         select imsld_id 
         from imsld_runs
@@ -3132,8 +3455,10 @@ ad_proc -public imsld::generate_activities_tree {
 			$activity_node setAttribute class "liOpen"
 			set b_node [$dom_doc createElement b]
 			set a_node [$dom_doc createElement a]
-			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+			set href [imsld::activity_url -div=$div_p -activity_id $activity_id -run_id $run_id -user_id $user_id]
+			$a_node setAttribute href $href
 			$a_node setAttribute target "content"
+			$a_node setAttribute onclick "return loadContent('$href')"
 			set text [$dom_doc createTextNode "$activity_title"]
 			$a_node appendChild $text
 			$b_node appendChild $a_node
@@ -3146,8 +3471,10 @@ ad_proc -public imsld::generate_activities_tree {
 			set activity_node [$dom_doc createElement li]
 			$activity_node setAttribute class "liOpen"
 			set a_node [$dom_doc createElement a]
-			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+			set href [imsld::activity_url -div=$div_p -activity_id $activity_id -run_id $run_id -user_id $user_id]
+			$a_node setAttribute href $href
 			$a_node setAttribute target "content"
+			$a_node setAttribute onclick "return loadContent('$href')"
 			set text [$dom_doc createTextNode "$activity_title"]
 			$a_node appendChild $text
 			$activity_node appendChild $a_node
@@ -3212,8 +3539,10 @@ ad_proc -public imsld::generate_activities_tree {
 			# bold letters
 			set b_node [$dom_doc createElement b]
 			set a_node [$dom_doc createElement a]
-			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+			set href [imsld::activity_url -div=$div_p -activity_id $activity_id -run_id $run_id -user_id $user_id]
+			$a_node setAttribute href $href
 			$a_node setAttribute target "content"
+			$a_node setAttribute onclick "return loadContent('$href')"
 			set text [$dom_doc createTextNode "$activity_title"]
 			$a_node appendChild $text
 			$b_node appendChild $a_node
@@ -3224,8 +3553,10 @@ ad_proc -public imsld::generate_activities_tree {
 		    } else {
 			# bold letters
 			set a_node [$dom_doc createElement a]
-			$a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+			set href [imsld::activity_url -div=$div_p -activity_id $activity_id -run_id $run_id -user_id $user_id]
+			$a_node setAttribute href $href
 			$a_node setAttribute target "content"
+			$a_node setAttribute onclick "return loadContent('$href')"
 			set text [$dom_doc createTextNode "$activity_title"]
 			$a_node appendChild $text
 			$activity_node appendChild $a_node
@@ -3279,8 +3610,10 @@ ad_proc -public imsld::generate_activities_tree {
 			set structure_node [$dom_doc createElement li]
 			$structure_node setAttribute class "liOpen"
 			set a_node [$dom_doc createElement a]
-			$a_node setAttribute href "[imsld::activity_url -activity_id $structure_id -run_id $run_id -user_id $user_id]"
+			set href [imsld::activity_url -div=$div_p -activity_id $structure_id -run_id $run_id -user_id $user_id]
+			$a_node setAttribute href $href
 			$a_node setAttribute target "content"
+			$a_node setAttribute onclick "return loadContent('$href')"
 			set text [$dom_doc createTextNode "$activity_title"]
 			$a_node appendChild $text
 			$structure_node appendChild $a_node
@@ -3289,8 +3622,10 @@ ad_proc -public imsld::generate_activities_tree {
 			$structure_node setAttribute class "liOpen"
 			set b_node [$dom_doc createElement b]
 			set a_node [$dom_doc createElement a]
-			$a_node setAttribute href "[imsld::activity_url -activity_id $structure_id -run_id $run_id -user_id $user_id]"
+			set href [imsld::activity_url -div=$div_p -activity_id $structure_id -run_id $run_id -user_id $user_id]
+			$a_node setAttribute href $href
 			$a_node setAttribute target "content"
+			$a_node setAttribute onclick "return loadContent('$href')"
 			set text [$dom_doc createTextNode "$activity_title"]
 			$a_node appendChild $text
 			$b_node appendChild $a_node
@@ -3317,6 +3652,7 @@ ad_proc -public imsld::generate_activities_tree {
 }
 
 ad_proc -public imsld::generate_runtime_assigned_activities_tree {
+    -div:boolean
     -run_id:required
     -user_id
     -dom_node
@@ -3373,7 +3709,8 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
 		    $activity_node setAttribute class "liOpen"
 		    set b_node [$dom_doc createElement b]
 		    set a_node [$dom_doc createElement a]
-		    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+		    set href [imsld::activity_url -div=$div_p -activity_id $activity_id -run_id $run_id -user_id $user_id]
+		    $a_node setAttribute href $href
 		    $a_node setAttribute target "content"
 		    set text [$dom_doc createTextNode "$activity_title"]
 		    $a_node appendChild $text
@@ -3387,7 +3724,8 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
 		    set activity_node [$dom_doc createElement li]
 		    $activity_node setAttribute class "liOpen"
 		    set a_node [$dom_doc createElement a]
-		    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+		    set href [imsld::activity_url -div=$div_p -activity_id $activity_id -run_id $run_id -user_id $user_id]
+		    $a_node setAttribute href $href
 		    $a_node setAttribute target "content"
 		    set text [$dom_doc createTextNode "$activity_title"]
 		    $a_node appendChild $text
@@ -3444,8 +3782,10 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
 		    $activity_node setAttribute class "liOpen"
 		    set b_node [$dom_doc createElement b]
 		    set a_node [$dom_doc createElement a]
-		    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+		    set href [imsld::activity_url -div=$div_p -activity_id $activity_id -run_id $run_id -user_id $user_id]
+		    $a_node setAttribute $href
 		    $a_node setAttribute target "content"
+		    $a_node setAttribute onclick "return loadContent('$href')"
 		    set text [$dom_doc createTextNode "$activity_title"]
 		    $a_node appendChild $text
 		    $b_node appendChild $a_node
@@ -3458,8 +3798,10 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
 		    set activity_node [$dom_doc createElement li]
 		    $activity_node setAttribute class "liOpen"
 		    set a_node [$dom_doc createElement a]
-		    $a_node setAttribute href "[imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]"
+		    set href [imsld::activity_url -div=$div_p -activity_id $activity_id -run_id $run_id -user_id $user_id]
+		    $a_node setAttribute $href
 		    $a_node setAttribute target "content"
+		    $a_node setAttribute onclick "return loadContent('$href')"
 		    set text [$dom_doc createTextNode "$activity_title"]
 		    $a_node appendChild $text
 		    $activity_node appendChild $a_node
@@ -4494,6 +4836,7 @@ ad_proc -public imsld::grant_permissions {
             }
    }
 }
+
 
 ad_register_proc GET /finish-component-element* imsld::finish_component_element
 ad_register_proc POST /finish-component-element* imsld::finish_component_element

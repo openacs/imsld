@@ -746,3 +746,17 @@ create table imsld_res_files_rels (
 comment on table imsld_res_files_rels is '
 This table stores the relationships between resources and files.';
 
+
+create table imsld_scheduled_time_limits (
+    activity_id	integer
+                constraint imsld_sche_tl_act_id_fk
+            	references cr_revisions
+                constraint imsld_sche_tl_act_id_pk
+		primary key,
+    time	integer,
+    due_date	date
+);
+
+comment on table imsld_scheduled_time_limits is '
+This table stores the schedule time of time_lmit for the different structures.';
+

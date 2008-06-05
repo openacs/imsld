@@ -38,6 +38,29 @@
 		</querytext>
 	</fullquery>
 
+	<fullquery name="imsld::finish_expired_activity.possible_expired_method">
+		<querytext>
+        select icm.manifest_id,
+        ii.imsld_id,
+        im.method_id,
+        ir.run_id,
+        ca.time_in_seconds,
+        ao.creation_date
+        from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+        imsld_imsldsi ii, imsld_methodsi im, imsld_complete_actsi ca, imsld_runs ir, acs_objects ao
+        where im.imsld_id = ii.item_id
+        and ii.imsld_id = ir.imsld_id
+        and ii.organization_id = ico.item_id
+        and ico.manifest_id = icm.item_id
+        and im.complete_act_id = ca.item_id
+        and ca.time_in_seconds is not null
+        and ao.object_id = ir.run_id
+        and content_revision__is_live(ii.imsld_id) = 't'
+        and im.method_id = :activity_id
+    
+		</querytext>
+	</fullquery>
+
 
 	<fullquery name="imsld::sweep_expired_activities.compre_times">
 		<querytext>
@@ -49,6 +72,19 @@
 
 
 	<fullquery name="imsld::sweep_expired_activities.user_in_run">
+		<querytext>
+        select u.user_id
+        from users u,
+             acs_rels ar,
+             imsld_run_users_group_ext r_map
+        where u.user_id > 0
+              and u.user_id=ar.object_id_two
+              and ar.object_id_one = r_map.group_id
+              and r_map.run_id = :run_id
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::finish_expired_activity.user_in_run">
 		<querytext>
         select u.user_id
         from users u,
@@ -86,6 +122,31 @@
 		</querytext>
 	</fullquery>
 
+	<fullquery name="imsld::finish_expired_activity.possible_expired_play">
+		<querytext>
+        select icm.manifest_id,
+        ii.imsld_id,
+        ip.play_id,
+        ca.time_in_seconds,
+        ao.creation_date,
+        ir.run_id
+        from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+        imsld_imsldsi ii, imsld_methodsi im, imsld_plays ip,
+        imsld_complete_actsi ca, imsld_runs ir, acs_objects ao
+        where ip.method_id = im.item_id
+        and im.imsld_id = ii.item_id
+        and ii.organization_id = ico.item_id
+        and ico.manifest_id = icm.item_id
+        and ip.complete_act_id = ca.item_id
+        and ca.time_in_seconds is not null
+        and ao.object_id = ir.run_id
+        and content_revision__is_live(ii.imsld_id) = 't'
+        and ii.imsld_id = ir.imsld_id    
+        and ip.play_id = :activity_id
+
+		</querytext>
+	</fullquery>
+
 	<fullquery name="imsld::sweep_expired_activities.possible_expired_acts">
 		<querytext>
         select icm.manifest_id,
@@ -112,6 +173,33 @@
 		</querytext>
 	</fullquery>
 
+	<fullquery name="imsld::finish_expired_activity.possible_expired_act">
+		<querytext>
+        select icm.manifest_id,
+        ii.imsld_id,
+        ip.play_id,
+        ia.act_id,
+        ca.time_in_seconds,
+        icm.creation_date,
+        ir.run_id
+        from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+        imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, imsld_acts ia,
+        imsld_complete_actsi ca, imsld_runs ir, acs_objects ao
+        where ia.play_id = ip.item_id
+        and ip.method_id = im.item_id
+        and im.imsld_id = ii.item_id
+        and ii.organization_id = ico.item_id
+        and ico.manifest_id = icm.item_id
+        and ia.complete_act_id = ca.item_id
+        and ca.time_in_seconds is not null
+        and ao.object_id = ir.run_id
+        and content_revision__is_live(ii.imsld_id) = 't'
+        and ii.imsld_id = ir.imsld_id    
+        and ia.act_id = :activity_id
+
+		</querytext>
+	</fullquery>
+
 	<fullquery name="imsld::sweep_expired_activities.referenced_sas">
 		<querytext>
         select sa.item_id as sa_item_id,
@@ -126,7 +214,48 @@
 		</querytext>
 	</fullquery>
 
+	<fullquery name="imsld::finish_expired_activity.referenced_sas">
+		<querytext>
+        select sa.item_id as sa_item_id,
+        sa.activity_id,
+        ca.time_in_seconds
+        from imsld_support_activitiesi sa,
+        imsld_complete_actsi ca
+        where sa.complete_act_id = ca.item_id
+        and content_revision__is_live(ca.complete_act_id) = 't'
+        and ca.time_in_seconds is not null
+        and sa.activity_id = :activity_id
+    
+		</querytext>
+	</fullquery>
+
 	<fullquery name="imsld::sweep_expired_activities.sa_referencer">
+		<querytext>
+            select icm.manifest_id,
+            irp.role_part_id,
+            ii.imsld_id,
+            ip.play_id,
+            ia.act_id,
+            ao.creation_date,
+            ir.run_id
+            from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+            imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
+            imsld_actsi ia, imsld_role_partsi irp, imsld_runs ir, acs_objects ao
+            where irp.support_activity_id = :sa_item_id
+            and irp.act_id = ia.item_id
+            and ia.play_id = ip.item_id
+            and ip.method_id = im.item_id
+            and im.imsld_id = ii.item_id
+            and ii.organization_id = ico.item_id
+            and ii.imsld_id = ir.imsld_id
+            and ao.object_id = ir.run_id
+            and ico.manifest_id = icm.item_id
+            and content_revision__is_live(ii.imsld_id) = 't'
+
+		</querytext>
+	</fullquery>
+
+	<fullquery name="imsld::finish_expired_activity.sa_referencer">
 		<querytext>
             select icm.manifest_id,
             irp.role_part_id,
@@ -166,7 +295,50 @@
 		</querytext>
 	</fullquery>
 
+	<fullquery name="imsld::finish_expired_activity.referenced_las">
+		<querytext>
+        select la.item_id as la_item_id,
+        la.activity_id,
+        ca.time_in_seconds
+        from imsld_learning_activitiesi la,
+        imsld_complete_actsi ca
+        where la.complete_act_id = ca.item_id
+        and content_revision__is_live(ca.complete_act_id) = 't'
+        and ca.time_in_seconds is not null
+        and la.activity_id = :activity_id
+    
+		</querytext>
+	</fullquery>
+
 	<fullquery name="imsld::sweep_expired_activities.la_referencer">
+		<querytext>
+
+            select icm.manifest_id,
+            irp.role_part_id,
+            ii.imsld_id,
+            ip.play_id,
+            ia.act_id,
+            ao.creation_date,
+            ir.run_id
+            from imsld_cp_manifestsi icm, imsld_cp_organizationsi ico, 
+            imsld_imsldsi ii, imsld_methodsi im, imsld_playsi ip, 
+            imsld_actsi ia, imsld_role_partsi irp, imsld_runs ir, acs_objects ao
+            where irp.role_part_id = :role_part_id
+            and irp.act_id = ia.item_id
+            and ia.play_id = ip.item_id
+            and ip.method_id = im.item_id
+            and im.imsld_id = ii.item_id
+            and ii.organization_id = ico.item_id
+            and ii.imsld_id = ir.imsld_id
+            and ao.object_id = ir.run_id
+            and ico.manifest_id = icm.item_id
+            and content_revision__is_live(ii.imsld_id) = 't'
+        
+		</querytext>
+	</fullquery>
+
+
+	<fullquery name="imsld::finish_expired_activity.la_referencer">
 		<querytext>
 
             select icm.manifest_id,

@@ -76,8 +76,28 @@ ad_proc -public imsld::parse::convert_time_to_seconds {
         }
         regsub ${amount}${component} $time "" time
     }
-    set seconds [expr ($years*946080000 + $months*2592000 + $days*86400 + $hours*3600 + $minutes*60 + $seconds)]
+    set seconds [expr ($years*3153600 + $months*2592000 + $days*86400 + $hours*3600 + $minutes*60 + $seconds)]
     return $seconds
+}
+
+ad_proc -public imsld::parse::convert_time_to_array {
+    -time:required
+} {
+    Converts the time from seconds into an array years, months, days,
+									    # hours, minutes, seconds
+    @param time The time in seconds
+} {
+    # seconds in year, month, day, hour, minute and second
+    set units [list year 31536000 month 2592000 day 86400 hour 3600 minute 60 second 1]
+    set result [list]
+
+    foreach {unit seconds} $units {
+	set value [expr $time / $seconds]
+	set result [concat $result [list $unit $value]]
+	set time [expr $time % $seconds]
+    }
+    
+    return $result
 }
 
 ad_proc -public imsld::parse::get_URI {
@@ -1241,7 +1261,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
         set lrp_datatype [string tolower [imsld::parse::get_attribute -node $lrp_datatype -attr_name datatype]]
 
         set role_ref [$locrole_property selectNodes "*\[local-name()='role-ref'\]"]
-        imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name "locrole-property role" -equal
+        imsld::parse::validate_multiplicity -tree $role_ref -multiplicity 1 -element_name "locrole-property role-ref" -equal
         set ref [imsld::parse::get_attribute -node $role_ref -attr_name ref]
         if { ![db_0or1row get_role_id {
             select item_id as role_id 

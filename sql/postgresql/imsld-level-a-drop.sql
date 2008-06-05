@@ -5,6 +5,8 @@
 -- @creation-date jul-2005
 --
 
+drop table imsld_scheduled_time_limits;
+
 drop table imsld_learning_objects cascade;
 
 drop table imsld_imslds cascade;
