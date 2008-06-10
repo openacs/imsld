@@ -15,13 +15,13 @@
         <maturity>0</maturity>
 
         <provides url="imsld" version="1.2d"/>
-        <requires url="acs-content-repository" version="5.2.2"/>
-        <requires url="acs-kernel" version="5.2.2"/>
-        <requires url="acs-templating" version="5.2.2"/>
-        <requires url="assessment" version="0.17"/>
-        <requires url="dotlrn-assessment" version="0.2"/>
-        <requires url="dotlrn-lorsm" version="0.4d"/>
-        <requires url="lorsm" version="0.7d"/>
+        <requires url="acs-content-repository" version="5.4.2"/>
+        <requires url="acs-kernel" version="5.4.2"/>
+        <requires url="acs-templating" version="5.4.2"/>
+        <requires url="assessment" version="0.22d7"/>
+        <requires url="dotlrn-assessment" version="2.4.0b1"/>
+        <requires url="dotlrn-lorsm" version="2.4.0b1"/>
+        <requires url="lorsm" version="0.8d3"/>
 
         <callbacks>
             <callback type="after-install"  proc="imsld::apm_callback::after_install"/>
