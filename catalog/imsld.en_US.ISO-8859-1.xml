@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<message_catalog package_key="imsld" package_version="1.2d" locale="en_US" charset="ISO-8859-1">
+<message_catalog package_key="imsld" locale="en_US" charset="ISO-8859-1">
 
   <msg key="_Assigned_users">| Assigned users:</msg>
   <msg key="_Component">Component Identifier</msg>
@@ -23,6 +23,7 @@
   <msg key="Caluclate_Identifier">Caluclate Identifier</msg>
   <msg key="Calulate_Identifier">Calulate Identifier</msg>
   <msg key="Class">Class</msg>
+  <msg key="Cockpit">Cockpit</msg>
   <msg key="Community">Community</msg>
   <msg key="Complete_Act">Complete Act</msg>
   <msg key="Complete_Acts">Complete Acts</msg>
@@ -56,6 +57,7 @@
   <msg key="Error_parsing_file">Error parsing file</msg>
   <msg key="Existing_href">Existing href</msg>
   <msg key="Exit">Exit UoL</msg>
+  <msg key="Exit_Cockpit">Exit Cockpit</msg>
   <msg key="Exit_Monitor">Exit Monitor</msg>
   <msg key="Expression">Expression</msg>
   <msg key="Extra_Activities">Extra Activities</msg>
@@ -461,6 +463,7 @@
   <msg key="There">There are no descendant roles</msg>
   <msg key="This">Activity report for user </msg>
   <msg key="Time_in_Seconds">Time in Seconds</msg>
+  <msg key="Time_String">Time String</msg>
   <msg key="Total_Activities">Total Activities</msg>
   <msg key="Total_Roles">Parent Roles</msg>
   <msg key="Type">Type</msg>
