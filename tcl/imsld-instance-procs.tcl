@@ -53,6 +53,7 @@ ad_proc -public imsld::instance::instantiate_imsld {
 #         }
 #     }
     imsld::instance::instantiate_activity_attributes -run_id $run_id
+    imsld::instance::schedule_instance_time_limits -run_id $run_id
     return $run_id
 }
 
@@ -1067,3 +1068,141 @@ ad_proc -public imsld::instance::user_folder_name {
 }
 
 #  LocalWords:  type
+
+ad_proc -public imsld::instance::schedule_instance_time_limits {
+    -run_id
+} {
+    
+    
+    @author Derick Leony (derick@inv.it.uc3m.es)
+    @creation-date 2008-06-19
+    
+    @param run_id
+
+    @return 
+    
+    @error 
+} {
+    set imsld_id [db_string select_imsld_id {
+	select ii.item_id
+	from imsld_imsldsi ii, imsld_runs ir
+	where ir.run_id = :run_id
+	and ii.imsld_id = ir.imsld_id
+    }]
+
+    # method
+    db_foreach select_method {
+	select im.item_id, ica.time_string
+	from imsld_methodsi im, imsld_complete_actsi ica
+	where im.imsld_id = :imsld_id
+	and ica.item_id = im.complete_act_id
+	and ica.time_string != ''
+    } {
+	imsld::instance::schedule_complete_time_limit -run_id $run_id -activity_id $item_id -time_string $time_string
+    }
+
+    # plays
+    db_foreach select_plays {
+	select ip.item_id, ica.time_string
+	from imsld_methodsi im, imsld_playsi ip, imsld_complete_actsi ica
+	where im.imsld_id = :imsld_id
+	and ip.method_id = im.item_id
+	and ica.item_id = ip.complete_act_id
+	and ica.time_string != ''
+    } {
+	imsld::instance::schedule_complete_time_limit -run_id $run_id -activity_id $item_id -time_string $time_string
+    }
+
+    # acts
+    db_foreach select_acts {
+	select ia.item_id, ica.time_string
+	from imsld_methodsi im, imsld_playsi ip, imsld_actsi ia, imsld_complete_actsi ica
+	where im.imsld_id = :imsld_id
+	and ip.method_id = im.item_id
+	and ia.play_id = ip.item_id
+	and ica.item_id = ia.complete_act_id
+	and ica.time_string != ''
+    } {
+	imsld::instance::schedule_complete_time_limit -run_id $run_id -activity_id $item_id -time_string $time_string
+    }
+
+    # learning_activities
+    db_foreach select_learning_activities {
+	select ila.item_id, ica.time_string
+	from imsld_methodsi im, imsld_playsi ip, imsld_actsi ia, imsld_role_partsi irp, 
+	imsld_learning_activitiesi ila, imsld_complete_actsi ica
+	where im.imsld_id = :imsld_id
+	and ip.method_id = im.item_id
+	and ia.play_id = ip.item_id
+	and irp.act_id = ia.item_id
+	and ila.item_id = irp.learning_activity_id
+	and ica.item_id = ila.complete_act_id
+	and ica.time_string != ''
+    } {
+	imsld::instance::schedule_complete_time_limit -run_id $run_id -activity_id $item_id -time_string $time_string
+    }
+
+    # support_activities
+    db_foreach select_support_activities {
+	select isa.item_id, ica.time_string
+	from imsld_methodsi im, imsld_playsi ip, imsld_actsi ia, imsld_role_partsi irp, 
+	imsld_support_activitiesi isa, imsld_complete_actsi ica
+	where im.imsld_id = :imsld_id
+	and ip.method_id = im.item_id
+	and ia.play_id = ip.item_id
+	and irp.act_id = ia.item_id
+	and isa.item_id = irp.support_activity_id
+	and ica.item_id = isa.complete_act_id
+	and ica.time_string != ''
+    } {
+	imsld::instance::schedule_complete_time_limit -run_id $run_id -activity_id $item_id -time_string $time_string
+    }
+
+}
+
+
+ad_proc -public imsld::instance::schedule_complete_time_limit {
+    -run_id
+    -activity_id
+    -time_string
+} {
+    
+    
+    @author Derick Leony (derick@inv.it.uc3m.es)
+    @creation-date 2008-06-19
+    
+    @param run_id
+
+    @return 
+    
+    @error 
+} {
+
+    set creation_date [db_string creation_date {
+	select status_date
+	from imsld_runs
+	where run_id = :run_id
+    }]
+    regexp {([^\.]+)} $creation_date match creation_date
+    set creation_time [clock scan $creation_date]
+
+    array set offset [imsld::parse::convert_time_to_list -time $time_string]
+	
+    # hack to set a specific date, this will be
+    # done for years greater than 2000
+    if { $offset(years) >= 2000 } {
+	set time_in_seconds \
+	    [clock scan "$offset(years)-$offset(months)-$offset(days) $offset(hours):$offset(minutes):$offset(seconds)"]
+    } else {
+	# reversing the offset array so it can be used
+	# the clock scan syntax
+	foreach {key value} [array get offset] {
+	    set new_offset($value) $key
+	}
+	set time_in_seconds [clock scan [array get new_offset] -base $creation_time]
+	# we can only schedule with a minute-level granularity, so we
+	# schedule it to the minute after the actual minute instead
+	set time_in_seconds [expr $time_in_seconds + 60]
+    }
+    imsld::schedule_finish -activity_id $activity_id -time $time_in_seconds -store
+}

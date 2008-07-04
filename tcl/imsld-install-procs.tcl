@@ -199,6 +199,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::new -content_type imsld_complete_act -supertype content_revision -pretty_name "#imsld.Complete_Act#" -pretty_plural "#imsld.Complete_Acts#" -table_name imsld_complete_acts -id_column complete_act_id
     
     content::type::attribute::new -content_type imsld_complete_act -attribute_name time_in_seconds -datatype number -pretty_name "#imsld.Time_in_Seconds#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_complete_act -attribute_name time_string -datatype string -pretty_name "#imsld.Time_String#" -column_spec "varchar(30)"
     content::type::attribute::new -content_type imsld_complete_act -attribute_name user_choice_p -datatype string -pretty_name "#imsld.User_Choice#" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_complete_act -attribute_name when_last_act_completed_p -datatype string -pretty_name "#imsld.lt_When_Last_Act_Complet#" -column_spec "char(1)"
 

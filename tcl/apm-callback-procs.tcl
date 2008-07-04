@@ -66,3 +66,29 @@ ad_proc -public imsld::apm_callback::before_uninstall {
 
     return 1
 }
+
+
+ad_proc -public imsld::apm_callback::after_upgrade {
+    -from_version_name:required
+    -to_version_name:required
+} {
+    Upgrade script for the IMS-LD package
+
+    @author Derick Leony (derick@inv.it.uc3m.es)
+    @creation-date 2008-06-16
+    
+    @return 
+    
+    @error 
+} {
+    apm_upgrade_logic \
+	-from_version_name $from_version_name \
+	-to_version_name $to_version_name \
+	-spec {
+	    1.3d 1.4d {
+		content::type::attribute::new -content_type imsld_complete_act \
+		    -attribute_name time_string -datatype string \
+		    -pretty_name "#imsld.Time_String#" -column_spec "varchar(30)"
+	    }
+	}
+}

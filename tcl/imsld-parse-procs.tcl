@@ -80,11 +80,59 @@ ad_proc -public imsld::parse::convert_time_to_seconds {
     return $seconds
 }
 
+ad_proc -public imsld::parse::convert_time_to_list {
+    -time
+} {
+    Converts the time string (described in the spec) to an "arrayed" list
+    @param time The time string
+} {
+    set time [string tolower $time]
+    regsub -all {[^0-9pymdths]} $time "" time
+    array unset time
+    set timea(years) 0
+    set timea(months) 0
+    set timea(days) 0
+    set timea(hours) 0
+    set timea(minutes) 0
+    set timea(seconds) 0
+    set t_parsed 0
+    set time_length [string length $time]
+    while { [string length $time] } {
+        regexp {^([0-9]*)([pymdthms])} $time match amount component
+        switch $component {
+            y {
+                set timea(years) $amount
+            }
+            m {
+                if { !$t_parsed } {
+                    set timea(months) $amount
+                } else {
+                    set timea(minutes) $amount
+                }
+            }
+            d {
+                set timea(days) $amount
+            }
+            t {
+                set t_parsed 1
+            }
+            h {
+                set timea(hours) $amount
+            }
+            s {
+                set timea(seconds) $amount
+            }
+        }
+        regsub ${amount}${component} $time "" time
+    }
+    return [array get timea]
+}
+
 ad_proc -public imsld::parse::convert_time_to_array {
     -time:required
 } {
     Converts the time from seconds into an array years, months, days,
-									    # hours, minutes, seconds
+    hours, minutes, seconds
     @param time The time in seconds
 } {
     # seconds in year, month, day, hour, minute and second
@@ -98,6 +146,26 @@ ad_proc -public imsld::parse::convert_time_to_array {
     }
     
     return $result
+}
+
+ad_proc -public imsld::parse::convert_list_to_time {
+    -time:required
+} {
+    Converts the time a list "years, months, days, hours, minutes,
+    seconds" to a string
+    @param time The time in seconds
+} {
+    set time_string "P"
+    foreach {unit value} $time {
+	if { $unit eq "hours" } {
+	    append time_string "T"
+	}
+	if { $value } {
+	    set cap [string toupper [string range $unit 0 0]]
+	    append time_string "$value$cap"
+	}
+    }
+    return $time_string
 }
 
 ad_proc -public imsld::parse::get_URI {
@@ -2290,6 +2358,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     set user_choice_p f
     set complete_act_id ""
     set time_in_seconds ""
+    set time_string ""
     set when_prop_value_is_set_xml ""
     if { [llength $complete_activity] } {
         imsld::parse::validate_multiplicity -tree $complete_activity -multiplicity 1 -element_name complete-activity(learning-activity) -equal
@@ -2308,6 +2377,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(learning-activity) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
             set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
+            set time_string $time_string
         }
 
         # Learning Activity: Complete Activity: When Property Value is Set
@@ -2322,6 +2392,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             set when_prop_value_is_set_xml [$temporal_node asXML]
         }
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
+								       [list time_string $time_string] \
                                                                        [list user_choice_p $user_choice_p] \
                                                                        [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
                                  -content_type imsld_complete_act \
@@ -2503,6 +2574,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     set user_choice_p f
     set complete_act_id ""
     set time_in_seconds ""
+    set time_string ""
     set when_prop_value_is_set_xml ""
     if { [llength $complete_activity] } {
         imsld::parse::validate_multiplicity -tree $complete_activity -multiplicity 1 -element_name complete-activity(support-activity) -equal
@@ -2521,6 +2593,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(support-activity) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
             set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
+            set time_string $time_string
         }
         
         # Support Activity: Complete Activity: When Property Value is Set
@@ -2535,6 +2608,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             set when_prop_value_is_set_xml [$temporal_node asXML]
         }
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
+								       [list time_string $time_string] \
                                                                        [list user_choice_p $user_choice_p] \
                                                                        [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
                                  -content_type imsld_complete_act \
@@ -3340,6 +3414,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
     set complete_act [$act_node selectNodes "*\[local-name()='complete-act'\]"]
     set complete_act_id ""
     set time_in_seconds ""
+    set time_string ""
     set when_prop_value_is_set_xml ""
     set when_condition_true_id ""
     if { [llength $complete_act] } {
@@ -3350,6 +3425,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(complete-act) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
             set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
+            set time_string $time_string
         }
         # Act: Complete Act: When Property Value is Set
         set when_prop_value_is_set [$complete_act selectNodes "*\[local-name()='when-property-value-is-set'\]"] 
@@ -3404,6 +3480,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
         
 	if { ![string eq "" $time_in_seconds] || ![string eq "" $when_prop_value_is_set_xml] ||![string eq "" $when_condition_true_id]  } {
 	    set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
+									   [list time_string $time_string] \
 									   [list when_condition_true_id $when_condition_true_id] \
 									   [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
 				     -content_type imsld_complete_act \
@@ -3583,6 +3660,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
     set complete_play [$play_node selectNodes "*\[local-name()='complete-play'\]"]
     set complete_act_id ""
     set time_in_seconds ""
+    set time_string ""
     set when_last_act_completed_p f
     set when_prop_value_is_set_xml ""
     if { [llength $complete_play] } {
@@ -3593,6 +3671,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(complete-play) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
             set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
+            set time_string $time_string
         }
         # Play: Complete Play: When Property Value is Set
         set when_prop_value_is_set [$complete_play selectNodes "*\[local-name()='when-property-value-is-set'\]"] 
@@ -3611,6 +3690,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
             set when_last_act_completed_p t
         }
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
+								       [list time_string $time_string] \
                                                                        [list when_last_act_completed_p $when_last_act_completed_p] \
                                                                        [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
                                  -content_type imsld_complete_act \
@@ -4307,6 +4387,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     set complete_unit_of_learning [$method selectNodes "*\[local-name()='complete-unit-of-learning'\]"]
     set complete_act_id ""
     set time_in_seconds ""
+    set time_string ""
     set when_prop_value_is_set_xml ""
     if { [llength $complete_unit_of_learning] } {
         imsld::parse::validate_multiplicity -tree $complete_unit_of_learning -multiplicity 1 -element_name complete-unit-of-learning -equal
@@ -4317,6 +4398,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
             imsld::parse::validate_multiplicity -tree $time_limit -multiplicity 1 -element_name time-limit(complete-unit-of-learning) -equal
             set time_string [imsld::parse::get_element_text -node $time_limit]
             set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
+            set time_string $time_string
         }
         # Method: Complete Unit of Learning: When Property Value is Set
         set when_prop_value_is_set [$complete_unit_of_learning selectNodes "*\[local-name()='when-property-value-is-set'\]"] 
@@ -4330,6 +4412,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
             set when_prop_value_is_set_xml [$temporal_node asXML]
         }
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
+								       [list time_string $time_string] \
                                                                        [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
                                  -content_type imsld_complete_act \
                                  -parent_id $cr_folder_id]

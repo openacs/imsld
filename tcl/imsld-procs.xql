@@ -56,7 +56,7 @@
         and ca.time_in_seconds is not null
         and ao.object_id = ir.run_id
         and content_revision__is_live(ii.imsld_id) = 't'
-        and im.method_id = :activity_id
+        and im.item_id = :activity_id
     
 		</querytext>
 	</fullquery>
@@ -142,7 +142,7 @@
         and ao.object_id = ir.run_id
         and content_revision__is_live(ii.imsld_id) = 't'
         and ii.imsld_id = ir.imsld_id    
-        and ip.play_id = :activity_id
+        and ip.item_id = :activity_id
 
 		</querytext>
 	</fullquery>
@@ -195,7 +195,7 @@
         and ao.object_id = ir.run_id
         and content_revision__is_live(ii.imsld_id) = 't'
         and ii.imsld_id = ir.imsld_id    
-        and ia.act_id = :activity_id
+        and ia.item_id = :activity_id
 
 		</querytext>
 	</fullquery>
@@ -224,7 +224,7 @@
         where sa.complete_act_id = ca.item_id
         and content_revision__is_live(ca.complete_act_id) = 't'
         and ca.time_in_seconds is not null
-        and sa.activity_id = :activity_id
+        and sa.item_id = :activity_id
     
 		</querytext>
 	</fullquery>
@@ -305,7 +305,7 @@
         where la.complete_act_id = ca.item_id
         and content_revision__is_live(ca.complete_act_id) = 't'
         and ca.time_in_seconds is not null
-        and la.activity_id = :activity_id
+        and la.item_id = :activity_id
     
 		</querytext>
 	</fullquery>

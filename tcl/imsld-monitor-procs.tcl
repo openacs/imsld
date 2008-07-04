@@ -72,6 +72,7 @@ ad_proc -public imsld::monitor::structure_activities_list {
 				       -dom_doc $dom_doc \
 				       -title $activity_title \
 				       -href "[export_vars -base "activity-frame" -url {activity_id run_id {type "learning"}}]" \
+				       -onclick "return loadContent('[export_vars -base "activity-frame" -url {activity_id run_id {type "learning"}}]')" \
 				       -run_id $run_id \
 				       -revision_id $activity_id \
 				       -type "activity"]
@@ -98,6 +99,7 @@ ad_proc -public imsld::monitor::structure_activities_list {
 				       -dom_doc $dom_doc \
 				       -title $activity_title \
 				       -href "[export_vars -base "activity-frame" -url {activity_id run_id {type "support"}}]" \
+				       -onclick "return loadContent('[export_vars -base "activity-frame" -url {activity_id run_id {type "support"}}]')" \
 				       -run_id $run_id \
 				       -revision_id $activity_id \
 				       -type "activity"]
@@ -123,6 +125,7 @@ ad_proc -public imsld::monitor::structure_activities_list {
 					-title $activity_title \
 					-href "[export_vars -base "activity-frame" \
                               -url {{activity_id "$structure_id"} run_id {type "structure"}}]" \
+				       -onclick "return loadContent('[export_vars -base "activity-frame" -url {activity_id run_id {type "structure"}}]')" \
 					-run_id $run_id \
 					-revision_id $structure_id \
 					-type "activity"]
@@ -210,6 +213,7 @@ ad_proc -public imsld::monitor::activities_tree {
 				       -title $activity_title \
 				       -href "[export_vars -base "activity-frame" \
                               -url {activity_id run_id {type "learning"}}]" \
+				       -onclick "return loadContent('[export_vars -base "activity-frame" -url {activity_id run_id {type "learning"}}]')" \
 				       -run_id $run_id \
 				       -revision_id $activity_id \
 				       -type "activity"]
@@ -231,6 +235,7 @@ ad_proc -public imsld::monitor::activities_tree {
 				       -title $activity_title \
 				       -href "[export_vars -base "activity-frame" \
                               -url {activity_id run_id {type "support"}}]"\
+				       -onclick "return loadContent('[export_vars -base "activity-frame" -url {activity_id run_id {type "support"}}]')" \
 				       -run_id $run_id \
 				       -revision_id $activity_id \
 				       -type "activity"]
@@ -252,6 +257,7 @@ ad_proc -public imsld::monitor::activities_tree {
 					-title $activity_title \
 					-href "[export_vars -base "activity-frame" \
                                 -url {activity_id run_id {type "structure"}}]" \
+					-onclick "return loadContent('[export_vars -base "activity-frame" -url {activity_id run_id {type "structure"}}]')" \
 					-run_id $run_id \
 					-revision_id $structure_id \
 					-type "activity"]
@@ -295,7 +301,7 @@ ad_proc -public imsld::monitor::properties_tree {
     $local_node setAttribute class "liOpen"
     set a_node [$dom_doc createElement a]
     $a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id {type "loc"}}]"
-    $a_node setAttribute target "content"
+    $a_node setAttribute onclick "return loadContent('[export_vars -base "properties-frame" -url {run_id {type "loc"}}]')"
     set text [$dom_doc createTextNode "1. [_ imsld.Local_Properties]"]
     $a_node appendChild $text
     $local_node appendChild $a_node
@@ -308,7 +314,7 @@ ad_proc -public imsld::monitor::properties_tree {
     $locpers_node setAttribute class "liOpen"
     set a_node [$dom_doc createElement a]
     $a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id {type "locpers"}}]"
-    $a_node setAttribute target "content"
+    $a_node setAttribute onclick "return loadContent('[export_vars -base "properties-frame" -url {run_id {type "locpers"}}]')"
     set text [$dom_doc createTextNode "2. [_ imsld.lt_Local-personal_Prop]"]
     $a_node appendChild $text
     $locpers_node appendChild $a_node
@@ -331,7 +337,7 @@ ad_proc -public imsld::monitor::properties_tree {
 	$role_node setAttribute class "liOpen"
 	set a_node [$dom_doc createElement a]
 	$a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id role_id {type "locrole"}}]"
-	$a_node setAttribute target "content"
+	$a_node setAttribute onclick "return loadContent('[export_vars -base "properties-frame" -url {run_id role_id {type "locrole"}}]')"
 	set text [$dom_doc createTextNode "[content::item::get_title -item_id [content::revision::item_id -revision_id $role_id]]"]
 	$a_node appendChild $text
 	$role_node appendChild $a_node
@@ -348,7 +354,7 @@ ad_proc -public imsld::monitor::properties_tree {
     $globpers_node setAttribute class "liOpen"
     set a_node [$dom_doc createElement a]
     $a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id {type "globpers"}}]"
-    $a_node setAttribute target "content"
+    $a_node setAttribute onclick "return loadContent('[export_vars -base "properties-frame" -url {run_id {type "globpers"}}]')"
     set text [$dom_doc createTextNode "4. [_ imsld.lt_Global-personal_Pro]"]
     $a_node appendChild $text
     $globpers_node appendChild $a_node
@@ -361,7 +367,7 @@ ad_proc -public imsld::monitor::properties_tree {
     $globpers_node setAttribute class "liOpen"
     set a_node [$dom_doc createElement a]
     $a_node setAttribute href "[export_vars -base "properties-frame" -url {run_id {type "glob"}}]"
-    $a_node setAttribute target "content"
+    $a_node setAttribute onclick "return loadContent('[export_vars -base "properties-frame" -url {run_id {type "glob"}}]')"
     set text [$dom_doc createTextNode "5. [_ imsld.Global_Properties]"]
     $a_node appendChild $text
     $globpers_node appendChild $a_node
@@ -473,6 +479,7 @@ ad_proc -public imsld::monitor::runtime_assigned_activities_tree {
 }
 
 ad_proc -public imsld::monitor::environment_as_ul {
+    {-activity_id 0}
     -environment_item_id:required
     -run_id:required
     -dom_node:required
@@ -534,7 +541,8 @@ ad_proc -public imsld::monitor::environment_as_ul {
             foreach environments_list [db_list_of_lists env_nested_associated_items {
                 select cpr.resource_id,
                 cr2.item_id as resource_item_id,
-                cpr.type as resource_type
+                cpr.type as resource_type,
+		cpr.href as resource_href
                 from imsld_cp_resources cpr, imsld_items ii,
                 acs_rels ar, cr_items cr1, cr_items cr2
                 where ar.object_id_one = cr1.item_id
@@ -548,20 +556,41 @@ ad_proc -public imsld::monitor::environment_as_ul {
                 set resource_id [lindex $environments_list 0]
                 set resource_item_id [lindex $environments_list 1]
                 set resource_type [lindex $environments_list 2]
+                set resource_href [lindex $environments_list 3]
 
                 set lo_node [imsld::monitor::link_to_visitors_info \
 				 -dom_doc $dom_doc \
 				 -title $lo_title \
 				 -href "[export_vars -base "activity-frame" \
                            -url {run_id learning_object_id {type learning_object}}]"\
+				 -onclick "return loadContent('[export_vars -base "activity-frame" \
+                           -url {run_id learning_object_id {type learning_object}}]')"\
 				 -run_id $run_id \
 				 -revision_id $learning_object_id \
 				 -item_id $learning_object_item_id \
 				 -type "learning_object"]
                 
+		set edit_node [$dom_doc createElement a]
+		$edit_node setAttribute onclick "return editEnvironment(this.parentNode,$run_id,$activity_id,$environment_id,$learning_object_item_id,\'$lo_title\',\'$resource_href\')"
+		$edit_node setAttribute href "#no"
+		set text [$dom_doc createTextNode "EDIT"]
+		$edit_node appendChild $text
+		$lo_node appendChild [$dom_doc createTextNode " \["]
+		$lo_node appendChild $edit_node
+		$lo_node appendChild [$dom_doc createTextNode "]"]
+
+		set del_node [$dom_doc createElement a]
+		$del_node setAttribute onclick "return loadEnvironment('[export_vars -base environment-edit {run_id activity_id environment_id {item_id $learning_object_item_id}}]')"
+		$del_node setAttribute href "#no"
+		set text [$dom_doc createTextNode "DEL"]
+		$del_node appendChild $text
+                $lo_node appendChild [$dom_doc createTextNode " \["]
+                $lo_node appendChild $del_node
+		$lo_node appendChild [$dom_doc createTextNode "]"]
                 $environment_node appendChild $lo_node
             } 
         }
+	
     }
 
     # services
@@ -588,12 +617,23 @@ ad_proc -public imsld::monitor::environment_as_ul {
 			      -title $service_title \
 			      -href "[export_vars -base "activity-frame" \
                        -url {run_id service_id {type service}}]" \
+			      -onclick "return loadContent('[export_vars -base "activity-frame" \
+                       -url {run_id service_id {type service}}]')" \
 			      -run_id $run_id \
 			      -revision_id $service_id \
 			      -type "service"]
         
-        $environment_node appendChild $service_node
+	set del_node [$dom_doc createElement a]
+	$del_node setAttribute onclick "return loadEnvironment('[export_vars -base environment-edit {run_id activity_id environment_id {item_id $service_id}}]')"
+	$del_node setAttribute href "#no"
+	set text [$dom_doc createTextNode "DEL"]
+	$del_node appendChild $text
+	$service_node appendChild [$dom_doc createTextNode " \["]
+	$service_node appendChild $del_node
+	$service_node appendChild [$dom_doc createTextNode "]"]
 
+	$environment_node appendChild $service_node
+	
     }
 
     # environments
@@ -610,6 +650,50 @@ ad_proc -public imsld::monitor::environment_as_ul {
             -dom_doc $dom_doc
     }
     $environment_node_li appendChild $environment_node
+
+    set div_node [$dom_doc createElement div]
+    set add_node [$dom_doc createElement a]
+    $add_node setAttribute href "#"
+    $add_node setAttribute onclick "return addEnvironment(this.parentNode, $environment_id, $run_id, $activity_id)"
+    set text [$dom_doc createTextNode "Add URL"]
+    $add_node appendChild $text
+    $div_node appendChild $add_node
+
+#     set form_node [$dom_doc createElement form]
+#     $form_node setAttribute action "environment-edit"
+#     $form_node setAttribute onsubmit "return submitForm(this, 'environment')"
+
+#     if { $activity_id } {
+# 	set input_node [$dom_doc createElement input]
+# 	$input_node setAttribute type "hidden"
+# 	$input_node setAttribute name "activity_id"
+# 	$input_node setAttribute value $activity_id
+# 	$form_node appendChild $input_node
+#     }
+
+#     set input_node [$dom_doc createElement input]
+#     $input_node setAttribute type "hidden"
+#     $input_node setAttribute name "environment_id"
+#     $input_node setAttribute value $environment_id
+#     $form_node appendChild $input_node
+#     set input_node [$dom_doc createElement input]
+#     $input_node setAttribute type "hidden"
+#     $input_node setAttribute name "run_id"
+#     $input_node setAttribute value $run_id
+#     $form_node appendChild $input_node
+#     set text [$dom_doc createTextNode "URL:"]
+#     $form_node appendChild $text
+#     set input_node [$dom_doc createElement input]
+#     $input_node setAttribute type "text"
+#     $input_node setAttribute name "url"
+#     $form_node appendChild $input_node
+#     set input_node [$dom_doc createElement input]
+#     $input_node setAttribute type "submit"
+#     $input_node setAttribute value "Add"
+#     $form_node appendChild $input_node
+
+    $environment_node_li appendChild $div_node
+
     $dom_node appendChild $environment_node_li
 }
 
@@ -633,15 +717,15 @@ ad_proc -public imsld::monitor::activity_environments_tree {
     }] } {
         return ""
     } elseif { [db_0or1row is_learning {
-        select 1 from imsld_learning_activitiesi where item_id = :activity_item_id
+        select distinct 1 from imsld_learning_activitiesi where item_id = :activity_item_id
     }] } {
         set rel_type imsld_la_env_rel
     } elseif { [db_0or1row is_support {
-        select 1 from imsld_support_activitiesi where item_id = :activity_item_id
+        select distinct 1 from imsld_support_activitiesi where item_id = :activity_item_id
     }] } {
         set rel_type imsld_sa_env_rel
     } elseif { [db_0or1row is_structure {
-        select 1 from imsld_activity_structuresi where item_id = :activity_item_id
+        select distinct 1 from imsld_activity_structuresi where item_id = :activity_item_id
     }] } {
         set rel_type imsld_as_env_rel
     } else {
@@ -658,6 +742,7 @@ ad_proc -public imsld::monitor::activity_environments_tree {
     }]
     foreach environment_item_id $associated_environments_list {
         imsld::monitor::environment_as_ul -environment_item_id $environment_item_id \
+	    -activity_id [content::item::get_live_revision -item_id $activity_item_id] \
             -run_id $run_id \
             -dom_node $dom_node \
             -dom_doc $dom_doc
@@ -837,6 +922,7 @@ ad_proc -public imsld::monitor::link_to_visitors_info {
     -revision_id:required
     -type:required
     -item_id
+    {-onclick ""}
 } {
     @param dom_doc:required
     @param href:required
@@ -844,6 +930,7 @@ ad_proc -public imsld::monitor::link_to_visitors_info {
     @param revision_id:required
     @param type:required
     @param item_id
+    @param onclick
 
     <p>
     Adds to the given lo_node a link to the number of users visiting the
@@ -855,7 +942,9 @@ ad_proc -public imsld::monitor::link_to_visitors_info {
 
     set a_node [$dom_doc createElement a]
     $a_node setAttribute href $href
-    $a_node setAttribute target "content"
+    if { $onclick ne "" } {
+	$a_node setAttribute onclick $onclick
+    }
     $result appendChild $a_node
 
     set text [$dom_doc createTextNode "$title "]
