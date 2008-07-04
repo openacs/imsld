@@ -7,15 +7,15 @@
     <initial-install-p>f</initial-install-p>
     <singleton-p>f</singleton-p>
     
-    <version name="1.3d" url="http://openacs.org/repository/download/apm/imsld-1.3d.apm">
-        <owner url="mailto:jopez@galileo.edu">Jose Pablo Escobedo Del Cid</owner>
+    <version name="1.4d" url="http://openacs.org/repository/download/apm/imsld-1.4d.apm">
         <owner url="mailto:derick@inv.it.uc3m.es">Derick Leony</owner>
+        <owner url="mailto:jopez@galileo.edu">Jose Pablo Escobedo Del Cid</owner>
         <summary>IMS LD integration with dotLRN.</summary>
-        <release-date>2008-05-26</release-date>
+        <release-date>2008-06-09</release-date>
         <description format="text/html">This package is the implementation of IMS LD in dotLRN. The course admin can create a sequence of activities for the students, as well as decide who does what, when and using what resources.</description>
         <maturity>0</maturity>
 
-        <provides url="imsld" version="1.3d"/>
+        <provides url="imsld" version="1.4d"/>
         <requires url="acs-content-repository" version="5.2.2"/>
         <requires url="acs-kernel" version="5.2.2"/>
         <requires url="acs-templating" version="5.2.2"/>
@@ -26,7 +26,7 @@
 
         <callbacks>
             <callback type="after-install"  proc="imsld::apm_callback::after_install"/>
-            <callback type="after-upgrade"  proc="imsld::install::after_upgrade"/>
+            <callback type="after-upgrade"  proc="imsld::apm_callback::after_upgrade"/>
             <callback type="before-uninstall"  proc="imsld::apm_callback::before_uninstall"/>
             <callback type="before-uninstantiate"  proc="imsld::apm_callback::before_uninstantiate"/>
             <callback type="before-unmount"  proc="imsld::apm_callback::before_unmount"/>
