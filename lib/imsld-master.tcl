@@ -30,7 +30,7 @@ if { [string match /dotlrn/clubs/* [ad_conn url]] } {
 		     -default "/resources/theme-zen/css/color/blue.css"]
 }
 
-set local_header {
+set local_header [subst {
     <meta http-equiv="content-type" content="text/html; charset=[ad_conn charset]">
     <meta name="robots" content="all">
     <meta name="keywords" content="accessibility, portals, elearning, design">
@@ -44,12 +44,12 @@ set local_header {
     <link rel="stylesheet" href="/resources/imsld/example.css" TYPE="text/css" MEDIA="screen">
     <link rel="stylesheet" href="/resources/imsld/example-print.css" TYPE="text/css" MEDIA="print">
     <link rel="stylesheet" type="text/css" href="/resources/imsld/imsld.css" media="all">
-}
+}]
 
 set custom_css [parameter::get -parameter "CustomCSS"]
 
 if { $custom_css ne "" } {
-    append local_header [substr {
+    append local_header [subst {
 	<link rel="stylesheet" type="text/css" href="${custom_css}" media="all">
     }]
 }

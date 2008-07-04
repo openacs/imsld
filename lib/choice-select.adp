@@ -1,10 +1,10 @@
 <if @item_select:rowcount@ gt 0>
-  <form name="choose" action="">
+  <form name="choose" action="@conn_url@">
 
     <if @aux_pre_text@ not nil>@aux_pre_text;noquote@</if>
 
     <select name="@select_name@" id="@select_id@" 
-            onChange="confirmValue(this.form)">
+            onChange="submitForm(this.form, 'content')">
       <if @selected_item@ eq "">
         <option value="select">@select_string@</option>
       </if>
