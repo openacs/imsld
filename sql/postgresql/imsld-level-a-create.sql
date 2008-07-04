@@ -638,6 +638,7 @@ create table imsld_complete_acts (
                                 constraint imsld_compa_pk   
                                 primary key, 
     time_in_seconds             integer,
+    time_string	 		varchar(30),
     user_choice_p               char(1) 
                                 check (user_choice_p in ('t','f')),
     when_last_act_completed_p   char(1)   
@@ -750,13 +751,9 @@ This table stores the relationships between resources and files.';
 create table imsld_scheduled_time_limits (
     activity_id	integer
                 constraint imsld_sche_tl_act_id_fk
-            	references cr_revisions
-                constraint imsld_sche_tl_act_id_pk
-		primary key,
-    time	integer,
-    due_date	date
+            	references cr_revisions,
+    time	integer
 );
 
 comment on table imsld_scheduled_time_limits is '
 This table stores the schedule time of time_lmit for the different structures.';
-
