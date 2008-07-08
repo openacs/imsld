@@ -9,6 +9,7 @@ ad_page_contract {
     @cvs-id $Id$
 } {
     run_id:integer,notnull
+    {type ""}
 } -properties {
 } -validate {
 } -errors {

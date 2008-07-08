@@ -13,7 +13,7 @@ ad_page_contract {
     {user_id:integer ""}
     type:notnull
 } -validate {
-    valid_type {
+    valid_type -requires {type} {
         if { ![string eq "loc" $type] && ![string eq "locpers" $type] && ![string eq "globpers" $type] && ![string eq "locrole" $type] && ![string eq "glob" $type] } {
             ad_complain "[_ imsld.lt_Invalid_property_type]"
         }
@@ -254,6 +254,7 @@ db_foreach property "
     set url_prefix [ns_conn url]
     regexp (.*)/ $url_prefix url_prefix
     $form_node setAttribute action "${url_prefix}../../properties-value-set"
+    $form_node setAttribute onsubmit "return submitForm(this)"
     $form_node setAttribute method "post"
 
     if { ![string eq "" $select_node] } {
@@ -290,7 +291,7 @@ db_foreach property "
     set return_url_node [$dom_doc createElement "input"]
     $return_url_node setAttribute name "return_url"
     $return_url_node setAttribute type "hidden"
-    $return_url_node setAttribute value "[ad_conn url]?[ad_conn query]"
+    $return_url_node setAttribute value "admin/monitor/index?[ad_conn query]"
     $form_node appendChild $return_url_node
 
     # adding the submit button

@@ -68,9 +68,23 @@ $li_node setAttribute class "liBullet"
 set a_node [$doc createElement a]
 $a_node setAttribute href \
     "[export_vars -base "individual-report-frame" -url {run_id}]"
-$a_node setAttribute target "content"
+$a_node setAttribute onclick \
+    "return loadContent('[export_vars -base "individual-report-frame" -url {run_id}]')"
 $a_node appendChild [$doc createTextNode "[_ imsld.User_activity_reports]"]
 $li_node appendChild $a_node
+
+# # method properties
+# set li_node [$doc createElement li]
+# $dom_root appendChild $li_node
+# $li_node setAttribute class "liBullet"
+
+# set a_node [$doc createElement a]
+# $a_node setAttribute href \
+#     "[export_vars -base "properties-frame" -url {run_id}]"
+# $a_node setAttribute onclick \
+#     "return loadContent('[export_vars -base "properties-frame" -url {run_id}]')"
+# $a_node appendChild [$doc createTextNode "Method properties"]
+# $li_node appendChild $a_node
 
 set user_activity [$dom_root asXML]
 

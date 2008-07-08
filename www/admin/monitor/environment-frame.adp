@@ -7,10 +7,3 @@
 
   <if @environments@ not nil>@environments;noquote@</if>
 
-  <script type="text/javascript">
-    var as = document.getElementsByTagName("a");
-    for (var i = 0; i < as.length; i++) {
-      var a = as[i];
-      a.setAttribute('target', 'content');
-    }
-  </script>
