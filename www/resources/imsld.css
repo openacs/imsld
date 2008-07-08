@@ -95,25 +95,31 @@ ul.mktree, ul.mktree ul {
 div.frame {
   position:absolute;
   overflow: auto;
+  border: 1px #000 solid;
 }
 
 div#tree {
   left:0;
   padding:0;
   width:30%;
-  height:50%;
 }
 
 div#environment {
   left:0;
   padding:0;
   width:30%;
-  height:50%;
-  top:50%;
 }
 
 div#content {
-  width:70%;
-  height:99%;
+  width:69%;
   left:30%;
 }
+
+div#runtime {
+  left:0;
+  width:100%;
+  padding:0;
+  height:5%;
+  top:0;
+}
+
