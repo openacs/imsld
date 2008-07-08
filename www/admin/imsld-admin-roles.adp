@@ -41,7 +41,7 @@
   </div>
    </if> 
    <if @finishable@ not eq 0>
-  <div class="roles-confirm">
+  <div class="roles-confirm" style="float:left;">
      <formtemplate id="finish_management"></formtemplate>
   </div>
    </if>

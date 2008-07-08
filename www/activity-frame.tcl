@@ -291,18 +291,19 @@ if { !$roles_template_p } {
         set resources_list [concat $resources_list [concat $prerequisites_list $objectives_list]]
         imsld::grant_permissions -resources_activities_list $resources_list -user_id $user_id -run_id $run_id
     }
+
     set nodeList [$dom_root selectNodes {descendant::a}]
     set activity_url ""
     foreach node $nodeList {
 	set href [$node getAttribute href]
 	if { $href ne "" && ![string match {*\#*} $href] } {
-	    ns_log notice "href: $href"
 	    set iframe_activity_url $href
 	    break
 	}
     }
     
     set activities [$dom_root asXML] 
+
 } else {
     # a user has been selected to be supported
     # get the associated resource of the support activity
@@ -332,6 +333,8 @@ if { !$roles_template_p } {
     }
     
     set activities [export_vars -base "imsld-content-serve" -url { run_id resource_item_id role_id {owner_user_id $supported_user_id} }]
+
+    set iframe_activity_url $activities
 }
 
 set page_title {}

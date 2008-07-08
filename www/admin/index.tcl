@@ -69,14 +69,14 @@ template::list::create \
         create_run {
             label {}
             display_template {<if @imslds.live_revision@ not nil>
-		<a href="run-new?run_imsld_id=@imslds.imsld_id@&return_url=@return_url@" title="[_ imsld.lt___imsldcreate_new_run]"> [_ imsld.create_new_run] </a>
+		<a href="run-new?run_imsld_id=@imslds.imsld_id@&return_url=@return_url@" title="[_ imsld.create_new_run]"> [_ imsld.create_new_run] </a>
 		</if>} 
         }
         delete {
             label {}
             sub_class narrow
             display_template {<if @imslds.live_revision@ nil>
-		<span class="alert">[_ imsld.Deleted]</span> <a href="index?set_imsld_id_live=@imslds.item_id@" title="[_ imsld.Make_it_live]">[_ imsld.Make_it_live]</a>
+		<span class="alert" style="display:inline;">[_ imsld.Deleted]</span> <a href="index?set_imsld_id_live=@imslds.item_id@" title="[_ imsld.Make_it_live]">[_ imsld.Make_it_live]</a>
 		</if>
 		<else>
 		<a href="imsld-delete?imsld_id=@imslds.imsld_id@&return_url=@return_url@" title="[_ imsld.Delete]"><img src="/resources/acs-subsite/Delete16.gif" width="16" height="16" border="0" alt="[_ imsld.Delete]" title="[_ imsld.Delete]"></a>
@@ -122,7 +122,7 @@ template::list::create \
         manage {
             label {}
             display_template {<if @imsld_runs.status@ eq "active" or @imsld_runs.status@ eq "stopped">
-		<a href="imsld-view-roles?run_id=@imsld_runs.run_id@" title="[_ imsld.View_members]">[_ imsld.View_members]</a> | <a href="monitor?run_id=@imsld_runs.run_id@" title="[_ imsld.Monitor]">[_ imsld.Monitor]</a>
+		<a href="imsld-view-roles?run_id=@imsld_runs.run_id@" title="[_ imsld.View_members]">[_ imsld.View_members]</a> | <a href="monitor?run_id=@imsld_runs.run_id@" title="[_ imsld.Cockpit]">[_ imsld.Cockpit]</a>
 		</if>
 		<else>
 		 <if @imsld_runs.status@ eq "waiting">
@@ -134,7 +134,7 @@ template::list::create \
             label {}
             sub_class narrow
             display_template {<if @imsld_runs.status@ eq "deleted">
-		<span class="alert">[_ imsld.Deleted]</span> <a href="index?set_run_id_live=@imsld_runs.run_id@" title="[_ imsld.Make_it_live]">[_ imsld.Make_it_live]</a>
+		<span class="alert" style="display:inline;">[_ imsld.Deleted]</span> <a href="index?set_run_id_live=@imsld_runs.run_id@" title="[_ imsld.Make_it_live]">[_ imsld.Make_it_live]</a>
 		</if>
 		<else>
 		<a href="run-delete?run_id=@imsld_runs.run_id@&return_url=@return_url@" title="[_ imsld.Delte]"><img src="/resources/acs-subsite/Delete16.gif" width="16" height="16" border="0" alt="[_ imsld.Delte]" title="[_ imsld.Delte]"></a>

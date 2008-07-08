@@ -11,15 +11,15 @@
 </div>
 
 <div class="one-row">
- <div class="one-element">
+ <div class="one-element" style="float:left; margin-right:10px;">
   <h2>#imsld.Not_members#</h2>
   <listtemplate name="asign_not_members"></listtemplate>
  </div>
- <div class="one-element">
+ <div class="one-element" style="float:left;">
   <h2>#imsld.Group_members#</h2>
    <listtemplate name="asign_members"></listtemplate> 
   </div>
-  <div class="roles-confirm">
+  <div class="roles-confirm" style="clear:both;float:none;">
   <formtemplate id="confirm"></formtemplate>
  </div>
 </div>

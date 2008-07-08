@@ -16,7 +16,6 @@ ad_page_contract {
 
 set user_id [ad_conn user_id]
 
-ns_log Notice "role_id: $role_id"
 if { ![ string eq $role_id ""] } {
     db_1row monitor_service_info { *SQL* }
 } else {

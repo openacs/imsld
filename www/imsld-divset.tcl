@@ -9,9 +9,19 @@ ad_page_contract {
     @cvs-id $Id$
 } {
     run_id:integer,notnull
+    {activity_id:optional ""}
 } -properties {
 } -validate {
 } -errors {
 }
 
 set course_name ""
+
+set environment_src ""
+set content_src ""
+
+if { $activity_id ne ""} {
+    set content_src [export_vars -base "activity-frame" {{run_id $run_id} {activity_id $activity_id}}]
+    set environment_src [export_vars -base "environment-frame" {{run_id $run_id} {activity_id $activity_id}}]
+}
+

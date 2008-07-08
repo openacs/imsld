@@ -28,8 +28,7 @@ imsld::process_activity_environments_as_ul \
     -activity_item_id $activity_item_id \
     -run_id $run_id \
     -dom_node $dom_root \
-    -dom_doc $doc \
-    -target "content"
+    -dom_doc $doc
 
 # Set the result only if it is not empty
 if { [$dom_root hasChildNodes]} {
