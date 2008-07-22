@@ -1,2 +1,1 @@
-<blockquote><listtemplate name="imsld_runs"></listtemplate></blockquote>
-
+<listtemplate name="imsld_runs"></listtemplate>

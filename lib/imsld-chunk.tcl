@@ -14,7 +14,7 @@ set elements [list imsld_title \
                   [list label "[_ imsld.Status]" \
                        orderby_asc {status asc} \
                        orderby_desc {status desc} \
-                       display_template {<img src="@imsld_runs.image_path;noquote@" alt="@imsld_runs.image_alt@" title="@imsld_runs.image_title@" border="0" alt="[_ imsld.Status]"></a>}] \
+                       display_template {<img src="@imsld_runs.image_path;noquote@" alt="@imsld_runs.image_alt@" title="@imsld_runs.image_title@">}] \
                   creation_date \
                   [list label "[_ imsld.Creation_Date]" \
                        orderby_asc {creation_date asc} \
