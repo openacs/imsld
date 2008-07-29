@@ -42,7 +42,7 @@ if { [string eq "" $member_id] } {
 	and a.object_id_one = :member_id
 	and a.rel_type = 'user_portrait_rel'}]} {
 	
-	set post_text "<img style=\"height: 100px; vertical-align: middle\" src=\"/shared/portrait-bits.tcl?user_id=$member_id\" alt=\"Portrait\"/>"
+	set post_text "<img style=\"height: 100px; vertical-align: middle\" src=\"/shared/portrait-bits.tcl?user_id=$member_id\" alt=\"Portrait\">"
     }
 }
 

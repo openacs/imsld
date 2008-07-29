@@ -30,7 +30,7 @@
       <input type="hidden" name="monitor_id" value="@monitor_id@">
     </if>
     <if @aux_post_text@ not nil>@aux_post_text;noquote@</if>
-    <input type="submit" name="ok" value="OK" />
+    <input type="submit" name="ok" value="OK">
   </form>
   <script type="text/javascript">
       document.forms['choose'].elements['ok'].style.display="none"

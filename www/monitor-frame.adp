@@ -17,7 +17,7 @@
 <input type="hidden" name="run_id" value="@run_id@">
 <input type="hidden" name="role_id" value="@role_id@">
 <input type="hidden" name="monitor_id" value="@monitor_id@">
-<input type="submit" name="ok" value="OK" />
+<input type="submit" name="ok" value="OK">
 </form>
 </if>
 
