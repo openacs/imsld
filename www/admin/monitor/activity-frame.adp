@@ -5,7 +5,7 @@
 
   <div class="frame-header">@frame_header@</div>
   
-  <br />
+  <br>
   
   <div class="centered-table">
     <listtemplate name="related_users"></listtemplate>

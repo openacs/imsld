@@ -76,7 +76,7 @@ foreach package_id $list_of_package_ids {
             set role_names [imsld::roles::get_roles_names -roles_list $user_roles_ids_list]
             # remove &nbsp; added in the previous proc
             regsub -all "&nbsp;" $role_names "" $role_names
-            template::multirow append imsld_runs $run_id $imsld_title $creation_date $image_alt $image_title $image_path $imsld_url $community_name [join $role_names "<br/>"]
+            template::multirow append imsld_runs $run_id $imsld_title $creation_date $image_alt $image_title $image_path $imsld_url $community_name [join $role_names "<br>"]
         }
     }
 }

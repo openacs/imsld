@@ -282,7 +282,7 @@ if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $
             # 2. get the users IN the run who have sent a bulk-mail message
             append frame_header "[_ imsld.sendmail]"
 
-            append frame_header "<br />[_ imsld.lt_This_is_a_special_cas]"
+            append frame_header "<br>[_ imsld.lt_This_is_a_special_cas]"
             
             db_foreach user_in_run {
                 select gmm.member_id,

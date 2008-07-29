@@ -16,7 +16,7 @@
     </if><else>@frame_header;noquote@</else>
   </div>
 
-  <br />
+  <br>
 
   <if @member_id@ not nil>
     <div class="centered-table">

@@ -20,7 +20,7 @@
 
   <div class="frame-header">#imsld.Activities#</div>
 
-  <br />
+  <br>
 
   @html_tree;noquote@
 

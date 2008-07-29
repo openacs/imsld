@@ -9,7 +9,7 @@
   </div>
   <div class="frame-header">#imsld.Activities#</div>
   
-  <br />
+  <br>
 
   @properties_tree;noquote@
   
