@@ -1614,7 +1614,7 @@ ad_proc -public imsld::finish_component_element {
         set imsld_package_id [site_node_apm_integration::get_child_package_id \
                                   -package_id [dotlrn_community::get_package_id $community_id] \
                                   -package_key "[imsld::package_key]"]
-        ad_returnredirect "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/imsld-divset" -url { run_id }]"
+        ad_returnredirect "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/imsld-tree" -url { run_id }]"
     }
 }
 
