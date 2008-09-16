@@ -19,8 +19,8 @@
         <requires url="acs-kernel" version="5.4.2"/>
         <requires url="acs-templating" version="5.4.2"/>
         <requires url="assessment" version="0.22d7"/>
-        <requires url="dotlrn-assessment" version="2.4.0"/>
-        <requires url="dotlrn-lorsm" version="2.4.0"/>
+        <requires url="dotlrn-assessment" version="2.4.1b1"/>
+        <requires url="dotlrn-lorsm" version="2.4.1b1"/>
         <requires url="lorsm" version="0.8d3"/>
 
         <callbacks>
