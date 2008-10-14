@@ -6,13 +6,13 @@
     <title>@course_name@</title>
   </head>
 
-  <frameset rows="%20,*">
-    <frame src="run-info?run_id=@run_id@" name="run-info" title="run-info">
+  <frameset rows="%20,*" title="#imsld.IMSLD_Monitor#">
+    <frame src="run-info?run_id=@run_id@" name="run-info" title="#imsld.Run_Information#">
     <frameset id="right-column" cols="30%,*">
-      <frameset rows="70%,*">
-      <frame src="monitor-tree?run_id=@run_id@" name="toc" title="toc">
-      <frame src="" name="environment">
+      <frameset rows="70%,*" title="#imsld.Menu_area#">
+      <frame src="monitor-tree?run_id=@run_id@" name="toc" title="#imsld.Menu#">
+      <frame src="" name="environment" title="#imsld.Environment#">
     </frameset>  
-    <frame src="" name="content" title="content">
+    <frame src="" name="content" title="#imsld.Contents#">
   </frameset>
 </html>

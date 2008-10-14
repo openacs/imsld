@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<message_catalog package_key="imsld" package_version="1.2d" locale="en_US" charset="ISO-8859-1">
+<message_catalog package_key="imsld" locale="en_US" charset="ISO-8859-1">
 
   <msg key="_Assigned_users">| Assigned users:</msg>
   <msg key="_Component">Component Identifier</msg>
@@ -33,6 +33,7 @@
   <msg key="Confirm">Confirm</msg>
   <msg key="Confirm_New_IMS-LD">Confirm: New IMS-LD</msg>
   <msg key="Confirm_this_changes">Confirm these changes</msg>
+  <msg key="Contents">Contents</msg>
   <msg key="Context_info">Environment</msg>
   <msg key="Create_a_new_group">Create a new group</msg>
   <msg key="Create_New">Create New?</msg>
@@ -53,6 +54,7 @@
   <msg key="Else_Identifier">Else Identifier</msg>
   <msg key="Email">Email</msg>
   <msg key="Empty_property_value">Empty property value</msg>
+  <msg key="Environment">Environment</msg>
   <msg key="Error_parsing_file">Error parsing file</msg>
   <msg key="Existing_href">Existing href</msg>
   <msg key="Exit">Exit UoL</msg>
@@ -135,6 +137,8 @@
   <msg key="IMS-LDs">IMS-LDs</msg>
   <msg key="IMS-LDs_1">IMS Learning Designs</msg>
   <msg key="IMS_LD_Name">Unit of Learning Name</msg>
+  <msg key="IMSLD_Monitor">IMS-LD Monitor</msg>
+  <msg key="IMSLD_Player">IMS-LD Player</msg>
   <msg key="Individual_Report">Individual Report</msg>
   <msg key="Information">Information</msg>
   <msg key="Initial_Value">Initial Value</msg>
@@ -372,10 +376,11 @@
   <msg key="Match_Persons">Match Persons?</msg>
   <msg key="Material">Material</msg>
   <msg key="Max_Persons">Max Persons</msg>
+  <msg key="Menu">Menu</msg>
+  <msg key="Menu_area">Menu Area</msg>
   <msg key="Method_Identifier">Method Identifier</msg>
   <msg key="Min_Persons">Min Persons</msg>
   <msg key="Moderator_Identifier">Moderator_Identifier</msg>
-  <msg key="Monitor">Monitor</msg>
   <msg key="monitor">monitor</msg>
   <msg key="Monitor_properties">Monitor properties</msg>
   <msg key="Monitoring">User</msg>
@@ -427,6 +432,7 @@
   <msg key="Roles_in_Run">Role(s) in Run</msg>
   <msg key="Run_Identifier">Run Identifier</msg>
   <msg key="Run_IMS-LD_Name">Run (IMS-LD) Name</msg>
+  <msg key="Run_Information">Run Information</msg>
   <msg key="Runinfo_Name">Run(UoL) Name:</msg>
   <msg key="Runs">Runs (IMS-LD instances)</msg>
   <msg key="Select">select user...</msg>
