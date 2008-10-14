@@ -19,9 +19,9 @@ td.element_value {
 </if>
 <else>
     #imsld.lt_Please_confirm_the_in#
-<blockquote>
+
 <listtemplate name="imsld_info"></listtemplate>
-</blockquote>
+
 <formtemplate id=imsld_upload></formtemplate>
 </else>
 
