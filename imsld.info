@@ -21,7 +21,7 @@
         <requires url="assessment" version="0.22d7"/>
         <requires url="dotlrn-assessment" version="2.4.1b1"/>
         <requires url="dotlrn-lorsm" version="2.4.1b1"/>
-        <requires url="lorsm" version="0.8d3"/>
+        <requires url="lorsm" version="0.8"/>
 
         <callbacks>
             <callback type="after-install"  proc="imsld::apm_callback::after_install"/>
