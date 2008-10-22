@@ -141,6 +141,25 @@
         
   </div>
 
+  </div>
+
   </if>
   
+  <if @type@ eq structure>
+
+  <div class="tabbertab">
+
+  <h3>Add activity</h3>
+
+  <div style="margin: 0 auto 10px auto; width: 80%;">
+    <fieldset>
+      <legend>New Activity</legend>
+      <formtemplate id="new_activity"></formtemplate>
+    </fieldset>
+  </div>
+
+  </div>
+
+  </if>
+
   </div>

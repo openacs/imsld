@@ -73,6 +73,20 @@ $a_node setAttribute onclick \
 $a_node appendChild [$doc createTextNode "[_ imsld.User_activity_reports]"]
 $li_node appendChild $a_node
 
+# permissions
+set li_node [$doc createElement li]
+$dom_root appendChild $li_node
+$li_node setAttribute class "liBullet"
+
+set a_node [$doc createElement a]
+$a_node setAttribute href \
+    "[export_vars -base "resource-permissions" -url {run_id}]"
+$a_node setAttribute onclick \
+    "return loadContent('[export_vars -base "resource-permissions" -url {run_id}]')"
+#$a_node appendChild [$doc createTextNode "[_ imsld.User_activity_reports]"]
+$a_node appendChild [$doc createTextNode "Resource Permissions"]
+$li_node appendChild $a_node
+
 # # method properties
 # set li_node [$doc createElement li]
 # $dom_root appendChild $li_node

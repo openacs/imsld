@@ -411,160 +411,285 @@ set properties [db_list_of_lists select_properties {
 }]
 
 
-ad_form \
-    -name complete \
-    -export {run_id activity_id type} \
-    -html { onsubmit "return submitForm(this)" } \
-    -form {
-	{ years:integer,optional
-	    { label "Year" }
-	    { html {size 2 $d_enabled $d_enabled} }
-	}
-	{ months:integer,optional
-	    { label "Months" }
-	    { html {size 2 $d_enabled $d_enabled} }
-	}
-	{ days:integer,optional
-	    { label "Days" }
-	    { html {size 2 $d_enabled $d_enabled} }
-	}
-	{ hours:integer,optional
-	    { label "Hours" }
-	    { html {size 2 $d_enabled $d_enabled} }
-	    { value $time(hours) }
-	}
-	{ minutes:integer,optional
-	    { label "Minutes" }
-	    { html {size 2 $d_enabled $d_enabled} }
-	}
-	{ seconds:integer,optional
-	    { label "Seconds" }
-	    { html {size 2 $d_enabled $d_enabled} }
-	}
-	{ property:text(select),optional
-	    { label "Property" }
-	    { options $properties }
-	    { html {$p_enabled $p_enabled} }
-	    { value ${property_ref} }
-	}
-	{ value:text,optional
-	    { label "Value" }
-	    { html {$p_enabled $p_enabled} }
-	    { value $expression_value }
-	}
-    } \
-    -on_request {
-	set option ""
-	if { $complete_act_id eq "" } {
-	    set option "none"
-	} elseif { $user_choice_p eq "t" } {
-	    set option "choice"
-	} elseif { $time_in_seconds > 0 } {
-	    set option "timelimit"
-	} elseif { $when_prop_val_is_set_xml ne "" } {
-	    set option "property"
-	}
-	
-    } \
-    -on_submit {
-	set parent_id [content::item::get_parent_folder -item_id [content::revision::item_id -revision_id $activity_id]]
-	set old_complete_act_id $complete_act_id
-	switch $option {
-	    "none" {
-		set complete_act_id ""
-	    }
-	    "choice" {
-		set complete_act_id [imsld::item_revision_new -attributes [list [list user_choice_p "t"]] \
-					 -content_type imsld_complete_act \
-					 -item_id $complete_act_id \
-					 -parent_id $parent_id]
-	    }
-	    "timelimit" {
-		set time_string [imsld::parse::convert_list_to_time \
-				     -time [list years $years months $months days $days \
-						hours $hours minutes $minutes seconds $seconds]]
-		set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
-		set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
-									       [list time_string $time_string]] \
-					 -content_type imsld_complete_act \
-					 -item_id $complete_act_id \
-					 -parent_id $parent_id]
+set activity_item_id [content::revision::item_id -revision_id $activity_id]
 
-		imsld::instance::schedule_complete_time_limit \
-		    -run_id $run_id \
-		    -activity_id [content::revision::item_id -revision_id $activity_id] \
-		    -time_string $time_string
+if { $type eq "learning" || $type eq "support" } {
 
+    ad_form \
+	-name complete \
+	-export {run_id activity_id type} \
+	-html { onsubmit "return submitForm(this)" } \
+	-form {
+	    { years:integer,optional
+		{ label "Year" }
+		{ html {size 2 $d_enabled $d_enabled} }
 	    }
-	    "property" {
-		dom createDocument when-property-value-is-set doc
-		set node [$doc documentElement]
-		set wpvis [$doc createElement "imsld:when-property-value-is-set"]
-		$wpvis setAttribute "xmlns:imsld" "http://www.imsglobal.org/xsd/imsld_v1p0"
-		
-		set pr [$doc createElement "imsld:property-ref"]
-		$pr setAttribute ref $property
-		$wpvis appendChild $pr
-		set pv [$doc createElement "imsld:property-value"]
-		set text [$doc createTextNode $value]
-		$pv appendChild $text
-		$wpvis appendChild $pv
-		
-		$node appendChild $wpvis
-		set xml [$node asXML]
-
-		set complete_act_id [imsld::item_revision_new -attributes [list [list when_prop_val_is_set_xml $xml]] \
-					 -content_type imsld_complete_act \
-					 -item_id $complete_act_id \
-					 -parent_id $parent_id]
-		
+	    { months:integer,optional
+		{ label "Months" }
+		{ html {size 2 $d_enabled $d_enabled} }
 	    }
-	}
-
-	if {$old_complete_act_id ne $complete_act_id} {
-	    if {$type eq "learning"} {
-		db_1row select_learning_activity {
-		    select identifier, component_id, activity_description_id, parameters, is_visible_p,
-		    on_completion_id, learning_objective_id, prerequisite_id, title, context_id, item_id
-		    from imsld_learning_activitiesi
-		    where activity_id = :activity_id
-		}		
-		
-		set learning_activity_id \
-		    [imsld::item_revision_new -attributes [list [list identifier $identifier] \
-							       [list component_id $component_id] \
-							       [list activity_description_id $activity_description_id] \
-							       [list parameters $parameters] \
-							       [list is_visible_p $is_visible_p] \
-							       [list complete_act_id $complete_act_id] \
-							       [list on_completion_id $on_completion_id] \
-							       [list learning_objective_id $learning_objective_id] \
-							       [list prerequisite_id $prerequisite_id]] \
-			 -content_type "imsld_learning_activity" \
-			 -item_id $item_id \
-			 -title $title \
-			 -parent_id $parent_id]
-	    } else {
-		db_1row select_learning_activity {
-		    select identifier, component_id, activity_description_id, parameters, is_visible_p,
-		    on_completion_id, item_id, title
-		    from imsld_support_activitiesi
-		    where activity_id = :activity_id
+	    { days:integer,optional
+		{ label "Days" }
+		{ html {size 2 $d_enabled $d_enabled} }
+	    }
+	    { hours:integer,optional
+		{ label "Hours" }
+		{ html {size 2 $d_enabled $d_enabled} }
+		{ value $time(hours) }
+	    }
+	    { minutes:integer,optional
+		{ label "Minutes" }
+		{ html {size 2 $d_enabled $d_enabled} }
+	    }
+	    { seconds:integer,optional
+		{ label "Seconds" }
+		{ html {size 2 $d_enabled $d_enabled} }
+	    }
+	    { property:text(select),optional
+		{ label "Property" }
+		{ options $properties }
+		{ html {$p_enabled $p_enabled} }
+		{ value ${property_ref} }
+	    }
+	    { value:text,optional
+		{ label "Value" }
+		{ html {$p_enabled $p_enabled} }
+		{ value $expression_value }
+	    }
+	} \
+	-on_request {
+	    set option ""
+	    if { $complete_act_id eq "" } {
+		set option "none"
+	    } elseif { $user_choice_p eq "t" } {
+		set option "choice"
+	    } elseif { $time_in_seconds > 0 } {
+		set option "timelimit"
+	    } elseif { $when_prop_val_is_set_xml ne "" } {
+		set option "property"
+	    }
+	    
+	} \
+	-on_submit {
+	    set parent_id [content::item::get_parent_folder -item_id $activity_item_id]
+	    set old_complete_act_id $complete_act_id
+	    switch $option {
+		"none" {
+		    set complete_act_id ""
 		}
-		
-		set support_activity_id \
-		    [imsld::item_revision_new -attributes [list [list identifier $identifier] \
-							       [list component_id $component_id] \
-							       [list activity_description_id $activity_description_id] \
-							       [list parameters $parameters] \
-							       [list is_visible_p $is_visible_p] \
-							       [list complete_act_id $complete_act_id] \
-							       [list on_completion_id $on_completion_id]] \
-			 -content_type "imsld_support_activity" \
-			 -item_id $item_id \
-			 -title $title \
-			 -parent_id $parent_id]
+		"choice" {
+		    set complete_act_id [imsld::item_revision_new -attributes [list [list user_choice_p "t"]] \
+					     -content_type imsld_complete_act \
+					     -item_id $complete_act_id \
+					     -parent_id $parent_id]
+		}
+		"timelimit" {
+		    set time_string [imsld::parse::convert_list_to_time \
+					 -time [list years $years months $months days $days \
+						    hours $hours minutes $minutes seconds $seconds]]
+		    set time_in_seconds [imsld::parse::convert_time_to_seconds -time $time_string]
+		    set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
+										   [list time_string $time_string]] \
+					     -content_type imsld_complete_act \
+					     -item_id $complete_act_id \
+					     -parent_id $parent_id]
+
+		    imsld::instance::schedule_complete_time_limit \
+			-run_id $run_id \
+			-activity_id $activity_item_id \
+			-time_string $time_string
+
+		}
+		"property" {
+		    dom createDocument when-property-value-is-set doc
+		    set node [$doc documentElement]
+		    set wpvis [$doc createElement "imsld:when-property-value-is-set"]
+		    $wpvis setAttribute "xmlns:imsld" "http://www.imsglobal.org/xsd/imsld_v1p0"
+		    
+		    set pr [$doc createElement "imsld:property-ref"]
+		    $pr setAttribute ref $property
+		    $wpvis appendChild $pr
+		    set pv [$doc createElement "imsld:property-value"]
+		    set text [$doc createTextNode $value]
+		    $pv appendChild $text
+		    $wpvis appendChild $pv
+		    
+		    $node appendChild $wpvis
+		    set xml [$node asXML]
+
+		    set complete_act_id [imsld::item_revision_new -attributes [list [list when_prop_val_is_set_xml $xml]] \
+					     -content_type imsld_complete_act \
+					     -item_id $complete_act_id \
+					     -parent_id $parent_id]
+		    
+		}
 	    }
+
+	    if {$old_complete_act_id ne $complete_act_id} {
+		if {$type eq "learning"} {
+		    db_1row select_learning_activity {
+			select identifier, component_id, activity_description_id, parameters, is_visible_p,
+			on_completion_id, learning_objective_id, prerequisite_id, title, context_id, item_id
+			from imsld_learning_activitiesi
+			where activity_id = :activity_id
+		    }		
+		    
+		    set learning_activity_id \
+			[imsld::item_revision_new -attributes [list [list identifier $identifier] \
+								   [list component_id $component_id] \
+								   [list activity_description_id $activity_description_id] \
+								   [list parameters $parameters] \
+								   [list is_visible_p $is_visible_p] \
+								   [list complete_act_id $complete_act_id] \
+								   [list on_completion_id $on_completion_id] \
+								   [list learning_objective_id $learning_objective_id] \
+								   [list prerequisite_id $prerequisite_id]] \
+			     -content_type "imsld_learning_activity" \
+			     -item_id $item_id \
+			     -title $title \
+			     -parent_id $parent_id]
+		} else {
+		    db_1row select_learning_activity {
+			select identifier, component_id, activity_description_id, parameters, is_visible_p,
+			on_completion_id, item_id, title
+			from imsld_support_activitiesi
+			where activity_id = :activity_id
+		    }
+		    
+		    set support_activity_id \
+			[imsld::item_revision_new -attributes [list [list identifier $identifier] \
+								   [list component_id $component_id] \
+								   [list activity_description_id $activity_description_id] \
+								   [list parameters $parameters] \
+								   [list is_visible_p $is_visible_p] \
+								   [list complete_act_id $complete_act_id] \
+								   [list on_completion_id $on_completion_id]] \
+			     -content_type "imsld_support_activity" \
+			     -item_id $item_id \
+			     -title $title \
+			     -parent_id $parent_id]
+		}
+	    }
+	    
 	}
-	
+
+    db_multirow -extend { edit_url } act_items select_act_items {
+        select ii.imsld_item_id, icr.resource_id, cp.item_id as resource_item_id, icr.type as resource_type,
+	cr.title, icr.acs_object_id
+        from imsld_items ii, imsld_activity_descs lad, imsld_learning_activitiesi la,
+        cr_items cr1, cr_items cr2, acs_rels ar,
+	imsld_cp_resources icr, imsld_attribute_instances iai, cr_items ci, cr_items cp,
+	acs_rels ar2, cr_revisions cr
+        where la.item_id = :activity_item_id
+        and la.activity_description_id = cr1.item_id
+        and cr1.live_revision = lad.description_id
+        and ar.object_id_one = la.activity_description_id
+        and ar.object_id_two = cr2.item_id
+        and cr2.live_revision = ii.imsld_item_id    
+
+	and   icr.resource_id = cr.revision_id
+	and   ii.imsld_item_id = ci.live_revision
+	and   ar2.object_id_one = ci.item_id
+	and   icr.resource_id = cp.live_revision
+	and   ar2.object_id_two = cp.item_id
+	and   content_revision__is_live(icr.resource_id) = 't'
+	and   (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = ii.imsld_item_id))
+	       and tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = ii.imsld_item_id))
+	or    ii.imsld_item_id = ii.imsld_item_id)
+	and   iai.owner_id = ii.imsld_item_id
+	and   iai.run_id = :run_id
+	and   iai.type = 'isvisible'
+	and   iai.is_visible_p = 't'	
+    } {
+	set edit_url ""
+	ns_log notice $title
+	if { $acs_object_id ne "" } {
+	    set edit_url [imsld::xowiki::page_url -item_id $acs_object_id]
+	}
     }
+
+}
+
+if { $type eq "structure" } {
+    ad_form \
+	-name new_activity \
+	-export {run_id activity_id type} \
+	-html { onsubmit "return submitForm(this)" } \
+	-form {
+	    { title:text
+		{label "Title"}
+	    }
+	} \
+	-on_submit {
+	    
+	    set imsld_id [content::revision::item_id \
+			      -revision_id [imsld::get_imsld_from_activity -activity_id $activity_id -activity_type "structure"]]
+	    
+	    set component_id [db_string select_component {
+	      select item_id
+	      from imsld_componentsx
+	      where imsld_id = :imsld_id
+	    }]
+	
+	    set parent_id [content::item::get_parent_folder -item_id $activity_item_id]
+	    
+	    # start the activity creation
+	    set activity_description_id [imsld::item_revision_new -title $title \
+					     -content_type imsld_activity_desc \
+					     -parent_id $parent_id]
+	    
+
+	    set identifier "$title-${activity_description_id}"
+
+	    set learning_activity_id [imsld::item_revision_new -attributes [list [list identifier $identifier] \
+										[list component_id $component_id] \
+										[list activity_description_id $activity_description_id] \
+										[list is_visible_p t] \
+									       ] \
+					  -content_type imsld_learning_activity \
+					  -title $title \
+					  -parent_id $parent_id]
+	    
+#	    relation_add imsld_al_info_i_rel $activity_item_id $information_id
+	    
+	    set sort_order 0
+	    set extra_vars [ns_set create]
+	    oacs_util::vars_to_ns_set \
+		-ns_set $extra_vars \
+		-var_list { sort_order }
+	    
+	    relation_add -extra_vars $extra_vars imsld_as_la_rel $activity_item_id $learning_activity_id    
+
+# 	    set involved_roles \
+# 		[imsld::roles::get_list_of_roles \
+# 		     -imsld_id [db_string get_imsld_from_run \
+# 				    {select imsld_id from imsld_runs where run_id=:run_id}] ]
+	    
+# 	    set involved_users [list]
+# 	    foreach role $involved_roles {
+# 		set involved_users [concat $involved_users \
+# 					[imsld::roles::get_users_in_role \
+# 					     -role_id [lindex $role 0] -run_id $run_id]]
+# 	    }
+	    
+# 	    set involved_users [list]
+
+# 	    foreach user_id [lsort -unique $involved_users] { 
+	    
+# 		set instance_id \
+# 		    [package_exec_plsql \
+# 			 -var_list [list [list instance_id ""] \
+# 					[list owner_id [content::item::get_live_revision -item_id $learning_activity_id]] \
+# 					[list type "isvisible"] \
+# 					[list identifier $identifier] \
+# 					[list run_id $run_id] \
+# 					[list user_id $user_id] \
+# 					[list is_visible_p "t"] \
+# 					[list title ""] \
+# 					[list with_control_p ""]] \
+# 			 imsld_attribute_instance new]
+# 	    }
+
+	}
+
+}
