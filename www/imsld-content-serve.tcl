@@ -51,7 +51,9 @@ db_1row get_info {
     and map.displayable_p = 't'
 }
 
-set xml_string [cr_write_content -string -revision_id $revision_id]
+# set xml_string [cr_write_content -string -revision_id $revision_id]
+
+set xml_string [imsld::xowiki::page_content -item_id $item_id]
 
 # context info
 db_1row context_info {
