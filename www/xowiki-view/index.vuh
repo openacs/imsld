@@ -1,0 +1,7 @@
+# 
+
+set query [ad_conn url]
+set item_id [string range $query [expr [string last / $query] + 1] end]
+
+rp_form_put item_id $item_id
+rp_internal_redirect xowiki
