@@ -2499,6 +2499,8 @@ ad_proc -public imsld::process_resource_as_ul {
     -dom_node 
     -dom_doc
     -li_mode:boolean
+    -monitor:boolean
+    -plain:boolean
     {-user_id ""}} {
     @param resource_item_id
     @param run_id
@@ -2523,27 +2525,48 @@ ad_proc -public imsld::process_resource_as_ul {
     
     set files_node [$dom_doc createElement ul]
     if { ![string eq $resource_type "webcontent"] && ![string eq $acs_object_id ""] } {
+
         # if the resource type is not webcontent or has an associated object_id (special cases)...
         if { [db_0or1row is_cr_item { *SQL* }] } {
             db_1row get_cr_info { *SQL* } 
         } else {
             db_1row get_ao_info { *SQL* } 
         }
-        set file_url [acs_sc::invoke -contract FtsContentProvider -operation url -impl $object_type -call_args [list $acs_object_id]]
+	set file_url [acs_sc::invoke -contract FtsContentProvider -operation url -impl $object_type -call_args [list $acs_object_id]]
         set a_node [$dom_doc createElement a]
         $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
 	$a_node setAttribute target "_blank"
+	$a_node setAttribute onclick "return loadContent(this.href)"
 	$a_node setAttribute title "$object_title"
-        set img_node [$dom_doc createElement img]
-        $img_node setAttribute src "[imsld::object_type_image_path -object_type $object_type]"
-        $img_node setAttribute border "0"
-        $img_node setAttribute alt "$object_title"
-        $img_node setAttribute title "$object_title"
-        $a_node appendChild $img_node
+	set img_node [$dom_doc createElement img]
+	$img_node setAttribute src "[imsld::object_type_image_path -object_type $object_type]"
+	$img_node setAttribute border "0"
+	$img_node setAttribute alt "$object_title"
+	$img_node setAttribute title "$object_title"
+	$a_node appendChild $img_node
         if { $li_mode_p } {
             set file_node [$dom_doc createElement li]
             $file_node appendChild $a_node
             $dom_node appendChild $file_node
+	    $a_node appendChild [$dom_doc createTextNode $object_title]
+	    if { $monitor_p } {
+		set choose_node [$dom_doc createElement a]
+		$choose_node appendChild [$dom_doc createTextNode "Choose"]
+		$file_node appendChild [$dom_doc createTextNode {[}]
+		$file_node appendChild $choose_node
+		$file_node appendChild [$dom_doc createTextNode {]}]
+
+		set up_node [$dom_doc createElement a]
+		$up_node appendChild [$dom_doc createTextNode "^"]
+		$up_node setAttribute href {#}
+		set down_node [$dom_doc createElement a]
+		$down_node appendChild [$dom_doc createTextNode "v"]
+		$down_node setAttribute href {#}
+		$file_node appendChild [$dom_doc createTextNode " "]
+		$file_node appendChild $up_node
+		$file_node appendChild [$dom_doc createTextNode " "]
+		$file_node appendChild $down_node
+	    }
         } else {
             $dom_node appendChild $a_node
         }
@@ -2565,15 +2588,34 @@ ad_proc -public imsld::process_resource_as_ul {
 	    $a_node setAttribute target "_blank"
 	    $a_node setAttribute title "$file_name"
             set img_node [$dom_doc createElement img]
-            $img_node setAttribute src "[imsld::object_type_image_path -object_type file-storage]"
-            $img_node setAttribute border "0"
-            $img_node setAttribute alt "$file_name"
-            $img_node setAttribute title "$file_name"
-            $a_node appendChild $img_node
+	    $img_node setAttribute src "[imsld::object_type_image_path -object_type file-storage]"
+	    $img_node setAttribute border "0"
+	    $img_node setAttribute alt "$file_name"
+	    $img_node setAttribute title "$file_name"
+	    $a_node appendChild $img_node
             if { $li_mode_p } {
                 set file_node [$dom_doc createElement li]
                 $file_node appendChild $a_node
                 $dom_node appendChild $file_node
+		$a_node appendChild [$dom_doc createTextNode $object_title]
+		if { $monitor_p } {
+		    set choose_node [$dom_doc createElement a]
+		    $choose_node appendChild [$dom_doc createTextNode "Choose"]
+		    $file_node appendChild [$dom_doc createTextNode {[}]
+		    $file_node appendChild $choose_node
+		    $file_node appendChild [$dom_doc createTextNode {]}]
+
+		    set up_node [$dom_doc createElement a]
+		    $up_node appendChild [$dom_doc createTextNode "^"]
+		    $up_node setAttribute href {#}
+		    set down_node [$dom_doc createElement a]
+		    $down_node appendChild [$dom_doc createTextNode "v"]
+		    $down_node setAttribute href {#}
+		    $file_node appendChild [$dom_doc createTextNode " "]
+		    $file_node appendChild $up_node
+		    $file_node appendChild [$dom_doc createTextNode " "]
+		    $file_node appendChild $down_node
+		}
             } else {
                 $dom_node appendChild $a_node
             }
@@ -2594,36 +2636,85 @@ ad_proc -public imsld::process_resource_as_ul {
             $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
 	    $a_node setAttribute target "_blank"
 	    $a_node setAttribute title "$file_name"
-            set img_node [$dom_doc createElement img]
-            $img_node setAttribute src "[imsld::object_type_image_path -object_type file-storage]"
-            $img_node setAttribute border "0"
-            $img_node setAttribute alt "$file_name"
-            $img_node setAttribute title "$file_name"
-            $a_node appendChild $img_node
+	    set img_node [$dom_doc createElement img]
+	    $img_node setAttribute src "[imsld::object_type_image_path -object_type file-storage]"
+	    $img_node setAttribute border "0"
+	    $img_node setAttribute alt "$file_name"
+	    $img_node setAttribute title "$file_name"
+	    $a_node appendChild $img_node
             if { $li_mode_p } {
                 set file_node [$dom_doc createElement li]
                 $file_node appendChild $a_node
                 $dom_node appendChild $file_node
+		$a_node appendChild [$dom_doc createTextNode $object_title]
+		if { $monitor_p } {
+		    set choose_node [$dom_doc createElement a]
+		    $choose_node appendChild [$dom_doc createTextNode "Choose"]
+		    $file_node appendChild [$dom_doc createTextNode {[}]
+		    $file_node appendChild $choose_node
+		    $file_node appendChild [$dom_doc createTextNode {]}]
+
+		    set up_node [$dom_doc createElement a]
+		    $up_node appendChild [$dom_doc createTextNode "^"]
+		    $up_node setAttribute href {#}
+		    set down_node [$dom_doc createElement a]
+		    $down_node appendChild [$dom_doc createTextNode "v"]
+		    $down_node setAttribute href {#}
+		    $file_node appendChild [$dom_doc createTextNode " "]
+		    $file_node appendChild $up_node
+		    $file_node appendChild [$dom_doc createTextNode " "]
+		    $file_node appendChild $down_node
+		}
             } else {
                 $dom_node appendChild $a_node
             }
         }
         # get associated urls
-        db_foreach associated_urls { *SQL* } {
+        db_foreach associated_urls_wiki {
+            select ar.object_id_two as page_id
+            from acs_rels ar,
+            imsld_res_files_rels map
+            where ar.object_id_one = :resource_item_id
+            and ar.rel_id = map.rel_id
+	} {
             set a_node [$dom_doc createElement a]
+	    # set url [imsld::xowiki::page_url -item_id $page_id]
+	    set url "xowiki-view/$page_id"
             $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" { {file_url "[export_vars -base $url]"} resource_item_id run_id}]"
+	    ns_log notice "resource item: $resource_item_id"
+	    $a_node setAttribute onclick "return loadContent(this.href)"
 	    $a_node setAttribute target "_blank"
 	    $a_node setAttribute title "$url"
             set img_node [$dom_doc createElement img]
-            $img_node setAttribute src "[imsld::object_type_image_path -object_type url]"
-            $img_node setAttribute border "0"
-            $img_node setAttribute alt "$url"
-            $img_node setAttribute title "$url"
-            $a_node appendChild $img_node
-            if { $li_mode_p } {
+	    $img_node setAttribute src "[imsld::object_type_image_path -object_type url]"
+	    $img_node setAttribute border "0"
+	    $img_node setAttribute alt "$url"
+	    $img_node setAttribute title "$url"
+	    $a_node appendChild $img_node
+	    if { $li_mode_p } {
                 set file_node [$dom_doc createElement li]
                 $file_node appendChild $a_node
                 $dom_node appendChild $file_node
+		$a_node appendChild [$dom_doc createTextNode "$url"]
+		if { $monitor_p } {
+		    set choose_node [$dom_doc createElement a]
+		    $choose_node appendChild [$dom_doc createTextNode "Choose"]
+		    $choose_node setAttribute href {#}
+		    $file_node appendChild [$dom_doc createTextNode {[}]
+		    $file_node appendChild $choose_node
+		    $file_node appendChild [$dom_doc createTextNode {]}]
+
+		    set up_node [$dom_doc createElement a]
+		    $up_node appendChild [$dom_doc createTextNode "^"]
+		    $up_node setAttribute href {#}
+		    set down_node [$dom_doc createElement a]
+		    $down_node appendChild [$dom_doc createTextNode "v"]
+		    $down_node setAttribute href {#}
+		    $file_node appendChild [$dom_doc createTextNode " "]
+		    $file_node appendChild $up_node
+		    $file_node appendChild [$dom_doc createTextNode " "]
+		    $file_node appendChild $down_node
+		}
             } else {
                 $dom_node appendChild $a_node
             }
@@ -2840,6 +2931,7 @@ ad_proc -public imsld::process_learning_activity_as_ul {
     set description_head_node [$dom_doc createElement h2]
     set text [$dom_doc createTextNode "[_ imsld.Material]"]
     $description_head_node appendChild $text
+    $description_node setAttribute style "display: none; float:left; "
     $description_node appendChild $description_head_node
     set linear_item_list [db_list item_linear_list { *SQL* }]
 
@@ -2977,27 +3069,6 @@ ad_proc -public imsld::process_support_activity_as_ul {
     set text [$dom_doc createTextNode "[_ imsld.Material]"]
     $description_head_node appendChild $text
     $description_node appendChild $description_head_node
-    set linear_item_list [db_list item_linear_list { *SQL* }]
-    foreach imsld_item_id $linear_item_list {
-        foreach sa_items_list [db_list_of_lists sa_nested_associated_items { *SQL* }] {
-            set resource_id [lindex $sa_items_list 0]
-            set resource_item_id [lindex $sa_items_list 1]
-            set resource_type [lindex $sa_items_list 2]
-            if {[string eq "t" $resource_mode] } { 
-                lappend sa_resource_item_list $resource_item_id
-            }
-            
-            imsld::process_resource_as_ul -resource_item_id $resource_item_id \
-                -run_id $run_id \
-                -dom_doc $dom_doc \
-                -dom_node $description_node
-
-            if { [string eq "t" $resource_mode] } { 
-                lappend activity_items_list $sa_resource_item_list
-            }
-        }
-    }
-    if { [llength $linear_item_list ] > 0 } { $dom_node appendChild $description_node }
 
     # process feedback only if the activity is finished
     set feedback_node [$dom_doc createElement div]
@@ -3339,7 +3410,7 @@ ad_proc -public imsld::generate_structure_activities_list {
 			set b_node [$dom_doc createElement b]
 			set a_node [$dom_doc createElement a]
 			set href [imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]
-			$a_node setAttribute $href
+			$a_node setAttribute href $href
 			set div [imsld::activity_url -div -activity_id $activity_id -run_id $run_id -user_id $user_id]
 			$a_node setAttribute onclick "return loadContent('$div');"
 			set text [$dom_doc createTextNode "$activity_title"]
@@ -3453,7 +3524,7 @@ ad_proc -public imsld::generate_activities_tree {
 		    } else {
 			# the activity has been started
 			set activity_node [$dom_doc createElement li]
-			$activity_node setAttribute class "liOpen"
+#			$activity_node setAttribute class "liOpen"
 			set a_node [$dom_doc createElement a]
 			set href [imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]
 			set div [imsld::activity_url -div -activity_id $activity_id -run_id $run_id -user_id $user_id]
@@ -3465,7 +3536,7 @@ ad_proc -public imsld::generate_activities_tree {
 			
 			set text [$dom_doc createTextNode " "]
 			$activity_node appendChild $text
-			
+
 		    }
 
 		    if { $completed_activity_p } {
@@ -3495,6 +3566,7 @@ ad_proc -public imsld::generate_activities_tree {
 			}
 		    }
 
+		    imsld::generate_resources_tree -activity_item_id $activity_item_id -run_id $run_id -user_id $user_id -dom_node $activity_node -dom_doc $dom_doc
                     $dom_node appendChild $activity_node
                 }
             }
@@ -3575,6 +3647,7 @@ ad_proc -public imsld::generate_activities_tree {
 			}
 		    }
                     $dom_node appendChild $activity_node
+		    imsld::generate_resources_tree -run_id $run_id -user_id $user_id -dom_node $activity_node -dom_doc $dom_doc
                 }
             }
             structure {
@@ -3636,6 +3709,66 @@ ad_proc -public imsld::generate_activities_tree {
         }
     }
 }
+
+
+ad_proc -public imsld::generate_resources_tree {
+    -activity_item_id:required
+    -run_id:required
+    -user_id
+    {-community_id ""}
+    -dom_node
+    -dom_doc
+    -monitor:boolean
+} {
+    @param run_id
+    @param user_id
+    @param dom_node
+    @param dom_doc
+    @return Nothing, it appends the resources tree to the dom_node
+    @error 
+} {
+    set list_node [$dom_doc createElement ul]
+    set linear_item_list [db_list item_linear_list { *SQL* }]
+    foreach imsld_item_id $linear_item_list {
+        foreach sa_items_list [db_list_of_lists la_nested_associated_items { *SQL* }] {
+            set resource_id [lindex $sa_items_list 0]
+            set resource_item_id [lindex $sa_items_list 1]
+            set resource_type [lindex $sa_items_list 2]
+#             if {[string eq "t" $resource_mode] } { 
+#                 lappend sa_resource_item_list $resource_item_id
+#             }
+            
+            imsld::process_resource_as_ul -resource_item_id $resource_item_id \
+                -run_id $run_id \
+                -dom_doc $dom_doc \
+                -dom_node $list_node \
+		-li_mode \
+		-monitor=$monitor_p
+
+#             if { [string eq "t" $resource_mode] } { 
+#                 lappend activity_items_list $sa_resource_item_list
+#             }
+        }
+    }
+    if { $monitor_p } {
+	set li_node [$dom_doc createElement li]
+	set choose_node [$dom_doc createElement a]
+	$choose_node appendChild [$dom_doc createTextNode "Add"]
+	$choose_node setAttribute href {#}
+	$li_node appendChild [$dom_doc createTextNode {[}]
+	$li_node appendChild $choose_node
+	$li_node appendChild [$dom_doc createTextNode {]}]
+    }
+    if { [llength $linear_item_list ] > 0 } { $dom_node appendChild $list_node }
+
+#     set aux [$dom_doc createElement ul]
+#     set aux2 [$dom_doc createElement li]
+#     $aux appendChild $aux2
+#     set aux3 [$dom_doc createTextNode "test"]
+#     $aux2 appendChild $aux3
+#     $dom_node appendChild $aux
+}
+
 
 ad_proc -public imsld::generate_runtime_assigned_activities_tree {
     -run_id:required
@@ -3773,7 +3906,7 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
 		    set a_node [$dom_doc createElement a]
 		    set href [imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]
 		    set div [imsld::activity_url -div -activity_id $activity_id -run_id $run_id -user_id $user_id]
-		    $a_node setAttribute $href
+		    $a_node setAttribute href $href
 		    $a_node setAttribute onclick "return loadContent('$div')"
 		    set text [$dom_doc createTextNode "$activity_title"]
 		    $a_node appendChild $text
@@ -3789,7 +3922,7 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
 		    set a_node [$dom_doc createElement a]
 		    set href [imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]
 		    set div [imsld::activity_url -div -activity_id $activity_id -run_id $run_id -user_id $user_id]
-		    $a_node setAttribute $href
+		    $a_node setAttribute href $href
 		    $a_node setAttribute onclick "return loadContent('$div')"
 		    set text [$dom_doc createTextNode "$activity_title"]
 		    $a_node appendChild $text
@@ -3828,6 +3961,7 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
 		    }
                 }
                 $dom_node appendChild $activity_node
+		imsld::generate_resources_tree -run_id $run_id -user_id $user_id -dom_node $activity_node -dom_doc $dom_doc
             }
         }
     }
