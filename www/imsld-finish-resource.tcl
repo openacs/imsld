@@ -55,6 +55,6 @@ if { [db_0or1row not_fedbk_nor_assmnt {
 }
 
 if { ![regexp {http://} $file_url] } {
-    ad_returnredirect "[export_vars -base "$file_url" -url { file_url run_id resource_id resource_item_id owner_user_id }]"
+    set file_url [export_vars -base "$file_url" -url { file_url run_id resource_id resource_item_id owner_user_id }]
+    ad_returnredirect $file_url
 } 
-ad_returnredirect "[export_vars -base "$file_url"]"
