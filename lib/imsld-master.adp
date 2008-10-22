@@ -80,7 +80,7 @@
       <!-- Include the arrow icon and JS for collapsing the left frames -->
       <span id="addc1" class="show">
         <a href="#" onClick="return _tp_div(false)" title="#imsld.Hide_1#" 
-           class="show-hide-icon_link">
+           class="show-hide-icon_link" style="float:left; padding-top:8px;">
           <img src="/resources/acs-subsite/stock_left.png" 
                alt="#imsld.Hide#" title="#imsld.Hide#" border="0" 
                align="top"/>
