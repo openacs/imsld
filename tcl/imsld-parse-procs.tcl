@@ -1183,8 +1183,7 @@ ad_proc -public imsld::parse::parse_and_create_property_group {
             # there is no propety group with that identifier. search in the rest of non-created property-groups
             set organizations [$manifest selectNodes "*\[local-name()='organizations'\]"]
 
-            set property_groups [$organizations selectNodes {*[local-name()='learning-design']/*[local-name()='components']/*[local-name()='porperties']/*[local-name()='property-group' ] } ]
-#                set property_groups [[[[$organizations child all imsld:learning-design] child all imsld:components] child all imsld:property] child all imsld:property-group]
+            set property_groups [$organizations selectNodes {*[local-name()='learning-design']/*[local-name()='components']/*[local-name()='properties']/*[local-name()='property-group' ] } ]
             
             set found_p 0
             foreach referenced_property_group $property_groups {
