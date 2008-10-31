@@ -204,8 +204,9 @@ function loadTree(url) {
   }
         
   objXmlHttp.onreadystatechange = function() {
-    if (objXmlHttp.readyState==4 || objXmlHttp.readyState=="complete"){
+    if ((objXmlHttp.readyState==4 || objXmlHttp.readyState=="complete") && objXmlHttp.status==200){
       document.getElementById('tree').innerHTML = objXmlHttp.responseText;
+      delete window.treeClass;
       convertTrees();
     }
   }
@@ -242,6 +243,9 @@ function _tp_div(a){
 
    ac.className=ai;
    ab.className=aj;
+
+   ac.style.float = 'left';
+   ab.style.float = 'left';
    
    return false;
 }
