@@ -10,6 +10,48 @@ ad_library {
 
 namespace eval imsld::monitor {}
 
+ad_proc -public imsld::monitor::add_activity_sorting {
+    -item_id:required
+    -run_id:required
+    -dom_doc:required
+    -dom_node:required
+    {-sort_order:required 1}
+    -number_elements
+} {
+    @param item_id
+    @param run_id
+    @param dom_doc
+    @param dom_node
+    @param sort_order
+    @param number_elements
+    @return 
+    
+    @error 
+} {
+    if { $sort_order > 0 } {
+	set url [export_vars -base change-activity-order {item_id run_id sort_order {dir -1}}]
+	set up_node [$dom_doc createElement a]
+	set img_node [$dom_doc createElement img]
+	$img_node setAttribute src "/resources/imsld/arrow_up.png"
+	$img_node setAttribute alt "Up"
+	$up_node appendChild $img_node
+	$up_node setAttribute href {\#}
+	$up_node setAttribute onclick "return loadTree('$url')"
+	$dom_node appendChild $up_node
+    }
+    if { $sort_order < ($number_elements - 1)} {
+	set url [export_vars -base change-activity-order {item_id run_id sort_order {dir 1}}]
+	set down_node [$dom_doc createElement a]
+	set img_node [$dom_doc createElement img]
+	$img_node setAttribute src "/resources/imsld/arrow_down.png"
+	$img_node setAttribute alt "Down"
+	$down_node appendChild $img_node
+	$down_node setAttribute href {\#}
+	$down_node setAttribute onclick "return loadTree('$url')"
+	$dom_node appendChild $down_node
+    }
+}
+
 ad_proc -public imsld::monitor::structure_activities_list {
     -imsld_id
     -run_id
@@ -38,20 +80,30 @@ ad_proc -public imsld::monitor::structure_activities_list {
         from imsld_activity_structuresi
         where item_id = :structure_item_id
     }
-    # get the referenced activities which are referenced from the structure
-    foreach referenced_activity [db_list_of_lists struct_referenced_activities {
+    # get the referenced activities which are referenced from the
+    # structure
+    set activities_list [db_list_of_lists struct_referenced_activities {
         select ar.object_id_two,
         ar.rel_type,
-        ar.rel_id
-        from acs_rels ar, imsld_activity_structuresi ias
+        ar.rel_id,
+	ir.sort_order
+        from acs_rels ar, imsld_activity_structuresi ias,
+	(select * from imsld_as_la_rels union select * from imsld_as_sa_rels union
+	 select * from imsld_as_as_rels) as ir
         where ar.object_id_one = ias.item_id
+	and ar.rel_id = ir.rel_id
         and ias.structure_id = :structure_id
-        order by ar.object_id_two
-    }] {
+        order by ir.sort_order, ar.object_id_two
+    }]
+
+    set activities_number [llength $activities_list]
+
+    foreach referenced_activity $activities_list {
         # get all the directly referenced activities (from the activity structure)
         set object_id_two [lindex $referenced_activity 0]
         set rel_type [lindex $referenced_activity 1]
         set rel_id [lindex $referenced_activity 2]
+        set sort_order [lindex $referenced_activity 3]
         switch $rel_type {
             imsld_as_la_rel {
                 # add the activiti to the TCL list
@@ -64,18 +116,18 @@ ad_proc -public imsld::monitor::structure_activities_list {
                     where la.item_id = :object_id_two
                     and content_revision__is_live(la.activity_id) = 't'
                 }
-                db_1row get_sort_order {
-                    select sort_order from imsld_as_la_rels where rel_id = :rel_id
-                }
 
                 set activity_node [imsld::monitor::link_to_visitors_info \
 				       -dom_doc $dom_doc \
-				       -title $activity_title \
+				       -title "$activity_title" \
 				       -href "[export_vars -base "activity-frame" -url {activity_id run_id {type "learning"}}]" \
 				       -onclick "return loadContent('[export_vars -base "activity-frame" -url {activity_id run_id {type "learning"}}]')" \
 				       -run_id $run_id \
 				       -revision_id $activity_id \
-				       -type "activity"]
+				       -type "activity" \
+				       -sort \
+				       -sort_order $sort_order \
+				       -number_elements $activities_number]
 
                 set completed_list [linsert $completed_list \
 					$sort_order [$activity_node asList]]
@@ -91,9 +143,6 @@ ad_proc -public imsld::monitor::structure_activities_list {
                     where sa.item_id = :object_id_two
                     and content_revision__is_live(sa.activity_id) = 't'
                 }
-                db_1row get_sort_order {
-                    select sort_order from imsld_as_sa_rels where rel_id = :rel_id
-                }
 
                 set activity_node [imsld::monitor::link_to_visitors_info \
 				       -dom_doc $dom_doc \
@@ -102,7 +151,10 @@ ad_proc -public imsld::monitor::structure_activities_list {
 				       -onclick "return loadContent('[export_vars -base "activity-frame" -url {activity_id run_id {type "support"}}]')" \
 				       -run_id $run_id \
 				       -revision_id $activity_id \
-				       -type "activity"]
+				       -type "activity" \
+				       -sort
+				       -sort_order $sort_order \
+				       -number_elements $activities_number]
 
                 set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
             }
@@ -116,9 +168,6 @@ ad_proc -public imsld::monitor::structure_activities_list {
                     where item_id = :object_id_two
                     and content_revision__is_live(structure_id) = 't'
                 }
-                db_1row get_sort_order {
-                    select sort_order from imsld_as_as_rels where rel_id = :rel_id
-                }
 
                 set structure_node [imsld::monitor::link_to_visitors_info \
 					-dom_doc $dom_doc \
@@ -128,7 +177,11 @@ ad_proc -public imsld::monitor::structure_activities_list {
 				       -onclick "return loadContent('[export_vars -base "activity-frame" -url {activity_id run_id {type "structure"}}]')" \
 					-run_id $run_id \
 					-revision_id $structure_id \
-					-type "activity"]
+					-type "activity" \
+					-sort \
+					-sort_order $sort_order \
+					-number_elements $activities_number]
+				    
 
                 set nested_activities_list [imsld::monitor::structure_activities_list -imsld_id $imsld_id \
                                                 -run_id $run_id \
@@ -922,6 +975,9 @@ ad_proc -public imsld::monitor::link_to_visitors_info {
     -revision_id:required
     -type:required
     -item_id
+    -sort:boolean
+    -sort_order
+    -number_elements
     {-onclick ""}
 } {
     @param dom_doc:required
@@ -931,6 +987,9 @@ ad_proc -public imsld::monitor::link_to_visitors_info {
     @param type:required
     @param item_id
     @param onclick
+    @param sort:boolean
+    @param sort_order
+    @param number_elements
 
     <p>
     Adds to the given lo_node a link to the number of users visiting the
@@ -938,7 +997,6 @@ ad_proc -public imsld::monitor::link_to_visitors_info {
     </p>
 } {
     set result [$dom_doc createElement li]
-    $result setAttribute class "liOpen"
 
     set a_node [$dom_doc createElement a]
     $a_node setAttribute href $href
@@ -950,7 +1008,7 @@ ad_proc -public imsld::monitor::link_to_visitors_info {
     set text [$dom_doc createTextNode "$title "]
     $a_node appendChild $text
 
-    if { $type == "learning_object" } {
+    if { $type eq "learning_object" } {
 	set visitors [imsld::monitor::number_of_visitors \
 			  -run_id $run_id \
 			  -revision_id $revision_id \
@@ -972,6 +1030,18 @@ ad_proc -public imsld::monitor::link_to_visitors_info {
     }
 
     $result appendChild $text
+
+    if { $sort_p } {
+	if { ![info exists item_id] } {
+	    set item_id [content::revision::item_id -revision_id $revision_id]
+	}
+	imsld::monitor::add_activity_sorting -item_id $item_id -run_id $run_id -dom_doc $dom_doc -dom_node $result \
+	    -sort_order $sort_order -number_elements $number_elements
+    }
+
+    set activity_item_id [content::revision::item_id -revision_id $revision_id]
+    set user_id [ad_conn user_id]
+    imsld::generate_resources_tree -activity_item_id $activity_item_id -user_id $user_id -run_id $run_id -dom_node $result -dom_doc $dom_doc -monitor
 
     return $result
 }
