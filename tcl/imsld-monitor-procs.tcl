@@ -623,23 +623,29 @@ ad_proc -public imsld::monitor::environment_as_ul {
 				 -item_id $learning_object_item_id \
 				 -type "learning_object"]
                 
-		set edit_node [$dom_doc createElement a]
-		$edit_node setAttribute onclick "return editEnvironment(this.parentNode,$run_id,$activity_id,$environment_id,$learning_object_item_id,\'$lo_title\',\'$resource_href\')"
-		$edit_node setAttribute href "#no"
-		set text [$dom_doc createTextNode "EDIT"]
-		$edit_node appendChild $text
-		$lo_node appendChild [$dom_doc createTextNode " \["]
-		$lo_node appendChild $edit_node
-		$lo_node appendChild [$dom_doc createTextNode "]"]
-
 		set del_node [$dom_doc createElement a]
 		$del_node setAttribute onclick "return loadEnvironment('[export_vars -base environment-edit {run_id activity_id environment_id {item_id $learning_object_item_id}}]')"
 		$del_node setAttribute href "#no"
-		set text [$dom_doc createTextNode "DEL"]
-		$del_node appendChild $text
-                $lo_node appendChild [$dom_doc createTextNode " \["]
-                $lo_node appendChild $del_node
-		$lo_node appendChild [$dom_doc createTextNode "]"]
+		$del_node setAttribute title "[_ imsld.Delete_URL]"
+
+		set del_icon [$dom_doc createElement img]
+		$del_node appendChild $del_icon
+		$del_icon setAttribute src "/resources/acs-subsite/Delete16.gif"
+		$del_icon setAttribute alt "[_ imsld.Delete]"
+		$lo_node insertBefore $del_node [$lo_node firstChild]
+
+		set edit_node [$dom_doc createElement a]
+		$edit_node setAttribute onclick "return editEnvironment(this.parentNode,$run_id,$activity_id,$environment_id,$learning_object_item_id,\'$lo_title\',\'$resource_href\')"
+		$edit_node setAttribute href "#no"
+		$edit_node setAttribute title "[_ imsld.Edit_URL]"
+
+		set edit_icon [$dom_doc createElement img]
+		$edit_node appendChild $edit_icon
+		$edit_icon setAttribute src "/resources/acs-subsite/Edit16.gif"
+		$edit_icon setAttribute alt "[_ imsld.Edit]"
+		$edit_icon setAttribute border "0"
+		$lo_node insertBefore $edit_node [$lo_node firstChild]
+
                 $environment_node appendChild $lo_node
             } 
         }
@@ -708,7 +714,15 @@ ad_proc -public imsld::monitor::environment_as_ul {
     set add_node [$dom_doc createElement a]
     $add_node setAttribute href "#"
     $add_node setAttribute onclick "return addEnvironment(this.parentNode, $environment_id, $run_id, $activity_id)"
-    set text [$dom_doc createTextNode "Add URL"]
+    $add_node setAttribute title "[_ imsld.Add_URL]"
+
+    set add_icon [$dom_doc createElement img]
+    $add_node appendChild $add_icon
+    $add_icon setAttribute src "/resources/acs-subsite/Add16.gif"
+    $add_icon setAttribute alt "[_ imsld.Add_URL]"
+    $add_icon setAttribute border "0"
+
+    set text [$dom_doc createTextNode "[_ imsld.Add_URL]"]
     $add_node appendChild $text
     $div_node appendChild $add_node
 
