@@ -5,7 +5,11 @@ ad_library {
     
     @creation-date Jul 2005
     @author jopez@inv.it.uc3m.es
+<<<<<<< imsld-parse-procs.tcl
     @cvs-id $Id$
+=======
+    @cvs-id $Id$
+>>>>>>> 1.69
 }
 
 namespace eval imsld {}

@@ -5,7 +5,11 @@ ad_library {
     
     @creation-date Nov 2006
     @author jopez@inv.it.uc3m.es
+<<<<<<< imsld-monitor-procs.tcl
     @cvs-id $Id$
+=======
+    @cvs-id $Id$
+>>>>>>> 1.6
 }
 
 namespace eval imsld::monitor {}
