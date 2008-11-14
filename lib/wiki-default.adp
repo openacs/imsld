@@ -46,6 +46,23 @@ function get_popular_tags(popular_tags_link, prefix) {
   };
   http.send(null);
 }
+
+function replace_link_targets() {
+  var links = document.getElementsByTagName("a");
+  for (var i=0; i<links.length; i++) {
+    links[i].target = "_top";
+  }  
+}
+
+var old_onload = window.onload;
+
+window.onload = function() {
+  if (old_onload) {
+    old_onload();
+  }
+  replace_link_targets();
+}
+
 </script>
   </property>
 <!-- The following DIV is needed for overlib to function! -->
