@@ -294,6 +294,7 @@ if { !$roles_template_p } {
 
     set nodeList [$dom_root selectNodes {descendant::a}]
     set activity_url ""
+
     foreach node $nodeList {
 	set href [$node getAttribute href]
 	if { $href ne "" && ![string match {*\#*} $href] } {

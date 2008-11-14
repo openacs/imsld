@@ -37,23 +37,24 @@ if { [string eq $role_id ""] } {
 
 # get file info
 db_1row get_info {
-    select cr.revision_id,
+    select cr.revision_id, cr.item_id,
     cpf.item_id,
     cpf.file_name,
     cr.mime_type
     from imsld_cp_filesx cpf,
-    acs_rels ar, imsld_res_files_rels map, cr_revisions cr
+    from acs_rels ar, imsld_res_files_rels map, cr_revisions cr
     where ar.object_id_one = :resource_item_id
     and ar.object_id_two = cpf.item_id
+    and ar.object_id_two = cr.item_id
     and cr.item_id = cpf.item_id
     and ar.rel_id = map.rel_id
     and content_revision__is_live(cr.revision_id) = 't'
     and map.displayable_p = 't'
 }
 
-# set xml_string [cr_write_content -string -revision_id $revision_id]
+set xml_string [cr_write_content -string -revision_id $revision_id]
 
-set xml_string [imsld::xowiki::page_content -item_id $item_id]
+# set xml_string "<body>[imsld::xowiki::page_content -item_id $item_id]</body>"
 
 # context info
 db_1row context_info {
@@ -913,7 +914,7 @@ set bodies [$dom_root selectNodes "*\[local-name()='body'\]"]
 foreach body $bodies {
     $body appendChild $script
 }
-set fs_resource_info [db_1row get_fs_resource_info {
+set fs_resource_info [db_0or1row get_fs_resource_info {
     select cr.revision_id as imsld_file_id,
     cpf.parent_id as parent_id
     from imsld_cp_filesx cpf,
@@ -932,6 +933,7 @@ set fs_resource_info [db_1row get_fs_resource_info {
 
 set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
 
+set folder_path ""
 set folder_path [db_exec_plsql get_folder_path {select content_item__get_path(:parent_id,:root_folder_id); }]
 set file_url "[apm_package_url_from_id $fs_package_id]view/${folder_path}"
 
