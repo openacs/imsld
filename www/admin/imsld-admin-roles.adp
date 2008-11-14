@@ -30,10 +30,13 @@
         myform.submit()
     }
 </SCRIPT>
-
 <div class="one-row">
   <div class="one-element">
-   <formtemplate id="choose_role"></formtemplate>
+    <formtemplate id="choose_role"></formtemplate>
+    <if @role@ eq 0>
+      - or -
+      <formtemplate id="upload_role"></formtemplate>
+    </if>
   </div>
   <if @role@ not eq 0>
   <div class="one-element">
@@ -41,9 +44,9 @@
   </div>
    </if> 
    <if @finishable@ not eq 0>
-  <div class="roles-confirm" style="float:left;">
-     <formtemplate id="finish_management"></formtemplate>
-  </div>
+     <div class="roles-confirm" style="float:left;">
+       <formtemplate id="finish_management"></formtemplate>
+     </div>
    </if>
 </div>
 

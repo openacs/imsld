@@ -58,14 +58,20 @@ ad_form -name choose_role -action imsld-admin-roles -export {imsld_id run_id} -s
      }
 }
 
+ad_form -name upload_role -action imsld-import-roles -export {imsld_id run_id} -show_required_p {0} -form {
+    {role_url:text
+	{label "Import members from a URL"} 
+    }
+}
+
 if {![info exists role]} {
     set role 0
 }
 
 ad_form -name finish_management \
-            -form {
-                {submit:text(submit) {label "[_ imsld.lt_Finish_role_managemen]"}}
-            } \
-            -action imsld-finish \
-            -export {imsld_id run_id}
+    -form {
+	{submit:text(submit) {label "[_ imsld.lt_Finish_role_managemen]"}}
+    } \
+    -action imsld-finish \
+    -export {imsld_id run_id}
 
