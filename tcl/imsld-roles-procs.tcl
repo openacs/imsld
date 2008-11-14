@@ -363,3 +363,106 @@ ad_proc -public imsld::roles::get_role_id {
         return 0
     }
 }
+
+ad_proc -public imsld::roles::create_basic_instance {
+    -role_id:required
+    -run_id:required
+    -title:required
+    -parent_group_id
+} {
+    Create an instance with a given name and does not create subgroups
+    
+    @author Derick Leony (derick@inv.it.uc3m.es)
+    @creation-date 2008-10-31
+    
+    @param role_id
+    @param run_id
+    @param title
+
+    @return 
+    
+    @error 
+} {
+    set user_id [ad_conn user_id] 
+    set peeraddr [ad_conn peeraddr]
+
+    #get the run_users_group
+    db_1row get_group_from_run {
+        select group_id as run_group_id  
+        from imsld_run_users_group_ext 
+        where run_id=:run_id
+    }
+    #create the party
+    db_transaction {
+        set group_id [db_exec_plsql create_new_group {
+	    select acs_group__new(
+				  null,
+				  'imsld_role_group',
+				  now(),
+				  :user_id,
+				  :peeraddr,
+				  null,
+				  null,
+				  :title,
+				  null,
+				  null
+				  );
+	}]
+    }
+
+    #map role with group
+    set role_item_id [content::revision::item_id -revision_id $role_id]
+    set rel_id [relation_add imsld_role_group_rel $role_item_id $group_id]
+    #map group with his parent (composition_rel)
+    if {[info exist parent_group_id] } {
+        relation_add composition_rel $parent_group_id $group_id
+    } 
+    #map group with the run
+    relation_add imsld_roleinstance_run_rel $group_id $run_group_id
+    
+    return $group_id
+}
+
+
+ad_proc -public imsld::roles::create_groups_from_dom {
+    -node:required
+    -run_id:required
+    -parent_group_id
+} {
+    Creates role groups based on an standarized XML
+    
+    @author Derick Leony (derick@inv.it.uc3m.es)
+    @creation-date 2008-10-31
+    
+    @param node
+    @param run_id
+    @param imsld_id
+    @param parent_group_id
+
+    @return 
+    
+    @error 
+} {
+    set groups [list]
+    foreach role_node [$node selectNodes {role}] {
+	set id [$role_node getAttribute {id}]
+	set occurrence [$role_node getAttribute {occurrence}]
+	set title [[$role_node firstChild] text]
+#	ns_write "$occurrence - $id: $title\n"
+	set role_id [imsld::roles::get_role_id -run_id $run_id -ref $id]
+	set new_instance ""
+	if { [info exists parent_group_id] } {
+	    set new_instance_id [imsld::roles::create_basic_instance -role_id $role_id -parent_group_id $parent_group_id \
+				  -title $title -run_id $run_id]
+	} else {
+	    set new_instance_id [imsld::roles::create_basic_instance -role_id $role_id \
+				  -title $title -run_id $run_id]
+	}
+	lappend groups $occurrence $new_instance_id
+	set sub_groups [imsld::roles::create_groups_from_dom -node $role_node -run_id $run_id \
+			    -parent_group_id $new_instance_id]
+	set groups [concat $groups $sub_groups]
+    }
+    return $groups
+}
+

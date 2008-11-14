@@ -2555,17 +2555,6 @@ ad_proc -public imsld::process_resource_as_ul {
 		$file_node appendChild [$dom_doc createTextNode {[}]
 		$file_node appendChild $choose_node
 		$file_node appendChild [$dom_doc createTextNode {]}]
-
-		set up_node [$dom_doc createElement a]
-		$up_node appendChild [$dom_doc createTextNode "^"]
-		$up_node setAttribute href {#}
-		set down_node [$dom_doc createElement a]
-		$down_node appendChild [$dom_doc createTextNode "v"]
-		$down_node setAttribute href {#}
-		$file_node appendChild [$dom_doc createTextNode " "]
-		$file_node appendChild $up_node
-		$file_node appendChild [$dom_doc createTextNode " "]
-		$file_node appendChild $down_node
 	    }
         } else {
             $dom_node appendChild $a_node
@@ -2574,19 +2563,21 @@ ad_proc -public imsld::process_resource_as_ul {
     } elseif { [string eq $resource_type "imsldcontent"] } {
 
         foreach file_list [db_list_of_lists associated_files { *SQL* }] {
+
             set imsld_file_id [lindex $file_list 0]
             set file_name [lindex $file_list 1]
             set item_id [lindex $file_list 2]
             set parent_id [lindex $file_list 3]
             # get the fs file path
             set folder_path [db_exec_plsql get_folder_path { *SQL* }]
-            db_1row get_fs_file_url { *SQL* }
+            db_0or1row get_fs_file_url { *SQL* }
             set fs_file_url $file_url
             set file_url "imsld-content-serve"
             set a_node [$dom_doc createElement a]
             $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
 	    $a_node setAttribute target "_blank"
 	    $a_node setAttribute title "$file_name"
+	    $a_node setAttribute onclick "return loadContent(this.href)"
             set img_node [$dom_doc createElement img]
 	    $img_node setAttribute src "[imsld::object_type_image_path -object_type file-storage]"
 	    $img_node setAttribute border "0"
@@ -2604,17 +2595,6 @@ ad_proc -public imsld::process_resource_as_ul {
 		    $file_node appendChild [$dom_doc createTextNode {[}]
 		    $file_node appendChild $choose_node
 		    $file_node appendChild [$dom_doc createTextNode {]}]
-
-		    set up_node [$dom_doc createElement a]
-		    $up_node appendChild [$dom_doc createTextNode "^"]
-		    $up_node setAttribute href {#}
-		    set down_node [$dom_doc createElement a]
-		    $down_node appendChild [$dom_doc createTextNode "v"]
-		    $down_node setAttribute href {#}
-		    $file_node appendChild [$dom_doc createTextNode " "]
-		    $file_node appendChild $up_node
-		    $file_node appendChild [$dom_doc createTextNode " "]
-		    $file_node appendChild $down_node
 		}
             } else {
                 $dom_node appendChild $a_node
@@ -2646,40 +2626,30 @@ ad_proc -public imsld::process_resource_as_ul {
                 set file_node [$dom_doc createElement li]
                 $file_node appendChild $a_node
                 $dom_node appendChild $file_node
-		$a_node appendChild [$dom_doc createTextNode $object_title]
+		$a_node appendChild [$dom_doc createTextNode $file_name]
 		if { $monitor_p } {
 		    set choose_node [$dom_doc createElement a]
 		    $choose_node appendChild [$dom_doc createTextNode "Choose"]
 		    $file_node appendChild [$dom_doc createTextNode {[}]
 		    $file_node appendChild $choose_node
 		    $file_node appendChild [$dom_doc createTextNode {]}]
-
-		    set up_node [$dom_doc createElement a]
-		    $up_node appendChild [$dom_doc createTextNode "^"]
-		    $up_node setAttribute href {#}
-		    set down_node [$dom_doc createElement a]
-		    $down_node appendChild [$dom_doc createTextNode "v"]
-		    $down_node setAttribute href {#}
-		    $file_node appendChild [$dom_doc createTextNode " "]
-		    $file_node appendChild $up_node
-		    $file_node appendChild [$dom_doc createTextNode " "]
-		    $file_node appendChild $down_node
 		}
             } else {
                 $dom_node appendChild $a_node
             }
         }
         # get associated urls
-        db_foreach associated_urls_wiki {
+	set wiki_query {
             select ar.object_id_two as page_id
             from acs_rels ar,
             imsld_res_files_rels map
             where ar.object_id_one = :resource_item_id
             and ar.rel_id = map.rel_id
-	} {
-            set a_node [$dom_doc createElement a]
-	    # set url [imsld::xowiki::page_url -item_id $page_id]
-	    set url "xowiki-view/$page_id"
+	}
+        db_foreach associated_urls { *SQL* } {
+            set a_node [$dom_doc createElement a]	    
+#	    set url "xowiki-view/$page_id"
+#	    set url [export_vars -base [imsld::xowiki::page_url -item_id $page_id] {{template_file "/packages/imsld/lib/wiki-default"}}]
             $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" { {file_url "[export_vars -base $url]"} resource_item_id run_id}]"
 	    ns_log notice "resource item: $resource_item_id"
 	    $a_node setAttribute onclick "return loadContent(this.href)"
@@ -2699,21 +2669,10 @@ ad_proc -public imsld::process_resource_as_ul {
 		if { $monitor_p } {
 		    set choose_node [$dom_doc createElement a]
 		    $choose_node appendChild [$dom_doc createTextNode "Choose"]
-		    $choose_node setAttribute href {#}
+		    $choose_node setAttribute href {\#}
 		    $file_node appendChild [$dom_doc createTextNode {[}]
 		    $file_node appendChild $choose_node
 		    $file_node appendChild [$dom_doc createTextNode {]}]
-
-		    set up_node [$dom_doc createElement a]
-		    $up_node appendChild [$dom_doc createTextNode "^"]
-		    $up_node setAttribute href {#}
-		    set down_node [$dom_doc createElement a]
-		    $down_node appendChild [$dom_doc createTextNode "v"]
-		    $down_node setAttribute href {#}
-		    $file_node appendChild [$dom_doc createTextNode " "]
-		    $file_node appendChild $up_node
-		    $file_node appendChild [$dom_doc createTextNode " "]
-		    $file_node appendChild $down_node
 		}
             } else {
                 $dom_node appendChild $a_node
