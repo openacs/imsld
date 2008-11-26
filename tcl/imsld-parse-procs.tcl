@@ -654,6 +654,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
     -resource_node
     -parent_id
     -tmp_dir
+    {-lpplist ""}
 } {
     Parses an IMS-LD resource and stores all the information in the database, such as files, dependencies, etc
 
@@ -667,6 +668,8 @@ ad_proc -public imsld::parse::parse_and_create_resource {
     @tmp_dir Temporary directory where the files were exctracted
 } {
     upvar files_struct_list files_struct_list
+
+    set prop ""
     # verify that the resource hasn't been already created
     set resource_identifier [imsld::parse::get_attribute -node $resource_node -attr_name identifier]
     if { ![db_0or1row redundancy_protection {
@@ -680,10 +683,32 @@ ad_proc -public imsld::parse::parse_and_create_resource {
         set resource_href [imsld::parse::get_attribute -node $resource_node -attr_name href]
         set community_id [dotlrn_community::get_community_id]
         
+        if { $resource_type eq "imsqti_xmlv1p0" || $resource_type eq "imsqti_xmlv1p1" || $resource_type eq "imsqti_item_xmlv2p0" } {
+                set resource_id [imsld::parse::get_attribute -node $resource_node -attr_name identifier]
+                set noprop 1
+                foreach property $lpplist {
+                        set aux [lindex [split $property .] 0]
+                        if { $resource_id eq $aux } {
+                                set noprop 0
+                                set prop $property
+                        }
+                }
+                # noprop = 1 -> there isn't any property with part of the name as the id resource.      
+                if {$noprop == 1} {
+                        ns_write "<hr /><p><font color=\"red\"><b><center>-- WARNING --</center></b></font></p>"
+                        ns_write "<p> Properties and QTI-Resources definition does not match the <b>IMS Question and Test Interoperability Integration Guide</b>.</p>"
+                        ns_write "<p> The resource identifier is: <b>$resource_id</b> and it doesn't match any property defined.</p><hr />"
+                }
+        } else {
+                set lpplist ""
+        }
+
         if { [string eq $resource_type forum] } {
             # particular case specially treated in .LRN
             # (this is not part of the spec)
             set acs_object_id [imsld::parse::parse_and_create_forum -name $activity_name]
+        } elseif { $resource_type eq "imsqti_xmlv1p0" || $resource_type eq "imsqti_xmlv1p1" || $resource_type eq "imsqti_item_xmlv2p0" } {
+            set acs_object_id [callback -catch imsld::import -res_type $resource_type -res_href $resource_href -tmp_dir $tmp_dir -community_id $community_id -prop $prop]
         } else {
             set acs_object_id [callback -catch imsld::import -res_type $resource_type -res_href $resource_href -tmp_dir $tmp_dir -community_id $community_id]
         }
@@ -803,6 +828,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
     -parent_id
     -tmp_dir
     {-parent_item_id ""}
+    {-lpplist ""}
 } {
     Parse IMS-LD item node and stores all the information in the database, such as the resources, resources items, etc.
 
@@ -847,7 +873,8 @@ ad_proc -public imsld::parse::parse_and_create_item {
                                -manifest_id $manifest_id \
                                -activity_name $activity_name \
                                -parent_id $parent_id \
-                               -tmp_dir $tmp_dir]
+                               -tmp_dir $tmp_dir \
+			       -lpplist $lpplist]
         set resource_id [lindex $resource_list 0]
         if { !$resource_id } {
             # return the error
@@ -1234,6 +1261,7 @@ ad_proc -public imsld::parse::parse_and_create_property {
     -property_node
     -parent_id
     -tmp_dir
+    {-lpplist ""}
 } {
     Parse IMS-LD property and stores all the information in the database.
 
@@ -1299,6 +1327,10 @@ ad_proc -public imsld::parse::parse_and_create_property {
         set lpp_title [imsld::parse::get_title -node $locpers_property -prefix imsld]
         set lpp_identifier [imsld::parse::get_attribute -node $locpers_property -attr_name identifier]
         set lpp_datatype [$locpers_property selectNodes "*\[local-name()='datatype' \]"] 
+
+	upvar 1 $lpplist lppaux
+	set lppaux [lappend lppaux [list $lpp_identifier]]
+
         imsld::parse::validate_multiplicity -tree $lpp_datatype -multiplicity 1 -element_name "locpers-property datatype" -equal
         set lpp_datatype [string tolower [imsld::parse::get_attribute -node $lpp_datatype -attr_name datatype]]
         set lpp_initial_value [$locpers_property selectNodes "*\[local-name()='initial-value' \]"] 
@@ -1579,6 +1611,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_description {
     {-activity_name ""}
     -parent_id
     -tmp_dir
+    {-lpplist ""}
 } {
     Parse a activity description and stores all the information in the database.
 
@@ -1609,7 +1642,8 @@ ad_proc -public imsld::parse::parse_and_create_activity_description {
                                -item_node $imsld_item \
                                -activity_name $activity_name \
                                -parent_id $parent_id \
-                               -tmp_dir $tmp_dir]
+                               -tmp_dir $tmp_dir \
+			       -lpplist $lpplist]
             
             set item_id [lindex $item_list 0]
             if { !$item_id } {
@@ -2289,6 +2323,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     -manifest_id
     -parent_id
     -tmp_dir
+    {-lpplist ""}
 } {
     Parse a learning activity and stores all the information in the database.
 
@@ -2357,7 +2392,8 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                                        -manifest $manifest \
                                        -activity_name $title \
                                        -parent_id $parent_id \
-                                       -tmp_dir $tmp_dir]
+                                       -tmp_dir $tmp_dir \
+				       -lpplist $lpplist]
 
     set activity_description_id [lindex $activity_description_list 0]
     if { !$activity_description_id } {
@@ -4134,6 +4170,10 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     set community_id [expr { [empty_string_p $community_id] ? [dotlrn_community::get_community_id] : $community_id }]
     set warnings ""
 
+    # list in which every element will have locpersproperty_id
+    # [ [prop1] [prop2] ... ]
+    set lpplist [list]
+
     # get the files structure
     set files_struct_list [imsld::parse::get_files_structure -tmp_dir $tmp_dir]
 
@@ -4290,7 +4330,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                      -manifest_id $manifest_id \
                                      -parent_id $cr_folder_id \
                                      -tmp_dir $tmp_dir \
-                                     -component_id $component_id]
+                                     -component_id $component_id \
+				     -lpplist lpplist]
         }
     }
 
@@ -4342,7 +4383,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                                 -manifest $manifest \
                                                 -manifest_id $manifest_id \
                                                 -parent_id $cr_folder_id \
-                                                -tmp_dir $tmp_dir]
+                                                -tmp_dir $tmp_dir \
+						-lpplist $lpplist]
                 if { ![lindex $learning_activity_list 0] } {
                     # an error happened, abort and return the list whit the error
                     return $learning_activity_list
@@ -4706,7 +4748,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                    -manifest $manifest \
                                    -manifest_id $manifest_id \
                                    -parent_id $cr_folder_id \
-                                   -tmp_dir $tmp_dir]
+                                   -tmp_dir $tmp_dir \
+				   -lpplist $lpplist]
             set resource_id [lindex $resource_list 0]
             if { !$resource_id } {
                 # return the error
