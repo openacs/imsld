@@ -427,6 +427,7 @@ ad_proc -public imsld::roles::create_basic_instance {
 ad_proc -public imsld::roles::create_groups_from_dom {
     -node:required
     -run_id:required
+    -imsld_id:required
     -parent_group_id
 } {
     Creates role groups based on an standarized XML
@@ -448,9 +449,9 @@ ad_proc -public imsld::roles::create_groups_from_dom {
 	set id [$role_node getAttribute {id}]
 	set occurrence [$role_node getAttribute {occurrence}]
 	set title [[$role_node firstChild] text]
-#	ns_write "$occurrence - $id: $title\n"
-	set role_id [imsld::roles::get_role_id -run_id $run_id -ref $id]
-	set new_instance ""
+	set role_id [imsld::roles::get_role_id -run_id $run_id -ref $id -imsld_id $imsld_id]
+
+	set new_instance_id ""
 	if { [info exists parent_group_id] } {
 	    set new_instance_id [imsld::roles::create_basic_instance -role_id $role_id -parent_group_id $parent_group_id \
 				  -title $title -run_id $run_id]
@@ -459,7 +460,7 @@ ad_proc -public imsld::roles::create_groups_from_dom {
 				  -title $title -run_id $run_id]
 	}
 	lappend groups $occurrence $new_instance_id
-	set sub_groups [imsld::roles::create_groups_from_dom -node $role_node -run_id $run_id \
+	set sub_groups [imsld::roles::create_groups_from_dom -node $role_node -run_id $run_id -imsld_id $imsld_id \
 			    -parent_group_id $new_instance_id]
 	set groups [concat $groups $sub_groups]
     }
