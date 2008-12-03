@@ -42,7 +42,7 @@ db_1row get_info {
     cpf.file_name,
     cr.mime_type
     from imsld_cp_filesx cpf,
-    from acs_rels ar, imsld_res_files_rels map, cr_revisions cr
+    acs_rels ar, imsld_res_files_rels map, cr_revisions cr
     where ar.object_id_one = :resource_item_id
     and ar.object_id_two = cpf.item_id
     and ar.object_id_two = cr.item_id
