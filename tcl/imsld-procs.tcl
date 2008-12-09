@@ -2588,7 +2588,7 @@ ad_proc -public imsld::process_resource_as_ul {
                 set file_node [$dom_doc createElement li]
                 $file_node appendChild $a_node
                 $dom_node appendChild $file_node
-		$a_node appendChild [$dom_doc createTextNode $object_title]
+		$a_node appendChild [$dom_doc createTextNode $file_name]
 		if { $monitor_p } {
 		    set choose_node [$dom_doc createElement a]
 		    $choose_node appendChild [$dom_doc createTextNode "Choose"]
