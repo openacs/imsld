@@ -69,7 +69,7 @@ template::list::create \
         create_run {
             label {}
             display_template {<if @imslds.live_revision@ not nil>
-		<a href="run-new?run_imsld_id=@imslds.imsld_id@&return_url=@return_url@" title="[_ imsld.create_new_run]"> [_ imsld.create_new_run] </a>
+		<a href="run-new?run_imsld_id=@imslds.imsld_id@&return_url=@return_url@" title="[_ imsld.lt___imsldcreate_new_run]"> [_ imsld.create_new_run] </a>
 		</if>} 
         }
         delete {
