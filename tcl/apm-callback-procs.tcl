@@ -90,5 +90,11 @@ ad_proc -public imsld::apm_callback::after_upgrade {
 		    -attribute_name time_string -datatype string \
 		    -pretty_name "#imsld.Time_String#" -column_spec "varchar(30)"
 	    }
+	    1.5d 1.6d {
+		content::type::attribute::new -content_type imsld_imsld \
+		    -attribute_name resource_handler -datatype string \
+		    -pretty_name "#imsld.Resource_Handler#" -column_spec "varchar(100)"
+	    }
 	}
+
 }

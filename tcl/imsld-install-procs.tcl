@@ -38,6 +38,8 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_imsld -attribute_name sequence_used_p -datatype string -pretty_name "#imsld.Sequence_Used#" -column_spec "char(1)"
     content::type::attribute::new -content_type imsld_imsld -attribute_name learning_objective_id -datatype number -pretty_name "#imsld.lt_Learning_Objectives_I#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_imsld -attribute_name prerequisite_id -datatype number -pretty_name "#imsld.Prerequistes_ID#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_imsld -attribute_name resource_handler -datatype string -pretty_name "#imsld.Resource_Handler#" -column_spec "varchar(100)"
+
 
     # learning objectives
     content::type::new -content_type imsld_learning_objective -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Learning_Objec#" -pretty_plural "#imsld.lt_IMS-LD_Learning_Objec_1#" -table_name imsld_learning_objectives -id_column learning_objective_id

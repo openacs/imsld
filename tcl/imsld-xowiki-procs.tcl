@@ -38,7 +38,7 @@ ad_proc -public imsld::xowiki::file_new {
     @error 
 } {
 
-    set mime_type [ns_guesstype $complete_path]
+    set mime_type [cr_filename_to_mime_type $complete_path]
 
     set community_id [dotlrn_community::get_community_id]
     set xw_url "[dotlrn_community::get_community_url $community_id]xowiki/"
@@ -47,7 +47,7 @@ ad_proc -public imsld::xowiki::file_new {
     set package_id $node(package_id)
     
     ::xowiki::Package initialize -package_id $package_id -url $xw_url -user_id [ad_conn user_id]
-    
+
     if { [string match "text/*" $mime_type] } {
 	set file [open $complete_path]
 	set content [read $file]
@@ -74,10 +74,6 @@ ad_proc -public imsld::xowiki::file_new {
 	    $page save
 	}	
     } else {
-	set file [open $complete_path]
-	set content [read $file]
-	close $file
-	
 	set page [$package_id resolve_page "file:$file_name" method]
 	
 	if {$page eq ""} {

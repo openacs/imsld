@@ -654,6 +654,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
     -resource_node
     -parent_id
     -tmp_dir
+    {-resource_handler "file-storage"}
     {-lpplist ""}
 } {
     Parses an IMS-LD resource and stores all the information in the database, such as files, dependencies, etc
@@ -734,6 +735,9 @@ ad_proc -public imsld::parse::parse_and_create_resource {
         set found_id_in_list 0
 	# TODO: set this variable properly:
 	set import_with_xowiki 0
+	if { $resource_handler eq "xowiki" } {
+	    set import_with_xowiki 1
+	}
 
         foreach filex $filex_list {
             set filex_href [imsld::parse::get_attribute -node $filex -attr_name href]
@@ -771,7 +775,8 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             
             # map resource with file
 	    if { $import_with_xowiki } {
-		relation_add -extra_vars $extra_vars imsld_resource_xowiki_rel $resource_id $filex_id
+		relation_add -extra_vars $extra_vars imsld_res_files_rel $resource_id $filex_id
+#		relation_add -extra_vars $extra_vars imsld_resource_xowiki_rel $resource_id $filex_id
 	    } else {
 		relation_add -extra_vars $extra_vars imsld_res_files_rel $resource_id $filex_id
 	    }
@@ -810,7 +815,8 @@ ad_proc -public imsld::parse::parse_and_create_resource {
                                               -manifest_id $manifest_id \
                                               -activity_name $activity_name \
                                               -parent_id $parent_id \
-                                              -tmp_dir $tmp_dir]
+                                              -tmp_dir $tmp_dir \
+					      -resource_handler $resource_handler ]
             if { ![lindex $dependency_resource_list 0] } {
                 # return this value and let the user know there was an error (becuase if succeded, it does nothing here)
                 return $dependency_resource_list
@@ -828,6 +834,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
     -parent_id
     -tmp_dir
     {-parent_item_id ""}
+    {-resource_handler "file-storage"}
     {-lpplist ""}
 } {
     Parse IMS-LD item node and stores all the information in the database, such as the resources, resources items, etc.
@@ -874,6 +881,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
                                -activity_name $activity_name \
                                -parent_id $parent_id \
                                -tmp_dir $tmp_dir \
+			       -resource_handler $resource_handler \
 			       -lpplist $lpplist]
         set resource_id [lindex $resource_list 0]
         if { !$resource_id } {
@@ -894,7 +902,8 @@ ad_proc -public imsld::parse::parse_and_create_item {
                                       -activity_name $activity_name \
                                       -parent_id $parent_id \
                                       -tmp_dir $tmp_dir \
-                                      -parent_item_id $item_id]
+                                      -parent_item_id $item_id \
+				      -resource_handler $resource_handler ]
             
             set nested_item_id [lindex $nested_item_list 0]
             if { !$nested_item_id } {
@@ -915,6 +924,7 @@ ad_proc -public imsld::parse::parse_and_create_role {
     -parent_id
     -tmp_dir
     {-parent_role_id ""}
+    {-resource_handler "file-storage"}
 } {
     Parse IMS-LD role node and stores all the information in the database.
 
@@ -990,7 +1000,8 @@ ad_proc -public imsld::parse::parse_and_create_role {
                            -manifest_id $manifest_id \
                            -item_node $information_item \
                            -parent_id $parent_id \
-                           -tmp_dir $tmp_dir]
+                           -tmp_dir $tmp_dir \
+			   -resource_handler $resource_handler ]
         
         set item_id [lindex $item_list 0]
         if { !$item_id } {
@@ -1012,7 +1023,8 @@ ad_proc -public imsld::parse::parse_and_create_role {
                                -tmp_dir $tmp_dir \
                                -roles_node $nested_role \
                                -parent_role_id $role_id \
-                               -component_id $component_id]
+                               -component_id $component_id \
+			       -resource_handler $resource_handler ]
             if { ![lindex $role_list 0] } {
                 # an error happened, abort and return the list whit the error
                 return $role_list
@@ -1512,6 +1524,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_objective {
     -manifest_id:required
     -parent_id:required
     -tmp_dir:required
+    {-resource_handler "file-storage"}
 } {
     Parse a learning objective and stores all the information in the database.
 
@@ -1541,7 +1554,8 @@ ad_proc -public imsld::parse::parse_and_create_learning_objective {
                                -manifest_id $manifest_id \
                                -item_node $imsld_item \
                                -parent_id $parent_id \
-                               -tmp_dir $tmp_dir]
+                               -tmp_dir $tmp_dir \
+			       -resource_handler $resource_handler ]
             
             set item_id [lindex $item_list 0]
             if { !$item_id } {
@@ -1561,6 +1575,7 @@ ad_proc -public imsld::parse::parse_and_create_prerequisite {
     -manifest_id
     -parent_id
     -tmp_dir
+    {-resource_handler "file-storage"}
 } {
     Parse a prerequisite and stores all the information in the database.
 
@@ -1590,7 +1605,8 @@ ad_proc -public imsld::parse::parse_and_create_prerequisite {
                                -manifest_id $manifest_id \
                                -item_node $imsld_item \
                                -parent_id $parent_id \
-                               -tmp_dir $tmp_dir]
+                               -tmp_dir $tmp_dir \
+			       -resource_handler $resource_handler ]
             
             set item_id [lindex $item_list 0]
             if { !$item_id } {
@@ -1611,6 +1627,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_description {
     {-activity_name ""}
     -parent_id
     -tmp_dir
+    {-resource_handler "file-storage"}
     {-lpplist ""}
 } {
     Parse a activity description and stores all the information in the database.
@@ -1643,6 +1660,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_description {
                                -activity_name $activity_name \
                                -parent_id $parent_id \
                                -tmp_dir $tmp_dir \
+			       -resource_handler $resource_handler \
 			       -lpplist $lpplist]
             
             set item_id [lindex $item_list 0]
@@ -1664,6 +1682,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_object {
     -manifest_id
     -parent_id
     -tmp_dir
+    {-resource_handler "file-storage"}
 } {
     Parse a learning object and stores all the information in the database.
 
@@ -1703,8 +1722,9 @@ ad_proc -public imsld::parse::parse_and_create_learning_object {
                            -manifest_id $manifest_id \
                            -item_node $learning_object_item \
                            -parent_id $parent_id \
-                           -tmp_dir $tmp_dir]
-        
+                           -tmp_dir $tmp_dir \
+			   -resource_handler $resource_handler ]
+	        
         set item_id [lindex $item_list 0]
         if { !$item_id } {
             # an error happened, abort and return the list whit the error
@@ -1749,6 +1769,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
     -manifest_id
     -parent_id
     -tmp_dir
+    {-resource_handler "file-storage"}
 } {
     Parse a service and stores all the information in the database.
 
@@ -1939,7 +1960,8 @@ ad_proc -public imsld::parse::parse_and_create_service {
                                -manifest_id $manifest_id \
                                -item_node $conference_item \
                                -parent_id $parent_id \
-                               -tmp_dir $tmp_dir]
+                               -tmp_dir $tmp_dir \
+			       -resource_handler $resource_handler ]
         
             set imsld_item_id [lindex $item_list 0]
             if { !$imsld_item_id } {
@@ -2085,7 +2107,8 @@ ad_proc -public imsld::parse::parse_and_create_service {
                            -manifest_id $manifest_id \
                            -item_node $imsld_item \
                            -parent_id $parent_id \
-                           -tmp_dir $tmp_dir]
+                           -tmp_dir $tmp_dir \
+			   -resource_handler $resource_handler ]
         
         set imsld_item_id [lindex $item_list 0]
         if { !$imsld_item_id } {
@@ -2115,6 +2138,7 @@ ad_proc -public imsld::parse::parse_and_create_environment {
     -manifest_id
     -parent_id
     -tmp_dir
+    {-resource_handler "file-storage"}
 } {
     Parse a environment and stores all the information in the database.
 
@@ -2158,7 +2182,8 @@ ad_proc -public imsld::parse::parse_and_create_environment {
                                       -manifest_id $manifest_id \
                                       -manifest $manifest \
                                       -parent_id $parent_id \
-                                      -tmp_dir $tmp_dir]
+                                      -tmp_dir $tmp_dir \
+				      -resource_handler $resource_handler ]
         
         set learning_object_id [lindex $learning_object_list 0]
         if { !$learning_object_id } {
@@ -2175,7 +2200,8 @@ ad_proc -public imsld::parse::parse_and_create_environment {
                               -manifest_id $manifest_id \
                               -manifest $manifest \
                               -parent_id $parent_id \
-                              -tmp_dir $tmp_dir]
+                              -tmp_dir $tmp_dir \
+			      -resource_handler $resource_handler ]
         if { ![lindex $service_list 0] } {
             # there is an error, abort and return the list with the error
             return $service_list
@@ -2220,7 +2246,8 @@ ad_proc -public imsld::parse::parse_and_create_environment {
                                                   -manifest $manifest \
                                                   -parent_id $parent_id \
                                                   -component_id $component_id \
-                                                  -tmp_dir $tmp_dir]
+                                                  -tmp_dir $tmp_dir \
+						  -resource_handler $resource_handler ]
                     set environment_ref_id [lindex $environment_ref_list 0]
                     if { !$environment_ref_id } {
                         # there is an error, abort and return the list with the error
@@ -2323,6 +2350,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     -manifest_id
     -parent_id
     -tmp_dir
+    {-resource_handler "file-storage"}
     {-lpplist ""}
 } {
     Parse a learning activity and stores all the information in the database.
@@ -2353,7 +2381,8 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                                          -manifest_id $manifest_id \
                                          -parent_id $parent_id \
                                          -manifest $manifest \
-                                         -tmp_dir $tmp_dir]
+                                         -tmp_dir $tmp_dir \
+					 -resource_handler $resource_handler ]
         
         set learning_objective_id [lindex $learning_objective_list 0]
         if { !$learning_objective_id } {
@@ -2372,7 +2401,8 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                                    -manifest_id $manifest_id \
                                    -manifest $manifest \
                                    -parent_id $parent_id \
-                                   -tmp_dir $tmp_dir]
+                                   -tmp_dir $tmp_dir \
+				   -resource_handler $resource_handler ]
 
         set prerequisite_id [lindex $prerequisite_list 0]
         if { !$prerequisite_id } {
@@ -2393,6 +2423,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                                        -activity_name $title \
                                        -parent_id $parent_id \
                                        -tmp_dir $tmp_dir \
+				       -resource_handler $resource_handler \
 				       -lpplist $lpplist]
 
     set activity_description_id [lindex $activity_description_list 0]
@@ -2492,7 +2523,8 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                                    -manifest_id $manifest_id \
                                    -item_node $feedback_item \
                                    -parent_id $parent_id \
-                                   -tmp_dir $tmp_dir]
+                                   -tmp_dir $tmp_dir \
+				   -resource_handler $resource_handler ]
                 set item_id [lindex $item_list 0]
                 if { !$item_id } {
                     # an error happened, abort and return the list whit the error
@@ -2577,6 +2609,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     -manifest_id
     -parent_id
     -tmp_dir
+    {-resource_handler "file-storage"}
 } {
     Parse a support activity and stores all the information in the database.
 
@@ -2609,7 +2642,8 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                                        -manifest $manifest \
                                        -activity_name $title \
                                        -parent_id $parent_id \
-                                       -tmp_dir $tmp_dir]
+                                       -tmp_dir $tmp_dir \
+				       -resource_handler $resource_handler ]
 
     set activity_description_id [lindex $activity_description_list 0]
     if { !$activity_description_id } {
@@ -2710,7 +2744,8 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                                    -manifest_id $manifest_id \
                                    -item_node $feedback_item \
                                    -parent_id $parent_id \
-                                   -tmp_dir $tmp_dir]
+                                   -tmp_dir $tmp_dir \
+				   -resource_handler $resource_handler ]
                 set item_id [lindex $item_list 0]
                 if { !$item_id } {
                     # an error happened, abort and return the list whit the error
@@ -2813,6 +2848,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
     -manifest_id
     -parent_id
     -tmp_dir
+    {-resource_handler "file-storage"}
 } {
     Parse a activity structure and stores all the information in the database.
 
@@ -2871,7 +2907,8 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
 			       -manifest_id $manifest_id \
 			       -item_node $information_item \
 			       -parent_id $parent_id \
-			       -tmp_dir $tmp_dir]
+			       -tmp_dir $tmp_dir \
+			       -resource_handler $resource_handler ]
 	    
 	    set information_id [lindex $item_list 0]
 	    if { !$information_id } {
@@ -2971,7 +3008,8 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                                                                  -manifest_id $manifest_id \
                                                                  -manifest $manifest \
                                                                  -parent_id $parent_id \
-                                                                 -tmp_dir $tmp_dir]
+                                                                 -tmp_dir $tmp_dir \
+								 -resource_handler $resource_handler ]
                             
                             set activity_structure_ref_id [lindex $activity_structure_ref_list 0]
                             if { !$activity_structure_ref_id } {
@@ -3075,7 +3113,8 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                                                                  -manifest_id $manifest_id \
                                                                  -manifest $manifest \
                                                                  -parent_id $parent_id \
-                                                                 -tmp_dir $tmp_dir]
+                                                                 -tmp_dir $tmp_dir \
+								 -resource_handler $resource_handler ]
                             
                             set activity_structure_ref_id [lindex $activity_structure_ref_list 0]
                             if { !$activity_structure_ref_id } {
@@ -3163,7 +3202,8 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                                                          -manifest_id $manifest_id \
                                                          -manifest $manifest \
                                                          -parent_id $parent_id \
-                                                         -tmp_dir $tmp_dir]
+                                                         -tmp_dir $tmp_dir \
+							 -resource_handler $resource_handler ]
 
                     set activity_structure_ref_id [lindex $activity_structure_ref_list 0]
                     if { !$activity_structure_ref_id } {
@@ -3426,6 +3466,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
     -parent_id
     -tmp_dir
     -sort_order
+    {-resource_handler "file-storage"}
 } {
     Parse a act and stores all the information in the database.
 
@@ -3583,7 +3624,8 @@ ad_proc -public imsld::parse::parse_and_create_act {
                                    -manifest_id $manifest_id \
                                    -item_node $feedback_item \
                                    -parent_id $parent_id \
-                                   -tmp_dir $tmp_dir]
+                                   -tmp_dir $tmp_dir \
+				   -resource_handler $resource_handler ]
                 set item_id [lindex $item_list 0]
                 if { !$item_id } {
                     # an error happened, abort and return the list whit the error
@@ -3687,6 +3729,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
     -parent_id
     -tmp_dir
     -sort_order
+    {-resource_handler "file-storage"}
 } {
     Parse a play and stores all the information in the database.
 
@@ -3791,7 +3834,9 @@ ad_proc -public imsld::parse::parse_and_create_play {
                                    -manifest_id $manifest_id \
                                    -item_node $feedback_item \
                                    -parent_id $parent_id \
-                                   -tmp_dir $tmp_dir]
+                                   -tmp_dir $tmp_dir \
+				   -resource_handler $resource_handler ]
+
                 set item_id [lindex $item_list 0]
                 if { !$item_id } {
                     # an error happened, abort and return the list whit the error
@@ -3854,7 +3899,8 @@ ad_proc -public imsld::parse::parse_and_create_play {
                           -manifest_id $manifest_id \
                           -parent_id $parent_id \
                           -tmp_dir $tmp_dir \
-                          -sort_order $count]
+                          -sort_order $count \
+			  -resource_handler $resource_handler ]
         set act_id [lindex $act_list 0]
         if { !$act_id } {
             # an error happened, abort and return the list whit the error
@@ -3931,11 +3977,12 @@ ad_proc -public imsld::parse::parse_and_create_notification {
                 if { $found_p } {
                     # ok, let's create the learning activity
                     set learning_activity_ref_list [imsld::parse::parse_and_create_learning_activity -activity_node $referenced_learning_activity_node \
-                                                         -component_id $component_id \
-                                                         -manifest_id $manifest_id \
-                                                         -manifest $manifest \
-                                                         -parent_id $parent_id \
-                                                         -tmp_dir $tmp_dir]
+							-component_id $component_id \
+							-manifest_id $manifest_id \
+							-manifest $manifest \
+							-parent_id $parent_id \
+							-tmp_dir $tmp_dir \
+							-resource_handler $resource_handler ]
                     
                     set activity_id [lindex $learning_activity_ref_list 0]
                     if { !$activity_id } {
@@ -3980,11 +4027,12 @@ ad_proc -public imsld::parse::parse_and_create_notification {
                 if { $found_p } {
                     # ok, let's create the support activity
                     set support_activity_ref_list [imsld::parse::parse_and_create_support_activity -activity_node $referenced_support_activity_node \
-                                                         -component_id $component_id \
-                                                         -manifest_id $manifest_id \
-                                                         -manifest $manifest \
-                                                         -parent_id $parent_id \
-                                                         -tmp_dir $tmp_dir]
+						       -component_id $component_id \
+						       -manifest_id $manifest_id \
+						       -manifest $manifest \
+						       -parent_id $parent_id \
+						       -tmp_dir $tmp_dir \
+						       -resource_handler $resource_handler ]
                     
                     set activity_id [lindex $learning_activity_ref_list 0]
                     if { !$activity_id } {
@@ -4157,6 +4205,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     -manifest_id:required
     {-community_id ""}
     -tmp_dir:required
+    {-resource_handler "file-storage"}
 } {
     Parse a XML IMS LD file and store all the information found in the database, such as the manifest, the organization, the imsld with its components, method, activities, etc.
 
@@ -4231,7 +4280,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                          -manifest_id $manifest_id \
                                          -parent_id $cr_folder_id \
                                          -manifest $manifest \
-                                         -tmp_dir $tmp_dir]
+                                         -tmp_dir $tmp_dir \
+					 -resource_handler $resource_handler ]
 
         set learning_objective_id [lindex $learning_objective_list 0]
         if { !$learning_objective_id } {
@@ -4250,7 +4300,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                    -manifest_id $manifest_id \
                                    -manifest $manifest \
                                    -parent_id $cr_folder_id \
-                                   -tmp_dir $tmp_dir]
+                                   -tmp_dir $tmp_dir \
+				   -resource_handler $resource_handler ]
 
         set prerequisite_id [lindex $prerequisite_list 0]
         if { !$prerequisite_id } {
@@ -4268,6 +4319,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                                             [list sequence_p $imsld_sequence_p] \
                                                             [list learning_objective_id $learning_objective_id] \
                                                             [list prerequisite_id $prerequisite_id] \
+                                                            [list resource_handler $resource_handler] \
                                                             [list organization_id $organization_id]] \
                       -content_type imsld_imsld \
                       -title $imsld_title \
@@ -4295,7 +4347,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                     -parent_id $cr_folder_id \
                                     -tmp_dir $tmp_dir \
                                     -roles_node $learner \
-                                    -component_id $component_id]
+                                    -component_id $component_id \
+				    -resource_handler $resource_handler ]
         if { ![lindex $learner_parse_list 0] } {
             # an error happened, abort and return the list whit the error
             return $learner_parse_list
@@ -4312,7 +4365,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                       -parent_id $cr_folder_id \
                                       -tmp_dir $tmp_dir \
                                       -roles_node $staff \
-                                      -component_id $component_id]
+                                      -component_id $component_id \
+				      -resource_handler $resource_handler ]
             if { ![lindex $staff_parse_list 0] } {
                     # an error happened, abort and return the list whit the error
                 return $staff_parse_list
@@ -4350,7 +4404,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                           -manifest_id $manifest_id \
                                           -manifest $manifest \
                                           -parent_id $cr_folder_id \
-                                          -tmp_dir $tmp_dir]
+                                          -tmp_dir $tmp_dir \
+					  -resource_handler $resource_handler ]
             set environment_ref_id [lindex $environment_ref_list 0]
             if { !$environment_ref_id } {
                 # there is an error, abort and return the list with the error
@@ -4384,6 +4439,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                                 -manifest_id $manifest_id \
                                                 -parent_id $cr_folder_id \
                                                 -tmp_dir $tmp_dir \
+						-resource_handler $resource_handler \
 						-lpplist $lpplist]
                 if { ![lindex $learning_activity_list 0] } {
                     # an error happened, abort and return the list whit the error
@@ -4409,7 +4465,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                                -manifest $manifest \
                                                -manifest_id $manifest_id \
                                                -parent_id $cr_folder_id \
-                                               -tmp_dir $tmp_dir]
+                                               -tmp_dir $tmp_dir \
+					       -resource_handler $resource_handler ]
                 if { ![lindex $support_activity_list 0] } {
                     # an error happened, abort and return the list whit the error
                     return $support_activity_list
@@ -4429,7 +4486,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                              -manifest $manifest \
                                              -manifest_id $manifest_id \
                                              -parent_id $cr_folder_id \
-                                             -tmp_dir $tmp_dir]
+                                             -tmp_dir $tmp_dir \
+					     -resource_handler $resource_handler ]
             if { ![lindex $activity_structure_list 0] } {
                     # an error happened, abort and return the list whit the error
                 return $activity_structure_list
@@ -4518,7 +4576,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                    -manifest_id $manifest_id \
                                    -item_node $feedback_item \
                                    -parent_id $cr_folder_id \
-                                   -tmp_dir $tmp_dir]
+                                   -tmp_dir $tmp_dir \
+				   -resource_handler $resource_handler ]
                 set item_id [lindex $item_list 0]
                 if { !$item_id } {
                     # an error happened, abort and return the list whit the error
@@ -4575,7 +4634,9 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                            -manifest_id $manifest_id \
                            -parent_id $cr_folder_id \
                            -tmp_dir $tmp_dir \
-                           -sort_order $count]
+                           -sort_order $count \
+			   -resource_handler $resource_handler ]
+
         if { ![lindex $play_list 0] } {
             # an error happened, abort and return the list whit the error
             return $play_list
@@ -4749,6 +4810,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                    -manifest_id $manifest_id \
                                    -parent_id $cr_folder_id \
                                    -tmp_dir $tmp_dir \
+				   -resource_handler $resource_handler \
 				   -lpplist $lpplist]
             set resource_id [lindex $resource_list 0]
             if { !$resource_id } {

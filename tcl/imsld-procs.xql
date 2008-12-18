@@ -1730,6 +1730,23 @@
 	</fullquery>
 
 
+	<fullquery name="imsld::process_resource_as_ul.associated_xo_files">
+		<querytext>
+
+            select ci.item_id as page_id, ci.name as file_name
+            from acs_rels ar, imsld_res_files_rels map,
+	    cr_revisions cr, cr_items ci
+            where ar.object_id_one = :resource_item_id
+            and ar.object_id_two = cr.item_id
+            and cr.item_id = ci.item_id
+            and ar.rel_id = map.rel_id
+            and content_revision__is_live(cr.revision_id) = 't'
+            and map.displayable_p = 't'
+
+		</querytext>
+	</fullquery>
+
+
 	<fullquery name="imsld::process_resource_as_ul.get_folder_path">
 		<querytext>
  select content_item__get_path(:parent_id,:root_folder_id); 

@@ -2523,7 +2523,6 @@ ad_proc -public imsld::process_resource_as_ul {
     set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
     db_1row get_resource_info { *SQL* }
     
-    set files_node [$dom_doc createElement ul]
     if { ![string eq $resource_type "webcontent"] && ![string eq $acs_object_id ""] } {
 
         # if the resource type is not webcontent or has an associated object_id (special cases)...
@@ -2562,17 +2561,36 @@ ad_proc -public imsld::process_resource_as_ul {
 
     } elseif { [string eq $resource_type "imsldcontent"] } {
 
-        foreach file_list [db_list_of_lists associated_files { *SQL* }] {
+	db_1row get_imsld {
+	    select i.imsld_id, i.resource_handler
+	    from imsld_runs r, imsld_imslds i
+	    where r.run_id = :run_id
+	    and r.imsld_id = i.imsld_id
+	}
+     
+	set associated_files_query "associated_files"
+	if { $resource_handler eq "xowiki" } {
+	    set associated_files_query "associated_xo_files"
+	}
 
-            set imsld_file_id [lindex $file_list 0]
-            set file_name [lindex $file_list 1]
-            set item_id [lindex $file_list 2]
-            set parent_id [lindex $file_list 3]
-            # get the fs file path
-            set folder_path [db_exec_plsql get_folder_path { *SQL* }]
-            db_0or1row get_fs_file_url { *SQL* }
-            set fs_file_url $file_url
-            set file_url "imsld-content-serve"
+        foreach file_list [db_list_of_lists $associated_files_query { *SQL* }] {
+	    if { $resource_handler eq "xowiki" } {
+		set page_id [lindex $file_list 0]
+		set file_name [lindex $file_list 1]
+		set url "xowiki-view/$page_id"
+		set fs_file_url [export_vars -base [imsld::xowiki::page_url -item_id $page_id] {{template_file "/packages/imsld/lib/wiki-default"}}]
+	    } else {
+		set imsld_file_id [lindex $file_list 0]
+		set file_name [lindex $file_list 1]
+		set item_id [lindex $file_list 2]
+		set parent_id [lindex $file_list 3]
+		# get the fs file path
+		set folder_path [db_exec_plsql get_folder_path { *SQL* }]
+		db_0or1row get_fs_file_url { *SQL* }
+		set fs_file_url $file_url
+	    }
+
+	    set file_url "imsld-content-serve"
             set a_node [$dom_doc createElement a]
             $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
 	    $a_node setAttribute target "_blank"
@@ -2603,15 +2621,35 @@ ad_proc -public imsld::process_resource_as_ul {
 
     } else {
         # is webcontent, let's get the associated files
-        foreach file_list [db_list_of_lists associated_files { *SQL* }] {
-            set imsld_file_id [lindex $file_list 0]
-            set file_name [lindex $file_list 1]
-            set item_id [lindex $file_list 2]
-            set parent_id [lindex $file_list 3]
-	    # get the fs file path
-            set folder_path [db_exec_plsql get_folder_path { *SQL* }]
-            set fs_file_url [db_1row get_fs_file_url { *SQL* }]
-            set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
+
+	db_1row get_imsld {
+	    select i.imsld_id, i.resource_handler
+	    from imsld_runs r, imsld_imslds i
+	    where r.run_id = :run_id
+	    and r.imsld_id = i.imsld_id
+	}
+     
+	set associated_files_query "associated_files"
+	if { $resource_handler eq "xowiki" } {
+	    set associated_files_query "associated_xo_files"
+	}
+
+        foreach file_list [db_list_of_lists $associated_files_query { *SQL* }] {
+	    if { $resource_handler eq "xowiki" } {
+		set url "xowiki-view/$page_id"
+		set url [export_vars -base [imsld::xowiki::page_url -item_id $page_id] {{template_file "/packages/imsld/lib/wiki-default"}}]
+		set file_url url
+		set file_name wikifile
+	    } else {
+		set imsld_file_id [lindex $file_list 0]
+		set file_name [lindex $file_list 1]
+		set item_id [lindex $file_list 2]
+		set parent_id [lindex $file_list 3]
+		# get the fs file path
+		set folder_path [db_exec_plsql get_folder_path { *SQL* }]
+		set fs_file_url [db_1row get_fs_file_url { *SQL* }]
+		set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
+	    }
             set a_node [$dom_doc createElement a]
             $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
 	    $a_node setAttribute target "_blank"
@@ -2639,19 +2677,11 @@ ad_proc -public imsld::process_resource_as_ul {
             }
         }
         # get associated urls
-	set wiki_query {
-            select ar.object_id_two as page_id
-            from acs_rels ar,
-            imsld_res_files_rels map
-            where ar.object_id_one = :resource_item_id
-            and ar.rel_id = map.rel_id
-	}
+	
         db_foreach associated_urls { *SQL* } {
-            set a_node [$dom_doc createElement a]	    
-#	    set url "xowiki-view/$page_id"
-#	    set url [export_vars -base [imsld::xowiki::page_url -item_id $page_id] {{template_file "/packages/imsld/lib/wiki-default"}}]
-            $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" { {file_url "[export_vars -base $url]"} resource_item_id run_id}]"
-	    ns_log notice "resource item: $resource_item_id"
+            set a_node [$dom_doc createElement a]
+
+	    $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" { {file_url "[export_vars -base $url]"} resource_item_id run_id}]"
 	    $a_node setAttribute onclick "return loadContent(this.href)"
 	    $a_node setAttribute target "_blank"
 	    $a_node setAttribute title "$url"
@@ -3606,7 +3636,7 @@ ad_proc -public imsld::generate_activities_tree {
 			}
 		    }
                     $dom_node appendChild $activity_node
-		    imsld::generate_resources_tree -run_id $run_id -user_id $user_id -dom_node $activity_node -dom_doc $dom_doc
+		    imsld::generate_resources_tree -activity_item_id $activity_item_id -run_id $run_id -user_id $user_id -dom_node $activity_node -dom_doc $dom_doc
                 }
             }
             structure {
@@ -3920,7 +3950,7 @@ ad_proc -public imsld::generate_runtime_assigned_activities_tree {
 		    }
                 }
                 $dom_node appendChild $activity_node
-		imsld::generate_resources_tree -run_id $run_id -user_id $user_id -dom_node $activity_node -dom_doc $dom_doc
+		imsld::generate_resources_tree -activity_item_id $activity_item_id -run_id $run_id -user_id $user_id -dom_node $activity_node -dom_doc $dom_doc
             }
         }
     }
