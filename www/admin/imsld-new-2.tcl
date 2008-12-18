@@ -10,6 +10,7 @@ ad_page_contract {
     tmp_dir
     manifest_id:integer,notnull
     return_url
+    {resource_handler:optional "file-storage"}
 } -properties {
     context:onevalue
 }
@@ -21,6 +22,17 @@ set page_title "[_ imsld.Creating_new_IMS-LD]"
 set context [list [list "[_ imsld.New_IMS-LD]" "new-imsld"] [list "[_ imsld.lt_Creaginting_new_IMS-L]"]]
 
 set user_id [ad_conn user_id]
+
+set community_id [dotlrn_community::get_community_id]
+set applets [dotlrn_community::list_active_applets -community_id $community_id]
+if {[lsearch $applets "dotlrn_xowiki"] == -1} {
+    set resource_handler "file-storage"
+} else {
+    if {[lsearch [list "xowiki" "file-storage"] ${resource_handler}] == -1} {
+	set resource_handler "xowiki"
+    }
+}
+
 
 # Display progress bar
 ad_progress_bar_begin \
@@ -36,7 +48,8 @@ set community_id [dotlrn_community::get_community_id]
 set manifest_list [imsld::parse::parse_and_create_imsld_manifest -xmlfile $tmp_dir/imsmanifest.xml \
                        -manifest_id $manifest_id \
                        -tmp_dir $tmp_dir \
-                       -community_id $community_id]
+                       -community_id $community_id \
+		       -resource_handler $resource_handler ]
 
 set manifest_id [lindex $manifest_list 0]
 

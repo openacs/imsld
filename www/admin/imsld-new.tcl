@@ -134,6 +134,19 @@ ad_form -name imsld_upload -cancel_url $return_url -action imsld-new-2 -html { e
     {manifest_id:integer {widget hidden} {value $manifest_id}}
 }
 
+if {[apm_package_installed_p "xowiki"]} {
+    set community_id [dotlrn_community::get_community_id]
+    set applets [dotlrn_community::list_active_applets -community_id $community_id]
+    if {[lsearch $applets "dotlrn_xowiki"] > -1} {
+	ad_form -extend -name imsld_upload -form {
+	    { resource_handler:integer(select)
+		{label "Resource manager:"}
+		{options {{XoWiki xowiki} {{File Storage} file-storage}}}
+	    }
+	}
+    }
+}
+
 set file_str [imsld::parse::get_files_structure -tmp_dir $tmp_dir]
 
 
