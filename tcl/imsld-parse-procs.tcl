@@ -774,12 +774,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             permission::set_not_inherit -object_id $filex_id
             
             # map resource with file
-	    if { $import_with_xowiki } {
-		relation_add -extra_vars $extra_vars imsld_res_files_rel $resource_id $filex_id
-#		relation_add -extra_vars $extra_vars imsld_resource_xowiki_rel $resource_id $filex_id
-	    } else {
-		relation_add -extra_vars $extra_vars imsld_res_files_rel $resource_id $filex_id
-	    }
+	    relation_add -extra_vars $extra_vars imsld_res_files_rel $resource_id $filex_id
         }
         
         if { ![empty_string_p $resource_href] && !$found_p } {

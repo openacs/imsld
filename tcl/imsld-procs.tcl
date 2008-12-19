@@ -2134,8 +2134,7 @@ ad_proc -public imsld::process_service_as_ul {
                 imsld::process_resource_as_ul -resource_item_id $resource_item_id \
                     -run_id $run_id \
                     -dom_node $dom_node \
-                    -dom_doc $dom_doc \
-                    -li_mode
+                    -dom_doc $dom_doc
                 # replace the image with the conference name
                 set img_nodes [$dom_node selectNodes {.//img}]
                 foreach img_node $img_nodes {
@@ -2253,8 +2252,7 @@ ad_proc -public imsld::process_environment_as_ul {
                 set one_learning_object_list [imsld::process_resource_as_ul -resource_item_id $resource_item_id \
                                                   -run_id $run_id \
                                                   -dom_node $environment_node \
-                                                  -dom_doc $dom_doc \
-                                                  -li_mode]
+                                                  -dom_doc $dom_doc]
 
                 # in order to behave like CopperCore, we decide to replace the images with the learning object title
                 set img_nodes [$environment_node selectNodes {.//img}]
@@ -2372,7 +2370,7 @@ ad_proc -public imsld::process_learning_objective_as_ul {
             imsld::process_resource_as_ul -resource_item_id $resource_item_id \
                 -run_id $run_id \
                 -dom_doc $dom_doc \
-                -dom_node $dom_node
+                -dom_node $list_node
         } if_no_rows {
             ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
         }
@@ -3274,6 +3272,7 @@ ad_proc -public imsld::generate_structure_activities_list {
 			    $activity_node appendChild $input_node
 			}
 		    }
+		    imsld::generate_resources_tree -activity_item_id $activity_item_id -run_id $run_id -user_id $user_id -dom_node $activity_node -dom_doc $dom_doc
                     set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
                 }
             }
@@ -3319,6 +3318,7 @@ ad_proc -public imsld::generate_structure_activities_list {
 			
 			set text [$dom_doc createTextNode " "]
 			$activity_node appendChild $text
+
 		    } else {
 			# bold letters
 			set activity_node [$dom_doc createElement li]
@@ -3362,6 +3362,7 @@ ad_proc -public imsld::generate_structure_activities_list {
 			    $activity_node appendChild $input_node
 			}
 		    }
+		    imsld::generate_resources_tree -activity_item_id $activity_item_id -run_id $run_id -user_id $user_id -dom_node $activity_node -dom_doc $dom_doc
                     set completed_list [linsert $completed_list $sort_order [$activity_node asList]]
                 }
             }

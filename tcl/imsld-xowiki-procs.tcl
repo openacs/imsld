@@ -138,3 +138,36 @@ ad_proc -public imsld::xowiki::page_url {
     return [::[$page package_id] url] 
 }
 
+
+ad_proc -public imsld::xowiki::page_list {
+} {        
+    @author Derick Leony (derick@inv.it.uc3m.es)
+    @creation-date 2008-12-19
+    
+    @return 
+    
+    @error 
+} {
+    set community_id [dotlrn_community::get_community_id]
+    set xw_url "[dotlrn_community::get_community_url $community_id]xowiki/"
+    
+    array set node [site_node::get_from_url -url $xw_url]
+    set xowiki_package_id $node(package_id)
+    ::xowiki::Package initialize -package_id $xowiki_package_id -url $xw_url -user_id [ad_conn user_id]
+    
+    set page_list [list]
+    db_foreach select_pages \
+	[::xowiki::Page instance_select_query \
+	     -folder_id [::$xowiki_package_id folder_id] \
+	     -with_subtypes true \
+	     -select_attributes {name page_id} \
+	     -from_clause ", xowiki_page P" \
+	     -where_clause "P.page_id = bt.revision_id" \
+	     -orderby "ci.name"] \
+	{
+	    if {[regexp {^::[0-9]} $name]} continue
+	    lappend page_list [list $name $item_id]
+	}
+
+    return $page_list
+}
