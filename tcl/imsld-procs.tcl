@@ -2577,7 +2577,6 @@ ad_proc -public imsld::process_resource_as_ul {
 	    if { $resource_handler eq "xowiki" } {
 		set page_id [lindex $file_list 0]
 		set file_name [lindex $file_list 1]
-		set url "xowiki-view/$page_id"
 		set fs_file_url [export_vars -base [imsld::xowiki::page_url -item_id $page_id] {{template_file "/packages/imsld/lib/wiki-default"}}]
 	    } else {
 		set imsld_file_id [lindex $file_list 0]
@@ -2636,10 +2635,9 @@ ad_proc -public imsld::process_resource_as_ul {
 
         foreach file_list [db_list_of_lists $associated_files_query { *SQL* }] {
 	    if { $resource_handler eq "xowiki" } {
-		set url "xowiki-view/$page_id"
-		set url [export_vars -base [imsld::xowiki::page_url -item_id $page_id] {{template_file "/packages/imsld/lib/wiki-default"}}]
-		set file_url url
-		set file_name wikifile
+		set page_id [lindex $file_list 0]
+		set file_name [lindex $file_list 1]
+		set file_url [export_vars -base [imsld::xowiki::page_url -item_id $page_id] {{template_file "/packages/imsld/lib/wiki-default"}}]
 	    } else {
 		set imsld_file_id [lindex $file_list 0]
 		set file_name [lindex $file_list 1]
