@@ -602,7 +602,6 @@ if { $type eq "learning" || $type eq "support" } {
 	and   iai.is_visible_p = 't'	
     } {
 	set edit_url ""
-	ns_log notice $title
 	if { $acs_object_id ne "" } {
 	    set edit_url [imsld::xowiki::page_url -item_id $acs_object_id]
 	}
@@ -611,6 +610,40 @@ if { $type eq "learning" || $type eq "support" } {
 }
 
 if { $type eq "structure" } {
+    
+    set imsld_id [content::revision::item_id \
+		      -revision_id [imsld::get_imsld_from_activity -activity_id $activity_id -activity_type "structure"]]
+    
+    content::item::get -item_id $imsld_id -array_name imsld_array
+    set res_options [list]
+    if { $imsld_array(resource_handler) eq "xowiki" } {
+	set res_options [imsld::xowiki::page_list]
+    } else {
+	set community_id [dotlrn_community::get_community_id]
+	set fs_package_id [site_node_apm_integration::get_child_package_id \
+			       -package_id [dotlrn_community::get_package_id $community_id] \
+			       -package_key "file-storage"]
+	
+	set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
+	ns_log notice $root_folder_id
+	set res_options [db_list_of_lists get_folder_tree {
+	    select
+	    repeat('&nbsp;', tree_level(ci1.tree_sortkey))||'+-'||ci1.name as label,
+	    tree_level(ci1.tree_sortkey) as level_num
+	    from cr_items ci1, cr_items ci2
+	    where
+	    ci1.tree_sortkey between ci2.tree_sortkey and
+	    tree_right(ci2.tree_sortkey)
+	    and ci2.item_id=:root_folder_id
+	    and exists (select 1
+			from acs_object_party_privilege_map m
+			where m.object_id = ci1.item_id
+			and m.party_id = :user_id
+			and m.privilege = 'read')
+	    order by ci1.tree_sortkey, ci1.name
+	}]
+    }
+    
     ad_form \
 	-name new_activity \
 	-export {run_id activity_id type} \
@@ -619,12 +652,13 @@ if { $type eq "structure" } {
 	    { title:text
 		{label "Title"}
 	    }
+	    { resource_file_id:integer(select)
+		{label "Resource"}
+		{options $res_options}
+	    }
 	} \
 	-on_submit {
-	    
-	    set imsld_id [content::revision::item_id \
-			      -revision_id [imsld::get_imsld_from_activity -activity_id $activity_id -activity_type "structure"]]
-	    
+	    	    
 	    set component_id [db_string select_component {
 	      select item_id
 	      from imsld_componentsx
@@ -634,11 +668,43 @@ if { $type eq "structure" } {
 	    set parent_id [content::item::get_parent_folder -item_id $activity_item_id]
 	    
 	    # start the activity creation
+	    # create the activity description
 	    set activity_description_id [imsld::item_revision_new -title $title \
 					     -content_type imsld_activity_desc \
 					     -parent_id $parent_id]
 	    
+	    # now create the activity description item
+	    set item_identifier "item_${activity_description_id}"
+	    set res_item_id [imsld::item_revision_new -title $title \
+				 -content_type imsld_item \
+				 -attributes [list [list identifier $item_identifier] \
+						  [list is_visible_p "t"]] \
+				 -parent_id $parent_id]
+	    
+	    
+            relation_add imsld_actdesc_item_rel $activity_description_id $res_item_id
 
+	    # now the resource
+	    set resource_identifier "resource_${activity_description_id}"
+	    set manifest_id [db_string select_manifest {
+		select ico.manifest_id
+		from imsld_cp_organizationsi ico, imsld_imsldsi ii
+		where ii.item_id = :imsld_id
+		and ico.item_id = ii.organization_id
+		and content_revision__is_live(ii.imsld_id) = 't'
+		and content_revision__is_live(ico.organization_id) = 't'
+	    }]
+	    set resource_item_id [imsld::cp::resource_new -manifest_id $manifest_id \
+				 -identifier $resource_identifier \
+				 -type "webcontent" \
+				 -parent_id $parent_id]
+
+	    set extra_vars [util_list_to_ns_set [list displayable_p "t"]]
+
+	    relation_add -extra_vars $extra_vars imsld_res_files_rel $resource_item_id $resource_file_id
+	    relation_add imsld_item_res_rel $res_item_id $resource_item_id
+
+	    # now the learning activity
 	    set identifier "$title-${activity_description_id}"
 
 	    set learning_activity_id [imsld::item_revision_new -attributes [list [list identifier $identifier] \
