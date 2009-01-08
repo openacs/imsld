@@ -35,26 +35,47 @@ if { [string eq $role_id ""] } {
     }
 }
 
-# get file info
-db_1row get_info {
-    select cr.revision_id, cr.item_id,
-    cpf.item_id,
-    cpf.file_name,
-    cr.mime_type
-    from imsld_cp_filesx cpf,
-    acs_rels ar, imsld_res_files_rels map, cr_revisions cr
-    where ar.object_id_one = :resource_item_id
-    and ar.object_id_two = cpf.item_id
-    and ar.object_id_two = cr.item_id
-    and cr.item_id = cpf.item_id
-    and ar.rel_id = map.rel_id
-    and content_revision__is_live(cr.revision_id) = 't'
-    and map.displayable_p = 't'
+db_1row get_imsld {
+    select i.imsld_id, i.resource_handler
+    from imsld_runs r, imsld_imslds i
+    where r.run_id = :run_id
+    and r.imsld_id = i.imsld_id
 }
 
-set xml_string [cr_write_content -string -revision_id $revision_id]
+if { $resource_handler eq "file-storage" } {
+    # get file info
+    db_1row get_info {	
+    	select cr.revision_id, cr.item_id,
+	cpf.item_id,
+	cpf.file_name,
+    	cr.mime_type
+    	from imsld_cp_filesx cpf,
+    	acs_rels ar, imsld_res_files_rels map, cr_revisions cr
+    	where ar.object_id_one = :resource_item_id
+    	and ar.object_id_two = cpf.item_id
+    	and ar.object_id_two = cr.item_id
+    	and cr.item_id = cpf.item_id
+    	and ar.rel_id = map.rel_id
+    	and content_revision__is_live(cr.revision_id) = 't'
+    	and map.displayable_p = 't'
+    }
 
-# set xml_string "<body>[imsld::xowiki::page_content -item_id $item_id]</body>"
+    set xml_string [cr_write_content -string -revision_id $revision_id]
+} else {
+    # get file info
+    db_1row get_info {	
+    	select cr.revision_id, cr.item_id
+    	from acs_rels ar, imsld_res_files_rels map, cr_revisions cr
+    	where ar.object_id_one = :resource_item_id
+    	and ar.object_id_two = cr.item_id
+    	and cr.item_id = cr.item_id
+    	and ar.rel_id = map.rel_id
+    	and content_revision__is_live(cr.revision_id) = 't'
+    	and map.displayable_p = 't'
+    }
+
+    set xml_string "<body>[imsld::xowiki::page_content -item_id $item_id]</body>"
+}
 
 # context info
 db_1row context_info {
@@ -531,7 +552,9 @@ foreach set_property_node $set_property_nodes {
     # first, replace property node with the form node
     $parent_node replaceChild $form_node $set_property_node
     # FIXME: tDOME apparently(??) adds automathically  the attribute xmlns when replacing a node...
-    $form_node removeAttribute xmlns
+    if { $resource_handler eq "file-storage" } {
+	$form_node removeAttribute xmlns
+    }
 
     # level C: notifications
     set notified_users_list [list]
@@ -796,7 +819,9 @@ foreach set_property_group_node $set_property_group_nodes {
     # finally, replace property node with the form node
     $parent_node replaceChild $form_node $set_property_group_node
     # FIXME: tDOME apparently adds automathically  the attribute xmlns when replacing a node...
-    $form_node removeAttribute xmlns
+    if { $resource_handler eq "file-storage" } {
+	$form_node removeAttribute xmlns
+    }
 
     # level C: notifications
     foreach notification_node [$set_property_group_node selectNodes "*\[local-name()='notification'\]"] {
@@ -931,11 +956,15 @@ set fs_resource_info [db_0or1row get_fs_resource_info {
 # multiple properties to be shown in the page, and therefore, the base URL is
 # not so easy to compute.
 
-set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
-
-set folder_path ""
-set folder_path [db_exec_plsql get_folder_path {select content_item__get_path(:parent_id,:root_folder_id); }]
-set file_url "[apm_package_url_from_id $fs_package_id]view/${folder_path}"
+if { $resource_handler eq "xowiki" } {
+    set file_url [export_vars -base [imsld::xowiki::page_url -item_id $item_id] {{template_file "/packages/imsld/lib/wiki-default"}}]
+} else {   
+    set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
+    
+    set folder_path ""
+    set folder_path [db_exec_plsql get_folder_path {select content_item__get_path(:parent_id,:root_folder_id); }]
+    set file_url "[apm_package_url_from_id $fs_package_id]view/${folder_path}"
+}
 
 set head_node [$dom_root selectNodes {//*[local-name()='head']}]
 if {$head_node eq ""} {
@@ -945,7 +974,7 @@ if {$head_node eq ""} {
 
 if {![llength [$head_node selectNodes {/*[local-name()='base']}]]} {
     set base_node [$dom_doc createElement "base"]
-    set base_prefix [ns_conn location]
+    set base_prefix [ad_url]
     $base_node setAttribute href "$base_prefix/$file_url/"
     $head_node appendChild $base_node
 }
