@@ -11,7 +11,7 @@ ad_proc -public -callback imsld::import {
     -res_href
     -tmp_dir
     -community_id
-    {-prop ""}
+    -prop
 } {
     <p>Returns the acs_object_id for the resource.</p>
 

@@ -16,7 +16,6 @@
   <msg key="Activity_Type">Activity Type</msg>
   <msg key="Acts_in_play_count">Acts in play %count%</msg>
   <msg key="Add_Members">Add Members</msg>
-  <msg key="Add_URL">Add URL</msg>
   <msg key="Admin_IMS_LD">Admin IMS LD</msg>
   <msg key="Admin_roles">Admin roles</msg>
   <msg key="Back">Back to admin</msg>
@@ -48,13 +47,10 @@
   <msg key="Delete">Delete</msg>
   <msg key="Delete_IMS_LD">Delete IMS LD</msg>
   <msg key="Delete_Run">Delete Run</msg>
-  <msg key="Delete_URL">Delete URL</msg>
   <msg key="Deleted">Deleted</msg>
   <msg key="Delte">Delte</msg>
   <msg key="Descendant">Descendant roles:</msg>
   <msg key="Description">Description</msg>
-  <msg key="Edit">Edit</msg>
-  <msg key="Edit_URL">Edit URL</msg>
   <msg key="Else_Identifier">Else Identifier</msg>
   <msg key="Email">Email</msg>
   <msg key="Empty_property_value">Empty property value</msg>
