@@ -3717,8 +3717,10 @@ ad_proc -public imsld::generate_resources_tree {
 } {
     set list_node [$dom_doc createElement ul]
     set linear_item_list [db_list item_linear_list { *SQL* }]
+    set has_items 0
     foreach imsld_item_id $linear_item_list {
         foreach sa_items_list [db_list_of_lists la_nested_associated_items { *SQL* }] {
+	    set has_items 1
             set resource_id [lindex $sa_items_list 0]
             set resource_item_id [lindex $sa_items_list 1]
             set resource_type [lindex $sa_items_list 2]
@@ -3747,7 +3749,7 @@ ad_proc -public imsld::generate_resources_tree {
 	$li_node appendChild $choose_node
 	$li_node appendChild [$dom_doc createTextNode {]}]
     }
-    if { [llength $linear_item_list ] > 0 } { $dom_node appendChild $list_node }
+    if { $has_items } { $dom_node appendChild $list_node }
 
 #     set aux [$dom_doc createElement ul]
 #     set aux2 [$dom_doc createElement li]

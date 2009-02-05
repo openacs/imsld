@@ -191,11 +191,11 @@ ad_proc -public imsld::monitor::structure_activities_list {
                                                 -act_id $act_id \
                                                 -dom_node $structure_node \
                                                 -dom_doc $dom_doc]
-                set ul_node [$dom_doc createElement ul]
-                foreach nested_activity $nested_activities_list {
-                    $ul_node appendFromList $nested_activity
-                }
-                $structure_node appendChild $ul_node
+		set ul_node [$dom_doc createElement ul]	    
+		foreach nested_activity $nested_activities_list {
+		    $ul_node appendFromList $nested_activity
+		}
+		$structure_node appendChild $ul_node
                 set completed_list [linsert $completed_list $sort_order [$structure_node asList]]
             }
         }
@@ -324,7 +324,9 @@ ad_proc -public imsld::monitor::activities_tree {
                                      -dom_doc $dom_doc \
                                      -dom_node $dom_node]
                 # the nested finished activities are returned as a tcl list in tDOM format
-                $structure_node appendFromList [list ul [list] [concat [list] $nested_list]]
+		if {[llength $nested_list]} {
+		    $structure_node appendFromList [list ul [list] [concat [list] $nested_list]]
+		}
                 $dom_node appendChild $structure_node
             }
         }
