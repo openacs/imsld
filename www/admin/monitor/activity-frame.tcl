@@ -625,7 +625,7 @@ if { $type eq "structure" } {
 			       -package_key "file-storage"]
 	
 	set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
-	ns_log notice $root_folder_id
+	set user_id [ad_conn user_id]
 	set res_options [db_list_of_lists get_folder_tree {
 	    select
 	    repeat('&nbsp;', tree_level(ci1.tree_sortkey))||'+-'||ci1.name as label,
