@@ -355,3 +355,33 @@ function editEnvironment(div, run, act, env, item, title, url) {
   div.innerHTML = formCode;
 
 }
+
+function changeColor(cell, color) {
+  var row = cell.parentNode;
+  var table = row.parentNode;
+  for (var i = 0; i < table.rows.length; i++) {
+    if (i == row.rowIndex) continue;
+    table.rows[i].cells[cell.cellIndex].style.background = color;
+  }
+  for (var i = 0; i < row.cells.length; i++) {
+    if (i == cell.cellIndex) continue;
+    row.cells[i].style.background = color;
+  }
+}
+
+function showPermissionDialog(link, object_id, role_id) {
+  var cell = link.parentNode;
+  var formCode = '';
+  formCode = '<form action="resource-permission-edit" onsubmit="return submitForm(this, \'cell_'+object_id+'_'+role_id+'\')">';
+  formCode += '<div>';
+  formCode += '<input type="hidden" name="object_id" value="'+object_id+'" />';
+  formCode += '<input type="hidden" name="role_id" value="'+role_id+'" />';
+  formCode += '<input type="radio" name="privilege_'+object_id+'_'+role_id+'" value="none" /> None<br />';
+  formCode += '<input type="radio" name="privilege_'+object_id+'_'+role_id+'" value="read" checked="checked" /> Read<br />';
+  formCode += '<input type="radio" name="privilege_'+object_id+'_'+role_id+'" value="write" /> Write<br />';
+  formCode += '<input type="submit" name="submit" value="Set" />';
+  formCode += '</div>';
+  formCode += '</form>';
+  cell.innerHTML = formCode;
+  return(false);
+}
