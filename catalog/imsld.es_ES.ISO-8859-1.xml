@@ -5,4 +5,15 @@
   <msg key="Material">Material</msg>
   <msg key="units-of-learning">Unidades de Aprendizaje</msg>
   <msg key="units-of-learning_Administration">Administración de Unidades de Aprendizaje</msg>
+
+  <msg key="export_heading">Exportar UoL</msg>
+  <msg key="export_intro">Usted va a exportar una UoL. Revise todos los recursos asociados a dicha UoL o</msg>
+  <msg key="export_files">Archivos</msg>
+  <msg key="export_warnings">Advertencias</msg>
+  <msg key="export_warning_msg1">No asociado a recurso</msg>
+  <msg key="export_uol_name">Nombre UoL</msg>
+  <msg key="export_resources_question">Desea exportar archivos no asociados a recursos?</msg>
+  <msg key="export_yes">Si</msg>
+  <msg key="export_no">No</msg>
+
 </message_catalog>
