@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<!DOCTYPE queryset PUBLIC "-//OpenACS//DTD XQL 1.0//EN"
+"http://www.thecodemill.biz/repository/xql.dtd">
+<!--  -->
+<!-- @author Derick Leony (derick@inv.it.uc3m.es) -->
+<!-- @creation-date 2009-02-06 -->
+<!-- @arch-tag: /bin/bash: uuidgen: command not found -->
+<!-- @cvs-id $Id$ -->
+
+<queryset>
+
+  <fullquery name="get_learning_activity_info">
+    <querytext>
+      
+      select la.title as activity_title,
+      la.item_id as activity_item_id,
+      la.activity_id,
+      attr.is_visible_p,
+      la.complete_act_id
+      from imsld_learning_activitiesi la, imsld_attribute_instances attr
+      where activity_id = :activity_id
+      and attr.owner_id = la.activity_id
+      and attr.run_id = :run_id
+      and attr.user_id = :user_id
+      and attr.type = 'isvisible'
+      
+    </querytext>
+  </fullquery>
+  
+  <fullquery name="get_support_activity_info">
+    <querytext>
+      
+      select sa.title as activity_title,
+      sa.item_id as activity_item_id,
+      sa.activity_id,
+      attr.is_visible_p,
+      sa.complete_act_id
+      from imsld_support_activitiesi sa, imsld_attribute_instances attr
+      where sa.activity_id = :activity_id
+      and attr.owner_id = sa.activity_id
+      and attr.run_id = :run_id
+      and attr.user_id = :user_id
+      and attr.type = 'isvisible'
+      
+    </querytext>
+  </fullquery>
+  
+  <fullquery name="get_activity_structure_info">
+    <querytext>
+      
+      select title as activity_title,
+      item_id as structure_item_id,
+      structure_id,
+      structure_type
+      from imsld_activity_structuresi
+      where structure_id = :activity_id
+      
+    </querytext>
+  </fullquery>
+  
+  <fullquery name="as_started_p">
+    <querytext>
+      
+      select 1 from imsld_status_user
+      where related_id = :structure_id 
+      and user_id = :user_id 
+      and status = 'started'
+      and run_id = :run_id
+      
+    </querytext>
+  </fullquery>
+  
+  <fullquery name="as_completed_p">
+    <querytext>
+      
+      select 1 from imsld_status_user
+      where related_id = :structure_id 
+      and user_id = :user_id 
+      and status = 'finish'
+      and run_id = :run_id
+      
+    </querytext>
+  </fullquery>
+  
+  <fullquery name="struct_referenced_activities">
+    <querytext>
+      select ar.object_id_two,
+      ar.rel_type,
+      ar.rel_id,
+      case ar.rel_type
+      when 'imsld_as_la_rel'
+      then 'learning'
+      when 'imsld_as_sa_rel'
+      then 'support'
+      when 'imsld_as_as_rel'
+      then 'structure'
+      else 'none'
+      end as activity_type
+      from acs_rels ar, imsld_activity_structuresi ias
+      where ar.object_id_one = ias.item_id
+      and ias.structure_id = :activity_id
+      and content_item__get_live_revision(ar.object_id_two) is not null
+      order by ar.object_id_two
+      
+    </querytext>
+  </fullquery>
+
+  <fullquery name="structure_info">
+    <querytext>
+      
+      select structure_id,
+      structure_type
+      from imsld_activity_structuresi
+      where item_id = :structure_item_id
+      
+    </querytext>
+  </fullquery>
+
+</queryset>
