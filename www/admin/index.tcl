@@ -72,6 +72,13 @@ template::list::create \
 		<a href="run-new?run_imsld_id=@imslds.imsld_id@&return_url=@return_url@" title="[_ imsld.lt___imsldcreate_new_run]"> [_ imsld.create_new_run] </a>
 		</if>} 
         }
+        export {
+            label {}
+            sub_class narrow
+            display_template {
+              <a href="imsld-export?imsld_id=@imslds.imsld_id@"><img src="/resources/imsld/export.png" title="Export" alt="Export" /></a>
+            }
+        }
         delete {
             label {}
             sub_class narrow
