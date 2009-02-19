@@ -2,7 +2,7 @@
   <property name="imsld_include_mktree">1</property>
 
   <div class="float-left">
-    <a href="@community_url@" class="button" target="_top" 
+    <a href="@community_url@" class="button" 
        title="#imsld.Exit#">#imsld.Exit#</a>
   </div>
 
@@ -22,7 +22,8 @@
 
   <br />
 
-  @html_tree;noquote@
+  <include src="../lib/activity-tree" run_id="@run_id@" user_id="@user_id@"
+    next_activity_id_list="@next_activity_id@" />
 
   @aux_html_tree;noquote@
 

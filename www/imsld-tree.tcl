@@ -101,38 +101,12 @@ if {[string eq "stopped" $run_status]} {
     set user_message "[_ imsld.lt_The_course_has_been_f]"
 }
 
-dom createDocument ul doc
-set dom_root [$doc documentElement]
-$dom_root setAttribute class "mktree"
-set imsld_title_node [$doc createElement li]
-$imsld_title_node setAttribute class "liOpen"
-set text [$doc createTextNode "$imsld_title"] 
-$imsld_title_node appendChild $text
-$dom_root appendChild $imsld_title_node
-
-set activities_node [$doc createElement ul]
-
 if { $user_role_id == -1 } {
-    set html_tree ""
     set aux_html_tree ""
 } else {
-    imsld::generate_activities_tree -run_id $run_id \
-        -user_id $user_id \
-        -next_activity_id_list $next_activity_id \
-        -dom_node $activities_node \
-        -dom_doc $doc
-    
-    $imsld_title_node appendChild $activities_node
-    
-    set html_tree [$dom_root asXML]
 
     # runtime generated activities (notifications, level C)
-    if { [db_string generated_acitivties_p {
-        select count(*)
-        from imsld_runtime_activities_rels
-        where role_id = :current_role_id
-        and run_id = :run_id
-    } -default 0] > 0 } {
+    if { [db_string generated_activities_p { *SQL* } -default 0] > 0 } {
         dom createDocument ul aux_doc
         set aux_dom_root [$aux_doc documentElement]
         $aux_dom_root setAttribute class "mktree"
