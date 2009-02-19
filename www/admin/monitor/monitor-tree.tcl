@@ -102,26 +102,6 @@ $li_node appendChild $a_node
 
 set user_activity [$dom_root asXML]
 
-# Create the activity tree
-dom createDocument ul doc
-set dom_root [$doc documentElement]
-$dom_root setAttribute class "mktree"
-set imsld_title_node [$doc createElement li]
-$imsld_title_node setAttribute class "liOpen"
-set text [$doc createTextNode "$imsld_title"] 
-$imsld_title_node appendChild $text
-$dom_root appendChild $imsld_title_node
-
-set activities_node [$doc createElement ul]
-
-imsld::monitor::activities_tree -run_id $run_id \
-    -dom_node $activities_node \
-    -dom_doc $doc
-
-$imsld_title_node appendChild $activities_node
-    
-set html_tree [$dom_root asXML]
-
 # runtime generated activities (notifications, level C)
 if { [db_string generated_acitivties_p {
     select count(*)

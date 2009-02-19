@@ -15,7 +15,7 @@
   
   @user_activity;noquote@
   
-  @html_tree;noquote@
+  <include src="../../../lib/monitor/activity-tree" run_id="@run_id@" />
   
   @aux_html_tree;noquote@
   
