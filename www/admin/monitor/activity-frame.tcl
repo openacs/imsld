@@ -8,7 +8,7 @@ ad_page_contract {
     @creation-date Nov 2006
 } -query {
     run_id:integer,notnull
-    {activity_id:integer ""}
+    {activity_item_id:integer ""}
     {learning_object_id:integer ""}
     {service_id:integer ""}
     type:notnull
@@ -23,7 +23,7 @@ ad_page_contract {
     {option ""}
 } -validate {
     non_empty_id {
-        if { [string eq "" $activity_id] && [string eq "" $learning_object_id] && [string eq "" $service_id] } {
+        if { [string eq "" $activity_item_id] && [string eq "" $learning_object_id] && [string eq "" $service_id] } {
             ad_complain "[_ imsld.lt_You_must_provide_an_a]"
         }
     }
@@ -31,6 +31,11 @@ ad_page_contract {
 
 set page_title "[_ imsld.lt_Monitoring_One_Activi]"
 set context [list]
+
+set activity_id ""
+if { $activity_item_id ne "" } {
+    set activity_id [content::item::get_live_revision -item_id $activity_item_id]
+}
 
 set elements [list portrait \
                   [list label "" \
@@ -396,7 +401,7 @@ if { $complete_act_id ne "" } {
 	set property ${property_ref}
 	set value ${expression_value}
     }
-} else {
+} elseif {$option eq ""} {
     set option "none"
 }
 
@@ -417,7 +422,7 @@ if { $type eq "learning" || $type eq "support" } {
 
     ad_form \
 	-name complete \
-	-export {run_id activity_id type} \
+	-export {run_id activity_item_id type} \
 	-html { onsubmit "return submitForm(this)" } \
 	-form {
 	    { years:integer,optional
@@ -646,7 +651,7 @@ if { $type eq "structure" } {
     
     ad_form \
 	-name new_activity \
-	-export {run_id activity_id type} \
+	-export {run_id activity_item_id type} \
 	-html { onsubmit "return submitForm(this)" } \
 	-form {
 	    { title:text

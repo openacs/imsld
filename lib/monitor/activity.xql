@@ -30,12 +30,8 @@
       sa.activity_id,
       attr.is_visible_p,
       sa.complete_act_id
-      from imsld_support_activitiesi sa, imsld_attribute_instances attr
+      from imsld_support_activitiesi sa
       where sa.activity_id = :activity_id
-      and attr.owner_id = sa.activity_id
-      and attr.run_id = :run_id
-      and attr.user_id = :user_id
-      and attr.type = 'isvisible'
       
     </querytext>
   </fullquery>
@@ -44,7 +40,7 @@
     <querytext>
       
       select title as activity_title,
-      item_id as structure_item_id,
+      item_id as activity_item_id,
       structure_id,
       structure_type
       from imsld_activity_structuresi

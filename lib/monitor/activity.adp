@@ -39,7 +39,7 @@
               type="@referenced_activities.activity_type@"
               activity_id="@referenced_activities.r_activity_id@"
               imsld_id="@imsld_id@" play_id="@play_id@" act_id="@act_id@"
-              structure_item_id="@structure_item_id@"
+              structure_item_id="@activity_item_id@"
               sort_order="@referenced_activities.sort_order@"
               siblings_number="@referenced_activities:rowcount@" />
           </li>

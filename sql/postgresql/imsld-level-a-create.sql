@@ -69,7 +69,9 @@ create table imsld_imslds (
                             references cr_items,    --imsld_learning_objectives
     prerequisite_id         integer
                             constraint imsld_prereq_id_fk
-                            references cr_items     --imsld_prerequisites
+                            references cr_items,    --imsld_prerequisites
+    resource_handler	    varchar(100)
+			    not null
 );
 
 create index imsld_imsld_orgid_idx on imsld_imslds(organization_id);
@@ -87,6 +89,9 @@ The level of the document. It can only be A, B or C';
 
 comment on column imsld_imslds.sequence_used_p is '
 If the value is true, IMS Simple Sequencing is included at the appropriate places in the document instance, default is false.';
+
+comment on column imsld_imslds.resource_handler is '
+Indicates which package is used to handle the resource objects for the UoL (file-storage or xowiki).';
 
 create table imsld_learning_objectives (
     learning_objective_id  integer
@@ -735,6 +740,17 @@ create table imsld_as_as_rels (
 
 comment on table imsld_as_as_rels is '
 This table stores the information of the relationship between the activity structures (between them).';
+
+create table imsld_res_xowiki_rels (
+    rel_id      integer
+                constraint imsld_res_xowiki_rels_fk
+                references acs_rels
+                constraint imsld_res_xowiki_rels_pk
+                primary key
+);
+
+comment on table imsld_res_xowiki_rels is '
+This table stores the relationships between resources and xowiki Pages.';
 
 create table imsld_res_files_rels (
     rel_id      integer
