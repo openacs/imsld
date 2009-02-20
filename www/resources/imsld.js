@@ -33,7 +33,7 @@ function resizeobject() {
       o.height = document.body.clientHeight - o.style.top;
     };
 
-  if (document.getElementById('content')) {
+  if (document.getElementById('imsld_content')) {
     o.width = '99%';
     o.height = '78%';
   }
@@ -80,7 +80,7 @@ function init_activity() {
   resizeobject();
   window.onresize = resizeobject;
 
-  var content = document.getElementById("content");
+  var content = document.getElementById("imsld_content");
   if (content == null) content = document;
   var as = content.getElementsByTagName("a");
   for (var i = 0; i < as.length; i++) {
@@ -118,7 +118,7 @@ function loadContent(url) {
         
   objXmlHttp.onreadystatechange = function() {
     if (objXmlHttp.readyState==4 || objXmlHttp.readyState=="complete"){
-      document.getElementById('content').innerHTML = objXmlHttp.responseText;
+      document.getElementById('imsld_content').innerHTML = objXmlHttp.responseText;
       var e;
       if (document.forms['choose'] && (e = document.forms['choose'].elements['ok'])) {
         e.style.display = "none";
@@ -130,7 +130,7 @@ function loadContent(url) {
         loadEnvironment(env_url);
       } else {
 	if ( !(unescape(url).match(/service_id=|learning_object_id=/i))) {
-	  document.getElementById('environment').innerHTML = '';
+	  document.getElementById('imsld_environment').innerHTML = '';
         }
       }
       // tabberAutomatic();
@@ -163,8 +163,8 @@ function loadEnvironment(url) {
         
   objXmlHttp.onreadystatechange = function() {
     if (objXmlHttp.readyState==4 || objXmlHttp.readyState=="complete"){
-      document.getElementById('environment').innerHTML = objXmlHttp.responseText;
-//      var as = document.getElementById("environment").getElementsByTagName("a");
+      document.getElementById('imsld_environment').innerHTML = objXmlHttp.responseText;
+//      var as = document.getElementById("imsld_environment").getElementsByTagName("a");
 //      for (var i = 0; i < as.length; i++) {
 //        var a = as[i];
 //        var oldEvent = a.onclick;
@@ -205,7 +205,7 @@ function loadTree(url) {
         
   objXmlHttp.onreadystatechange = function() {
     if ((objXmlHttp.readyState==4 || objXmlHttp.readyState=="complete") && objXmlHttp.status==200){
-      document.getElementById('tree').innerHTML = objXmlHttp.responseText;
+      document.getElementById('imsld_activity_tree').innerHTML = objXmlHttp.responseText;
       delete window.treeClass;
       convertTrees();
     }
@@ -227,18 +227,18 @@ function _tp_div(a){
    if (a) {
      ai='show'; 
      aj='hide';
-     document.getElementById("tree").style.width= '30%';
-     document.getElementById("environment").style.width= '30%';
-     document.getElementById("content").style.width= '70%';
-     document.getElementById("content").style.left= '30%';
+     document.getElementById("imsld_activity_tree").style.width= '30%';
+     document.getElementById("imsld_environment").style.width= '30%';
+     document.getElementById("imsld_content").style.width= '70%';
+     document.getElementById("imsld_content").style.left= '30%';
    } else {
      /* collapse the left panels */
      ai='hide';
      aj='show';
-     document.getElementById("tree").style.width= '0';
-     document.getElementById("environment").style.width= '0';
-     document.getElementById("content").style.width= '100%';
-     document.getElementById("content").style.left= '0';
+     document.getElementById("imsld_activity_tree").style.width= '0';
+     document.getElementById("imsld_environment").style.width= '0';
+     document.getElementById("imsld_content").style.width= '100%';
+     document.getElementById("imsld_content").style.left= '0';
    }
 
    ac.className=ai;
@@ -274,6 +274,10 @@ function submitForm(form, contentDiv) {
         if (document.forms['choose'] && (e = document.forms['choose'].elements['ok'])) {
           e.style.display = "none";
         }
+	if (contentDiv == "imsld_activity_tree" || contentDiv == "imsld_environment_tree") {
+	  delete window.treeClass;
+	  convertTrees();
+	}
       }
     }
   }
@@ -379,6 +383,21 @@ function showPermissionDialog(link, object_id, role_id) {
   formCode += '<input type="radio" name="privilege_'+object_id+'_'+role_id+'" value="none" /> None<br />';
   formCode += '<input type="radio" name="privilege_'+object_id+'_'+role_id+'" value="read" checked="checked" /> Read<br />';
   formCode += '<input type="radio" name="privilege_'+object_id+'_'+role_id+'" value="write" /> Write<br />';
+  formCode += '<input type="submit" name="submit" value="Set" />';
+  formCode += '</div>';
+  formCode += '</form>';
+  cell.innerHTML = formCode;
+  return(false);
+}
+
+function editActivity(activity_id, run_id, title) {
+  var cell = document.getElementById('activity_'+activity_id);
+  var formCode = '';
+  formCode = '<form action="activity-edit" onsubmit="return(submitForm(this, \'imsld_activity_tree\'))">';
+  formCode += '<div class="activity_edit_form">';
+  formCode += '<input type="hidden" name="activity_id" value="'+activity_id+'" />';
+  formCode += '<input type="hidden" name="run_id" value="'+run_id+'" />';
+  formCode += '<input type="text" name="title" value="' + title + '" size="20" />';
   formCode += '<input type="submit" name="submit" value="Set" />';
   formCode += '</div>';
   formCode += '</form>';

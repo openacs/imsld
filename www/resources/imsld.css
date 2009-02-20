@@ -98,24 +98,30 @@ div.frame {
   border: 1px #000 solid;
 }
 
-div#tree {
+div#imsld_activity_tree {
   left:0;
   padding:0;
   width:30%;
+  top:5%;
+  height:49%;
 }
 
-div#environment {
+div#imsld_environment {
   left:0;
   padding:0;
   width:30%;
+  top:54%;
+  height:45%;
 }
 
-div#content {
+div#imsld_content {
   width:69%;
   left:30%;
+  top:5%;
+  height:94%;
 }
 
-div#runtime {
+div#runinfo {
   left:0;
   width:100%;
   padding:0;
@@ -123,3 +129,24 @@ div#runtime {
   top:0;
 }
 
+div.activity_actions {
+  display: none;
+  margin: 0;
+}
+
+div.activity_actions img {
+  margin: 0;
+  vertical-align: middle;
+}
+
+ul.mktree li ul li:hover div.activity_actions {
+  display: inline;
+}
+
+ul.mktree li ul li:hover {
+  background-color: #efefef;
+}
+
+div.activity_edit_form {
+  display: inline;
+}
