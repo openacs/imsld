@@ -576,8 +576,6 @@ if { $type eq "learning" || $type eq "support" } {
 		}
 	    }
 	    
-	    ad_returnredirect [export_vars -base "monitor-tree" {run_id}]
-	    	    
 	} #end form
 
     db_multirow -extend { edit_url } act_items select_act_items {
@@ -763,6 +761,8 @@ if { $type eq "structure" } {
 # 			 imsld_attribute_instance new]
 # 	    }
 
-	}
+	    ad_returnredirect [export_vars -base "monitor-tree" {run_id}]
+	    	    
+	} # end new_activity on_submit
 
 }
