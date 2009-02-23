@@ -16,7 +16,6 @@
   <msg key="Activity_Type">Activity Type</msg>
   <msg key="Acts_in_play_count">Acts in play %count%</msg>
   <msg key="Add_Members">Add Members</msg>
-  <msg key="Add_URL">Add URL</msg>
   <msg key="Admin_IMS_LD">Admin IMS LD</msg>
   <msg key="Admin_roles">Admin roles</msg>
   <msg key="Back">Back to admin</msg>
@@ -48,13 +47,10 @@
   <msg key="Delete">Delete</msg>
   <msg key="Delete_IMS_LD">Delete IMS LD</msg>
   <msg key="Delete_Run">Delete Run</msg>
-  <msg key="Delete_URL">Delete URL</msg>
   <msg key="Deleted">Deleted</msg>
   <msg key="Delte">Delte</msg>
   <msg key="Descendant">Descendant roles:</msg>
   <msg key="Description">Description</msg>
-  <msg key="Edit">Edit</msg>
-  <msg key="Edit_URL">Edit URL</msg>
   <msg key="Else_Identifier">Else Identifier</msg>
   <msg key="Email">Email</msg>
   <msg key="Empty_property_value">Empty property value</msg>
@@ -172,7 +168,7 @@
   <msg key="lt_community_name_imsld_">%community_name%: %imsld_title%</msg>
   <msg key="lt_Complete_Act_Identifi">Complete Act Identifier</msg>
   <msg key="lt_Confirm_roles_assignm">Confirm roles assignments</msg>
-  <msg key="lt_Could_not_determine_w">Could not determine whit what program uncompress the file %upload_file% has. Aborting</msg>
+  <msg key="lt_Could_not_determine_w">Could not determine with what program uncompress the file %upload_file% has. Aborting</msg>
   <msg key="lt_Couldnt_determine_if_">Couldn't determine if this is a well formed IMS-LD: %message%</msg>
   <msg key="lt_Creaginting_new_IMS-L">Creaginting new IMS-LD</msg>
   <msg key="lt_Create_a_new_instance">Create a new instance of a role</msg>
@@ -180,7 +176,7 @@
   <msg key="lt_Current_UoL_does_not_">Current UoL does not allow to include them in more than one subroles of the role.</msg>
   <msg key="lt_Dear_recepient_name_b">Dear %recepient_name%. &lt;br&gt; 
                        %sender_name% has triggered this notification. Please do not replay to this email. &lt;br&gt;</msg>
-  <msg key="lt_Email_Propery_Identif">Email Propery Identifier</msg>
+  <msg key="lt_Email_Propery_Identif">Email Property Identifier</msg>
   <msg key="lt_Environment_Identifie">Environment Identifier</msg>
   <msg key="lt_Error_creating_folder">Error creating folder</msg>
   <msg key="lt_Error_deleting_IMS_LD">Error deleting IMS LD</msg>
@@ -316,7 +312,7 @@
   <msg key="lt_The_resource_resource">The resource %resource_identifier% has a reference to a non existing file (%resource_href%).</msg>
   <msg key="lt_The_value_must_be_gre">The value must be greather than %restriction_value% (inclusive)</msg>
   <msg key="lt_The_value_must_be_gre_1">The value must be greather than %restriction_value%</msg>
-  <msg key="lt_The_value_must_be_low">The value must be lower than %restriction_value% (inclusive</msg>
+  <msg key="lt_The_value_must_be_low">The value must be lower than %restriction_value% (inclusive)</msg>
   <msg key="lt_The_value_must_be_low_1">The value must be lower than %restriction_value%</msg>
   <msg key="lt_The_value_value_doesn">The value (%value%) doesn't match with the expression %restriction_value%</msg>
   <msg key="lt_The_value_value_is_no">The value %value% is not alowed</msg>
@@ -471,9 +467,9 @@
   <msg key="Total_Activities">Total Activities</msg>
   <msg key="Total_Roles">Parent Roles</msg>
   <msg key="Type">Type</msg>
-  <msg key="Uknown_type">Uknown type</msg>
+  <msg key="Uknown_type">Unknown type</msg>
   <msg key="ul_activity_name_br_">&lt;ul&gt; %activity_name% &lt;br /&gt;</msg>
-  <msg key="Unist_of_Learning">Unist of Learning</msg>
+  <msg key="Unist_of_Learning">Units of Learning</msg>
   <msg key="units-of-learning">Learning Units</msg>
   <msg key="units-of-learning_Administration">Units of Learning Administration</msg>
   <msg key="Uploading_IMS_LD">Uploading IMS LD</msg>
