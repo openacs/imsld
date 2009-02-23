@@ -2,11 +2,9 @@ set act_item_id [content::revision::item_id -revision_id $act_id]
 set user_id [ad_conn user_id]
 
 set structure_type ""
-set completion_restriction 1
 if {[info exists structure_item_id]} {
     # if the activity is in a structure, get the structure's info
     db_1row structure_info { *SQL* }
-    set completion_restriction [imsld::structure_completion_resctriction_p -run_id $run_id -structure_item_id $structure_item_id]
 }
 
 if {![info exists sort_order]} {
