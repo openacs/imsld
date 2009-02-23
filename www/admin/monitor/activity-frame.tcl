@@ -576,7 +576,8 @@ if { $type eq "learning" || $type eq "support" } {
 		}
 	    }
 	    
-	} #end form
+	}
+    #end form
 
     db_multirow -extend { edit_url } act_items select_act_items {
         select ii.imsld_item_id, icr.resource_id, cp.item_id as resource_item_id, icr.type as resource_type,
