@@ -423,7 +423,7 @@ if { $type eq "learning" || $type eq "support" } {
     ad_form \
 	-name complete \
 	-export {run_id activity_item_id type} \
-	-html { onsubmit "return(submitForm(this, 'imsld_activity_tree'))" } \
+	-html { onsubmit "return(submitForm(this))" } \
 	-form {
 	    { years:integer,optional
 		{ label "Year" }
@@ -652,7 +652,7 @@ if { $type eq "structure" } {
     ad_form \
 	-name new_activity \
 	-export {run_id activity_item_id type} \
-	-html { onsubmit "return submitForm(this)" } \
+	-html { onsubmit "return submitForm(this, 'imsld_activity_tree')" } \
 	-form {
 	    { title:text
 		{label "Title"}
