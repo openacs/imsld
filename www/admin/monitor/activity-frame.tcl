@@ -763,6 +763,7 @@ if { $type eq "structure" } {
 
 	    ad_returnredirect [export_vars -base "monitor-tree" {run_id}]
 	    	    
-	} # end new_activity on_submit
+	}
+# end new_activity on_submit
 
 }
