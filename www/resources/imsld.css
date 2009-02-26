@@ -130,17 +130,13 @@ div#runinfo {
 }
 
 div.activity_actions {
-  display: none;
+  display: inline;
   margin: 0;
 }
 
 div.activity_actions img {
   margin: 0;
   vertical-align: middle;
-}
-
-ul.mktree li ul li:hover div.activity_actions {
-  display: inline;
 }
 
 ul.mktree li ul li:hover {
