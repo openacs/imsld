@@ -635,7 +635,7 @@ if { $type eq "structure" } {
 	set res_options [db_list_of_lists get_folder_tree {
 	    select
 	    repeat('&nbsp;', tree_level(ci1.tree_sortkey))||'+-'||ci1.name as label,
-	    tree_level(ci1.tree_sortkey) as level_num
+	    ci1.item_id
 	    from cr_items ci1, cr_items ci2
 	    where
 	    ci1.tree_sortkey between ci2.tree_sortkey and

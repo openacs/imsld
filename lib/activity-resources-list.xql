@@ -31,7 +31,9 @@
       select icr.resource_id,
       cp.item_id as resource_item_id,
       icr.type as resource_type
-      from imsld_cp_resources icr, imsld_items ii, imsld_attribute_instances iai, cr_items ci, cr_items cp,
+      from imsld_cp_resources icr, imsld_items ii,
+--      imsld_attribute_instances iai,
+      cr_items ci, cr_items cp,
       acs_rels ar
       where ii.imsld_item_id = ci.live_revision
       and   ar.object_id_one = ci.item_id
@@ -41,11 +43,11 @@
       and   (imsld_tree_sortkey between tree_left((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
       and   tree_right((select imsld_tree_sortkey from imsld_items where imsld_item_id = :imsld_item_id))
       or    ii.imsld_item_id = :imsld_item_id)
-      and   iai.owner_id = ii.imsld_item_id
-      and   iai.run_id = :run_id
-      and   iai.user_id = :user_id
-      and   iai.type = 'isvisible'
-      and   iai.is_visible_p = 't'
+--      and   iai.owner_id = ii.imsld_item_id
+--      and   iai.run_id = :run_id
+--      and   iai.user_id = :user_id
+--      and   iai.type = 'isvisible'
+--      and   iai.is_visible_p = 't'
       
     </querytext>
   </fullquery>
