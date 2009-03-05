@@ -2,6 +2,10 @@ if {![info exists user_id]} {
     set user_id [ad_conn user_id]
 }
 
+if {![info exists monitor_p]} {
+    set monitor_p 0
+}
+
 if {![info exists community_id]} {
     set community_id [dotlrn_community::get_community_id]
 }

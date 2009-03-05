@@ -1,5 +1,8 @@
 set dom_doc [dom createDocument root]
-set monitor_p 0
+
+if { ![info exists monitor_p] } {
+    set monitor_p 0
+}
 
 set linear_item_list [db_list item_linear_list { *SQL* }]
 set has_items 0

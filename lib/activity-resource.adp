@@ -32,7 +32,6 @@
           </if>
         </a>
         <if @monitor_p@>
-          
         </if>
         <if @li_mode_p@>
           </li>

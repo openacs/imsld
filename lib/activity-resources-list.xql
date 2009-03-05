@@ -16,6 +16,7 @@
       cr_items cr1, cr_items cr2,
       acs_rels ar
       where la.item_id = :activity_item_id
+      and content_revision__is_live(la.activity_id)
       and la.activity_description_id = cr1.item_id
       and cr1.live_revision = lad.description_id
       and ar.object_id_one = la.activity_description_id

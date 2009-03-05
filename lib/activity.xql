@@ -87,6 +87,7 @@
       select ar.object_id_two,
       ar.rel_type,
       ar.rel_id,
+      ir.sort_order,
       case ar.rel_type
       when 'imsld_as_la_rel'
       then 'learning'
@@ -96,11 +97,14 @@
       then 'structure'
       else 'none'
       end as activity_type
-      from acs_rels ar, imsld_activity_structuresi ias
+      from acs_rels ar, imsld_activity_structuresi ias,
+      (select * from imsld_as_la_rels union select * from imsld_as_sa_rels union
+        select * from imsld_as_as_rels) as ir
       where ar.object_id_one = ias.item_id
+      and ar.rel_id = ir.rel_id
       and ias.structure_id = :activity_id
       and content_item__get_live_revision(ar.object_id_two) is not null
-      order by ar.object_id_two
+      order by ir.sort_order, ar.object_id_two
       
     </querytext>
   </fullquery>
