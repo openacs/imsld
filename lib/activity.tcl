@@ -91,7 +91,6 @@ switch $type {
 	     || ([string eq $complete_act_id ""] && [string eq $is_visible_p "t"]
 		 && [lsearch -exact $active_acts_list $act_item_id] != -1) } {
 
-	    $activity_node setAttribute class "liOpen"
 	    if { !$started_activity_p && [string eq $is_visible_p "t"] } {
 		# bold letters
 		set href [imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]
