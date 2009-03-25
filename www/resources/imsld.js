@@ -274,7 +274,7 @@ function submitForm(form, contentDiv) {
         if (document.forms['choose'] && (e = document.forms['choose'].elements['ok'])) {
           e.style.display = "none";
         }
-	if (contentDiv == "imsld_activity_tree" || contentDiv == "imsld_environment_tree") {
+	if (contentDiv == "imsld_activity_tree" || contentDiv == "imsld_environment") {
 	  delete window.treeClass;
 	  convertTrees();
 	}
@@ -334,7 +334,7 @@ function enableFields(check) {
 }
 
 function addEnvironment(div, env, run, act) {
-  var formCode = '<form action="environment-edit" onsubmit="return submitForm(this, \'environment\')">';
+  var formCode = '<form action="environment-edit" onsubmit="return submitForm(this, \'imsld_environment\')">';
   formCode += '<input type="hidden" name="environment_id" value="' + env + '" />';
   formCode += '<input type="hidden" name="run_id" value="' + run + '" />';
   formCode += '<input type="hidden" name="activity_id" value="' + act + '" />';
@@ -347,7 +347,7 @@ function addEnvironment(div, env, run, act) {
 }
 
 function editEnvironment(div, run, act, env, item, title, url) {
-  var formCode = '<form action="environment-edit" onsubmit="return submitForm(this, \'environment\')">';
+  var formCode = '<form action="environment-edit" onsubmit="return submitForm(this, \'imsld_environment\')">';
   formCode += '<input type="hidden" name="environment_id" value="' + env + '" />';
   formCode += '<input type="hidden" name="run_id" value="' + run + '" />';
   formCode += '<input type="hidden" name="activity_id" value="' + act + '" />';
