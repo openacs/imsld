@@ -21,7 +21,9 @@ $dom_root setAttribute class "mktree"
 $dom_root setAttribute style "white-space: nowrap;"
 
 # Create the li nodes for each environment
-set activity_item_id [content::revision::item_id -revision_id $activity_id]
+# set activity_item_id [content::revision::item_id -revision_id
+# $activity_id]
+set activity_item_id $activity_id
 imsld::monitor::activity_environments_tree -activity_item_id $activity_item_id \
     -run_id $run_id \
     -dom_node $dom_root \

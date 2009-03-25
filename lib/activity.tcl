@@ -91,7 +91,6 @@ switch $type {
 	     || ([string eq $complete_act_id ""] && [string eq $is_visible_p "t"]
 		 && [lsearch -exact $active_acts_list $act_item_id] != -1) } {
 
-	    set activity_node [$dom_doc createElement li]
 	    $activity_node setAttribute class "liOpen"
 	    if { !$started_activity_p && [string eq $is_visible_p "t"] } {
 		# bold letters
