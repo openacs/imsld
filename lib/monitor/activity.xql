@@ -28,7 +28,6 @@
       select sa.title as activity_title,
       sa.item_id as activity_item_id,
       sa.activity_id,
-      attr.is_visible_p,
       sa.complete_act_id
       from imsld_support_activitiesi sa
       where sa.activity_id = :activity_id
