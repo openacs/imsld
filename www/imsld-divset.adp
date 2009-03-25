@@ -23,7 +23,7 @@
     </style>
   </head>
   <body> 
-    <div id="imsld_tree" class="frame">
+    <div id="imsld_activity_tree" class="frame">
         <include src="imsld-tree" />
     </div>
     <div id="imsld_environment" class="frame">
