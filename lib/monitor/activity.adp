@@ -19,7 +19,7 @@
     <include src="activity-info" type="activity" revision_id="@activity_id@"
       run_id="@run_id@" sort_order="@sort_order@" title="@activity_title@"
       number_elements="@siblings_number@" />
-    <include src="activity-resources-list" activity_item_id="@activity_item_id@"
+    <include src="../activity-resources-list" activity_item_id="@activity_item_id@"
       run_id="@run_id@" user_id="@user_id@" monitor_p="1" />
   </case>
   
