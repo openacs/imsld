@@ -125,7 +125,7 @@ function loadContent(url) {
       }
       init_activity();
       convertTrees();
-      if (unescape(url).match(/activity_id=/i)) {
+      if (unescape(url).match(/activity_item_id=/i)) {
         var env_url = url.replace(/[^\?]+/, "environment-frame");
         loadEnvironment(env_url);
       } else {
