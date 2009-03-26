@@ -2292,7 +2292,8 @@ ad_proc -public imsld::process_environment_as_ul {
                                                       -run_id $run_id \
                                                       -resource_mode $resource_mode \
                                                       -dom_node $environment_node \
-                                                      -dom_doc $dom_doc]]]
+                                                      -dom_doc $dom_doc \
+						      -list_mode]]]
         # in order to behave like CopperCore, we decide to replace the images with the service title
         set img_nodes [$environment_node selectNodes {.//img}]
         foreach img_node $img_nodes {
@@ -2309,7 +2310,8 @@ ad_proc -public imsld::process_environment_as_ul {
                                              -run_id $run_id \
                                              -resource_mode $resource_mode \
                                              -dom_node $environment_node \
-                                             -dom_doc $dom_doc]
+                                             -dom_doc $dom_doc \
+					     -list_mode]
         # the title is stored in [lindex $one_nested_environment_list 0], but is not returned for displaying porpouses
         set nested_environment_list [concat $nested_environment_list \
                                          [lindex $one_nested_environment_list 1] \
