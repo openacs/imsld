@@ -2252,7 +2252,8 @@ ad_proc -public imsld::process_environment_as_ul {
                 set one_learning_object_list [imsld::process_resource_as_ul -resource_item_id $resource_item_id \
                                                   -run_id $run_id \
                                                   -dom_node $environment_node \
-                                                  -dom_doc $dom_doc]
+                                                  -dom_doc $dom_doc \
+						  -li_mode]
 
                 # in order to behave like CopperCore, we decide to replace the images with the learning object title
                 set img_nodes [$environment_node selectNodes {.//img}]
