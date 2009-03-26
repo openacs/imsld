@@ -4,7 +4,7 @@
     <if @aux_pre_text@ not nil>@aux_pre_text;noquote@</if>
 
     <select name="@select_name@" id="@select_id@" 
-            onChange="submitForm(this.form, 'content')">
+            onChange="confirmValue(this.form)">
       <if @selected_item@ eq "">
         <option value="select">@select_string@</option>
       </if>

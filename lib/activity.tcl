@@ -2,6 +2,10 @@ set active_acts_list [imsld::active_acts -run_id $run_id -user_id $user_id]
 set act_item_id [content::revision::item_id -revision_id $act_id]
 
 set structure_type ""
+set class ""
+set href ""
+set div ""
+
 set completion_restriction 1
 if {[info exists structure_item_id]} {
     # if the activity is in a structure, get the structure's info
