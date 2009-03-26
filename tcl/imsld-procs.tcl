@@ -2260,7 +2260,7 @@ ad_proc -public imsld::process_environment_as_ul {
                 foreach img_node $img_nodes {
                     set parent_node [$img_node parentNode]
                     set lo_title_node [$dom_doc createTextNode "$lo_title"]
-                    $parent_node replaceChild $lo_title_node $img_node 
+                    # $parent_node replaceChild $lo_title_node $img_node 
                 }
                 if { ![string eq "" $one_learning_object_list] } {
                     if { [string eq "t" $resource_mode] } { 
@@ -2292,8 +2292,7 @@ ad_proc -public imsld::process_environment_as_ul {
                                                       -run_id $run_id \
                                                       -resource_mode $resource_mode \
                                                       -dom_node $environment_node \
-                                                      -dom_doc $dom_doc \
-						      -list_mode]]]
+                                                      -dom_doc $dom_doc]]]
         # in order to behave like CopperCore, we decide to replace the images with the service title
         set img_nodes [$environment_node selectNodes {.//img}]
         foreach img_node $img_nodes {
@@ -2310,8 +2309,7 @@ ad_proc -public imsld::process_environment_as_ul {
                                              -run_id $run_id \
                                              -resource_mode $resource_mode \
                                              -dom_node $environment_node \
-                                             -dom_doc $dom_doc \
-					     -list_mode]
+                                             -dom_doc $dom_doc]
         # the title is stored in [lindex $one_nested_environment_list 0], but is not returned for displaying porpouses
         set nested_environment_list [concat $nested_environment_list \
                                          [lindex $one_nested_environment_list 1] \
@@ -3094,8 +3092,7 @@ ad_proc -public imsld::process_support_activity_as_ul {
         set environments_ids [concat [lindex [lindex $environments_list 1] [expr [llength [lindex $environments_list 1] ] - 1 ]] \
                                      [lindex [lindex $environments_list 2] [expr [llength [lindex $environments_list 2] ] - 1 ]] ]
 
-         return [list $environments_ids \
-                      [lindex $activity_items_list [expr [llength $activity_items_list ] - 1]]]
+	return [list $environments_ids]
     } 
 }
 
