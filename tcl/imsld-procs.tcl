@@ -2259,8 +2259,8 @@ ad_proc -public imsld::process_environment_as_ul {
                 set img_nodes [$environment_node selectNodes {.//img}]
                 foreach img_node $img_nodes {
                     set parent_node [$img_node parentNode]
-                    set lo_title_node [$dom_doc createTextNode "$lo_title"]
-                    # $parent_node replaceChild $lo_title_node $img_node 
+                    set lo_title_node [$dom_doc createTextNode "$lo_title: "]
+                    $parent_node replaceChild $lo_title_node $img_node 
                 }
                 if { ![string eq "" $one_learning_object_list] } {
                     if { [string eq "t" $resource_mode] } { 
