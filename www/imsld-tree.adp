@@ -14,7 +14,9 @@
         select_id="roles_list"
         selected_item=@user_role_id@
         select_string=@select_string@
-        run_id=@run_id@>
+        run_id=@run_id@
+        conn_url="imsld-tree"
+        section="imsld_activity_tree">
     </if>
   </div>
 

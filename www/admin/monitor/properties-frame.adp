@@ -13,7 +13,8 @@
         aux_post_text=@post_text;noquote@
         run_id=@run_id@
         role_id=@role_id@
-        type=@type@>
+        type=@type@
+        section="imsld_content">
     </if><else>@frame_header;noquote@</else>
   </div>
 

@@ -12,7 +12,8 @@
         select_string=@select_string@
         aux_pre_text=@frame_header@
         aux_post_text=@post_text;noquote@
-        run_id=@run_id@>
+        run_id=@run_id@
+        section="imsld_content">
     </if><else>@frame_header;noquote@</else>
   </div>
 

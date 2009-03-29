@@ -1,3 +1,5 @@
 # imsld/lib/choice-select.tcl
 
-set conn_url [ad_conn url]
+if {![info exists conn_url]} {
+    set conn_url [ad_conn url]
+}
