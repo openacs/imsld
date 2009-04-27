@@ -12,7 +12,7 @@
         </if>
       </if>
       <else>
-        <if @is_visible_p@ and @user_choice_p@>
+        <if @is_visible_p@ and @user_choice_p@ and @finish_href@ not nil>
           <a href="@finish_href@" onclick="return(loadTree(this.href))"
             class="finish" title="#imsld.finish_activity#">#imsld.finish#</a>
         </if>

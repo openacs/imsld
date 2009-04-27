@@ -41,6 +41,9 @@ switch $type {
 	    and content_revision__is_live(complete_act_id) = 't'
 	} -default "f"]
 
+	set href [imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]
+	set div [imsld::activity_url -div -activity_id $activity_id -run_id $run_id -user_id $user_id]
+
 	if { $completed_activity_p 
 	     || ($structure_type eq "selection")
 	     || (!$completion_restriction)
@@ -50,16 +53,10 @@ switch $type {
 
 	    if { !$started_activity_p && [string eq $is_visible_p "t"] } {
 		# bold letters
-		set href [imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]
-		set div [imsld::activity_url -div -activity_id $activity_id -run_id $run_id -user_id $user_id]
-
 		set class "liOpen has_focus"
 		
 	    } else {
 		# the activity has been started
-		set href [imsld::activity_url -activity_id $activity_id -run_id $run_id -user_id $user_id]
-		set div [imsld::activity_url -div -activity_id $activity_id -run_id $run_id -user_id $user_id]
-
 		set class "liOpen"
 
 	    }
