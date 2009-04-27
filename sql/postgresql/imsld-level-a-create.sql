@@ -767,7 +767,7 @@ This table stores the relationships between resources and files.';
 create table imsld_scheduled_time_limits (
     activity_id	integer
                 constraint imsld_sche_tl_act_id_fk
-            	references cr_revisions,
+            	references cr_items,
     time	integer
 );
 
