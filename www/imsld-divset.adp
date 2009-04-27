@@ -22,7 +22,7 @@
       
     </style>
   </head>
-  <body> 
+  <body style="height:100%;"> 
     <div id="imsld_activity_tree" class="frame">
         <include src="imsld-tree" />
     </div>

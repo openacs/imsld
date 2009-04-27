@@ -27,7 +27,7 @@
     <p class="notice">#imsld.navigate#</p>
   </else>
 
-  <iframe id="object" name="object" src="@iframe_activity_url@" width="98%" height="60%"></iframe>
+  <iframe id="object" name="object" src="@iframe_activity_url@" style="left:0; top:0;" width="98%" height="60%"></iframe>
 
   <script type="text/javascript">
     <if @roles_template_p@ eq 1>
