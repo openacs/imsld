@@ -5,13 +5,11 @@ if { ![info exists monitor_p] } {
 }
 
 set linear_item_list [db_list item_linear_list { *SQL* }]
-set has_items 0
 
 multirow create resources resource_item_id
 
 foreach imsld_item_id $linear_item_list {
     foreach sa_items_list [db_list_of_lists la_nested_associated_items { *SQL* }] {
-	set has_items 1
 	set resource_id [lindex $sa_items_list 0]
 	set resource_item_id [lindex $sa_items_list 1]
 	set resource_type [lindex $sa_items_list 2]

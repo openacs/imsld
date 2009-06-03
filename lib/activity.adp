@@ -18,7 +18,7 @@
         </if>
       </else>
       <include src="activity-resources-list" activity_item_id="@activity_item_id@"
-        run_id="@run_id@" user_id="@user_id@" />
+        run_id="@run_id@" user_id="@user_id@" activity_id="@activity_id@" />
     </li>
   </case>
 
@@ -41,7 +41,7 @@
         </if>
       </else>
       <include src="activity-resources-list" activity_item_id="@activity_item_id@"
-        run_id="@run_id@" user_id="@user_id@" />
+        run_id="@run_id@" user_id="@user_id@" activity_id="@activity_id@" />
     </li>
   </case>
 

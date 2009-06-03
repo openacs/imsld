@@ -33,7 +33,7 @@ if { ![string eq $resource_type "webcontent"] && ![string eq $acs_object_id ""] 
 
     set file_url [acs_sc::invoke -contract FtsContentProvider -operation url -impl $object_type -call_args [list $acs_object_id]]
 
-    set href [export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]
+    set href [export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url resource_item_id run_id activity_id}]
     set img_src [imsld::object_type_image_path -object_type $object_type]
 
 } elseif { [string eq $resource_type "imsldcontent"] } {
@@ -70,7 +70,7 @@ if { ![string eq $resource_type "webcontent"] && ![string eq $acs_object_id ""] 
 	}
 
 	set file_url "imsld-content-serve"
-	set href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
+	set href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url resource_item_id run_id activity_id}]"
 
 	multirow append files $href $file_name
 
@@ -108,7 +108,7 @@ if { ![string eq $resource_type "webcontent"] && ![string eq $acs_object_id ""] 
 	    set fs_file_url [db_1row get_fs_file_url { *SQL* }]
 	    set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
 	}
-	set href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
+	set href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url resource_item_id run_id activity_id}]"
 	set img_src "[imsld::object_type_image_path -object_type file-storage]"
 
 	multirow append files $href $file_name $img_src
@@ -117,7 +117,7 @@ if { ![string eq $resource_type "webcontent"] && ![string eq $acs_object_id ""] 
     # get associated urls
     
     db_foreach associated_urls { *SQL* } {
-	set href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" { {file_url "[export_vars -base $url]"} resource_item_id run_id}]"
+	set href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" { {file_url "[export_vars -base $url]"} resource_item_id run_id activity_id}]"
 	set img_src "[imsld::object_type_image_path -object_type url]"
 	
 	multirow append files $href $url $img_src	
