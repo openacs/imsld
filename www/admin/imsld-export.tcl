@@ -29,10 +29,14 @@ set intro "[_ imsld.export_intro] "
 set export_url "./imsld-export-2.tcl?imsld_id=$imsld_id"
 set anchor_msg "export"
 
+db_1row get_file_type {select resource_handler from imsld_imslds where imsld_id = :imsld_id}
+if {$resource_handler == "xowiki"} {
+  ad_returnredirect "./imsld-export-xo.tcl?imsld_id=$imsld_id"
+} else { set get_files get_fs_files }
 
 template::list::create \
   -name resource_files \
-  -multirow get_resource_files \
+  -multirow $get_files \
   -elements {
     path_to_file {
       label "[_ imsld.export_files]"
@@ -51,14 +55,22 @@ if {[db_0or1row get_next_imsld {select organization_id from imsld_imslds where i
   set get_files get_files_2
 }
 
+
+
 set number_of_files 0
 db_multirow -local \
-  -extend {warning} \
-  get_resource_files $get_files {} {
+  -extend {warning item_id name} \
+  get_fs_files $get_files {} {
   if {[db_0or1row get_file_resource {select object_id_one from acs_rels, cr_items where latest_revision = :imsld_file_id and item_id = object_id_two and rel_type = 'imsld_res_files_rel' limit 1}] == 1} {
     set warning "OK"
   } else {set warning "[_ imsld.export_warning_msg1]"}
 }
+
+
+#Where are the resources of this UoL stored?
+#First, we need the manifest_id
+db_1row get_manifest {select manifest_id from imsld_cp_organizations, cr_items cr1 where organization_id = cr1.latest_revision and cr1.item_id = imsld_imslds.organization_id and imsld_imslds.imsld_id = :imsld_id}
+
 
 #Create Export button
 ad_form -name export_button \
@@ -72,6 +84,6 @@ ad_form -name export_button \
     set include_all "Yes"
   } \
   -on_submit {
-    ad_returnredirect "${export_url}&uol_name=${name}&include_all=${include_all}"
+    ad_returnredirect "${export_url}&uol_name=${name}&include_all=${include_all}&manifest_id=${manifest_id}"
     ad_script_abort
 }

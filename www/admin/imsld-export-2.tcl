@@ -7,6 +7,7 @@ ad_page_contract {
     imsld_id:integer
     uol_name:nohtml
     include_all:nohtml
+    manifest_id:integer
 } 
 
 #Check if the user who attemps to enter the page has admin priviledges
@@ -36,20 +37,19 @@ if {[file isdirectory [acs_package_root_dir imsld]/www/tmp] == 0} {
 
 #Create new temporal directory to store output
 set in_path [ns_tmpnam]
-#############################################################################
-#############################################################################
+
 set path [acs_package_root_dir imsld]/www$in_path
 
-#set path $in_path
-#############################################################################
-#############################################################################
 exec mkdir $path
 
 #Open a new file to write imsmanifest.xml
 set manifest [open "${path}/imsmanifest.xml" w]
 
+#Create resource list with one element call NONE
+set resource_list [list NONE]
+
 #Write manifest document
-set information [imsld::export::uol -run_imsld_id $imsld_id]
+set information [imsld::export::uol -run_imsld_id $imsld_id -resource_list $resource_list]
 
 #Write manifest file
 puts $manifest "<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
@@ -68,72 +68,70 @@ close $manifest
 set out_file [file join ${path} ${download_name}]
 
 #Get manifest_id
-db_1row get_imsld_data {select organization_id from imsld_imslds where imsld_id = :imsld_id}
+db_1row get_imsld_data {select organization_id, resource_handler from imsld_imslds where imsld_id = :imsld_id}
 db_1row get_manifest_id {select manifest_id from imsld_cp_organizations where organization_id = cr_items.latest_revision and cr_items.item_id = :organization_id}
 
 #Store imsld_id in a variable to use it later
 set this_imsld $imsld_id
 
-
-#Get files and include them in our export directory
-db_multirow get_files get_files {select resource_id, href from imsld_cp_resources where manifest_id = :manifest_id} {
-  #Create folders if necessary to create directory tree
-  set inside_path ""
-  set position [string last "/" $href]
-  if {$position > 0 && [string first "http:" $href] == -1} {
-    set inside_path [string range $href 0 [expr $position-1]]
-    #file mkdir $path/$inside_path/
-  }
-
-  #If the resources is a link, it has no files to be copied
-  if {[string first "http:" $href] == -1} {
-    #Call proc to copy resource files to export temporal directory
-    imsld::export::files::copy_files -resource_id $resource_id -path $path
-  }
-
-}
-
-if {$include_all == "Yes"} {
-  #Save additional files of the UoL which are not used in the player
-  #Get imsld_id of next UoL
-  if {[db_0or1row get_next_imsld {select organization_id from imsld_imslds where imsld_id > :this_imsld limit 1}] == 1} {
-    set next_imsld $organization_id
-    db_multirow get_files get_files_1 {} {
-      #Create directories if necessary to complete the tree
-      set inside_path ""
-      set position [string last $file_name $path_to_file]
-      if {$position > 0} {
-        set inside_path ${inside_path}[string range $path_to_file 0 [expr $position-1]]
-        file mkdir $path/$inside_path/
-      }
-      #Copy file
-      if {[fs_file_p [expr $imsld_file_id-1]] == 1} {
-        set data [fs__datasource $imsld_file_id]
-        set url [lindex $data [expr [lsearch $data content]+1]]
-        file copy -force $url "$path/${inside_path}${file_name}"
-      }
+if {$resource_handler != "xowiki"} {
+  #Get files and include them in our export directory
+  db_multirow get_files get_files {select resource_id, href from imsld_cp_resources where manifest_id = :manifest_id} {
+    #Create folders if necessary to create directory tree
+    set inside_path ""
+    set position [string last "/" $href]
+    if {$position > 0 && [string first "http:" $href] == -1} {
+      set inside_path [string range $href 0 [expr $position-1]]
+      #file mkdir $path/$inside_path/
     }
-  } else {
-    #If the UoL we are going to export is the last one stored, then copy all
-    # files with id greater than imsld_id
-    db_multirow get_files get_files_2 {} {
-      #Create directories if necessary to complete the tree
-      set inside_path ""
-      set position [string last $file_name $path_to_file]
-      if {$position > 0} {
-        set inside_path ${inside_path}[string range $path_to_file 0 [expr $position-1]]
-        file mkdir $path/$inside_path/
-      }
-      #Copy file
-      if {[fs_file_p [expr $imsld_file_id-1]] == 1} {
-        set data [fs__datasource $imsld_file_id]
-        set url [lindex $data [expr [lsearch $data content]+1]]
-        file copy -force $url "$path/${inside_path}${file_name}"
-      }
+
+    #If the resources is a link, it has no files to be copied
+    if {[string first "http:" $href] == -1} {
+      #Call proc to copy resource files to export temporal directory
+      imsld::export::files::copy_files -resource_id $resource_id -path $path
     }
   }
+  if {$include_all == "Yes"} {
+    #Save additional files of the UoL which are not used in the player
+    #Get imsld_id of next UoL
+    if {[db_0or1row get_next_imsld {select organization_id from imsld_imslds where imsld_id > :this_imsld limit 1}] == 1} {
+      set next_imsld $organization_id
+      db_multirow get_files get_files_1 {} {
+        #Create directories if necessary to complete the tree
+        set inside_path ""
+        set position [string last $file_name $path_to_file]
+        if {$position > 0} {
+          set inside_path ${inside_path}[string range $path_to_file 0 [expr $position-1]]
+          file mkdir $path/$inside_path/
+        }
+        #Copy file
+        if {[fs_file_p [expr $imsld_file_id-1]] == 1} {
+          set data [fs__datasource $imsld_file_id]
+          set url [lindex $data [expr [lsearch $data content]+1]]
+          file copy -force $url "$path/${inside_path}${file_name}"
+        }
+      }
+    } else {
+      #If the UoL we are going to export is the last one stored, then copy all
+      # files with id greater than imsld_id
+      db_multirow get_files get_files_2 {} {
+        #Create directories if necessary to complete the tree
+        set inside_path ""
+        set position [string last $file_name $path_to_file]
+        if {$position > 0} {
+          set inside_path ${inside_path}[string range $path_to_file 0 [expr $position-1]]
+          file mkdir $path/$inside_path/
+        }
+        #Copy file
+        if {[fs_file_p [expr $imsld_file_id-1]] == 1} {
+          set data [fs__datasource $imsld_file_id]
+          set url [lindex $data [expr [lsearch $data content]+1]]
+          file copy -force $url "$path/${inside_path}${file_name}"
+        }
+      }
+    }
+  }
 }
-
 
 #Create zip archive
 set cmd "zip -r '$out_file' *"

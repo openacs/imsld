@@ -2,11 +2,11 @@
   <property name="title">@page_title;noquote@</property>
   <property name="context">@context;noquote@</property>
 
-<SCRIPT>
+<script type="text/javascript">
     function confirmValue(myform){
         myform.submit()
     }
-</SCRIPT>
+</script>
 <table  width="100%">
   <tr>
     <td>
@@ -29,16 +29,17 @@
     </td>
    <td>
      <h3>#imsld.Descendant#</h3>
-     <ul>
-       <multiple name="subroles_names">
-         <li><a href=@subroles_names.rolelink@ title="#imsld.Subrole#">@subroles_names.rolename@</a></li>
-       </multiple>
-      </ul>
-      <if @subroles_names:rowcount@ eq 0>
-      <p>#imsld.There#</p>
+     <if @subroles_names:rowcount@ gt 0>
+       <ul>
+         <multiple name="subroles_names">
+           <li><a href=@subroles_names.rolelink@ title="#imsld.Subrole#">@subroles_names.rolename@</a></li>
+         </multiple>
+        </ul>
       </if>
+      <else>
+      <p>#imsld.There#</p>
+      </else>
     </td>
-   </td>
   </tr>
 </table>
 
@@ -46,7 +47,7 @@
 <listtemplate name="group_table"></listtemplate>
 <br><br>
 <a href="index" title="#imsld.Back#">#imsld.Back#</a>
-<SCRIPT>
+<script type="text/javascript">
   document.forms['choose_role'].elements['formbutton:ok'].style.display="none"
-</SCRIPT>
+</script>
 

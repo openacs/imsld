@@ -9,7 +9,7 @@
     <implements-subsite-p>f</implements-subsite-p>
     <inherit-templates-p>t</inherit-templates-p>
     
-    <version name="1.7d" url="http://openacs.org/repository/download/apm/imsld-1.7d.apm">
+    <version name="1.8d" url="http://openacs.org/repository/download/apm/imsld-1.8d.apm">
         <owner url="mailto:derick@inv.it.uc3m.es">Derick Leony</owner>
         <owner url="mailto:jopez@galileo.edu">Jose Pablo Escobedo Del Cid</owner>
         <summary>IMS LD integration with dotLRN.</summary>
@@ -17,7 +17,7 @@
         <description format="text/html">This package is the implementation of IMS LD in dotLRN. The course admin can create a sequence of activities for the students, as well as decide who does what, when and using what resources.</description>
         <maturity>0</maturity>
 
-        <provides url="imsld" version="1.7d"/>
+        <provides url="imsld" version="1.8d"/>
         <requires url="acs-content-repository" version="5.2.2"/>
         <requires url="acs-kernel" version="5.2.2"/>
         <requires url="acs-templating" version="5.2.2"/>
@@ -31,6 +31,8 @@
         </callbacks>
         <parameters>
             <parameter datatype="string"  min_n_values="1"  max_n_values="1"  name="CustomCSS"  description="Custom CSS to apply to the player"/>
+            <parameter datatype="number"  min_n_values="1"  max_n_values="1"  name="GSIRegistryPort"  default="9000" description="TCP port number of the GSI registry." section_name="gsi"/>
+            <parameter datatype="string"  min_n_values="1"  max_n_values="1"  name="GSIRegistryURL"  default="localhost" description="URL of the Registry where GSI services are stored." section_name="gsi"/>
         </parameters>
 
     </version>

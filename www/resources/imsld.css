@@ -72,15 +72,18 @@ ul.mktree, ul.mktree ul {
 }
 
 .hide { 
-  position:absolute;
+  position:relative;
   top:0px;
   left:0px;
   display:none;
+  float:left;
 }
 .show { 
   position:relative;
   top:0px;
   left:0px;
+  display:block;
+  float:left;
 }
 
 .centered-table table { 

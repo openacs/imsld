@@ -191,13 +191,23 @@ ad_proc -public imsld::instance::instantiate_properties {
     # before we can continue we create the folder where the properties of type
     # file will be stored
     set run_folder_id [imsld::instance::create_run_folder -run_id $run_id]
+    set community_id [dotlrn_community::get_community_id]
     set cr_root_folder_id \
 	[imsld::cr::get_root_folder \
-	     -community_id [dotlrn_community::get_community_id]]
+	     -community_id $community_id]
     set cr_folder_id [content::item::get_id \
 			  -item_path "cr_manifest_${manifest_id}" \
 			  -root_folder_id $cr_root_folder_id -resolve_index f] 
     set global_folder_id [imsld::global_folder_id]
+
+    # Set read permissions for community/class dotlrn_member_rel
+    set party_id_member [dotlrn_community::get_rel_segment_id -community_id $community_id -rel_type dotlrn_member_rel]
+    permission::grant -party_id $party_id_member -object_id $global_folder_id -privilege read
+    
+    # Set read permissions for community/class dotlrn_admin_rel
+    set party_id_admin [dotlrn_community::get_rel_segment_id -community_id $community_id -rel_type dotlrn_admin_rel]
+    permission::grant -party_id $party_id_admin -object_id $global_folder_id -privilege read    
+
 
     # 1. loc-property: We create only one entry in the imsld_property_instances
     # table for each property of this type
@@ -885,6 +895,11 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
 			 imsld_attribute_instance new]
             }
         }
+
+        #5.5 Generic Service (GSI)
+        #in another file, to ensure an non-intrussive add-on (as much as possible)
+        imsld::gsi::instance::instantiate_service -component_item_id $component_item_id -run_id $run_id -user_id $user_id
+
 
         # 6. play
         db_foreach play {

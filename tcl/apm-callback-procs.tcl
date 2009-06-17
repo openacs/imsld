@@ -26,6 +26,9 @@ ad_proc -public imsld::apm_callback::after_install {
     # create default relationships with non IMS-LD objects
     imsld::install::init_ext_rels
 
+    #create the GSI model
+    imsld::gsi::install::do_install
+
     return 1
 }
 
@@ -51,7 +54,9 @@ ad_proc -public imsld::apm_callback::before_uninstall {
 } { 
     Proc calls and tasks needed to be donde before the uninstallation of the imsld package.
 } { 
-
+    #clean the GSI model
+    imsld::gsi::uninstall::do_uninstall
+    
     # clean rels
     imsld::uninstall::delete_rels
     imsld::uninstall::delete_ext_rels
@@ -94,6 +99,9 @@ ad_proc -public imsld::apm_callback::after_upgrade {
 		content::type::attribute::new -content_type imsld_imsld \
 		    -attribute_name resource_handler -datatype string \
 		    -pretty_name "#imsld.Resource_Handler#" -column_spec "varchar(100)"
+	    }
+	    1.7d 1.8d {
+		imsld::gsi::install::do_install
 	    }
 	}
 

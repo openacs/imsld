@@ -74,7 +74,7 @@ if { $resource_handler eq "file-storage" } {
     	and map.displayable_p = 't'
     }
 
-    set xml_string "<body>[imsld::xowiki::page_content -item_id $item_id]</body>"
+    set xml_string "<body>[imsld::xowiki::page_content -item_id $item_id -run_id $run_id]</body>"
 }
 
 # context info

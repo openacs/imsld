@@ -105,6 +105,10 @@ ad_proc -public imsld::export::ld::components::write_role_information {
     if {$identifier != ""} {
       $imsld_item setAttribute identifier $identifier
     }
+    #Check if the reference is of a xowiki page, if it is the case, fill identifierref with resource_(resource_number)
+    if {[string first "item_" $identifier] == 0} {
+      set identifierref "resource_[string range $identifier [expr [string first "_" $identifier]+1] end]"
+    }
     $imsld_item setAttribute identifierref $identifierref
     if {$is_visible_p == "t"} {
       set is_visible "true"
@@ -501,6 +505,11 @@ ad_proc -public imsld::export::ld::components::write_activity_description {
     if {$identifier != ""} {
       $imsld_item setAttribute identifier $identifier
     }
+    #Check if the reference is of a xowiki page, if it is the case, fill identifierref with resource_(resource_number)
+    if {[string first "item_" $identifier] == 0} {
+      set identifierref "resource_[string range $identifier [expr [string first "_" $identifier]+1] end]"
+    }
+
     $imsld_item setAttribute identifierref $identifierref
     if {$is_visible_p == "t"} {
       set is_visible "true"
@@ -541,7 +550,6 @@ ad_proc -public imsld::export::ld::components::write_on_completion {
 
   if {$change_property_value_xml == ""} {
 
-
     if {$feedback_title != ""} {
       #Create feedback-description label
       set feedback_description [$doc createElement "imsld:feedback-description"]
@@ -562,6 +570,10 @@ ad_proc -public imsld::export::ld::components::write_on_completion {
       #Add attributes of imsld:item label
       if {$identifier != ""} {
         $imsld_item setAttribute identifier $identifier
+      }
+      #Check if the reference is of a xowiki page, if it is the case, fill identifierref with resource_(resource_number)
+      if {[string first "item_" $identifier] == 0} {
+        set identifierref "resource_[string range $identifier [expr [string first "_" $identifier]+1] end]"
       }
       $imsld_item setAttribute identifierref $identifierref
       if {$is_visible_p == "t"} {
@@ -788,7 +800,7 @@ ad_proc -public imsld::export::ld::components::write_environment {
     }
 
     #Get items associated to the learning_object
-    db_multirow get_learning_object_item get_learning_object_item {select imsld_item_id, identifier, identifierref, is_visible_p, title from acs_rels, cr_items cr1, cr_items cr2, imsld_items, cr_revisions where :learning_object_id = cr1.latest_revision and cr1.item_id = object_id_one and object_id_two = cr2.item_id and cr2.latest_revision = imsld_item_id and revision_id = imsld_item_id} {
+    db_foreach get_learning_object_item {select imsld_item_id, identifier, identifierref, is_visible_p, title from acs_rels, cr_items cr1, cr_items cr2, imsld_items, cr_revisions where :learning_object_id = cr1.latest_revision and cr1.item_id = object_id_one and object_id_two = cr2.item_id and cr2.latest_revision = imsld_item_id and revision_id = imsld_item_id} {
       #Write imsld:item label and content
       set imsld_item [$doc createElement "imsld:item"]
       $learning_object appendChild $imsld_item
@@ -796,6 +808,10 @@ ad_proc -public imsld::export::ld::components::write_environment {
       if {$identifier != ""} {
         $imsld_item setAttribute identifier $identifier
       }
+      #Check if the reference is of a xowiki page, if it is the case, fill identifierref with resource_(resource_number)
+      if {[string first "item_" $identifier] == 0} {
+        set identifierref "resource_[string range $identifier [expr [string first "_" $identifier]+1] end]"
+      }		
       $imsld_item setAttribute identifierref $identifierref
       if {$is_visible_p == "t"} {
         set is_visible "true"
@@ -812,8 +828,12 @@ ad_proc -public imsld::export::ld::components::write_environment {
       }
     }
   }
+
+
+
   #If the current environment has one or more services, then write them
   db_multirow get_services get_services {select service_id, identifier, is_visible_p, service_type from imsld_services where environment_id = cr_items.item_id and cr_items.latest_revision = :environment_id} {
+
     #Write imsld:service label and content
     set imsld_service [$doc createElement "imsld:service"]
     $environment appendChild $imsld_service
@@ -908,6 +928,10 @@ ad_proc -public imsld::export::ld::components::write_environment {
         if {$identifier != ""} {
           $imsld_item setAttribute identifier $identifier
         }
+        #Check if the reference is of a xowiki page, if it is the case, fill identifierref with resource_(resource_number)
+        if {[string first "item_" $identifier] == 0} {
+          set identifierref "resource_[string range $identifier [expr [string first "_" $identifier]+1] end]"
+        }
         $imsld_item setAttribute identifierref $identifierref
         if {$is_visible_p == "t"} {
           set is_visible "true"
@@ -927,7 +951,7 @@ ad_proc -public imsld::export::ld::components::write_environment {
       }
     } elseif {$service_type == "send-mail"} {
       #If service is of type send-mail, write send-mail content
-      db_1row get_send_mail_data {select mail_id, recipients, is_visible_p, parameters from imsld_send_mail_services where service_id = cr_items.item_id and cr_items.latest_revision = :service_id}
+      db_1row get_send_mail_data {select mail_id, recipients, is_visible_p, parameters from imsld_send_mail_services, cr_items where service_id = cr_items.item_id and cr_items.latest_revision = :service_id}
       #Write imsld:send-mail label and content
       set imsld_send_mail [$doc createElement "imsld:send-mail"]
       $imsld_service appendChild $imsld_send_mail
@@ -951,8 +975,9 @@ ad_proc -public imsld::export::ld::components::write_environment {
         $imsld_title appendChild [$doc createTextNode "$title"]
       }
 
+
       #Add mail data if it exists
-      db_multirow get_mail_data get_mail_data {select identifier, mail_data, email_property_id, username_property_id from imsld_roles roles, imsld_send_mail_data data, acs_rels, cr_items cr1, cr_items cr2, cr_items cr3 where object_id_one = cr1.item_id and cr1.latest_revision = :mail_id and rel_type = 'imsld_send_mail_serv_data_rel' and object_id_two = cr2.item_id and cr2.latest_revision = data_id and data.role_id = cr3.item_id and cr3.latest_revision = roles.role_id} {
+      db_foreach get_mail_data {select identifier, mail_data, email_property_id, username_property_id from imsld_roles roles, imsld_send_mail_data data, acs_rels, cr_items cr1, cr_items cr2, cr_items cr3 where object_id_one = cr1.item_id and cr1.latest_revision = :mail_id and rel_type = 'imsld_send_mail_serv_data_rel' and object_id_two = cr2.item_id and cr2.latest_revision = data_id and data.role_id = cr3.item_id and cr3.latest_revision = roles.role_id} {
         #Write imsld:email-data label and content
         set imsld_email_data [$doc createElement "imsld:email-data"]
         $imsld_send_mail appendChild $imsld_email_data
@@ -962,19 +987,13 @@ ad_proc -public imsld::export::ld::components::write_environment {
         $imsld_email_data appendChild $imsld_role_ref
         #Add ref attribute
         $imsld_role_ref setAttribute ref $identifier
-###################################################
-###################################################
-############# Under construction ##################
-###################################################
-#        #Write imsld:email-property-ref label and content
-#        set email_property_ref [$doc createElement "imsld:email-property-ref"]
-#        $imsld_email_data appendChild $email_property_ref
+
+        #Write imsld:email-property-ref label and content
+        set email_property_ref [$doc createElement "imsld:email-property-ref"]
+        $imsld_email_data appendChild $email_property_ref
         
-#        #Add ref attribute
-#        $email_property_ref setAttribute ref $identifier
-###################################################
-###################################################
-###################################################
+        #Add ref attribute
+        $email_property_ref setAttribute ref $identifier
       }
     }
   }

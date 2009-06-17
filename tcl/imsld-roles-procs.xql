@@ -139,7 +139,7 @@
 		</querytext>
 	</fullquery>
 
-    <fullquery name="imsld::roles::get_role_instances.get_community_related_groups">
+    <fullquery name="imsld::roles::get_role_instances.get_community_role_related_groups">
 		<querytext>
         select ar.object_id_two
         from acs_rels ar,
@@ -153,6 +153,22 @@
               and ar2.object_id_two=iruge.group_id
               and iruge.run_id=:run_id
               and iri.role_id=:role_id
+		</querytext>
+	</fullquery>
+
+    <fullquery name="imsld::roles::get_role_instances.get_community_related_groups">
+		<querytext>
+        select ar.object_id_two
+        from acs_rels ar,
+             acs_rels ar2,
+             imsld_rolesi iri,
+             imsld_run_users_group_ext iruge
+        where ar.object_id_one=iri.item_id
+              and ar.rel_type='imsld_role_group_rel'
+              and ar.object_id_two=ar2.object_id_one
+              and ar2.rel_type='imsld_roleinstance_run_rel'
+              and ar2.object_id_two=iruge.group_id
+              and iruge.run_id=:run_id
 		</querytext>
 	</fullquery>
 

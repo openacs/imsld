@@ -10,10 +10,25 @@ ad_page_contract {
 
 
 # NOTE: we should verify the permissions here
-set conditions 1
-if {$conditions == 1} {
+set has_services_p [db_string get_services_in_run { 
+    select count(*)
+    from imsld_gsi_service_status stat, 
+         imsld_gsi_servicesi serv, 
+         imsld_gsi_toolsi tools 
+    where stat.run_id=:run_id and 
+          serv.gsi_tool_id=tools.item_id and 
+          stat.owner_id=serv.gsi_service_id
+}]
+
+if {$has_services_p == 0} {
     db_dml set_run_active { 
         update imsld_runs set status = 'active',
+        status_date = now()
+        where run_id=:run_id and imsld_id=:imsld_id
+    }
+} else {
+    db_dml set_run_waitingservices { 
+        update imsld_runs set status = 'waitingservices',
         status_date = now()
         where run_id=:run_id and imsld_id=:imsld_id
     }

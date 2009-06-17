@@ -252,6 +252,7 @@ ad_proc -public imsld::fs::empty_file {
 ad_proc -public imsld::fs::traverse_zip {
     -dir:required
     -pattern:required
+    {-resource_handler "file-storage"}
 } {
     Function to recursively traverse the files in a ZIP to then detect those
     that are not reerenced in a resource, but still need to be in the file
@@ -266,16 +267,23 @@ ad_proc -public imsld::fs::traverse_zip {
 		  -file_list $files_struct_list \
 		  -path_prefix $dir] } {
 	    # Create the new file
-	    imsld::fs::file_new \
-		-path_to_file $fname \
-		-type file \
-		-complete_path "[ns_urldecode ${dir}/${fname}]"
+	    if {$resource_handler eq "file-storage"} {
+		imsld::fs::file_new \
+		    -path_to_file $fname \
+		    -type file \
+		    -complete_path "[ns_urldecode ${dir}/${fname}]"
+	    } else {
+		imsld::xowiki::file_new \
+		    -path_to_file $fname \
+		    -type file \
+		    -complete_path "[ns_urldecode ${dir}/${fname}]"
+	    }
 	}
     }
     
     # Recur over the directories
     foreach subd [glob -tail -nocomplain -types d -directory $dir $pattern] {
-	imsld::fs::traverse_zip -dir $dir -pattern "$subd/*"
+	imsld::fs::traverse_zip -dir $dir -pattern "$subd/*" -resource_handler $resource_handler
     }
 }
 
@@ -300,7 +308,7 @@ ad_proc -public imsld::fs::find_file_not_created {
 	    if { [lsearch -exact [string tolower $content] \
 		      [string tolower "$path_prefix/$file_name"]] >=0 && \
 		     [lindex $content 1] eq "file" } {
-		# If the object_id is zero, the file was found
+		# If the object_id is zero, the file was not found
 		if { [lindex $content 2] == 0 } {
 		    return 1
 		} else {

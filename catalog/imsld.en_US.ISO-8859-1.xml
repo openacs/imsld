@@ -415,6 +415,7 @@
   <msg key="Type">Type</msg>
   <msg key="Unknown_type">Unknown type</msg>
   <msg key="units-of-learning">Learning Units</msg>
+  <msg key="units-of-learning_Administration">Units of learning Administration</msg>
   <msg key="Uploading_IMS_LD">Uploading IMS LD</msg>
   <msg key="URI">URI</msg>
   <msg key="user">user</msg>
@@ -434,6 +435,7 @@
   <msg key="export_warnings">Warnings</msg>
   <msg key="export_warning_msg1">Not associated to any resource</msg>
   <msg key="export_uol_name">UoL Name</msg>
+  <msg key="export_repository">Repository</msg>
   <msg key="export_resources_question">Export files not associated to resources?</msg>
   <msg key="export_yes">Yes</msg>
   <msg key="export_no">No</msg>

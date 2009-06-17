@@ -264,7 +264,7 @@ ad_proc -public imsld::parse::expand_file {
     } elseif { [regexp {.zip$} $upload_file] } { 
         set type zip 
     } else { 
-        set type "[_ imsld.Uknown_type]" 
+        set type "[_ imsld.Unknown_type]" 
     } 
     
     switch $type {
@@ -533,6 +533,7 @@ ad_proc -public imsld::parse::initialize_folders {
     -community_id:required
     -manifest_id:required
     {-manifest_identifier ""}
+    {-resource_handler "file-storage"}
 } {
     Initializes the cr folders where all the cr items of the manifest will be stored in, and sets the respective permissions. There are two folders for each imsld. One to store the files and show them in the fs, and the other to store the items..
     It won't create the files in the cr since not every file will be handled by the cr (some files may be handled by other packages).
@@ -564,7 +565,7 @@ ad_proc -public imsld::parse::initialize_folders {
     set fs_folder_id [content::item::get_id -item_path "manifest_${manifest_id}" -root_folder_id $fs_root_folder_id -resolve_index f] 
     set cr_folder_id [content::item::get_id -item_path "cr_manifest_${manifest_id}" -root_folder_id $cr_root_folder_id -resolve_index f] 
 
-    if { [empty_string_p $fs_folder_id] } {
+    if { [empty_string_p $fs_folder_id] && ($resource_handler eq "file-storage") } {
         db_transaction {
             set folder_name "manifest_${manifest_id}"
 
@@ -721,6 +722,11 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             permission::set_not_inherit -object_id $acs_object_id
         }
         
+	set import_with_xowiki 0
+	if { $resource_handler eq "xowiki" } {
+	    set import_with_xowiki 1
+	}
+
         set resource_id [imsld::cp::resource_new -manifest_id $manifest_id \
                              -identifier $resource_identifier \
                              -type $resource_type \
@@ -733,11 +739,6 @@ ad_proc -public imsld::parse::parse_and_create_resource {
         set filex_list [$resource_node selectNodes {*[local-name()='file']}]
         
         set found_id_in_list 0
-	# TODO: set this variable properly:
-	set import_with_xowiki 0
-	if { $resource_handler eq "xowiki" } {
-	    set import_with_xowiki 1
-	}
 
         foreach filex $filex_list {
             set filex_href [imsld::parse::get_attribute -node $filex -attr_name href]
@@ -750,7 +751,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
 				  -type file \
 				  -complete_path "[ns_urldecode ${tmp_dir}/${filex_href}]"]
 	    } else {
-		set filex_id [imsld::fs::file_new -href $filex_href \
+        set filex_id [imsld::fs::file_new -href $filex_href \
 				  -path_to_file $filex_href \
 				  -type file \
 				  -complete_path "[ns_urldecode ${tmp_dir}/${filex_href}]"]
@@ -2203,6 +2204,22 @@ ad_proc -public imsld::parse::parse_and_create_environment {
         }
     }
 
+
+# GSI integration: support for generic services
+# environment: genericService
+    set gsi_services [$environment_node selectNodes "*\[local-name()='genericService'\]"]
+    foreach gservice $gsi_services {
+        set gsi_service_id [imsld::gsi::parse::parse_and_create_genericService -service_node $gservice \
+                              -environment_id $environment_id \
+                              -parent_id $parent_id \
+                              -manifest_id $manifest_id \
+                              -manifest $manifest \
+                              -tmp_dir $tmp_dir \
+                              -resource_handler $resource_handler \
+                              ]
+    }
+
+
     # environment: environment ref
     set environment_ref_list [$environment_node selectNodes "*\[local-name()='environment-ref'\]"]
     if { [llength $environment_ref_list] } {
@@ -2499,8 +2516,10 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             # create a node where all the change-property-values will be stored
             set temporal_doc [dom createDocument change-property-values]
             set temporal_node [$temporal_doc documentElement]
-            
-            $temporal_node appendChild $change_property_value_list
+
+            foreach cpv $change_property_value_list {
+                $temporal_node appendChild $cpv
+            }
             set change_property_value_xml [$temporal_node asXML]
         }
 
@@ -2720,8 +2739,10 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             # create a node where all the change-property-values will be stored
             set temporal_doc [dom createDocument change-property-values]
             set temporal_node [$temporal_doc documentElement]
-            
-            $temporal_node appendChild $change_property_value_list
+
+            foreach cpv $change_property_value_list {
+                $temporal_node appendChild $cpv
+            }
             set change_property_value_xml [$temporal_node asXML]
         }
 
@@ -3600,8 +3621,9 @@ ad_proc -public imsld::parse::parse_and_create_act {
             # create a node where all the change-property-values will be stored
             set temporal_doc [dom createDocument change-property-values]
             set temporal_node [$temporal_doc documentElement]
-            
-            $temporal_node appendChild $change_property_value_list
+            foreach cpv $change_property_value_list {
+                $temporal_node appendChild $cpv
+            }
             set change_property_value_xml [$temporal_node asXML]
         }
 
@@ -3810,8 +3832,10 @@ ad_proc -public imsld::parse::parse_and_create_play {
             # create a node where all the change-property-values will be stored
             set temporal_doc [dom createDocument change-property-values]
             set temporal_node [$temporal_doc documentElement]
-            
-            $temporal_node appendChild $change_property_value_list
+
+            foreach cpv $change_property_value_list {
+                $temporal_node appendChild $cpv
+            }
             set change_property_value_xml [$temporal_node asXML]
         }
 
@@ -4234,9 +4258,10 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
 
     # initialize folders
     set folders_list [imsld::parse::initialize_folders -community_id $community_id \
-                          -manifest_id $manifest_id \
-                          -manifest_identifier $manifest_identifier]
-
+			  -manifest_id $manifest_id \
+			  -manifest_identifier $manifest_identifier \
+			  -resource_handler $resource_handler]
+    
     set fs_folder_id [lindex $folders_list 0]
     set cr_folder_id [lindex $folders_list 1]
     
@@ -4552,8 +4577,10 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
             # create a node where all the change-property-values will be stored
             set temporal_doc [dom createDocument change-property-values]
             set temporal_node [$temporal_doc documentElement]
-            
-            $temporal_node appendChild $change_property_value_list
+
+            foreach cpv $change_property_value_list {
+                $temporal_node appendChild $cpv
+            }
             set change_property_value_xml [$temporal_node asXML]
         }
 
@@ -4820,7 +4847,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     # them. Those that still have a zero as object_id are files that are not
     # referenced as resources by the manifest, but they are in the ZIP,
     # therefore, they need to be moved to the FS.
-    imsld::fs::traverse_zip -dir $tmp_dir -pattern "*"
+    imsld::fs::traverse_zip -dir $tmp_dir -pattern "*" -resource_handler $resource_handler
 
     if { ![empty_string_p $warnings] } {
         set warnings "[_ imsld.lt_br__Warnings_ul_warni]"

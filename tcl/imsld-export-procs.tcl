@@ -5,6 +5,7 @@ namespace eval imsld::export {}
 ###############################################################################
 ad_proc -public imsld::export::uol {
   -run_imsld_id:required
+  -resource_list:required
 } {
   This proc is called when an UoL is needed to be exported
 } {
@@ -31,7 +32,7 @@ ad_proc -public imsld::export::uol {
   imsld::export::write_organizations -doc $doc -manifest $root -manifest_id $manifest_id -imsld_id $run_imsld_id -learning_objective_id $learning_objective_id -prerequisite_id $prerequisite_id
 
   #Call proc to fill resources part of imsmanifest.xml
-  imsld::export::write_resources -doc $doc -manifest $root -manifest_id $manifest_id
+  imsld::export::write_resources -doc $doc -manifest $root -manifest_id $manifest_id -resource_list $resource_list
 
   #Return the document as xml
   $root asXML
@@ -79,9 +80,9 @@ ad_proc -public imsld::export::write_metadata {
 } {
   This proc is called to write metadata label and content
 } {
-  ###################################
-  # This is not implemented
-  ###################################
+  ##############################################################
+  # This is not implemented due to it is not supported in Grail
+  ##############################################################
   #Not stored in grail
   #set metadata [$doc createElement metadata]
   #$metadata appendChild [$doc createTextNode "Estoy en funcion write_metadata"]
@@ -116,16 +117,15 @@ ad_proc -public imsld::export::write_resources {
   -doc:required
   -manifest:required
   -manifest_id:required
+  -resource_list:required
 } {
   This proc is called to write resources label and content
 } {
   #First, create resources label
   set resources [$doc createElement resources]
   $manifest appendChild $resources
-
   #Get resources and write them into the manifest document
   db_multirow get_resources get_resources {select * from imsld_cp_resources where manifest_id = :manifest_id} {
-    if {$href != ""} {
       #First, I need to create a resource label
       set resource [$doc createElement "resource"]
       $resources appendChild $resource
@@ -134,10 +134,22 @@ ad_proc -public imsld::export::write_resources {
         $resource setAttribute identifier $identifier
       }
       $resource setAttribute type $type
-      $resource setAttribute href $href
+      if {$href != ""} { 
+        $resource setAttribute href $href
+      }
+      #Check resource_list to look for additional resource files to the ones referenced in the database
+      if {[lindex $resource_list 0] == "NONE" || $href == ""} {
+        set resource_files_list [list]
+      } else {
+        set position [lsearch $resource_list $href]
+        if {$position != -1} {
+          set resource_files_list [lindex $resource_list [expr $position+1]]
+        } else {
+          set resource_files_list [list]
+        }
+      }
       #Call proc to fill files information for the resource
-      imsld::export::write_files -doc $doc -resource $resource -resource_id $resource_id
-    }
+      imsld::export::write_files -doc $doc -resource $resource -resource_id $resource_id -resource_files_list $resource_files_list
   }
 }
 
@@ -148,18 +160,51 @@ ad_proc -public imsld::export::write_files {
   -doc:required
   -resource:required
   -resource_id:required
+  -resource_files_list:required
 } {
   This proc is called to write files label and content
 } {
     #Get file_ids of the resource given
     db_multirow get_file_ids get_file_ids {select object_id_two from acs_rels where object_id_one = cr_items.item_id and cr_items.latest_revision = :resource_id} {
-      #Get href for each file returned in the get_files_ids query
-      if {[db_0or1row get_file_href {select href from imsld_cp_files where imsld_file_id = cr_items.latest_revision and cr_items.item_id = :object_id_two}] == 1} {
-      #Create file label
-      set one_file [$doc createElement "file"]
-      $resource appendChild $one_file
-      #Add href attribute
-      $one_file setAttribute href $href
+      #Get content type to proceed depending on type (imsld_cp_file, ::xowiki::Page or ::xowiki::File)
+      db_1row get_content_type {select content_type, name from cr_items where item_id = :object_id_two}
+      
+      if {$content_type == "imsld_cp_file"} {
+        #Get href for each file returned in the get_files_ids query
+        if {[db_0or1row get_file_href {select href from imsld_cp_files where imsld_file_id = cr_items.latest_revision and cr_items.item_id = :object_id_two}] == 1} {
+          #Create file label
+          set one_file [$doc createElement "file"]
+          $resource appendChild $one_file
+          #Add href attribute
+          $one_file setAttribute href ${href}
+        }
+      } else {
+        if {[string first "link" $name] != 0} {
+          #Create file label
+          set one_file [$doc createElement "file"]
+          $resource appendChild $one_file
+
+          set pos [string first "/" $name]
+	  if {$pos == -1} {
+            regsub -all {:} $name {_} name
+            if {[string last "." $name] < [string length $name]-5} {
+	      set name ${name}.html
+            }
+	  }
+	  set href [string range $name [expr $pos+1] end]
+      
+          #Add href attribute
+          $one_file setAttribute href ${href}
+	}
+      }
+    }
+    #Write file resources from resource_file_list
+    if {[llength $resource_files_list] > 0} {
+      foreach res_file $resource_files_list {
+        set one_file [$doc createElement "file"]
+        $resource appendChild $one_file
+        #Add href attribute
+        $one_file setAttribute href ${res_file}
       }
     }
 }

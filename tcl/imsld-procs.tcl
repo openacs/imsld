@@ -668,63 +668,13 @@ ad_proc -public imsld::global_folder_id {
     This folder is a subfolder of the dotlrn root folder and there must be only
     one in the .LRN installation
 } {
-    set community_id [expr { [empty_string_p $community_id] ? \
-				 [dotlrn_community::get_community_id] : \
-				 $community_id }]
-
     set dotlrn_root_folder_id [dotlrn_fs::get_dotlrn_root_folder_id]
+
     set global_folder_id [content::item::get_id \
 			      -item_path "imsld_global_folder" \
 			      -root_folder_id $dotlrn_root_folder_id \
 			      -resolve_index f] 
 
-    if { [empty_string_p $global_folder_id] } {
-        db_transaction {
-            set folder_name "imsld_global_folder"
-
-            # checks for write permission on the parent folder
-	    ad_require_permission $dotlrn_root_folder_id write
-
-            # create the root cr dir
-
-            set global_folder_id [imsld::cr::folder_new \
-				      -parent_id $dotlrn_root_folder_id \
-				      -folder_name $folder_name \
-				      -folder_label "IMS-LD"]
-
-            # PERMISSIONS FOR FILE-STORAGE
-
-            # Before we go about anything else, lets just set permissions
-            # straight. 
-            # Disable folder permissions inheritance
-            permission::toggle_inherit -object_id $global_folder_id
-            
-            # Set read permissions for community/class dotlrn_member_rel
-            set party_id_member [dotlrn_community::get_rel_segment_id -community_id $community_id -rel_type dotlrn_member_rel]
-            permission::grant -party_id $party_id_member -object_id $global_folder_id -privilege read
-            
-            # Set read permissions for community/class dotlrn_admin_rel
-            set party_id_admin [dotlrn_community::get_rel_segment_id -community_id $community_id -rel_type dotlrn_admin_rel]
-            permission::grant -party_id $party_id_admin -object_id $global_folder_id -privilege read
-            
-            # Set read permissions for *all* other professors  within .LRN
-            # (so they can see the content)
-            set party_id_professor [dotlrn::user::type::get_segment_id -type professor]
-            permission::grant -party_id $party_id_professor -object_id $global_folder_id -privilege read
-            
-            # Set read permissions for *all* other admins within .LRN
-            # (so they can see the content)
-            set party_id_admins [dotlrn::user::type::get_segment_id -type admin]
-            permission::grant -party_id $party_id_admins -object_id $global_folder_id -privilege read
-        }
-        # register content types
-        content::folder::register_content_type -folder_id $global_folder_id \
-            -content_type imsld_property_instance
-
-        # allow subfolders inside our parent folder
-        content::folder::register_content_type -folder_id $global_folder_id \
-            -content_type content_folder
-    }
     return $global_folder_id
 }
 
@@ -1228,6 +1178,7 @@ ad_proc -public imsld::finish_component_element {
         set url [ns_conn url]
         regexp {finish-component-element-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([0-9]+)-([a-z]+).imsld$} $url match imsld_id run_id play_id act_id role_part_id element_id type
     }
+    ns_log Notice "finish_component element: act_id ($act_id), role_part_id ($role_part_id), user_id ($user_id)"
     if { ![db_0or1row marked_as_started { *SQL* }] } {
         # NOTE: this should not happen... UNLESS the activity is marked as
         # finished automatically
@@ -1283,7 +1234,8 @@ ad_proc -public imsld::finish_component_element {
                 and content_revision__is_live(on_completion_id) = 't'
                 and change_property_value_xml is not null
             }] } {
-                imsld::condition::eval_change_property_value -change_property_value_xml $change_property_value_xml -run_id $run_id
+                ns_log Notice "->eval: $user_id"
+                imsld::condition::eval_change_property_value -change_property_value_xml $change_property_value_xml -run_id $run_id -user_id $user_id
             }
             # notifications
             set notified_users_list [list]
@@ -1336,6 +1288,14 @@ ad_proc -public imsld::finish_component_element {
                                                  -notified_users_list $notified_users_list]
                 }
             }
+        }
+        #FIXME: on-complete-actions are only defined form acts, because all users finish the component at the
+        #same time. I have to define the behaviour for other components.
+        #look for matching gsi_triggers
+        set action_list [imsld::gsi::get_triggered_actions -trigger "on-complete-action" -run_id $run_id]
+        #FIXME: hay que restringir la lista a las acciones que apuntan al component actual
+        if {[llength $action_list]} {
+            imsld::gsi::action_list_execute -actions $action_list -run_id $run_id
         }
     }
 
@@ -2171,7 +2131,7 @@ ad_proc -public imsld::process_service_as_ul {
                 lappend resource_item_list $resource_item_id
                 set monitor_node_li [$dom_doc createElement li]
                 set a_node [$dom_doc createElement a]
-                set file_url [export_vars -base "[dotlrn_community::get_community_url [dotlrn_community::get_community_id]]imsld/monitor-frame" { monitor_id }]
+                set file_url [export_vars -base "[dotlrn_community::get_community_url [dotlrn_community::get_community_id]]imsld/monitor-frame" { monitor_id role_id}]
                 $a_node setAttribute href [export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]
                 set service_title [$dom_doc createTextNode "$monitor_service_title"]
                 $a_node appendChild $service_title
@@ -2302,6 +2262,13 @@ ad_proc -public imsld::process_environment_as_ul {
         }
     }
 
+#gsi generic services
+    set environment_gservices_list [imsld::gsi::find_and_process_gsi_service_as_ul -environment_id $environment_id \
+                                                                          -user_id $user_id \
+                                                                          -run_id $run_id \
+                                                                          -dom_node $environment_node \
+                                                                          -dom_doc $dom_doc] 
+
     set nested_environment_list [list]
     # environments
     foreach nested_environment_item_id [db_list nested_environment { *SQL* }] {
@@ -2371,7 +2338,7 @@ ad_proc -public imsld::process_learning_objective_as_ul {
             imsld::process_resource_as_ul -resource_item_id $resource_item_id \
                 -run_id $run_id \
                 -dom_doc $dom_doc \
-                -dom_node $list_node
+                -dom_node $dom_node
         } if_no_rows {
             ns_log notice "[_ imsld.lt_li_desc_no_file_assoc]"
         }
@@ -4472,6 +4439,7 @@ ad_proc -public imsld::get_activity_from_resource {
                         imsld_activity_descsi ades
                         where ades.item_id = :object_id_nested
                         and la.activity_description_id = ades.item_id
+			and content_revision__is_live(la.activity_id)
                     }] } {
                         set activities_list [concat $activities_list [list [list $activity_id $activity_item_id learning]]]
                     } else {
@@ -4719,17 +4687,7 @@ ad_proc -public imsld::grant_forum_permissions {
 
 
     #get the user active role
-    db_1row get_active_role {
-                            select iruns.active_role_id as active_role
-                            from imsld_run_users_group_rels iruns,
-                                 acs_rels ar,
-                                 imsld_run_users_group_ext iruge 
-                            where iruge.run_id=:run_id 
-                                  and ar.object_id_one=iruge.group_id 
-                                  and ar.object_id_two=:user_id 
-                                  and ar.rel_type='imsld_run_users_group_rel' 
-                                  and ar.rel_id=iruns.rel_id
-    }
+    set active_role [imsld::roles::get_active_role -run_id $run_id -user_id $user_id]
 
 #get the permissions related to that role
     set manager_in_forum 0
@@ -4949,6 +4907,40 @@ ad_proc -public imsld::grant_permissions {
                 } 
             }
    }
+}
+
+ad_proc -public imsld::get_imsld_cp_file_id {
+    -run_id
+    -identifier
+} {
+    Return the imsld_file_id (cr_item_id, in fact) related with an identifier and a run_id
+    @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
+} {
+   set imsld_file_id ""
+   if { [db_0or1row get_resource_from_identifier {
+            select icr.item_id as resource_item_id 
+            from imsld_runs ir, 
+                 imsld_imslds ii, 
+                 imsld_cp_organizationsi ico, 
+                 imsld_cp_manifestsi icm,
+                 imsld_cp_resourcesi icr 
+            where ir.imsld_id=ii.imsld_id and 
+                  ii.organization_id=ico.item_id and 
+                  ir.run_id=:run_id and 
+                  ico.manifest_id=icm.item_id and 
+                  icm.item_id=icr.manifest_id and
+                  icr.identifier=:identifier
+    }]} {
+
+    # get file info from resource
+    set imsld_file_id [db_string get_file_from_resource {
+            select ar.object_id_two as imsld_file_id
+            from acs_rels ar 
+            where ar.rel_type ='imsld_res_files_rel' and
+                  ar.object_id_one=:resource_item_id
+        } -default ""]
+    }
+    return "$imsld_file_id" 
 }
 
 

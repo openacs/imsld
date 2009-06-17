@@ -1,8 +1,15 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+            "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">      
+    <title>@doc.title@</title>
+
     <multiple name="link">
       <link rel="@link.rel;noquote@" href="@link.href;noquote@"<if @link.lang@ not nil and @link.lang@ ne @doc.lang@> lang="@link.lang;noquote@"</if>
       <if @link.title@ not nil> title="@link.title;noquote@"</if>
       <if @link.type@ not nil> type="@link.type;noquote@"</if>
-      <if @link.media@ not nil> media="@link.media@"</if>/></multiple>
+      <if @link.media@ not nil> media="@link.media@"</if>></multiple>
     <multiple name="script">
       <script type="@script.type;noquote@"<if @script.src@ not nil> src="@script.src;noquote@"</if>
       <if @script.charset@ not nil> charset="@script.charset;noquote@"</if>
@@ -11,7 +18,7 @@
       </if></script></multiple>
     <if @imsld_include_mktree@ not nil>
       <link rel="stylesheet" href="/resources/acs-templating/mktree.css" 
-            type="text/css" media="all"/>
+            type="text/css" media="all">
       <script type="text/javascript" 
               src="/resources/acs-templating/mktree.js"></script>
     </if>
@@ -72,29 +79,14 @@
       </script>
     </if>
 
+  </head>
+  <body style="height:100%;"> 
+
     <if @acs_blank_master__htmlareas@ not nil>
       <textarea id="holdtext" style="display: none;" rows="1" cols="1"></textarea>
     </if>
 
-    <if @imsld_content_frame@ not nil>
-      <!-- Include the arrow icon and JS for collapsing the left frames -->
-      <span id="addc1" class="show">
-        <a href="#" onClick="return _tp_div(false)" title="#imsld.Hide_1#" 
-           class="show-hide-icon_link" style="float:left; padding-top:8px;">
-          <img src="/resources/acs-subsite/stock_left.png" 
-               alt="#imsld.Hide#" title="#imsld.Hide#" border="0" 
-               align="top"/>
-        </a>
-      </span>
-      <span id="addc" class="hide">
-        <a href="#" onClick="return _tp_div(true)" title="#imsld.Show_1#" 
-           class="show-hide-icon_link">
-          <img src="/resources/acs-subsite/stock_right.png" 
-               alt="#imsld.Show#" title="#imsld.Show#" border="0" 
-               align="top"/>
-        </a>
-      </span>
-    </if>
-
     <slave>
 
+  </body>
+</html>

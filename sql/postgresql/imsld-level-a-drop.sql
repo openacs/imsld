@@ -7,6 +7,10 @@
 
 drop table imsld_scheduled_time_limits;
 
+drop table imsld_res_files_rels;
+
+drop table imsld_res_xowiki_rels;
+
 drop table imsld_learning_objects cascade;
 
 drop table imsld_imslds cascade;

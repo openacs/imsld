@@ -121,7 +121,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_activity_structure -attribute_name sort_order -datatype number -pretty_name "#imsld.Sort_Order#" -column_spec "integer"
 
     # environments
-    content::type::new -content_type imsld_environment -supertype content_revision -pretty_name "#imsld.IMD-LD_Environment#" -pretty_plural "#imsld.IMD-LD_Environments#" -table_name imsld_environments -id_column environment_id
+    content::type::new -content_type imsld_environment -supertype content_revision -pretty_name "#imsld.IMS-LD_Environment#" -pretty_plural "#imsld.IMS-LD_Environments#" -table_name imsld_environments -id_column environment_id
     
     content::type::attribute::new -content_type imsld_environment -attribute_name component_id -datatype number -pretty_name "#imsld.Component_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_environment -attribute_name identifier -datatype string -pretty_name "#imsld.Identifier#" -column_spec "varchar(100)"
@@ -208,7 +208,7 @@ ad_proc -public imsld::install::init_content_repository {
     # on completion
     content::type::new -content_type imsld_on_completion -supertype content_revision -pretty_name "#imsld.IMS-LD_On_Completion#" -pretty_plural "#imsld.lt_IMS-LD_On_Completions#" -table_name imsld_on_completion -id_column on_completion_id
 
-    content::type::attribute::new -content_type imsld_on_completion -attribute_name feedback_title -datatype string -pretty_name "#imsld.Feedbach_Title#" -column_spec "varchar(200)"
+    content::type::attribute::new -content_type imsld_on_completion -attribute_name feedback_title -datatype string -pretty_name "#imsld.Feedback_Title#" -column_spec "varchar(200)"
 
     # classes
     content::type::new -content_type imsld_class -supertype content_revision -pretty_name "#imsld.IMS-LD_Class#" -pretty_plural "#imsld.IMS-LD_Classes#" -table_name imsld_classes -id_column class_id
@@ -247,7 +247,7 @@ ad_proc -public imsld::install::init_content_repository {
     content::type::attribute::new -content_type imsld_cp_dependency -attribute_name identifierref -datatype string -pretty_name "#imsld.Identifierref#" -column_spec "varchar(100)"
 
     # imsld cp files
-    content::type::new -content_type imsld_cp_file -supertype content_revision -pretty_name "#imsld.IMS-LD_CP_File#" -pretty_plural "#imsld.IMS-LD_CP_Filed#" -table_name imsld_cp_files -id_column imsld_file_id
+    content::type::new -content_type imsld_cp_file -supertype content_revision -pretty_name "#imsld.IMS-LD_CP_File#" -pretty_plural "#imsld.IMS-LD_CP_Files#" -table_name imsld_cp_files -id_column imsld_file_id
 
     content::type::attribute::new -content_type imsld_cp_file -attribute_name path_to_file -datatype string -pretty_name "#imsld.Path_to_File#" -column_spec "varchar(2000)"
     content::type::attribute::new -content_type imsld_cp_file -attribute_name file_name -datatype string -pretty_name "#imsld.File_name#" -column_spec "varchar(2000)"
@@ -321,6 +321,9 @@ ad_proc -public imsld::install::init_content_repository {
 
     content::type::attribute::new -content_type imsld_condition -attribute_name method_id -datatype number -pretty_name "#imsld.Method_Identifier#" -column_spec "integer"
     content::type::attribute::new -content_type imsld_condition -attribute_name condition_xml -datatype string -pretty_name "#imsld.Condition#" -column_spec "varchar(4000)"
+
+    # global properties folder
+    imsld::install::create_global_folder
 
     ### IMS-LD LEVEL C
 
@@ -1083,6 +1086,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_imsld -attribute_name sequence_used_p
     content::type::attribute::delete -content_type imsld_imsld -attribute_name learning_objective_id
     content::type::attribute::delete -content_type imsld_imsld -attribute_name prerequisite_id
+    content::type::attribute::delete -content_type imsld_imsld -attribute_name resource_handler
 
     # learning objectives
     content::type::attribute::delete -content_type imsld_learning_objective -attribute_name pretty_title
@@ -1205,6 +1209,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
 
     # complete acts
     content::type::attribute::delete -content_type imsld_complete_act -attribute_name time_in_seconds
+    content::type::attribute::delete -content_type imsld_complete_act -attribute_name time_string
     content::type::attribute::delete -content_type imsld_complete_act -attribute_name user_choice_p
     content::type::attribute::delete -content_type imsld_complete_act -attribute_name when_last_act_completed_p
 
@@ -1296,4 +1301,53 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::delete -content_type imsld_cp_file 
 
 }
+
+
+ad_proc -private imsld::install::create_global_folder {
+} {
+    Creates the CR folder for global properties
+    
+    @author Derick Leony (derick@inv.it.uc3m.es)
+    @creation-date 2009-05-28
+    
+    @return 
+    
+    @error 
+} {
+    set folder_name "imsld_global_folder"
+    set dotlrn_root_folder_id [dotlrn_fs::get_dotlrn_root_folder_id]
+
+    db_transaction {
+	# create the root cr dir
+
+	set global_folder_id [imsld::cr::folder_new \
+				  -parent_id $dotlrn_root_folder_id \
+				  -folder_name $folder_name \
+				  -folder_label "IMS-LD"]
+
+	# PERMISSIONS FOR FILE-STORAGE
+
+	# Before we go about anything else, lets just set permissions
+	# straight. 
+	# Disable folder permissions inheritance
+	permission::set_not_inherit -object_id $global_folder_id
+
+	# Set read permissions for *all* other professors  within .LRN
+	# (so they can see the content)
+	set party_id_professor [dotlrn::user::type::get_segment_id -type professor]
+	permission::grant -party_id $party_id_professor -object_id $global_folder_id -privilege read
+	
+	# Set read permissions for *all* other admins within .LRN
+	# (so they can see the content)
+	set party_id_admins [dotlrn::user::type::get_segment_id -type admin]
+	permission::grant -party_id $party_id_admins -object_id $global_folder_id -privilege read
+    }
+    # register content types
+    content::folder::register_content_type -folder_id $global_folder_id \
+	-content_type imsld_property_instance
+
+    # allow subfolders inside our parent folder
+    content::folder::register_content_type -folder_id $global_folder_id \
+	-content_type content_folder
+}    
 

@@ -5,6 +5,12 @@
 
 delete from acs_objects where object_type = 'imsld_run';
 
+select acs_attribute__drop_attribute('imsld_run', 'imsld_id');
+
+select acs_attribute__drop_attribute('imsld_run', 'status');
+
+delete from acs_object_type_tables where object_type = 'imsld_run';
+
 select acs_object_type__drop_type('imsld_run','f');
 
 delete from acs_rels where rel_type = 'imsld_run_users_group_rel'; 

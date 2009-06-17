@@ -180,12 +180,20 @@ ad_proc -public imsld::condition::eval_when_condition_true {
 ad_proc -public imsld::condition::eval_change_property_value {
     -change_property_value_xml:required
     -run_id:required
+    -user_id
 } {
     Executes the expression of the change-property-value and sets the result to the associated property.
 } {
     dom parse $change_property_value_xml document
     $document documentElement change_property_value_root
-    imsld::statement::execute -run_id $run_id -statement [$change_property_value_root childNodes]
+    ns_log Notice "[info vars]"
+    if {![info exists user_id]} {
+        ns_log Notice "eval_change_property_value without user_id"
+        imsld::statement::execute -run_id $run_id -statement [$change_property_value_root childNodes]
+    } {
+        ns_log Notice "eval_change_property_value with user_id: $user_id"
+        imsld::statement::execute -run_id $run_id -statement [$change_property_value_root childNodes] -user_id $user_id
+    }
 }
 
 ad_proc -public imsld::condition::eval_when_prop_value_is_set {
@@ -637,6 +645,7 @@ ad_proc -public imsld::statement::execute {
     if {![info exist user_id]} {
 	set user_id [ad_conn user_id] 
     }
+    ns_log Notice "statement::execute with user_id: $user_id"
 
     foreach executeNode $statement {
         switch -- [$executeNode localName] {
@@ -751,7 +760,13 @@ ad_proc -public imsld::statement::execute {
                             {property-ref} {
                                 set propertyValue [imsld::runtime::property::property_value_get -run_id $run_id -user_id $user_id -identifier [$propertyvalueChildNode getAttribute {ref}]]
                             }
-                            
+                            {external-value} {
+                                #gsi-hook for external-value type. 
+                                #The value will be extracted from the proper service
+                                set propertyValue [imsld::gsi::get_external_value -run_id $run_id \
+                                                                                  -user_id $user_id \
+                                                                                  -node $propertyvalueChildNode]
+                            }
                         }
                     }
                     {TEXT_NODE} {

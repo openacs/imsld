@@ -14,18 +14,18 @@ function resizeobject() {
   var body = bodies[0];
   if (document.documentElement && document.documentElement.currentStyle && typeof document.documentElement.clientWidth != "undefined" && document.documentElement.clientWidth != 0)
     {
-      o.width = document.documentElement.clientWidth + 2*parseInt(document.documentElement.currentStyle.borderWidth,10) - o.style.left;
-      o.height = document.documentElement.clientHeight + 2*parseInt(document.documentElement.currentStyle.borderWidth,10) - o.style.top;
+      o.width = document.documentElement.clientWidth - 6;
+      o.height = document.documentElement.clientHeight - 6;
     }
   else if (document.all && document.body && typeof document.body.clientWidth != "undefined")
     {
-      o.width = document.body.clientWidth + 2*parseInt(document.body.currentStyle.borderWidth,10) - o.style.left;
-      o.height = document.body.clientHeight + 2*parseInt(document.body.currentStyle.borderWidth,10) - o.style.top;
+      o.width = document.body.clientWidth - 6;
+      o.height = document.body.clientHeight - 6;
     }
   else if (window.innerWidth)
     {
-      o.width = window.innerWidth - o.style.left - 30;
-      o.height = window.innerHeight - o.style.top - 50;
+      o.width = window.innerWidth - 30;
+      o.height = window.innerHeight - 50;
     }
   else if (document.body && typeof document.body.clientWidth != "undefined")
     {
@@ -244,14 +244,11 @@ function _tp_div(a){
    ac.className=ai;
    ab.className=aj;
 
-   ac.style.float = 'left';
-   ab.style.float = 'left';
-   
    return false;
 }
 
 function submitForm(form, contentDiv) {
-  var objXmlHttp=null
+  var objXmlHttp=null;
   try {
     objXmlHttp = new XMLHttpRequest();            
   } catch(e) {
@@ -275,7 +272,11 @@ function submitForm(form, contentDiv) {
           e.style.display = "none";
         }
 	if (contentDiv == "imsld_activity_tree" || contentDiv == "imsld_environment") {
-	  delete window.treeClass;
+	  try {
+	    delete window.treeClass;
+	  } catch(e) {
+	    window.treeClass = undefined;
+	  }
 	  convertTrees();
 	}
       }
@@ -292,24 +293,32 @@ function submitForm(form, contentDiv) {
       url = url.replace(/\/$/, '');
     }
   }
-  objXmlHttp.open(method,url,true);
-
-  var enctype = (form.enctype == "application/x-www-form-urlencoded") ? "POST" : form.enctype;
-  objXmlHttp.setRequestHeader('Content-Type', enctype);
 
   var list = new Array();
   for (var i=0; i<form.elements.length; i++) {
     var el = form.elements[i];
     if (el.type == "checkbox" || el.type == "radio" ) {
       if (el.checked) {
-        list.push(el.name+"="+el.value);
+        list.push(encodeURIComponent(el.name)+"="+encodeURIComponent(el.value));
       }
     } else {
-      list.push(el.name+"="+el.value);
+      list.push(encodeURIComponent(el.name)+"="+encodeURIComponent(el.value));
     }
   }
 
-  objXmlHttp.send(list.join("&"));
+  var params = list.join("&");
+
+  if (method.toUpperCase() == "POST") {
+    var enctype = "application/x-www-form-urlencoded";
+    objXmlHttp.open(method,url,true);
+    objXmlHttp.setRequestHeader('Content-Type', enctype);
+    objXmlHttp.setRequestHeader("Content-length", params.length);
+    objXmlHttp.setRequestHeader("Connection", "close");
+    objXmlHttp.send(params);
+  } else {
+    objXmlHttp.open(method,url+"?"+params,true);    
+    objXmlHttp.send(null);
+  }
   return(false);
 }
 

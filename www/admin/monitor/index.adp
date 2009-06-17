@@ -1,11 +1,29 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
-            "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>@course_name@</title>
-  </head>
-  <body> 
+<master src="../../../lib/imsld-master">
+  <property name="title">@course_name@</property>
+  <property name="imsld_include_mktree">1</property>
+  <property name="imsld_content_frame">1</property>
+  <property name="header_stuff">
+    <link rel="stylesheet" href="/resources/theme-zen/css/main.css" media="all">
+    <link rel="stylesheet" href="/resources/acs-templating/mktree.css" media="all">
+    <style type="text/css">
+      p.runtime {
+        font-family:Verdana, Arial, Helvetica, sans-serif;
+        text-align:center;  
+        font-size: 11px;
+        color: #ffffff;
+        margin: 0px;
+        padding: 0px 0px 0px 0px;
+      }
+      div.runtime {
+        margin: 0px;
+        padding: 0px 0px 0px 0px;
+        top: 0px;
+        background-color: #0000FF;
+      }
+    </style>
+
+  </property>
+
     <div id="runinfo" class="frame">
         <include src="run-info" />
     </div>
@@ -22,5 +40,3 @@
         <include src="properties-frame" />
       </if>
     </div>
-  </body>
-</html>

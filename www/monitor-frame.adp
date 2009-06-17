@@ -17,7 +17,7 @@
 <input type="hidden" name="run_id" value="@run_id@">
 <input type="hidden" name="role_id" value="@role_id@">
 <input type="hidden" name="monitor_id" value="@monitor_id@">
-<input type="submit" name="ok" value="OK" />
+<input type="submit" name="ok" value="OK">
 </form>
 </if>
 
@@ -50,10 +50,14 @@ for (var i = 0; i < as.length; i++) {
   var a = as[i];
   a.setAttribute('target', 'object');
 }
-document.getElementById('object').src = as[0].getAttribute('href');
+if (as[0].getAttribute('href') != '') {
+  document.getElementById('object').src = as[0].getAttribute('href');
+}
 </script>
 
-<SCRIPT>
-  document.forms['choose-user'].elements['ok'].style.display="none"
-</SCRIPT>
+<script type="text/javascript">
+  if (document.forms['choose-user']) {
+    document.forms['choose-user'].elements['ok'].style.display="none";
+  }
+</script>
 

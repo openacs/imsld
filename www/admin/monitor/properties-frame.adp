@@ -1,6 +1,3 @@
-<master src="../../../lib/imsld-master">
-  <property name="title">@page_title;noquote@</property>
-  <property name="imsld_content_frame">1</property>
 
   <div class="frame-header">
     <if @item_select:rowcount@ not nil>
@@ -18,7 +15,7 @@
     </if><else>@frame_header;noquote@</else>
   </div>
 
-  <br />
+  <br>
 
   <if @table_node@ not nil>
     <div class="centered-table">

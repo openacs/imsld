@@ -78,8 +78,8 @@ if { [lindex $is_imsld_list 0] } {
     set imsld_title [imsld::parse::get_title -node $imsld -prefix imsld]
     set imsld_level [imsld::parse::get_attribute -node $imsld -attr_name level]
     set imsld_level [expr { [empty_string_p $imsld_level] ? "[_ imsld.Not_defined]" : $imsld_level }]
-    multirow append imsld_info "[_ imsld.IMD_LD_Title]" "$imsld_title"
-    multirow append imsld_info "[_ imsld.IMD_LD_Level]" "$imsld_level"
+    multirow append imsld_info "[_ imsld.IMS-LD_Title]" "$imsld_title"
+    multirow append imsld_info "[_ imsld.IMS-LD_Level]" "$imsld_level"
     
     # Components
     set components [$imsld child all imsld:components]

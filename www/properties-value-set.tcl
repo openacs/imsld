@@ -21,12 +21,11 @@ foreach instance_id [array names instances_ids -regexp {[^[:alpha:]]$}] {
         # avoiding hacks
         db_1row instance_info_id {
             select ins.property_id,
-	    prop.datatype
+                  prop.datatype
             from imsld_property_instances ins,
-	    imsld_properties prop
+                 imsld_properties prop
             where ins.instance_id = :instance_id
-	    and ins.property_id = prop.property_id
-	    and content_revision__is_live(ins.instance_id) = 't'
+                  and ins.property_id = prop.property_id
         }
 	
 	if { [string eq "file" $datatype] } {

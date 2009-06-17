@@ -21,9 +21,12 @@ ad_page_contract {
     {property:optional ""}
     {value:optional ""}
     {option ""}
+    {title ""}
+    {is_visible_p:boolean t}
+    {resource_file_id ""}
 } -validate {
     non_empty_id {
-        if { [string eq "" $activity_item_id] && [string eq "" $learning_object_id] && [string eq "" $service_id] } {
+        if { $activity_item_id eq "" && $learning_object_id eq "" && $service_id eq "" } {
             ad_complain "[_ imsld.lt_You_must_provide_an_a]"
         }
     }
@@ -416,8 +419,6 @@ set properties [db_list_of_lists select_properties {
 }]
 
 
-set activity_item_id [content::revision::item_id -revision_id $activity_id]
-
 if { $type eq "learning" || $type eq "support" } {
 
     ad_form \
@@ -615,10 +616,18 @@ if { $type eq "learning" || $type eq "support" } {
 
 }
 
-if { $type eq "structure" } {
-    
-    set imsld_id [content::revision::item_id \
-		      -revision_id [imsld::get_imsld_from_activity -activity_id $activity_id -activity_type "structure"]]
+set imsld_id [content::revision::item_id \
+		  -revision_id [imsld::get_imsld_from_activity -activity_id $activity_id -activity_type $type]]
+
+content::item::get -item_id $imsld_id -array_name imsld_array
+set res_options [list]
+if { $imsld_array(resource_handler) eq "xowiki" } {
+    set res_options [imsld::xowiki::page_list]
+} else {
+    set community_id [dotlrn_community::get_community_id]
+    set fs_package_id [site_node_apm_integration::get_child_package_id \
+			   -package_id [dotlrn_community::get_package_id $community_id] \
+			   -package_key "file-storage"]
     
     content::item::get -item_id $imsld_id -array_name imsld_array
     set res_options [list]
@@ -649,6 +658,11 @@ if { $type eq "structure" } {
 	    order by ci1.tree_sortkey, ci1.name
 	}]
     }
+}
+
+set res_options [linsert $res_options 0 {{} {}}]
+
+if { $type eq "structure" } {
     
     ad_form \
 	-name new_activity \
@@ -656,10 +670,23 @@ if { $type eq "structure" } {
 	-html { onsubmit "return submitForm(this, 'imsld_activity_tree')" } \
 	-form {
 	    { title:text
-		{label "Title"}
+		{label Title}
 	    }
-	    { resource_file_id:integer(select)
-		{label "Resource"}
+	    { is_visible_p:text(checkbox),optional
+		{options {{"" t}}}
+		{label "Visible"}
+		{value "t"}
+	    }
+	    { resource_file_id:integer(select),optional
+		{label "Description"}
+		{options $res_options}
+	    }
+	    { lo_file_id:integer(select),optional
+		{label "Learning Objectives"}
+		{options $res_options}
+	    }
+	    { pr_file_id:integer(select),optional
+		{label "Prerequisites"}
 		{options $res_options}
 	    }
 	} \
@@ -716,7 +743,7 @@ if { $type eq "structure" } {
 	    set learning_activity_id [imsld::item_revision_new -attributes [list [list identifier $identifier] \
 										[list component_id $component_id] \
 										[list activity_description_id $activity_description_id] \
-										[list is_visible_p t] \
+										[list is_visible_p $is_visible_p] \
 									       ] \
 					  -content_type imsld_learning_activity \
 					  -title $title \
@@ -724,11 +751,18 @@ if { $type eq "structure" } {
 	    
 #	    relation_add imsld_al_info_i_rel $activity_item_id $information_id
 	    
-	    set sort_order 0
+	    set sort_order [db_string select_max_order {
+		select max(ir.sort_order)+1
+		from acs_rels ar, imsld_activity_structuresi ias,
+		(select * from imsld_as_la_rels union select * from imsld_as_sa_rels union
+		 select * from imsld_as_as_rels) as ir
+		where ar.object_id_one = ias.item_id
+		and ar.rel_id = ir.rel_id
+		and ias.structure_id = :activity_id
+		and content_item__get_live_revision(ar.object_id_two) is not null
+	    }]
 	    set extra_vars [ns_set create]
-	    oacs_util::vars_to_ns_set \
-		-ns_set $extra_vars \
-		-var_list { sort_order }
+	    ns_set put $extra_vars sort_order $sort_order
 	    
 	    relation_add -extra_vars $extra_vars imsld_as_la_rel $activity_item_id $learning_activity_id    
 
@@ -768,3 +802,130 @@ if { $type eq "structure" } {
 # end new_activity on_submit
 
 }
+
+ad_form \
+    -name edit_activity \
+    -export {run_id activity_item_id type} \
+    -html { onsubmit "return submitForm(this)" } \
+    -form {
+	{ title:text
+	    {label Title}
+	}
+	{ is_visible_p:text(checkbox),optional
+	    {options {{"" t}}}
+	    {label "Visible"}
+	    {value "t"}
+	}
+	{ resource_file_id:integer(select),optional
+	    {label "Description"}
+	    {options $res_options}
+	}
+	{ lo_file_id:integer(select),optional
+	    {label "Learning Objectives"}
+	    {options $res_options}
+	}
+	{ pr_file_id:integer(select),optional
+	    {label "Prerequisites"}
+	    {options $res_options}
+	}
+    } \
+    -on_submit {
+	
+	set component_id [db_string select_component {
+	    select item_id
+	    from imsld_componentsx
+	    where imsld_id = :imsld_id
+	}]
+	
+	set parent_id [content::item::get_parent_folder -item_id $activity_item_id]
+	
+	# start the activity creation
+	# create the activity description
+	set activity_description_id [imsld::item_revision_new -title $title \
+					 -content_type imsld_activity_desc \
+					 -parent_id $parent_id]
+	
+	# now create the activity description item
+	set item_identifier "item_${activity_description_id}"
+	set res_item_id [imsld::item_revision_new -title $title \
+			     -content_type imsld_item \
+			     -attributes [list [list identifier $item_identifier] \
+					      [list is_visible_p "t"]] \
+			     -parent_id $parent_id]
+	
+	
+	relation_add imsld_actdesc_item_rel $activity_description_id $res_item_id
+
+	# now the resource
+	set resource_identifier "resource_${activity_description_id}"
+	set manifest_id [db_string select_manifest {
+	    select ico.manifest_id
+	    from imsld_cp_organizationsi ico, imsld_imsldsi ii
+	    where ii.item_id = :imsld_id
+	    and ico.item_id = ii.organization_id
+	    and content_revision__is_live(ii.imsld_id) = 't'
+	    and content_revision__is_live(ico.organization_id) = 't'
+	}]
+	set resource_item_id [imsld::cp::resource_new -manifest_id $manifest_id \
+				  -identifier $resource_identifier \
+				  -type "webcontent" \
+				  -parent_id $parent_id]
+
+	set extra_vars [util_list_to_ns_set [list displayable_p "t"]]
+
+	relation_add -extra_vars $extra_vars imsld_res_files_rel $resource_item_id $resource_file_id
+	relation_add imsld_item_res_rel $res_item_id $resource_item_id
+
+	# now the learning activity
+	set identifier "$title-${activity_description_id}"
+
+	set learning_activity_id [imsld::item_revision_new -attributes [list [list identifier $identifier] \
+									    [list component_id $component_id] \
+									    [list activity_description_id $activity_description_id] \
+									    [list is_visible_p $is_visible_p] \
+									   ] \
+				      -content_type imsld_learning_activity \
+				      -title $title \
+				      -parent_id $parent_id]
+	
+	#	    relation_add imsld_al_info_i_rel $activity_item_id $information_id
+	
+	set sort_order 0
+	set extra_vars [ns_set create]
+	oacs_util::vars_to_ns_set \
+	    -ns_set $extra_vars \
+	    -var_list { sort_order }
+	
+	relation_add -extra_vars $extra_vars imsld_as_la_rel $activity_item_id $learning_activity_id    
+	
+	# 	    set involved_roles \
+	# 		[imsld::roles::get_list_of_roles \
+	# 		     -imsld_id [db_string get_imsld_from_run \
+	# 				    {select imsld_id from imsld_runs where run_id=:run_id}] ]
+	
+	# 	    set involved_users [list]
+	# 	    foreach role $involved_roles {
+	# 		set involved_users [concat $involved_users \
+	# 					[imsld::roles::get_users_in_role \
+	# 					     -role_id [lindex $role 0] -run_id $run_id]]
+	# 	    }
+	
+	# 	    set involved_users [list]
+
+	# 	    foreach user_id [lsort -unique $involved_users] { 
+	
+	# 		set instance_id \
+	# 		    [package_exec_plsql \
+	# 			 -var_list [list [list instance_id ""] \
+	# 					[list owner_id [content::item::get_live_revision -item_id $learning_activity_id]] \
+	# 					[list type "isvisible"] \
+	# 					[list identifier $identifier] \
+	# 					[list run_id $run_id] \
+	# 					[list user_id $user_id] \
+	# 					[list is_visible_p "t"] \
+	# 					[list title ""] \
+	# 					[list with_control_p ""]] \
+	# 			 imsld_attribute_instance new]
+	# 	    }
+
+    }

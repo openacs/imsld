@@ -25,3 +25,5 @@ if { $activity_id ne ""} {
     set environment_src [export_vars -base "environment-frame" {{run_id $run_id} {activity_id $activity_id}}]
 }
 
+set page_title {}
+set context [list]

@@ -11,4 +11,6 @@ drop table imsld_notifications_history cascade;
 
 drop table imsld_runtime_activities_rels cascade;
 
-drop sequence imsld_rar_seq;
+drop view imsld_rar_seq;
+
+drop sequence t_imsld_rar_seq;

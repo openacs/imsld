@@ -12,3 +12,5 @@
 \i imsld-production-delivery-package-create.sql
 \i imsld-tree-create.sql
 \i imsld-level-c-create.sql
+
+\i imsld-gsi-a-create.sql

@@ -129,6 +129,21 @@ ad_proc -public imsld::monitor::structure_activities_list {
 				       -sort_order $sort_order \
 				       -number_elements $activities_number]
 
+		set del_node [$dom_doc createElement a]
+		$del_node setAttribute onclick "return loadTree('[export_vars -base activity-del {run_id activity_id}]')"
+		$del_node setAttribute href "#no"
+		$del_node setAttribute title "[_ imsld.Delete_URL]"
+
+		set del_icon [$dom_doc createElement img]
+		$del_node appendChild $del_icon
+		$del_icon setAttribute src "/resources/acs-subsite/Delete16.gif"
+		$del_icon setAttribute alt "[_ imsld.Delete]"
+
+		$del_node appendChild $del_icon
+		$activity_node appendChild [$dom_doc createTextNode " \["]
+		$activity_node appendChild $del_node
+		$activity_node appendChild [$dom_doc createTextNode "]"]
+
                 set completed_list [linsert $completed_list \
 					$sort_order [$activity_node asList]]
             }

@@ -158,8 +158,12 @@ ad_proc -private imsld::roles::get_role_instances {
 } {
     @param roles_list the list of roles to get the name
 } {
-    if {[info exist run_id]} {
-        set groups [db_list get_community_related_groups {}]
+    if {[exists_and_not_null run_id]} {
+	if {[exists_and_not_null role_id]} {
+	    set groups [db_list get_community_role_related_groups {}]
+	} else {
+	    set groups [db_list get_community_related_groups {}]
+	}
     } else {
         set groups [db_list get_related_groups {}]
     }
@@ -467,3 +471,24 @@ ad_proc -public imsld::roles::create_groups_from_dom {
     return $groups
 }
 
+
+ad_proc -public imsld::roles::get_active_role {
+    -run_id:required
+    -user_id:required
+} {
+    Return the active role for a given user in a given run.
+} {
+    db_1row get_active_role {
+                            select iruns.active_role_id as active_role
+                            from imsld_run_users_group_rels iruns,
+                                 acs_rels ar,
+                                 imsld_run_users_group_ext iruge 
+                            where iruge.run_id=:run_id 
+                                  and ar.object_id_one=iruge.group_id 
+                                  and ar.object_id_two=:user_id 
+                                  and ar.rel_type='imsld_run_users_group_rel' 
+                                  and ar.rel_id=iruns.rel_id
+    }
+    return $active_role
+}
+ 

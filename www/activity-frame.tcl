@@ -178,5 +178,3 @@ if { !$roles_template_p } {
     set iframe_activity_url $activities
 }
 
-set page_title {}
-set context [list]

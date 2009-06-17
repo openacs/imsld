@@ -42,7 +42,7 @@ set manifest_id [db_nextval acs_object_id_seq]
 
 # form to upload an IMS LD ZIP file
 
-ad_form -name upload_file_form -html {enctype multipart/form-data} -cancel_url $return_url -action imsld-new -form {
+ad_form -name upload_file_form -html {enctype multipart/form-data} -action imsld-new -form {
     {upload_file:file {label "[_ imsld.lt_Import_IMS-LD_ZIP_Fil]"}}
     {return_url:text {widget hidden} {value $return_url}}
     {manifest_id:integer {widget hidden} {value $manifest_id}}
@@ -69,7 +69,7 @@ template::list::create \
         create_run {
             label {}
             display_template {<if @imslds.live_revision@ not nil>
-		<a href="run-new?run_imsld_id=@imslds.imsld_id@&return_url=@return_url@" title="[_ imsld.lt___imsldcreate_new_run]"> [_ imsld.create_new_run] </a>
+		<a href="run-new?run_imsld_id=@imslds.imsld_id@&return_url=@return_url@" title="[_ imsld.create_new_run]"> [_ imsld.create_new_run] </a>
 		</if>} 
         }
         export {
@@ -113,13 +113,15 @@ template::list::create \
             label "[_ imsld.Run_IMS-LD_Name]"
             orderby_asc {imsld_title asc}
             orderby_desc {imsld_title desc}
-            display_template {@imsld_runs.imsld_title@}
+	    link_url_eval {[export_vars -base "../imsld-divset" {run_id}]}
         }
         status {
             label "[_ imsld.Status]"
             orderby_asc {status asc}
             orderby_desc {status desc}
-            display_template {<img src="@imsld_runs.image_path;noquote@" alt="@imsld_runs.image_alt@" title="@imsld_runs.image_title@" border="0" alt="[_ imsld.Status]"></a>}
+            display_template {<if @imsld_runs.status@ ne "deleted">
+		<img src="@imsld_runs.image_path;noquote@" alt="@imsld_runs.image_alt@" title="@imsld_runs.image_title@" border="0" alt="[_ imsld.Status]"></a>
+	    </if>}
         }
         creation_date {
             label "[_ imsld.Creation_Date]"
@@ -135,6 +137,9 @@ template::list::create \
 		 <if @imsld_runs.status@ eq "waiting">
 		  <a href="imsld-admin-roles?run_id=@imsld_runs.run_id@" title="[_ imsld.Manage_Members]">[_ imsld.Manage_Members]</a>
  		 </if>
+		 <if @imsld_runs.status@ eq "waitingservices">
+		  <a href="gsi/imsld-gsi-serviceslist?run_id=@imsld_runs.run_id@" title="Configure Services">Configure Services</a>
+ 		 </if>
 		</else>}
         }
         delete {
@@ -144,7 +149,7 @@ template::list::create \
 		<span class="alert" style="display:inline;">[_ imsld.Deleted]</span> <a href="index?set_run_id_live=@imsld_runs.run_id@" title="[_ imsld.Make_it_live]">[_ imsld.Make_it_live]</a>
 		</if>
 		<else>
-		<a href="run-delete?run_id=@imsld_runs.run_id@&return_url=@return_url@" title="[_ imsld.Delte]"><img src="/resources/acs-subsite/Delete16.gif" width="16" height="16" border="0" alt="[_ imsld.Delte]" title="[_ imsld.Delte]"></a>
+		<a href="run-delete?run_id=@imsld_runs.run_id@&return_url=@return_url@" title="[_ imsld.Delete]"><img src="/resources/acs-subsite/Delete16.gif" width="16" height="16" border="0" alt="[_ imsld.Delete]" title="[_ imsld.Delete]"></a>
 		</else>}
             link_html { title "[_ imsld.Delete_Run]" }
         }
@@ -164,6 +169,7 @@ db_multirow -extend { manage delete_template image_path image_alt image_title } 
             set image_title "[_ imsld.active]"
             set image_path "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]/resources/active.png"
         }
+        waitingservices -
         waiting {
             set image_alt "[_ imsld.waiting]"
             set image_title "[_ imsld.waiting]"

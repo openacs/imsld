@@ -16,7 +16,7 @@ ad_page_contract {
 
 set user_id [ad_conn user_id]
 
-if { ![ string eq $role_id ""] } {
+if { $role_id ne "" } {
     db_1row monitor_service_info { *SQL* }
 } else {
     db_1row monitor_service_info_no_role_id { *SQL* }

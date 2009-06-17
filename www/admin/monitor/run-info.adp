@@ -1,22 +1,3 @@
-    <link rel="stylesheet" href="/resources/theme-zen/css/main.css" media="all">
-    <link rel="stylesheet" href="/resources/acs-templating/mktree.css" media="all">
-    <style type="text/css">
-      p.runtime {
-        font-family:Verdana, Arial, Helvetica, sans-serif;
-        text-align:center;  
-        font-size: 11px;
-        color: #ffffff;
-        margin: 0px;
-        padding: 0px 0px 0px 0px;
-      }
-      div.runtime {
-        margin: 0px;
-        padding: 0px 0px 0px 0px;
-        top: 0px;
-        background-color: #0000FF;
-      }
-    </style>
-
     <div class="runtime">
     <p class="runtime">
       #imsld.Runinfo_Name# 

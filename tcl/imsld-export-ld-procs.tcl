@@ -29,7 +29,13 @@ ad_proc -public imsld::export::ld::write_learning_objectives {
     db_1row get_learning_objectives_info {select imsld_item_id, identifier, identifierref, is_visible_p from acs_rels, cr_items cr, imsld_items where :learning_objective_id = object_id_one and object_id_two = cr.item_id and cr.latest_revision = imsld_item_id}
     #Add attributes of imsld:item label
     $imsld_item setAttribute identifier $identifier
+    #Check if the reference is of a xowiki page, if it is the case, fill identifierref with resource_(resource_number)
+    if {[string first "item_" $identifier] == 0} {
+      set identifierref "resource_[string range $identifier [expr [string first "_" $identifier]+1] end]"
+    }
+
     $imsld_item setAttribute identifierref $identifierref
+    
     if {$is_visible_p == "t"} {
       set is_visible "true"
     } else {
@@ -77,6 +83,10 @@ ad_proc -public imsld::export::ld::write_prerequisites {
     db_1row get_prerequisites_info {select imsld_item_id, identifier, identifierref, is_visible_p from acs_rels, cr_items cr, imsld_items where :prerequisite_id = object_id_one and object_id_two = cr.item_id and cr.latest_revision = imsld_item_id}
     #Add attributes of imsld:item label
     $imsld_item setAttribute identifier $identifier
+    #Check if the reference is of a xowiki page, if it is the case, fill identifierref with resource_(resource_number)
+    if {[string first "item_" $identifier] == 0} {
+      set identifierref "resource_[string range $identifier [expr [string first "_" $identifier]+1] end]"
+    }
     $imsld_item setAttribute identifierref $identifierref
     if {$is_visible_p == "t"} {
       set is_visible "true"

@@ -68,7 +68,7 @@ window.onload = function() {
 <!-- The following DIV is needed for overlib to function! -->
   <div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000;"></div>	
 <div class='xowiki-content'>
-<div id='wikicmds'>
+<div id='grail_wikicmds'>
   <if @edit_link@ not nil><a href="@edit_link@" accesskey='e' title='Diese Seite bearbeiten ...'>#xowiki.edit#</a> &middot; </if>
   <if @rev_link@ not nil><a href="@rev_link@" accesskey='r'>#xotcl-core.revisions#</a> &middot; </if>
   <if @new_link@ not nil><a href="@new_link@" accesskey='n'>#xowiki.new_page#</a> &middot; </if>

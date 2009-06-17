@@ -8,7 +8,7 @@
       <if @completed_activity_p@>
         <if @complete_act_id@ ne "">
           <img src="/resources/imsld/completed.png" alt="#imsld.completed#"
-            title="#imsld.completed#" />
+            title="#imsld.completed#" >
         </if>
       </if>
       <else>
@@ -31,7 +31,7 @@
       <if @completed_activity_p@>
         <if @complete_act_id@ ne "">
           <img src="/resources/imsld/completed.png" alt="#imsld.completed#"
-            title="#imsld.completed#" />
+            title="#imsld.completed#" >
         </if>
       </if>
       <else>
