@@ -9,25 +9,25 @@
     <implements-subsite-p>f</implements-subsite-p>
     <inherit-templates-p>t</inherit-templates-p>
     
-    <version name="1.8d" url="http://openacs.org/repository/download/apm/imsld-1.8d.apm">
+    <version name="2.0d" url="http://openacs.org/repository/download/apm/imsld-2.0d.apm">
         <owner url="mailto:derick@inv.it.uc3m.es">Derick Leony</owner>
         <owner url="mailto:jopez@galileo.edu">Jose Pablo Escobedo Del Cid</owner>
         <summary>IMS LD integration with dotLRN.</summary>
-        <release-date>2009-04-27</release-date>
+        <release-date>2009-06-19</release-date>
         <description format="text/html">This package is the implementation of IMS LD in dotLRN. The course admin can create a sequence of activities for the students, as well as decide who does what, when and using what resources.</description>
         <maturity>0</maturity>
 
-        <provides url="imsld" version="1.8d"/>
+        <provides url="imsld" version="2.0d"/>
         <requires url="acs-content-repository" version="5.2.2"/>
         <requires url="acs-kernel" version="5.2.2"/>
         <requires url="acs-templating" version="5.2.2"/>
 
         <callbacks>
-            <callback type="before-unmount"  proc="imsld::apm_callback::before_unmount"/>
-            <callback type="before-uninstall"  proc="imsld::apm_callback::before_uninstall"/>
             <callback type="after-install"  proc="imsld::apm_callback::after_install"/>
-            <callback type="before-uninstantiate"  proc="imsld::apm_callback::before_uninstantiate"/>
+            <callback type="before-uninstall"  proc="imsld::apm_callback::before_uninstall"/>
+            <callback type="before-unmount"  proc="imsld::apm_callback::before_unmount"/>
             <callback type="after-upgrade"  proc="imsld::apm_callback::after_upgrade"/>
+            <callback type="before-uninstantiate"  proc="imsld::apm_callback::before_uninstantiate"/>
         </callbacks>
         <parameters>
             <parameter datatype="string"  min_n_values="1"  max_n_values="1"  name="CustomCSS"  description="Custom CSS to apply to the player"/>
