@@ -1,4 +1,3 @@
-
 <ul>
   <li>
     @imsld_title@
