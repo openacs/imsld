@@ -1,0 +1,74 @@
+<master>
+  <property name="title">@page_title;noquote@</property>
+  <property name="context">@context;noquote@</property>
+
+<switch @state@>
+    <case value="void">
+        <include src="imsld-gsi-show-service-requirements" gservice_id=@gservice_id@>
+        <a href="@check_button@" title="check this service">Check this service</a>
+    </case>
+
+    <case value="checked">
+        <include src="imsld-gsi-show-service-requirements" gservice_id=@gservice_id@>
+        <include src="imsld-gsi-show-service-response" gservice_id=@gservice_id@ run_id=@run_id@ plugin_URI=@plugin_URI@>
+        <a href="@refresh_button@"></a>
+        <a href="@choose_button@"></a>
+    </case>
+
+    <case value="chosen">
+        <include src="imsld-gsi-show-service-requirements" gservice_id=@gservice_id@>
+        <include src="imsld-gsi-show-service-response" gservice_id=@gservice_id@ run_id=@run_id@ plugin_URI=@plugin_URI@>
+        <include src="imsld-gsi-show-service-user-mapping" gservice_id=@gservice_id@ run_id=@run_id@ plugin_URI=@plugin_URI@>
+        <a href="@do_map_button@"></a>
+    </case>
+
+    <case value="mapped">
+        <include src="imsld-gsi-show-service-requirements" gservice_id=@gservice_id@>
+        <include src="imsld-gsi-show-service-response" gservice_id=@gservice_id@ run_id=@run_id@ plugin_URI=@plugin_URI@>
+        <include src="imsld-gsi-show-service-user-mapping" gservice_id=@gservice_id@ run_id=@run_id@ plugin_URI=@plugin_URI@ mapped_p="t">
+        <a href="@configure_button@"></a>
+    </case>
+
+    <case value="configured">
+        <include src="imsld-gsi-show-service-requirements" gservice_id=@gservice_id@>
+        <include src="imsld-gsi-show-service-response" gservice_id=@gservice_id@ run_id=@run_id@ plugin_URI=@plugin_URI@>
+        <include src="imsld-gsi-show-service-user-mapping" gservice_id=@gservice_id@ run_id=@run_id@ plugin_URI=@plugin_URI@ mapped_p="t">
+        <include src="imsld-gsi-show-service-configuration-results" gservice_id=@gservice_id@ run_id=@run_id@ plugin_URI=@plugin_URI@>
+    </case>
+</switch>
+
+<div class="check-service">
+<h2>Check service functionality</h2>
+<!-- There is a list (ul-li) in the left with the requested capabilities, and a list in the rigth with the answer. CSS does the layout -->
+
+<div class="service-request">
+<h3>Functions</h3>
+<ul>
+<multiple name="requested_functions">
+    <li>@requested_functions.item@</li>
+</multiple>
+
+</ul>
+<h3>Permissions</h3>
+<ul>
+<multiple name="requested_permissions">
+    <li>@requested_permissions.item@</li>
+</multiple>
+</ul>
+</div>
+
+<a href="@check_button@" title="check this service">Check this service</a>
+
+  
+
+
+<div class="get-urls">
+    <h3>Obtain URLs</h3>
+    <if @users_mapped_p@ eq "t">
+        <p>Something here...</p>
+    </if>
+    <else>
+        <p>You have to map map users before.</p>
+    </else>
+</div>
+

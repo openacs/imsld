@@ -1,0 +1,126 @@
+ ad_page_contract {
+
+    Use a proper plugin to configure a service
+    @author lfuente@it.uc3m.es
+    @creation-date dic 2008
+} {
+    gservice_id
+    run_id
+    plugin_URI
+    gsi_request_id:optional
+    {do_check_p "f"}
+    {do_choose_p "f"}
+    {do_map_p "f"}
+    {do_configure_p "f"}
+}
+
+set page_title "IMS LD Service configuration"
+set context [list "Service configuration"]
+template::head::add_css -href "/resources/imsld/imsld.css" -media "screen" -order 0
+
+#first, perform action (if requested)
+
+if {[string eq $do_check_p "t"]} {
+    #FIXME: ¿en un thread a parte?
+    set service_response [imsld::gsi::send_check_request -gservice_id $gservice_id -plugin_URI $plugin_URI -run_id $run_id]
+    imsld::gsi::store_check_results -gservice_id $gservice_id -plugin_URI $plugin_URI -run_id $run_id -service_response $service_response
+    ns_log Notice "hecho el check"
+}
+if {[string eq $do_choose_p "t"]} {}
+if {[string eq $do_map_p "t"]} {}
+if {[string eq $do_configure_p "t"]} {}
+
+#second, choose state
+set service_status [imsld::gsi::get_service_status -run_id $run_id -gservice_id $gservice_id]
+if { [string eq $service_status "not-configured"] } {
+    if {[db_0or1row get_request_id {
+        select req.gsi_request_id 
+        from imsld_gsi_service_status stat, 
+             imsld_gsi_service_requests req 
+        where req.serv_status_id=stat.service_status_id and 
+              stat.run_id=:run_id and 
+              stat.owner_id=:gservice_id and 
+              req.plugin_URI=:plugin_URI
+    }]} {
+       set state "checked"
+    } else {
+       set state "void"
+    }
+} elseif { [string eq $service_status "in-progress"] } {
+    set ddbb_plugin_uri [db_string get_status_plugin {
+        select plugin_uri 
+        from imsld_gsi_service_status 
+        where run_id =:run_id and 
+              owner_id=:gservice_id
+    } ]
+
+    if {[string eq $ddbb_plugin_uri ""]} {
+        set state "chosen"
+    } else {
+        set state "mapped"
+    }
+
+} elseif { [string eq $service_status "configured"] } {
+    set state "configured"
+} else {
+    #you cannot be here...
+    ns_log notice "imsld-gsi-service-configure.tcl, status=not-found: you cannot be here"
+}
+
+
+#then go to this state
+switch $state {
+    void {
+        ns_log Notice "estado void"
+        set check_button [export_vars -base "imsld-gsi-service-configure" {plugin_URI gservice_id run_id {do_check_p "t"}}]
+    }
+    checked {
+        set refresh_button [export_vars -base "imsld-gsi-service-configure" {plugin_URI gservice_id run_id}]
+        set choose_button [export_vars -base "imsld-gsi-service-configure" {plugin_URI gservice_id run_id {do_choose_p "t"}}]
+    }
+    chosen {}
+    mapped {}
+    configured {}
+}
+
+##set checked_p "f"
+##
+###build list of things that must be checked
+##
+##if { [string eq $do_check_p "t"]} {
+##}
+##
+###FIXME: a sql query must build these values
+###maybe, the request_id is not initialized (it is done in another thread)
+##if { [info exists gsi_request_id] } {
+##    set request_response [imsld::gsi::get_request_response -request_id $gsi_request_id]
+##
+##    set functions_response [lindex $request_response 0]    
+##    set permissions_response [lindex $request_response 1]
+##    ns_log Notice "obtenidas respuestas de la bbdd"
+##    if {![string eq $do_map_p "t"] } {
+##        set choose_button [export_vars -base "imsld-gsi-service-configure" {plugin_URI gservice_id run_id {do_map_p t} {gsi_request_id $gsi_request_id}}]
+##    }
+##} else {
+##    set functions_response ""
+##    set permissions_response ""
+##}
+##
+##template::multirow create response_functions item
+##foreach function_item $functions_response {
+##    template::multirow append response_functions $function_item
+##}
+##
+##template::multirow create response_permissions item
+##foreach perm_item $permissions_response {
+##    template::multirow append response_permissions $perm_item
+##}
+##
+###map users
+##if { [string eq $do_map_p "t"]} {
+##    set checked_p "t"
+##}
+###ask for service instances
+##set users_mapped_p "f"
+##set configured_p "f"
+##
