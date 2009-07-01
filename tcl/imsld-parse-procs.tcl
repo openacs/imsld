@@ -749,7 +749,8 @@ ad_proc -public imsld::parse::parse_and_create_resource {
 				  -path_to_file $filex_href \
 				  -file_name "${manifest_identifier}/${filex_href}" \
 				  -type file \
-				  -complete_path "[ns_urldecode ${tmp_dir}/${filex_href}]"]
+				  -complete_path "[ns_urldecode ${tmp_dir}/${filex_href}]" \
+				  -manifest_identifier $manifest_identifier]
 	    } else {
         set filex_id [imsld::fs::file_new -href $filex_href \
 				  -path_to_file $filex_href \
@@ -4847,7 +4848,9 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     # them. Those that still have a zero as object_id are files that are not
     # referenced as resources by the manifest, but they are in the ZIP,
     # therefore, they need to be moved to the FS.
-    imsld::fs::traverse_zip -dir $tmp_dir -pattern "*" -resource_handler $resource_handler
+    imsld::fs::traverse_zip -dir $tmp_dir -pattern "*" \
+	-resource_handler $resource_handler \
+	-manifest_identifier $manifest_identifier
 
     if { ![empty_string_p $warnings] } {
         set warnings "[_ imsld.lt_br__Warnings_ul_warni]"

@@ -28,6 +28,7 @@ ad_proc -public imsld::xowiki::file_new {
     {-creation_date ""}
     -edit:boolean
     -complete_path
+    -manifest_identifier
 } {    
     
     @author Derick Leony (derick@inv.it.uc3m.es)
@@ -83,6 +84,7 @@ ad_proc -public imsld::xowiki::file_new {
 	set content [read $file]
 	close $file
 	
+	set content [imsld::xowiki::convert_syntax -content $content -manifest_identifier $manifest_identifier]
 	regexp {<body[^<]*>(.*?)</body>} $content match content
 	
 	set page [$package_id resolve_page $file_name method]
@@ -94,13 +96,11 @@ ad_proc -public imsld::xowiki::file_new {
 			  -package_id $package_id \
 			  -parent_id [$package_id folder_id] \
 			  -destroy_on_cleanup \
-			  -text $content]
-	    $page set_content [string trim [$page text] " \n"]
+			  -text [list $content $mime_type]]
 	    $page initialize_loaded_object
 	    $page save_new
 	} else {
-	    $page set text $content
-	    $page set_content [string trim [$page text] " \n"]
+	    $page set text [list $content $mime_type]
 	    $page save
 	}	
     } else {
@@ -136,6 +136,100 @@ ad_proc -public imsld::xowiki::file_new {
 }
 
 
+ad_proc -public imsld::xowiki::convert_syntax {
+    -content:required
+    -manifest_identifier:required
+} {
+    Gets a text and returns its convertion to XoWiki Syntax
+
+    @author Derick Leony (derick@inv.it.uc3m.es)
+    @creation-date 2009-06-15
+    
+    @param content
+    
+    @return 
+    
+    @error 
+} {
+    
+    # Here we assume that resources (URLs referenced by the SRC
+    # attribute) will be a file in XoWiki, while links (URLs
+    # referenced by the ALT attribute.
+
+    # small hack to avoid tDOM to escape the LD tags :(
+    regsub {<ld:([^\s]+)} $content {<ld\1} content
+
+    set document [dom parse -html $content]
+    set root [$document documentElement]
+
+    if { $root eq "" } {
+	# Content is too generic, we cannot proceed
+	return $content
+    }
+
+    # Changing links
+    foreach link [$root selectNodes //a] {
+	if { ![catch {set href [$link getAttribute href]}] } {
+	    if { ![regexp {://} $href] } {
+		regsub {^\./} $href "" href
+		set href "$manifest_identifier/$href"
+	    }
+	    
+	    set label [[$link firstChild] nodeValue]
+	    
+	    set wiki_text "\[\[$href|$label]]"
+
+	    set parent [$link parentNode]
+	    if { $parent eq "" } {
+		set parent $root
+	    }
+	    $parent replaceChild [$document createTextNode $wiki_text] $link
+	}
+    }
+
+    # Changing styles
+    foreach style [$root selectNodes //a\[@type="text/css"\]] {
+	if { ![catch {set href [$style getAttribute href]}] } {
+	    if { ![regexp {://} $href] } {
+		regsub {^\.?/} $href "" href
+		set href "$manifest_identifier/$href"
+		$style setAttribute href "download/file/$href"
+	    }
+
+	    set label [[$link firstChild] nodeValue]
+	}
+	
+    }
+
+    # Changing images
+    foreach image [$root selectNodes //img] {
+	if { ![catch {set src [$image getAttribute src]}] } {
+	    if { ![regexp {://} $src] } {
+		regsub {^\.?/} $src "" src
+		ns_log notice $manifest_identifier
+		set src "$manifest_identifier/$src"
+	    }
+	    
+	    set wiki_text "\[\[image:$src]]"
+	    set parent [$image parentNode]
+	    if { $parent eq "" } {
+		set parent $root
+	    }
+
+	    $parent replaceChild [$document createTextNode $wiki_text] $image
+	}
+    }
+
+    set wiki_content [$root asXML]
+
+    # small hack to avoid tDOM to escape the LD tags :(
+    regsub {<ld([^\s]+)} $wiki_content {<ld:\1} content
+
+    return $wiki_content    
+}
+
+
+
 ad_proc -public imsld::xowiki::page_content {
     -item_id
     -run_id
@@ -152,17 +246,6 @@ ad_proc -public imsld::xowiki::page_content {
 } {
     set page [::xowiki::Package instantiate_page_from_id -item_id $item_id]
     set result [$page render_content]
-
-    set manifest_identifier [db_string select_identifier {
-	select im.identifier
-	from imsld_cp_manifestsx im, imsld_cp_organizationsx io, imsld_imslds ii, imsld_runs ir
-	where ir.run_id = :run_id
-	and ir.imsld_id = ii.imsld_id
-	and ii.organization_id = io.item_id
-	and io.manifest_id = im.item_id
-    } -default ""]
-
-    regsub {src="([^\"]*)"} $result "src=\"../xowiki/download/file/${manifest_identifier}/\\1\"" result
 
     return $result
 }

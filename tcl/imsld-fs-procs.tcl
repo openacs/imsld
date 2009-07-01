@@ -252,6 +252,7 @@ ad_proc -public imsld::fs::empty_file {
 ad_proc -public imsld::fs::traverse_zip {
     -dir:required
     -pattern:required
+    -manifest_identifier:required
     {-resource_handler "file-storage"}
 } {
     Function to recursively traverse the files in a ZIP to then detect those
@@ -276,14 +277,15 @@ ad_proc -public imsld::fs::traverse_zip {
 		imsld::xowiki::file_new \
 		    -path_to_file $fname \
 		    -type file \
-		    -complete_path "[ns_urldecode ${dir}/${fname}]"
+		    -complete_path "[ns_urldecode ${dir}/${fname}]" \
+		    -manifest_identifier $manifest_identifier
 	    }
 	}
     }
     
     # Recur over the directories
     foreach subd [glob -tail -nocomplain -types d -directory $dir $pattern] {
-	imsld::fs::traverse_zip -dir $dir -pattern "$subd/*" -resource_handler $resource_handler
+	imsld::fs::traverse_zip -dir $dir -pattern "$subd/*" -resource_handler $resource_handler -manifest_identifier $manifest_identifier
     }
 }
 
