@@ -57,6 +57,7 @@ ad_proc -public imsld::export::files::modify_links {
 
   #Get Xowiki page
   set file_data "[imsld::xowiki::page_content -item_id $xo_page_id]"
+  if {[string first "<html" $file_data] != 0} {set file_data "<html><body>${file_data}</body></html>"}
 
   #Get root path to files stored in xowiki
   #Get xowiki package url
@@ -69,10 +70,13 @@ ad_proc -public imsld::export::files::modify_links {
 
 
   #Call proc that changes href attribute in a labels
+  ns_log notice "*** antes: [$root asHTML]"
   imsld::export::files::modify_a -root $root -xowiki_package_url $xowiki_package_url
   imsld::export::files::modify_frame -root $root -xowiki_package_url $xowiki_package_url
   imsld::export::files::modify_css -root $root -xowiki_package_url $xowiki_package_url
   set resource_files_list [imsld::export::files::modify_img -root $root -xowiki_package_url $xowiki_package_url -xowiki_package_id $package_id -path $path]
+
+  ns_log notice "*** despues: [$root asHTML]"
 
   #Once we have changed the references of the file, then we copy the file
   #Write page file
@@ -81,7 +85,7 @@ ad_proc -public imsld::export::files::modify_links {
   set data [$root asHTML]
   set pos [string last "content-chunk-footer" $data]
   if {$pos > 0} {set data [string range $data 0 [expr $pos-13]]}
-  if {[string first "<html" $data] != 0} {set data "<html><body>${data}</body></html>"}
+#  if {[string first "<html" $data] != 0} {set data "<html><body>${data}</body></html>"}
   puts $new_file $data
   close $new_file
 
@@ -278,7 +282,7 @@ ad_proc -public imsld::export::files::modify_img {
         #Get id of the file where the image is stored
         set content_item_id [string range [$xowiki_package_id resolve_page "$file_title" method] 2 end]
 
-        db_1row get_file_id {select object_id from acs_objects where title=:file_title and object_type='::xowiki::File' and context_id=:content_item_id}
+        db_1row get_file_id {select object_id from acs_objects o, cr_revisions r, cr_items i where o.title=:file_title and o.object_type='::xowiki::File' and o.context_id=:content_item_id and o.object_id = r.revision_id and r.item_id = i.item_id and r.revision_id = i.live_revision}
 
         #Get file and copy it to export folder
         set data [fs__datasource $object_id]
@@ -292,7 +296,7 @@ ad_proc -public imsld::export::files::modify_img {
           set position [string last "/" $file_name]
           if {$position != -1} {
             #Delete file path from file name
-            set file_name [string range [expr $position+1] end]
+            set file_name [string range $file_name [expr $position+1] end]
           }
 
           #Create folder to store resources if it doesn't exist

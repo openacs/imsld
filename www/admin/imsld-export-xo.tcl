@@ -53,7 +53,7 @@ exec mkdir $path
 set resource_list [list]
 
 set last_file ""
-db_multirow get_xowiki_pages get_xowiki_pages {select cr3.name, cr3.item_id, cr3.content_type from acs_rels, cr_items cr1, cr_items cr2, cr_items cr3 where object_id_one = cr1.item_id and imsld_cp_resources.resource_id = cr1.latest_revision and imsld_cp_resources.manifest_id = :manifest_id and object_id_two = cr3.item_id and (cr3.content_type = '::xowiki::File' or cr3.content_type = '::xowiki::Page')} {
+db_multirow get_xowiki_pages get_xowiki_pages {select cr3.name, cr3.item_id, cr3.content_type from acs_rels, cr_items cr1, cr_items cr3 where object_id_one = cr1.item_id and imsld_cp_resources.resource_id = cr1.latest_revision and imsld_cp_resources.manifest_id = :manifest_id and object_id_two = cr3.item_id and (cr3.content_type = '::xowiki::File' or cr3.content_type = '::xowiki::Page')} {
   #Avoid repiting rows
   if {$last_file == $name} {continue} else {
     set last_file $name
@@ -87,7 +87,7 @@ db_multirow get_xowiki_pages get_xowiki_pages {select cr3.name, cr3.item_id, cr3
   } elseif {$content_type == "::xowiki::File"} {
     #Create new directories if necessary (from subdirectory path)
     file mkdir $path[string range $name [string first "/" $name] [string last "/" $name]]
-    if {[db_0or1row get_file_id {select object_id from acs_objects where title=:name and object_type='::xowiki::File' and context_id=:item_id}] == 1} {
+    if {[db_0or1row get_file_id {select object_id from acs_objects o, cr_revisions r, cr_items i where o.title=:name and o.object_type='::xowiki::File' and o.context_id=:item_id and o.object_id = r.revision_id and r.item_id = i.item_id and r.revision_id = i.live_revision}] == 1} {
       #Get file and copy it to export folder
       set data [fs__datasource $object_id]
       #Get url of folder to copy file
@@ -139,6 +139,8 @@ with_catch errmsg {
 ##########################################################################
 ##########################################################################
 ##Return file download url
+
+set download_name [ad_urlencode $download_name]
 if {[string index $in_path 0] ne "/"} {
   ad_returnredirect "../${in_path}/${download_name}"
 } else {
