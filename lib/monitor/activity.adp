@@ -8,7 +8,7 @@
       run_id="@run_id@" sort_order="@sort_order@" title="@activity_title@"
       number_elements="@siblings_number@" />
     <include src="../activity-resources-list" activity_item_id="@activity_item_id@"
-      run_id="@run_id@" user_id="@user_id@" />
+      run_id="@run_id@" user_id="@user_id@" activity_id="@activity_id@" monitor_p="1" />
   </case>
   
   <case value="support">
@@ -20,7 +20,7 @@
       run_id="@run_id@" sort_order="@sort_order@" title="@activity_title@"
       number_elements="@siblings_number@" />
     <include src="../activity-resources-list" activity_item_id="@activity_item_id@"
-      run_id="@run_id@" user_id="@user_id@" monitor_p="1" />
+      run_id="@run_id@" user_id="@user_id@" activity_id="@activity_id@" monitor_p="1" />
   </case>
   
   <case value="structure">

@@ -1,4 +1,4 @@
-<if @resources:rowcount@ gt 1>
+<if @resources:rowcount@ gt 1 or @monitor_p@ true>
     <ul>
       <multiple name="resources">
 

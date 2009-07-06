@@ -5,7 +5,8 @@ ad_page_contract {
     @author Eduardo Pérez Ureta <eduardo.perez@uc3m.es>
     @creation-date 2006-03-03
 } -query {
-    activity_item_id:integer,notnull
+    activity_item_id:integer,optional
+    activity_id:integer,optional
     run_id:integer,notnull
 }
 
@@ -21,8 +22,10 @@ $dom_root setAttribute class "mktree"
 $dom_root setAttribute style "white-space: nowrap;"
 
 # Create the li nodes for each environment
-# set activity_item_id [content::revision::item_id -revision_id
-# $activity_id]
+if { ![exists_and_not_null activity_item_id] } {
+    set activity_item_id [content::revision::item_id -revision_id $activity_id]
+}
+
 imsld::monitor::activity_environments_tree -activity_item_id $activity_item_id \
     -run_id $run_id \
     -dom_node $dom_root \
