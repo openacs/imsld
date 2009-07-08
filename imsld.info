@@ -9,7 +9,7 @@
     <implements-subsite-p>f</implements-subsite-p>
     <inherit-templates-p>t</inherit-templates-p>
     
-    <version name="2.0d" url="http://openacs.org/repository/download/apm/imsld-2.0d.apm">
+    <version name="2.0" url="http://openacs.org/repository/download/apm/imsld-2.0.apm">
         <owner url="mailto:derick@inv.it.uc3m.es">Derick Leony</owner>
         <owner url="mailto:jopez@galileo.edu">Jose Pablo Escobedo Del Cid</owner>
         <summary>IMS LD integration with dotLRN.</summary>
@@ -17,7 +17,7 @@
         <description format="text/html">This package is the implementation of IMS LD in dotLRN. The course admin can create a sequence of activities for the students, as well as decide who does what, when and using what resources.</description>
         <maturity>0</maturity>
 
-        <provides url="imsld" version="2.0d"/>
+        <provides url="imsld" version="2.0"/>
         <requires url="acs-content-repository" version="5.2.2"/>
         <requires url="acs-kernel" version="5.2.2"/>
         <requires url="acs-templating" version="5.2.2"/>

@@ -1066,6 +1066,9 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_condition -attribute_name method_id
     content::type::attribute::delete -content_type imsld_condition -attribute_name condition_xml
 
+    # global properties folder
+    content::folder::delete -folder_id [imsld::global_folder_id] -cascade_p t
+
     ### IMS-LD Production and Delivery
 
     ### IMS-LD level A

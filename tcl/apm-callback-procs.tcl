@@ -103,6 +103,11 @@ ad_proc -public imsld::apm_callback::after_upgrade {
 	    1.7d 1.8d {
 		imsld::gsi::install::do_install
 	    }
+	    2.0d 2.0 {
+		if { [imsld::global_folder_id] eq "" } {
+		    imsld::install::create_global_folder
+		}
+	    }
 	}
 
 }
