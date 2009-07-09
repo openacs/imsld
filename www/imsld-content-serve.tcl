@@ -63,6 +63,7 @@ if { $resource_handler eq "file-storage" } {
     set xml_string [cr_write_content -string -revision_id $revision_id]
 } else {
     # get file info
+    set mime_type "text/html"
     db_1row get_info {	
     	select cr.revision_id, cr.item_id
     	from acs_rels ar, imsld_res_files_rels map, cr_revisions cr
