@@ -2134,6 +2134,7 @@ ad_proc -public imsld::process_service_as_ul {
                 set file_url [export_vars -base "[dotlrn_community::get_community_url [dotlrn_community::get_community_id]]imsld/monitor-frame" { monitor_id role_id}]
                 $a_node setAttribute href [export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]
                 set service_title [$dom_doc createTextNode "$monitor_service_title"]
+		$a_node setAttribute onclick "return loadContent(this.href)"
                 $a_node appendChild $service_title
                 $monitor_node_li appendChild $a_node
                 $dom_node appendChild $monitor_node_li
@@ -2213,13 +2214,13 @@ ad_proc -public imsld::process_environment_as_ul {
                                                   -run_id $run_id \
                                                   -dom_node $environment_node \
                                                   -dom_doc $dom_doc \
-						  -li_mode]
+						  -li_mode -no_title]
 
                 # in order to behave like CopperCore, we decide to replace the images with the learning object title
                 set img_nodes [$environment_node selectNodes {.//img}]
                 foreach img_node $img_nodes {
                     set parent_node [$img_node parentNode]
-                    set lo_title_node [$dom_doc createTextNode "$lo_title: "]
+                    set lo_title_node [$dom_doc createTextNode "$lo_title"]
                     $parent_node replaceChild $lo_title_node $img_node 
                 }
                 if { ![string eq "" $one_learning_object_list] } {
@@ -2466,6 +2467,7 @@ ad_proc -public imsld::process_resource_as_ul {
     -dom_doc
     -li_mode:boolean
     -monitor:boolean
+    -no_title:boolean
     -plain:boolean
     {-user_id ""}} {
     @param resource_item_id
@@ -2513,7 +2515,9 @@ ad_proc -public imsld::process_resource_as_ul {
             set file_node [$dom_doc createElement li]
             $file_node appendChild $a_node
             $dom_node appendChild $file_node
-	    $a_node appendChild [$dom_doc createTextNode $object_title]
+	    if { !$no_title_p} {
+		$a_node appendChild [$dom_doc createTextNode $object_title]
+	    }
 	    if { $monitor_p } {
 		set choose_node [$dom_doc createElement a]
 		$choose_node appendChild [$dom_doc createTextNode "Choose"]
@@ -2571,7 +2575,9 @@ ad_proc -public imsld::process_resource_as_ul {
                 set file_node [$dom_doc createElement li]
                 $file_node appendChild $a_node
                 $dom_node appendChild $file_node
-		$a_node appendChild [$dom_doc createTextNode $file_name]
+		if { !$no_title_p} {
+		    $a_node appendChild [$dom_doc createTextNode $file_name]
+		}
 		if { $monitor_p } {
 		    set choose_node [$dom_doc createElement a]
 		    $choose_node appendChild [$dom_doc createTextNode "Choose"]
@@ -2628,7 +2634,9 @@ ad_proc -public imsld::process_resource_as_ul {
                 set file_node [$dom_doc createElement li]
                 $file_node appendChild $a_node
                 $dom_node appendChild $file_node
-		$a_node appendChild [$dom_doc createTextNode $file_name]
+		if { !$no_title_p} {
+		    $a_node appendChild [$dom_doc createTextNode $file_name]
+		}
 		if { $monitor_p } {
 		    set choose_node [$dom_doc createElement a]
 		    $choose_node appendChild [$dom_doc createTextNode "Choose"]

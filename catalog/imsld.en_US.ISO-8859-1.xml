@@ -53,11 +53,22 @@
   <msg key="Existing_href">Existing href</msg>
   <msg key="Exit">Exit UoL</msg>
   <msg key="Exit_Cockpit">Exit Cockpit</msg>
+  <msg key="export_files">Files</msg>
+  <msg key="export_heading">Export UoL</msg>
+  <msg key="export_intro">You are about to export an UoL. Check all associated resources before exporting it or</msg>
+  <msg key="export_no">No</msg>
+  <msg key="export_repository">Repository</msg>
+  <msg key="export_resources_question">Export files not associated to resources?</msg>
+  <msg key="export_uol_name">UoL Name</msg>
+  <msg key="export_warning_msg1">Not associated to any resource</msg>
+  <msg key="export_warnings">Warnings</msg>
+  <msg key="export_yes">Yes</msg>
   <msg key="Expression">Expression</msg>
   <msg key="Extra_Activities">Extra Activities</msg>
-  <msg key="Feedback_Title">Feedback Title</msg>
   <msg key="Feedback">Feedback</msg>
+  <msg key="Feedback_Title">Feedback Title</msg>
   <msg key="File_name">File name</msg>
+  <msg key="Finish">Finish</msg>
   <msg key="finish">(finish)</msg>
   <msg key="finish_activity">finish activity</msg>
   <msg key="Finish_Date">Finish Date</msg>
@@ -66,6 +77,7 @@
   <msg key="Global_Properties">Global Properties</msg>
   <msg key="Go_back">Go back</msg>
   <msg key="go_back">go back</msg>
+  <msg key="Go_back_to_admin">Go back to admin</msg>
   <msg key="Go_to_UoL_page">Go to UoL page</msg>
   <msg key="Group_members">Group members</msg>
   <msg key="Group_name">Group name</msg>
@@ -77,10 +89,6 @@
   <msg key="Identifier_Reference">Identifier Reference</msg>
   <msg key="Identifierref">Identifierref</msg>
   <msg key="If_Identifier">If Identifier</msg>
-  <msg key="IMS-LD_Environment">IMS-LD Environment</msg>
-  <msg key="IMS-LD_Environments">IMS-LD Environments</msg>
-  <msg key="IMS-LD_Level">IMS LD Level</msg>
-  <msg key="IMS-LD_Title">IMS LD Title</msg>
   <msg key="IMS-LD_Act">IMS-LD Act</msg>
   <msg key="IMS-LD_Acts">IMS-LD Acts</msg>
   <msg key="IMS-LD_Class">IMS-LD Class</msg>
@@ -96,10 +104,13 @@
   <msg key="IMS-LD_CP_Manifests">IMS-LD CP Manifests</msg>
   <msg key="IMS-LD_CP_Resource">IMS-LD CP Resource</msg>
   <msg key="IMS-LD_CP_Resources">IMS-LD CP Resources</msg>
+  <msg key="IMS-LD_Environment">IMS-LD Environment</msg>
+  <msg key="IMS-LD_Environments">IMS-LD Environments</msg>
   <msg key="IMS-LD_Identifier">IMS-LD Identifier</msg>
   <msg key="IMS-LD_Intifier">IMS-LD Intifier</msg>
   <msg key="IMS-LD_Item">IMS-LD Item</msg>
   <msg key="IMS-LD_Items">IMS-LD Items</msg>
+  <msg key="IMS-LD_Level">IMS LD Level</msg>
   <msg key="IMS-LD_Method">IMS-LD Method</msg>
   <msg key="IMS-LD_Methods">IMS-LD Methods</msg>
   <msg key="IMS-LD_On_Completion">IMS-LD On Completion</msg>
@@ -118,6 +129,7 @@
   <msg key="IMS-LD_Sendmail_Data">IMS-LD Sendmail Data</msg>
   <msg key="IMS-LD_Service">IMS-LD Service</msg>
   <msg key="IMS-LD_Services">IMS-LD Services</msg>
+  <msg key="IMS-LD_Title">IMS LD Title</msg>
   <msg key="IMS-LDs">IMS-LDs</msg>
   <msg key="IMS-LDs_1">IMS Learning Designs</msg>
   <msg key="IMS_LD_Name">Unit of Learning Name</msg>
@@ -148,8 +160,8 @@
   <msg key="lt_Confirm_roles_assignm">Confirm roles assignments</msg>
   <msg key="lt_Could_not_determine_w">Could not determine with what program uncompress the file %upload_file% has. Aborting</msg>
   <msg key="lt_Couldnt_determine_if_">Couldn't determine if this is a well formed IMS-LD: %message%</msg>
-  <msg key="lt_Creating_new_IMS-L">Creating new IMS-LD</msg>
   <msg key="lt_Create_a_new_instance">Create a new instance of a role</msg>
+  <msg key="lt_Creating_new_IMS-L">Creating new IMS-LD</msg>
   <msg key="lt_Current_Unit_of_Learn">Current Unit of Learning does not allow creation of multiple instances of this role.</msg>
   <msg key="lt_Current_UoL_does_not_">Current UoL does not allow to include them in more than one subroles of the role.</msg>
   <msg key="lt_Dear_recepient_name_b">Dear %recepient_name%. &lt;br&gt; 
@@ -413,9 +425,9 @@
   <msg key="Total_Activities">Total Activities</msg>
   <msg key="Total_Roles">Parent Roles</msg>
   <msg key="Type">Type</msg>
-  <msg key="Unknown_type">Unknown type</msg>
   <msg key="units-of-learning">Learning Units</msg>
   <msg key="units-of-learning_Administration">Units of learning Administration</msg>
+  <msg key="Unknown_type">Unknown type</msg>
   <msg key="Uploading_IMS_LD">Uploading IMS LD</msg>
   <msg key="URI">URI</msg>
   <msg key="user">user</msg>
@@ -429,16 +441,4 @@
   <msg key="View_Roles">View Roles</msg>
   <msg key="waiting">waiting</msg>
   <msg key="When_Condition_True">When Condition True</msg>
-  <msg key="export_heading">Export UoL</msg>
-  <msg key="export_intro">You are about to export an UoL. Check all associated resources before exporting it or</msg>
-  <msg key="export_files">Files</msg>
-  <msg key="export_warnings">Warnings</msg>
-  <msg key="export_warning_msg1">Not associated to any resource</msg>
-  <msg key="export_uol_name">UoL Name</msg>
-  <msg key="export_repository">Repository</msg>
-  <msg key="export_resources_question">Export files not associated to resources?</msg>
-  <msg key="export_yes">Yes</msg>
-  <msg key="export_no">No</msg>
-  <msg key="Go_back_to_admin">Go back to admin</msg>
-
 </message_catalog>

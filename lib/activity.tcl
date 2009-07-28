@@ -123,6 +123,7 @@ switch $type {
 	db_1row get_activity_structure_info { *SQL* }
 	set started_p [db_0or1row as_started_p { *SQL* }]
 	set completed_p [db_0or1row as_completed_p { *SQL* }]
+
 	if { $started_p } {
 	    if { $completed_p } {
 		set href [imsld::activity_url -activity_id $structure_id -run_id $run_id -user_id $user_id]
@@ -136,10 +137,29 @@ switch $type {
 		set class "liOpen has_focus"
 	    }
 
-#	    set activity_item_id [content::revision::item_id -revision_id $activity_id]
+	    multirow create referenced_activities object_id_two rel_type rel_id sort_order activity_type activity_id
 
-	    db_multirow -extend {activity_id} referenced_activities struct_referenced_activities { *SQL* } {
+	    db_foreach struct_referenced_activities { *SQL* } {
+
 		set activity_id [content::item::get_live_revision -item_id $object_id_two]
+
+		if { $activity_type ne "imsld_as_as_rel" } {
+		    set visible_p [db_string get_visible {
+			select attr.is_visible_p
+			from imsld_attribute_instances attr
+			where attr.owner_id = :activity_id
+			and attr.run_id = :run_id
+			and attr.user_id = :user_id
+			and attr.type = 'isvisible'
+		    } -default 0]
+		} else {
+		    set visible_p t
+		}
+
+		if { $visible_p } {
+		    multirow append referenced_activities $object_id_two $rel_type $rel_id $sort_order $activity_type $activity_id
+		}
+		
 	    }
 
 # 	    set nested_list [imsld::generate_structure_activities_list -imsld_id $imsld_id \
