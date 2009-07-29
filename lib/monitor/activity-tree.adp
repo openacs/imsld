@@ -5,15 +5,6 @@
     <ul>
       <multiple name="activities">
         <li><include src="../act" act_id="@activities.act_id@" />
-          [
-          <a href="#no" onclick="return(editActivity(@activities.act_id@, @run_id@, 'test'))">
-            <img src="/resources/acs-subsite/Edit16.gif" alt="#imsld.Edit#" >
-          </a>
-          <a href="#no" onclick="return(loadTree('test'))">
-            <img src="/resources/acs-subsite/Delete16.gif" alt="#imsld.Delete#" >
-          </a>
-          ]
-          
           <ul>
             <group column="act_id">
               <li id="activity_@activities.activity_id@">
