@@ -47,12 +47,12 @@
 
   <case value="structure">
     <if @started_p@ and @referenced_activities:rowcount@>
-      <li class="@class@">
+      <li id="mktree_activity_li_@structure_item_id@">
         <a href="@href@"
           onclick="return(loadContent('@div@'))">
           @activity_title@
         </a>
-        <ul>
+        <ul id="mktree_activity_@structure_item_id@">
           <multiple name="referenced_activities">
             <include src="activity" run_id="@run_id@"
               type="@referenced_activities.activity_type@" user_id="@user_id@"

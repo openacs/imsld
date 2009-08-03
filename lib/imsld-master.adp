@@ -19,6 +19,9 @@
     <if @imsld_include_mktree@ not nil>
       <link rel="stylesheet" href="/resources/acs-templating/mktree.css" 
             type="text/css" media="all">
+      <script type="text/javascript">
+        var mktree_remember = true;
+      </script>
       <script type="text/javascript" 
               src="/resources/acs-templating/mktree.js"></script>
     </if>

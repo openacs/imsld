@@ -1,9 +1,9 @@
 <ul>
   <li>
     @imsld_title@
-    <ul class="mktree">
+    <ul id="mktree_activities" class="mktree">
       <multiple name="activities">
-        <li><include src="act" act_id="@activities.act_id@" />
+        <li id="mktree_activities_@activities.act_id@"><include src="act" act_id="@activities.act_id@" />
           <ul>
             <group column="act_id">
               <include src="activity" run_id="@run_id@" type="@activities.type@"
