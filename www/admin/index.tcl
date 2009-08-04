@@ -35,7 +35,7 @@ set package_id [ad_conn package_id]
 permission::require_permission -object_id $package_id -privilege create
 
 set page_title "[_ imsld.Admin_IMS_LD]"
-set context [list "[_ imsld.Admin_IMS_LD]"]
+set context ""
 
 set user_id [ad_conn user_id]
 set manifest_id [db_nextval acs_object_id_seq]

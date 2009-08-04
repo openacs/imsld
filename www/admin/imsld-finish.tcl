@@ -9,7 +9,7 @@ ad_page_contract {
 } 
 
 set page_title "[_ imsld.lt_Confirm_roles_assignm]" 
-set context "" 
+set context [list $page_title]
 
 # NOTE(lfuente): here there should be a check of all the input
 
