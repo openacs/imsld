@@ -1,17 +1,17 @@
     <!-- Include the arrow icon and JS for collapsing the left frames -->
     <span id="addc1" class="show">
-      <a href="#" onClick="return _tp_div(false)" title="#imsld.Hide_1#" 
-         class="show-hide-icon_link" style="float:left; padding-top:8px;">
-        <img src="/resources/acs-subsite/stock_left.png" 
-             alt="#imsld.Hide#" title="#imsld.Hide#" border="0" 
+      <a href="#" onClick="return _tp_div(false)" title="#imsld.Hide# #imsld.Hide_1#" 
+         class="show-hide-icon_link">
+        <img src="/resources/imsld/application_side_contract.png" 
+             alt="#imsld.Hide# #imsld.Hide_1#" border="0" 
              align="top">
       </a>
     </span>
     <span id="addc" class="hide">
-      <a href="#" onClick="return _tp_div(true)" title="#imsld.Show_1#" 
+      <a href="#" onClick="return _tp_div(true)" title="#imsld.Show# #imsld.Show_1#" 
         class="show-hide-icon_link">
-        <img src="/resources/acs-subsite/stock_right.png" 
-           alt="#imsld.Show#" title="#imsld.Show#" border="0" 
+        <img src="/resources/imsld/application_side_expand.png" 
+           alt="#imsld.Show# #imsld.Show_1#" border="0" 
            align="top">
       </a>
     </span>

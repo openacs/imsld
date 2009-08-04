@@ -46,6 +46,7 @@
   <msg key="Delete_Run">Delete Run</msg>
   <msg key="Deleted">Deleted</msg>
   <msg key="Descendant">Descendant roles:</msg>
+  <msg key="Edit">Edit</msg>
   <msg key="Else_Identifier">Else Identifier</msg>
   <msg key="Email">Email</msg>
   <msg key="Empty_property_value">Empty property value</msg>
@@ -132,6 +133,7 @@
   <msg key="IMS-LD_Title">IMS LD Title</msg>
   <msg key="IMS-LDs">IMS-LDs</msg>
   <msg key="IMS-LDs_1">IMS Learning Designs</msg>
+  <msg key="IMS_LD_Level">IMS LD Level</msg>
   <msg key="IMS_LD_Name">Unit of Learning Name</msg>
   <msg key="Individual_Report">Individual Report</msg>
   <msg key="Information">Information</msg>
@@ -144,6 +146,7 @@
   <msg key="Learning_Object">Learning Object</msg>
   <msg key="Learning_Objects">Learning Objects</msg>
   <msg key="Level">Level</msg>
+  <msg key="Loading_file">Loading file</msg>
   <msg key="Local_Properties">Local Properties</msg>
   <msg key="lt_Activity_Description_">Activity Description Identifier</msg>
   <msg key="lt_Activity_Structure_Id">Activity Structure Identifier</msg>

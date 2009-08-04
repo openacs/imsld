@@ -46,6 +46,7 @@
   <msg key="Delete_Run">Borrar Run</msg>
   <msg key="Deleted">Borrado</msg>
   <msg key="Descendant">Roles hijo:</msg>
+  <msg key="Edit">Edit</msg>
   <msg key="Email">Email</msg>
   <msg key="Empty_property_value">Valor de propiedad vacío</msg>
   <msg key="Error_parsing_file">Error al parsear archivo</msg>
@@ -141,6 +142,7 @@
   <msg key="Learning_Object">Objeto de aprendizaje</msg>
   <msg key="Learning_Objects">Objetos de aprendizaje</msg>
   <msg key="Level">Nivel</msg>
+  <msg key="Loading_file">Cargando fichero</msg>
   <msg key="Local_Properties">Propiedades locales</msg>
   <msg key="lt_Activity_Description_">Identificador de descripción de actividad</msg>
   <msg key="lt_Activity_Structure_Id">Identificador de estructura de actividades</msg>

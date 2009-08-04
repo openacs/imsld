@@ -80,10 +80,14 @@ ul.mktree, ul.mktree ul {
 }
 .show { 
   position:relative;
-  top:0px;
-  left:0px;
+  top:3px;
+  left:2px;
   display:block;
   float:left;
+}
+.show-hide-icon_link {
+  padding-top: 10px;
+  float: left;
 }
 
 .centered-table table { 

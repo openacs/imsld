@@ -266,7 +266,7 @@ ad_proc -public imsld::parse::expand_file {
     } else { 
         set type "[_ imsld.Unknown_type]" 
     } 
-    
+
     switch $type {
         tar {
             set error_p [catch {exec tar --directory $tmp_dir -xvf $tmpfile} errmsg]
@@ -742,6 +742,8 @@ ad_proc -public imsld::parse::parse_and_create_resource {
 
         foreach filex $filex_list {
             set filex_href [imsld::parse::get_attribute -node $filex -attr_name href]
+
+	    ns_write "[_ imsld.Loading_file] ${filex_href}. <br />"
 
 	    if { $import_with_xowiki } {
 		set manifest_identifier [imsld::parse::get_attribute -node $manifest -attr_name identifier]
