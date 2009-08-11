@@ -28,8 +28,9 @@
   </if>
   <else>
     @activities;noquote@
-    <!-- This message should appear only if there is more than one link! -->
-    <p class="notice">#imsld.navigate#</p>
+    <if @node_list:rowcount@ gt 1>
+      <p class="notice">#imsld.navigate#</p>
+    </if>
   </else>
 
   <iframe id="object" name="object" src="@iframe_activity_url@" style="left:0; top:0;" width="98%" height="60%"></iframe>

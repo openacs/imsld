@@ -151,7 +151,7 @@ switch $type {
 			and attr.run_id = :run_id
 			and attr.user_id = :user_id
 			and attr.type = 'isvisible'
-		    } -default 0]
+		    } -default "t"]
 		} else {
 		    set visible_p t
 		}
@@ -162,19 +162,6 @@ switch $type {
 		
 	    }
 
-# 	    set nested_list [imsld::generate_structure_activities_list -imsld_id $imsld_id \
-# 				 -run_id $run_id \
-# 				 -structure_item_id $structure_item_id \
-# 				 -user_id $user_id \
-# 				 -next_activity_id_list $next_activity_id_list \
-# 				 -role_part_id $role_part_id \
-# 				 -play_id $play_id \
-# 				 -act_id $act_id \
-# 				 -dom_doc $dom_doc \
-# 				 -dom_node $dom_node]
-# 	    # the nested finished activities are returned as a tcl list in tDOM format
-# 	    $structure_node appendFromList [list ul [list] [concat [list] $nested_list]]
-# 	    $dom_node appendChild $structure_node
 	}
     }
 }
