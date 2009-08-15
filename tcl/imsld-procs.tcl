@@ -675,6 +675,10 @@ ad_proc -public imsld::global_folder_id {
 			      -root_folder_id $dotlrn_root_folder_id \
 			      -resolve_index f] 
 
+    if { $global_folder_id eq "" } {
+	set global_folder_id [imsld::install::create_global_folder]
+    }
+
     return $global_folder_id
 }
 

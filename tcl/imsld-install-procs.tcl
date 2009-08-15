@@ -1352,5 +1352,7 @@ ad_proc -private imsld::install::create_global_folder {
     # allow subfolders inside our parent folder
     content::folder::register_content_type -folder_id $global_folder_id \
 	-content_type content_folder
+
+    return $global_folder_id
 }    
 
