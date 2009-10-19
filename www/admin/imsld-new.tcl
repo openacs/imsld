@@ -20,7 +20,7 @@ set package_id [ad_conn package_id]
 permission::require_permission -object_id $package_id -privilege create
 
 set page_title "[_ imsld.Confirm_New_IMS-LD]"
-set context [list [list "[_ imsld.New_IMS-LD]" "new-imsld"] [list "[_ imsld.Confirm_New_IMS-LD]"]]
+set context [list "[_ imsld.Confirm_New_IMS-LD]"]
 
 set user_id [ad_conn user_id]
 

@@ -14,7 +14,7 @@ ad_page_contract {
 } 
 
 set page_title "[_ imsld.Admin_roles]" 
-set context "" 
+set context [list $page_title] 
 
 #check if the run is waiting
 if { [db_0or1row get_run_status {

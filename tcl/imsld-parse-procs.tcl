@@ -266,7 +266,7 @@ ad_proc -public imsld::parse::expand_file {
     } else { 
         set type "[_ imsld.Unknown_type]" 
     } 
-    
+
     switch $type {
         tar {
             set error_p [catch {exec tar --directory $tmp_dir -xvf $tmpfile} errmsg]
@@ -743,6 +743,8 @@ ad_proc -public imsld::parse::parse_and_create_resource {
         foreach filex $filex_list {
             set filex_href [imsld::parse::get_attribute -node $filex -attr_name href]
 
+	    ns_write "[_ imsld.Loading_file] ${filex_href}. <br />"
+
 	    if { $import_with_xowiki } {
 		set manifest_identifier [imsld::parse::get_attribute -node $manifest -attr_name identifier]
 		set filex_id [imsld::xowiki::file_new -href $filex_href \
@@ -1189,11 +1191,21 @@ ad_proc -public imsld::parse::parse_and_create_property_group {
     set identifier [imsld::parse::get_attribute -node $property_group_node -attr_name identifier]
     set title [imsld::parse::get_title -node $property_group_node -prefix imsld]
 
-    set property_group_id [imsld::item_revision_new -attributes [list [list identifier $identifier] \
-                                                                     [list component_id $component_id]] \
-                               -content_type imsld_property_group \
-                               -title $title \
-                               -parent_id $parent_id]
+    if { [db_0or1row get_group_property_id {
+	select property_group_id
+	from imsld_property_groupsi 
+	where identifier = :identifier
+	and content_revision__is_live(property_group_id) = 't' 
+	and component_id = :component_id
+    }] } {
+	return $property_group_id
+    } else {
+	set property_group_id [imsld::item_revision_new -attributes [list [list identifier $identifier] \
+									 [list component_id $component_id]] \
+				   -content_type imsld_property_group \
+				   -title $title \
+				   -parent_id $parent_id]
+    }
 
     set property_refs [$property_group_node selectNodes "*\[local-name()='property-ref'\]"]
     foreach property $property_refs {
@@ -1217,9 +1229,9 @@ ad_proc -public imsld::parse::parse_and_create_property_group {
         set ref [imsld::parse::get_attribute -node $property_group -attr_name ref]
         if { ![db_0or1row get_group_property_id {
             select item_id as group_property_item_id 
-            from imsld_propertiesi 
+            from imsld_property_groupsi 
             where identifier = :ref 
-            and content_revision__is_live(property_id) = 't' 
+            and content_revision__is_live(property_group_id) = 't' 
             and component_id = :component_id
         }] } {
             # there is no propety group with that identifier. search in the rest of non-created property-groups

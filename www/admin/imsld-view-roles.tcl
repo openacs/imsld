@@ -25,7 +25,7 @@ set roles_list [imsld::roles::get_list_of_roles -imsld_id $imsld_id]
 set roles_list_names [imsld::roles::get_roles_names -roles_list $roles_list] 
 
 set page_title "[_ imsld.View_Roles]"
-set context ""
+set context [list $page_title]
 
 set lista [list]
 lappend lista [list "[_ imsld.Select_a_role]" 0]

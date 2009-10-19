@@ -1,6 +1,6 @@
   <div class="float-left">
     <a href="@community_url@" class="button" 
-       title="#imsld.Exit#">#imsld.Exit#</a>
+       title="#imsld.Finish#">#imsld.Finish#</a>
   </div>
 
   <div class="role_menu">

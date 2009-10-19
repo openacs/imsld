@@ -64,7 +64,7 @@
       and content_item__get_live_revision(coalesce(irp.learning_activity_id,irp.support_activity_id,irp.activity_structure_id))
       is not null
       order by ip.sort_order, ia.sort_order, irp.sort_order
-      
+
     </querytext>
   </fullquery>
   

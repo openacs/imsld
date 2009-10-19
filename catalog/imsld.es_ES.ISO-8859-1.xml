@@ -46,17 +46,29 @@
   <msg key="Delete_Run">Borrar Run</msg>
   <msg key="Deleted">Borrado</msg>
   <msg key="Descendant">Roles hijo:</msg>
+  <msg key="Edit">Edit</msg>
   <msg key="Email">Email</msg>
   <msg key="Empty_property_value">Valor de propiedad vacío</msg>
   <msg key="Error_parsing_file">Error al parsear archivo</msg>
   <msg key="Existing_href">Href existente</msg>
   <msg key="Exit">Salir de UoL</msg>
   <msg key="Exit_Cockpit">Salir de Cockpit</msg>
+  <msg key="export_files">Archivos</msg>
+  <msg key="export_heading">Exportar UoL</msg>
+  <msg key="export_intro">Usted va a exportar una UoL. Revise todos los recursos asociados a dicha UoL o</msg>
+  <msg key="export_no">No</msg>
+  <msg key="export_repository">Repositorio</msg>
+  <msg key="export_resources_question">Desea exportar archivos no asociados a recursos?</msg>
+  <msg key="export_uol_name">Nombre UoL</msg>
+  <msg key="export_warning_msg1">No asociado a recurso</msg>
+  <msg key="export_warnings">Advertencias</msg>
+  <msg key="export_yes">Sí</msg>
   <msg key="Expression">Expresion</msg>
   <msg key="Extra_Activities">Actividades extra</msg>
-  <msg key="Feedback_Title">Feedback Title</msg>
   <msg key="Feedback">Realimentacion</msg>
+  <msg key="Feedback_Title">Feedback Title</msg>
   <msg key="File_name">Nombre fichero</msg>
+  <msg key="Finish">Finalizar</msg>
   <msg key="finish">(terminar)</msg>
   <msg key="finish_activity">terminar actividad</msg>
   <msg key="Finish_Date">Fecha de fin</msg>
@@ -65,6 +77,7 @@
   <msg key="Global_Properties">Propiedades globales</msg>
   <msg key="Go_back">Ir atrás</msg>
   <msg key="go_back">ir atrás</msg>
+  <msg key="Go_back_to_admin">Volver a administración</msg>
   <msg key="Go_to_UoL_page">Ir a pagina de UoL</msg>
   <msg key="Group_members">Miembros del grupo</msg>
   <msg key="Group_name">Nombre del grupo</msg>
@@ -75,10 +88,6 @@
   <msg key="Identifier">Identificador</msg>
   <msg key="Identifier_Reference">Referencia de identificador</msg>
   <msg key="Identifierref">Identifierref</msg>
-  <msg key="IMS-LD_Environment">Entorno IMS-LD</msg>
-  <msg key="IMS-LD_Environments">Entornos IMS-LD</msg>
-  <msg key="IMS-LD_Level">Nivel IMS LD</msg>
-  <msg key="IMS-LD_Title">Título IMS LD</msg>
   <msg key="IMS-LD_Act">Acto IMS-LD</msg>
   <msg key="IMS-LD_Acts">Actos IMS-LD</msg>
   <msg key="IMS-LD_Class">Clase IMS-LD</msg>
@@ -94,9 +103,12 @@
   <msg key="IMS-LD_CP_Manifests">Manifiestos CP IMS-LD</msg>
   <msg key="IMS-LD_CP_Resource">Recurso CP IMS-LD</msg>
   <msg key="IMS-LD_CP_Resources">Recursos CP IMS-LD</msg>
+  <msg key="IMS-LD_Environment">Entorno IMS-LD</msg>
+  <msg key="IMS-LD_Environments">Entornos IMS-LD</msg>
   <msg key="IMS-LD_Identifier">Identificador IMS-LD</msg>
   <msg key="IMS-LD_Item">Item IMS-LD</msg>
   <msg key="IMS-LD_Items">Items IMS-LD</msg>
+  <msg key="IMS-LD_Level">Nivel IMS LD</msg>
   <msg key="IMS-LD_Method">Método IMS-LD</msg>
   <msg key="IMS-LD_Methods">Métodos IMS-LD</msg>
   <msg key="IMS-LD_On_Completion">IMS-LD On Completion</msg>
@@ -115,6 +127,7 @@
   <msg key="IMS-LD_Sendmail_Data">Datos de envío de email IMS-LD</msg>
   <msg key="IMS-LD_Service">Servicio IMS-LD</msg>
   <msg key="IMS-LD_Services">Servicios IMS-LD</msg>
+  <msg key="IMS-LD_Title">Título IMS LD</msg>
   <msg key="IMS-LDs">IMS-LDs</msg>
   <msg key="IMS-LDs_1">Diseños de aprendizaje IMS</msg>
   <msg key="IMS_LD_Name">Nombre de la unidad de aprendizaje</msg>
@@ -129,6 +142,7 @@
   <msg key="Learning_Object">Objeto de aprendizaje</msg>
   <msg key="Learning_Objects">Objetos de aprendizaje</msg>
   <msg key="Level">Nivel</msg>
+  <msg key="Loading_file">Cargando fichero</msg>
   <msg key="Local_Properties">Propiedades locales</msg>
   <msg key="lt_Activity_Description_">Identificador de descripción de actividad</msg>
   <msg key="lt_Activity_Structure_Id">Identificador de estructura de actividades</msg>
@@ -145,8 +159,8 @@
   <msg key="lt_Confirm_roles_assignm">Confirmar tareas de los roles</msg>
   <msg key="lt_Could_not_determine_w">No se puede determinar con que programa descomprimir el fichero %upload_file% has. Abortando</msg>
   <msg key="lt_Couldnt_determine_if_">No se puede determindar si IMS-LD está bien formado: %message%</msg>
-  <msg key="lt_Creating_new_IMS-L">Creando nuevo IMS-LD</msg>
   <msg key="lt_Create_a_new_instance">Crear una nueva instancia de un rol</msg>
+  <msg key="lt_Creating_new_IMS-L">Creando nuevo IMS-LD</msg>
   <msg key="lt_Current_Unit_of_Learn">La unidad de aprendizaje no permite la creación de multiples instancias de este rol.</msg>
   <msg key="lt_Current_UoL_does_not_">La unidad de aprendizaje no permite incluirlos en más de un subrol del rol.</msg>
   <msg key="lt_Dear_recepient_name_b">Estimado %recepient_name%. &lt;br&gt; 
@@ -410,8 +424,8 @@
   <msg key="Total_Activities">Total Actividades</msg>
   <msg key="Total_Roles">Roles padre</msg>
   <msg key="Type">Tipo</msg>
-  <msg key="Unknown_type">Tipo desconocido</msg>
   <msg key="units-of-learning">Unidades de Aprendizaje</msg>
+  <msg key="Unknown_type">Tipo desconocido</msg>
   <msg key="Uploading_IMS_LD">Subiendo IMS LD</msg>
   <msg key="URI">URI</msg>
   <msg key="user">usuario</msg>
@@ -425,16 +439,4 @@
   <msg key="View_Roles">Vista de roles</msg>
   <msg key="waiting">esperando</msg>
   <msg key="When_Condition_True">Cuando condición se cumpla</msg>
-  <msg key="export_heading">Exportar UoL</msg>
-  <msg key="export_intro">Usted va a exportar una UoL. Revise todos los recursos asociados a dicha UoL o</msg>
-  <msg key="export_files">Archivos</msg>
-  <msg key="export_warnings">Advertencias</msg>
-  <msg key="export_warning_msg1">No asociado a recurso</msg>
-  <msg key="export_uol_name">Nombre UoL</msg>
-  <msg key="export_repository">Repositorio</msg>
-  <msg key="export_resources_question">Desea exportar archivos no asociados a recursos?</msg>
-  <msg key="export_yes">Sí</msg>
-  <msg key="export_no">No</msg>
-  <msg key="Go_back_to_admin">Volver a administración</msg>
-
 </message_catalog>

@@ -1,3 +1,4 @@
+
 function confirmValue(myform) {
   myform.submit();
 }
@@ -128,10 +129,21 @@ function loadContent(url) {
       if (unescape(url).match(/activity_id=|activity_item_id=/i)) {
         var env_url = url.replace(/[^\?]+/, "environment-frame");
         loadEnvironment(env_url);
-      } else {
-	if ( !(unescape(url).match(/service_id=|learning_object_id=/i))) {
-	  document.getElementById('imsld_environment').innerHTML = '';
-        }
+      } else if ( unescape(url).match(/monitor-frame/i) ) {
+	resizeobject();
+	window.onresize = resizeobject;
+	var a = document.getElementById("monitor_service_url");
+	if ( a ) {
+	  a.setAttribute('target', 'object');
+	  if (a.getAttribute('href') != '') {
+	    document.getElementById('object').src = a.getAttribute('href');
+	  }
+	}
+	if (document.forms['choose-user']) {
+	  document.forms['choose-user'].elements['ok'].style.display="none";
+	}
+      } else if ( !(unescape(url).match(/service_id=|learning_object_id=|imsld-finish-resource/i))) {
+	document.getElementById('imsld_environment').innerHTML = '';
       }
       // tabberAutomatic();
     }
@@ -279,6 +291,20 @@ function submitForm(form, contentDiv) {
 	  }
 	  convertTrees();
 	}
+        if ( unescape(url).match(/monitor-frame/i) ) {
+	  resizeobject();
+	  window.onresize = resizeobject;
+	  var a = document.getElementById("monitor_service_url");
+	  if ( a ) {
+	    a.setAttribute('target', 'object');
+	    if (a.getAttribute('href') != '') {
+	      document.getElementById('object').src = a.getAttribute('href');
+	    }
+	  }
+	  if (document.forms['choose-user']) {
+	    document.forms['choose-user'].elements['ok'].style.display="none";
+	  }
+      }
       }
     }
   }

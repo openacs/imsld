@@ -3,8 +3,9 @@
 #imsld.Monitoring#: @monitoring_user_name@
 
 <if @users_in_role:rowcount@ gt 0>
-<form name="choose-user" action="">
-<select name="monitoring_user_id" id="users-in-role" onChange="confirmValue(this.form)">
+<form name="choose-user" action="monitor-frame">
+<select name="monitoring_user_id" id="users-in-role"
+        onChange="submitForm(this.form, 'imsld_content')">
     <option value="select">#imsld.Select#</option>
     <multiple name="users_in_role">
         <if @users_in_role.role_user_id@ eq @monitoring_user_id@>
@@ -22,42 +23,8 @@
 </if>
 
 <div class="hide">
-<a href="@monitor_service_url;noquote@" title="<# Monitor service #>"></a>
+<a id="monitor_service_url" href="@monitor_service_url;noquote@" title="<# Monitor service #>"></a>
 </div>
 
 <iframe id="object" name="object"></iframe>
-
-<script type="text/javascript">
-function resizeobject() {
-f = document.forms[0];
-o = document.getElementById('object');
-o.height = window.innerHeight - o.style.top - 50;
-o.width = window.innerWidth - o.style.left - 30;
-}
-resizeobject();
-window.onresize = resizeobject;
-
-function objecturl(url) {
-var o = document.getElementById('object');
-o.src = url;
-}
-
-</script>
-
-<script type="text/javascript">
-var as = document.getElementsByTagName("a");
-for (var i = 0; i < as.length; i++) {
-  var a = as[i];
-  a.setAttribute('target', 'object');
-}
-if (as[0].getAttribute('href') != '') {
-  document.getElementById('object').src = as[0].getAttribute('href');
-}
-</script>
-
-<script type="text/javascript">
-  if (document.forms['choose-user']) {
-    document.forms['choose-user'].elements['ok'].style.display="none";
-  }
-</script>
 

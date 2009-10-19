@@ -153,10 +153,11 @@ if { !$roles_template_p } {
         imsld::grant_permissions -resources_activities_list $resources_list -user_id $user_id -run_id $run_id
     }
 
-    set nodeList [$dom_root selectNodes {descendant::a}]
+    set node_list [$dom_root selectNodes {descendant::a}]
+    set {node_list:rowcount} [llength $node_list]
     set activity_url ""
 
-    foreach node $nodeList {
+    foreach node $node_list {
 	set href [$node getAttribute href]
 	if { $href ne "" && ![string match {*\#*} $href] } {
 	    set iframe_activity_url $href

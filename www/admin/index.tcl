@@ -35,7 +35,7 @@ set package_id [ad_conn package_id]
 permission::require_permission -object_id $package_id -privilege create
 
 set page_title "[_ imsld.Admin_IMS_LD]"
-set context [list "[_ imsld.Admin_IMS_LD]"]
+set context ""
 
 set user_id [ad_conn user_id]
 set manifest_id [db_nextval acs_object_id_seq]
@@ -69,14 +69,14 @@ template::list::create \
         create_run {
             label {}
             display_template {<if @imslds.live_revision@ not nil>
-		<a href="run-new?run_imsld_id=@imslds.imsld_id@&return_url=@return_url@" title="[_ imsld.create_new_run]"> [_ imsld.create_new_run] </a>
+		<a href="run-new?run_imsld_id=@imslds.imsld_id@&amp;return_url=@return_url@" title="[_ imsld.create_new_run]"> [_ imsld.create_new_run] </a>
 		</if>} 
         }
         export {
             label {}
             sub_class narrow
             display_template {
-              <a href="imsld-export?imsld_id=@imslds.imsld_id@"><img src="/resources/imsld/export.png" title="Export" alt="Export" /></a>
+              <a href="imsld-export?imsld_id=@imslds.imsld_id@"><img src="/resources/imsld/export.png" title="Export" alt="Export" ></a>
             }
         }
         delete {
@@ -86,7 +86,7 @@ template::list::create \
 		<span class="alert" style="display:inline;">[_ imsld.Deleted]</span> <a href="index?set_imsld_id_live=@imslds.item_id@" title="[_ imsld.Make_it_live]">[_ imsld.Make_it_live]</a>
 		</if>
 		<else>
-		<a href="imsld-delete?imsld_id=@imslds.imsld_id@&return_url=@return_url@" title="[_ imsld.Delete]"><img src="/resources/acs-subsite/Delete16.gif" width="16" height="16" border="0" alt="[_ imsld.Delete]" title="[_ imsld.Delete]"></a>
+		<a href="imsld-delete?imsld_id=@imslds.imsld_id@&amp;return_url=@return_url@" title="[_ imsld.Delete]"><img src="/resources/acs-subsite/Delete16.gif" width="16" height="16" alt="[_ imsld.Delete]" title="[_ imsld.Delete]"></a>
 		</else>} 
             link_html { title "[_ imsld.Delete_IMS_LD]" }
         }
@@ -120,7 +120,7 @@ template::list::create \
             orderby_asc {status asc}
             orderby_desc {status desc}
             display_template {<if @imsld_runs.status@ ne "deleted">
-		<img src="@imsld_runs.image_path;noquote@" alt="@imsld_runs.image_alt@" title="@imsld_runs.image_title@" border="0" alt="[_ imsld.Status]"></a>
+		<img src="@imsld_runs.image_path;noquote@" alt="@imsld_runs.image_alt@" title="@imsld_runs.image_title@">
 	    </if>}
         }
         creation_date {
@@ -149,7 +149,7 @@ template::list::create \
 		<span class="alert" style="display:inline;">[_ imsld.Deleted]</span> <a href="index?set_run_id_live=@imsld_runs.run_id@" title="[_ imsld.Make_it_live]">[_ imsld.Make_it_live]</a>
 		</if>
 		<else>
-		<a href="run-delete?run_id=@imsld_runs.run_id@&return_url=@return_url@" title="[_ imsld.Delete]"><img src="/resources/acs-subsite/Delete16.gif" width="16" height="16" border="0" alt="[_ imsld.Delete]" title="[_ imsld.Delete]"></a>
+		<a href="run-delete?run_id=@imsld_runs.run_id@&amp;return_url=@return_url@" title="[_ imsld.Delete]"><img src="/resources/acs-subsite/Delete16.gif" width="16" height="16" alt="[_ imsld.Delete]" title="[_ imsld.Delete]"></a>
 		</else>}
             link_html { title "[_ imsld.Delete_Run]" }
         }

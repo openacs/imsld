@@ -3,7 +3,7 @@
   <property name="context">@context;noquote@</property>
   <property name="header_stuff"><link rel="stylesheet" type="text/css" media="all" href="/resources/imsld/imsld.css" /></property>
 
-  <p><formtemplate id="upload_file_form"></formtemplate></p>
+  <div><formtemplate id="upload_file_form"></formtemplate></div>
 
   <h2 class="center">#imsld.IMS-LDs_1#</h2>
   <div class="centered-table"><listtemplate name="imslds"></listtemplate></div>

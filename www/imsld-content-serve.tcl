@@ -496,6 +496,7 @@ foreach set_property_node $set_property_nodes {
     set form_node [$dom_doc createElement "form"]
     $form_node setAttribute name "set-properties"
     $form_node setAttribute enctype "multipart/form-data"
+    $form_node setAttribute onsubmit "return submitForm(this, 'imsld_content')"
     set url_prefix [ns_conn url]
     regexp (.*)/ $url_prefix url_prefix
     $form_node setAttribute action "${url_prefix}properties-value-set"
@@ -647,6 +648,7 @@ foreach set_property_group_node $set_property_group_nodes {
     set form_node [$dom_doc createElement "form"]
     $form_node setAttribute name "set-properties"
     $form_node setAttribute enctype "multipart/form-data"
+    $form_node setAttribute onsubmit "return submitForm(this, 'imsld_content')"
     set url_prefix [ns_conn url]
     regexp (.*)/ $url_prefix url_prefix
     $form_node setAttribute action "${url_prefix}/properties-value-set"

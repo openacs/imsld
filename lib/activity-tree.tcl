@@ -35,8 +35,21 @@ foreach role_part_list [db_list_of_lists referenced_role_parts { *SQL* }] {
     set play_id [lindex $role_part_list 5]
 
     if {$type ne {structure}} {
-	multirow append activities $activity_id $type $play_id $act_id $role_part_id
+	set visible_p [db_string get_visible {
+	    select attr.is_visible_p
+	    from imsld_attribute_instances attr
+	    where attr.owner_id = :activity_id
+	    and attr.run_id = :run_id
+	    and attr.user_id = :user_id
+	    and attr.type = 'isvisible'
+	}]
+
+	if { $visible_p } {
+	    multirow append activities $activity_id $type $play_id $act_id $role_part_id
+	}
+
     } else {
+
 	set started_p [db_0or1row as_started_p { *SQL* }]
 	if { $started_p } {
 	    multirow append activities $activity_id $type $play_id $act_id $role_part_id

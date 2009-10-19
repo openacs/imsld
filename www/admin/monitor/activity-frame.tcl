@@ -9,6 +9,7 @@ ad_page_contract {
 } -query {
     run_id:integer,notnull
     {activity_item_id:integer ""}
+    {activity_id:integer ""}
     {learning_object_id:integer ""}
     {service_id:integer ""}
     type:notnull
@@ -26,7 +27,7 @@ ad_page_contract {
     {resource_file_id ""}
 } -validate {
     non_empty_id {
-        if { $activity_item_id eq "" && $learning_object_id eq "" && $service_id eq "" } {
+        if { $activity_id eq "" && $activity_item_id eq "" && $learning_object_id eq "" && $service_id eq "" } {
             ad_complain "[_ imsld.lt_You_must_provide_an_a]"
         }
     }
@@ -35,8 +36,7 @@ ad_page_contract {
 set page_title "[_ imsld.lt_Monitoring_One_Activi]"
 set context [list]
 
-set activity_id ""
-if { $activity_item_id ne "" } {
+if { $activity_item_id ne "" && $activity_id eq "" } {
     set activity_id [content::item::get_live_revision -item_id $activity_item_id]
 }
 
