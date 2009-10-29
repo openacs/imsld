@@ -1058,9 +1058,11 @@
         select ar.object_id_two,
         ar.rel_type,
         ar.rel_id
-        from acs_rels ar, imsld_activity_structuresi ias
+        from acs_rels ar, imsld_activity_structuresi ias, cr_revisions r
         where ar.object_id_one = ias.item_id
         and ias.structure_id = :activity_structure_id
+        and r.item_id = ar.object_id_two
+        and content_revision__is_live(r.revision_id) = 't'
         order by ar.object_id_two
     
 		</querytext>

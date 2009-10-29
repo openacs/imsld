@@ -16,7 +16,7 @@ set lista_aux [lindex [db_list_of_lists get_groups_list {}] 0]
 lappend lista $lista_aux
 
 
-set actions [list "[_ imsld.Create_new]" [export_vars -base imsld-create-instance {imsld_id run_id role lista}] "[_ imsld.Create_a_new_group]"]
+set actions [list "[_ imsld.New_group]" [export_vars -base imsld-create-instance {imsld_id run_id role lista}] "[_ imsld.Create_a_new_group]"]
 
 template::list::create \
     -name role_groups \

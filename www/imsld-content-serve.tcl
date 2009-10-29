@@ -323,7 +323,8 @@ foreach view_property_group_node $view_property_group_nodes {
 	# by the moment, the only different case are the properties of type file	
 	switch $datatype {
 	    file {
-	    set a_node ""
+		set root_folder_id [fs::get_root_folder -package_id $fs_package_id]
+		set a_node ""
 		if { ![string eq "" $content] } {
 		    set folder_path [db_exec_plsql get_folder_path {
 			select content_item__get_path(:parent_id,:root_folder_id); 

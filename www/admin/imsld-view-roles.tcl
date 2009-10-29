@@ -28,7 +28,7 @@ set page_title "[_ imsld.View_Roles]"
 set context [list $page_title]
 
 set lista [list]
-lappend lista [list "[_ imsld.Select_a_role]" 0]
+lappend lista [list "[_ imsld.Select_a_role]..." 0]
 
 for {set order 0} {$order < [llength $roles_list] } {incr order} {
     set lista_item [list [lindex $roles_list_names $order] [lindex [lindex $roles_list $order] 0]]
@@ -37,7 +37,7 @@ for {set order 0} {$order < [llength $roles_list] } {incr order} {
 
 ad_form -name choose_role -action imsld-view-roles -export {imsld_id run_id} -show_required_p {0} -form {
                 {role:integer(select)
-                   {label "[_ imsld.Select_a_role_1]"} 
+                   {label "[_ imsld.Select_a_role]"} 
                    {options "$lista"}
                 {html {onChange confirmValue(this.form)}}
                }

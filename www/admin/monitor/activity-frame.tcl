@@ -736,6 +736,13 @@ if { $type eq "structure" } {
 
 	    relation_add -extra_vars $extra_vars imsld_res_files_rel $resource_item_id $resource_file_id
 	    relation_add imsld_item_res_rel $res_item_id $resource_item_id
+	    
+	    set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds 0] \
+									   [list time_string ""] \
+									   [list user_choice_p "t"] \
+									   [list when_prop_val_is_set_xml ""]] \
+				     -content_type imsld_complete_act \
+				     -parent_id $parent_id]
 
 	    # now the learning activity
 	    set identifier "$title-${activity_description_id}"
@@ -743,6 +750,7 @@ if { $type eq "structure" } {
 	    set learning_activity_id [imsld::item_revision_new -attributes [list [list identifier $identifier] \
 										[list component_id $component_id] \
 										[list activity_description_id $activity_description_id] \
+										[list complete_act_id $complete_act_id] \
 										[list is_visible_p $is_visible_p] \
 									       ] \
 					  -content_type imsld_learning_activity \
@@ -766,35 +774,34 @@ if { $type eq "structure" } {
 	    
 	    relation_add -extra_vars $extra_vars imsld_as_la_rel $activity_item_id $learning_activity_id    
 
-# 	    set involved_roles \
-# 		[imsld::roles::get_list_of_roles \
-# 		     -imsld_id [db_string get_imsld_from_run \
-# 				    {select imsld_id from imsld_runs where run_id=:run_id}] ]
+	    set involved_roles \
+		[imsld::roles::get_list_of_roles \
+		     -imsld_id [db_string get_imsld_from_run \
+				    {select imsld_id from imsld_runs where run_id=:run_id}] ]
 	    
-# 	    set involved_users [list]
-# 	    foreach role $involved_roles {
-# 		set involved_users [concat $involved_users \
-# 					[imsld::roles::get_users_in_role \
-# 					     -role_id [lindex $role 0] -run_id $run_id]]
-# 	    }
+	    set involved_users [list]
+	    foreach role $involved_roles {
+		
+		set involved_users [concat $involved_users \
+					[imsld::roles::get_users_in_role \
+					     -role_id [lindex $role 0] -run_id $run_id]]
+	    }
 	    
-# 	    set involved_users [list]
-
-# 	    foreach user_id [lsort -unique $involved_users] { 
+	    foreach user_id [lsort -unique $involved_users] { 
 	    
-# 		set instance_id \
-# 		    [package_exec_plsql \
-# 			 -var_list [list [list instance_id ""] \
-# 					[list owner_id [content::item::get_live_revision -item_id $learning_activity_id]] \
-# 					[list type "isvisible"] \
-# 					[list identifier $identifier] \
-# 					[list run_id $run_id] \
-# 					[list user_id $user_id] \
-# 					[list is_visible_p "t"] \
-# 					[list title ""] \
-# 					[list with_control_p ""]] \
-# 			 imsld_attribute_instance new]
-# 	    }
+		set instance_id \
+		    [package_exec_plsql \
+			 -var_list [list [list instance_id ""] \
+					[list owner_id [content::item::get_live_revision -item_id $learning_activity_id]] \
+					[list type "isvisible"] \
+					[list identifier $identifier] \
+					[list run_id $run_id] \
+					[list user_id $user_id] \
+					[list is_visible_p "t"] \
+					[list title ""] \
+					[list with_control_p ""]] \
+			 imsld_attribute_instance new]
+	    }
 
 	    ad_returnredirect [export_vars -base "monitor-tree" {run_id}]
 	    	    

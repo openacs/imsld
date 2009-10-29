@@ -646,12 +646,11 @@ ad_proc -public imsld::statement::execute {
 	set user_id [ad_conn user_id] 
     }
     ns_log Notice "statement::execute with user_id: $user_id"
-
     foreach executeNode $statement {
         switch -- [$executeNode localName] {
             {show} {
                 foreach refNodes [$executeNode childNodes] {
-                    switch -- [$refNodes localName] {
+                   switch -- [$refNodes localName] {
                         {class} {
                             set class [$refNodes getAttribute class ""]
                             set title [$refNodes getAttribute title ""]
@@ -668,8 +667,8 @@ ad_proc -public imsld::statement::execute {
                         {environment-ref} {
                             # the environments doesn't have any isvisible attribute, 
                             # so we have to 'show' all the referenced elements
-                            imsld::runtime::environment::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "show"
+                           imsld::runtime::environment::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
+				-action "show" -user_id $user_id
                         }
                         {activity-structure-ref} {
                             imsld::runtime::activity_structure::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
@@ -718,7 +717,7 @@ ad_proc -public imsld::statement::execute {
                             # the environments doesn't have any isvisible attribute, 
                             # so we have to 'hide' all the referenced elements
                             imsld::runtime::environment::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "hide"
+				-action "hide" -user_id $user_id
                         }
                         {activity-structure-ref} {
                             imsld::runtime::activity_structure::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \

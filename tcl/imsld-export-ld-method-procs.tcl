@@ -27,7 +27,11 @@ ad_proc -public imsld::export::ld::method::write_conditions {
     set condition [dom parse $condition_xml]
     #Get root element of the document
     set root [$condition documentElement]
-    $conditions appendChild [$root firstChild] 
+    #Write if-then-else
+    set nodeList [$root childNodes]
+    foreach node $nodeList {
+      $conditions appendChild $node
+    } 
   }
 }
 

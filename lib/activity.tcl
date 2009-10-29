@@ -32,7 +32,7 @@ switch $type {
 	    and user_id = :user_id 
 	    and run_id = :run_id
 	    and status = 'finished'
-	}]
+	}]	
 
 	set user_choice_p [db_string user_choice_p {
 	    select user_choice_p
@@ -143,6 +143,14 @@ switch $type {
 
 		set activity_id [content::item::get_live_revision -item_id $object_id_two]
 
+		set completed_activity_p [db_0or1row already_completed {
+		    select 1 from imsld_status_user 
+		    where related_id = :activity_id 
+		    and user_id = :user_id 
+		    and run_id = :run_id
+		    and status = 'finished'
+		}]
+
 		if { $activity_type ne "imsld_as_as_rel" } {
 		    set visible_p [db_string get_visible {
 			select attr.is_visible_p
@@ -156,7 +164,10 @@ switch $type {
 		    set visible_p t
 		}
 
-		if { $visible_p } {
+		if { $visible_p && (($structure_type eq "selection")
+				    || ([lsearch -exact $next_activity_id_list $activity_id] != -1)
+				    || $completed_activity_p)
+		     || !$completion_restriction} {
 		    multirow append referenced_activities $object_id_two $rel_type $rel_id $sort_order $activity_type $activity_id
 		}
 		

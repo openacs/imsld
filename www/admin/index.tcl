@@ -43,7 +43,7 @@ set manifest_id [db_nextval acs_object_id_seq]
 # form to upload an IMS LD ZIP file
 
 ad_form -name upload_file_form -html {enctype multipart/form-data} -action imsld-new -form {
-    {upload_file:file {label "[_ imsld.lt_Import_IMS-LD_ZIP_Fil]"}}
+    {upload_file:file {label "[_ imsld.Import_Packaged_Course]"}}
     {return_url:text {widget hidden} {value $return_url}}
     {manifest_id:integer {widget hidden} {value $manifest_id}}
 } 
@@ -57,7 +57,7 @@ template::list::create \
     -orderby { default_value imsld_title } \
     -elements {
         imsld_title {
-            label "[_ imsld.IMS_LD_Name]"
+            label "[_ imsld.Packaged_Course_Name]"
             orderby_asc {imsld_title asc}
             orderby_desc {imsld_title desc}
         }
@@ -69,14 +69,17 @@ template::list::create \
         create_run {
             label {}
             display_template {<if @imslds.live_revision@ not nil>
-		<a href="run-new?run_imsld_id=@imslds.imsld_id@&amp;return_url=@return_url@" title="[_ imsld.create_new_run]"> [_ imsld.create_new_run] </a>
+		<a href="run-new?run_imsld_id=@imslds.imsld_id@&amp;return_url=@return_url@"> [_ imsld.Create_new_Course] </a>
 		</if>} 
         }
         export {
             label {}
             sub_class narrow
             display_template {
-              <a href="imsld-export?imsld_id=@imslds.imsld_id@"><img src="/resources/imsld/export.png" title="Export" alt="Export" ></a>
+              <if @imslds.live_revision@ nil></if>
+              <else>
+                <a href="imsld-export?imsld_id=@imslds.imsld_id@"><img src="/resources/imsld/export.png" title="Export" alt="Export" ></a>
+              </else>
             }
         }
         delete {
@@ -110,7 +113,7 @@ template::list::create \
     -key run_id \
     -elements {
         imsld_title {
-            label "[_ imsld.Run_IMS-LD_Name]"
+            label "[_ imsld.Course_Name]"
             orderby_asc {imsld_title asc}
             orderby_desc {imsld_title desc}
 	    link_url_eval {[export_vars -base "../imsld-divset" {run_id}]}

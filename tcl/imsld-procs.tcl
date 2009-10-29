@@ -2289,11 +2289,16 @@ ad_proc -public imsld::process_environment_as_ul {
                                          [lindex $one_nested_environment_list 3]]
         regsub -all "{}" $nested_environment_list "" nested_environment_list
     }
+
+    set childNodes [$environment_node childNodes]
     if { [string eq $resource_mode "t"] } {
         return [list $environment_title $environment_learning_objects_list $environment_services_list $nested_environment_list]
     } else {
-        $environment_node_li appendChild $environment_node
-        $dom_node appendChild $environment_node_li
+        if { ( [llength $childNodes] == 1 ) && ( [string eq [lindex [$childNodes nodeType] 0] "TEXT_NODE" ] ) && ( [string eq [[lindex $childNodes 0] nodeValue] ""]) } {
+        } else {
+            $environment_node_li appendChild $environment_node
+            $dom_node appendChild $environment_node_li
+        }
     }
 }
 
@@ -2609,7 +2614,7 @@ ad_proc -public imsld::process_resource_as_ul {
 	    set associated_files_query "associated_xo_files"
 	}
 
-        foreach file_list [db_list_of_lists $associated_files_query { *SQL* }] {
+        foreach file_list [db_list_of_lists $associated_files_query { *SQL* }] {	    
 	    if { $resource_handler eq "xowiki" } {
 		set page_id [lindex $file_list 0]
 		set file_name [lindex $file_list 1]
@@ -2624,6 +2629,7 @@ ad_proc -public imsld::process_resource_as_ul {
 		set fs_file_url [db_1row get_fs_file_url { *SQL* }]
 		set file_url "[apm_package_url_from_id $fs_package_id]view/${file_url}"
 	    }
+
             set a_node [$dom_doc createElement a]
             $a_node setAttribute href "[export_vars -base "[lindex [site_node::get_url_from_object_id -object_id $imsld_package_id] 0]imsld-finish-resource" {file_url $file_url resource_item_id $resource_item_id run_id $run_id}]"
 	    $a_node setAttribute target "_blank"
@@ -2671,7 +2677,6 @@ ad_proc -public imsld::process_resource_as_ul {
                 set file_node [$dom_doc createElement li]
                 $file_node appendChild $a_node
                 $dom_node appendChild $file_node
-		$a_node appendChild [$dom_doc createTextNode "$url"]
 		if { $monitor_p } {
 		    set choose_node [$dom_doc createElement a]
 		    $choose_node appendChild [$dom_doc createTextNode "Choose"]
@@ -2716,7 +2721,7 @@ ad_proc -public imsld::process_activity_as_ul {
             -dom_node $dom_node \
             -dom_doc $dom_doc
     } elseif { [db_0or1row is_learning {
-        select 1 from imsld_learning_activitiesi where item_id = :activity_item_id
+        select 1 from imsld_learning_activitiesi where item_id = :activity_item_id and content_revision__is_live(activity_id)
     }] } {
         imsld::process_learning_activity_as_ul -activity_item_id $activity_item_id \
             -run_id $run_id \
@@ -2770,7 +2775,7 @@ ad_proc -public imsld::process_activity_environments_as_ul {
     }] } {
         return ""
     } elseif { [db_0or1row is_learning {
-        select 1 from imsld_learning_activitiesi where item_id = :activity_item_id
+        select 1 from imsld_learning_activitiesi where item_id = :activity_item_id and content_revision__is_live(activity_id)
     }] } {
         set rel_type imsld_la_env_rel
     } elseif { [db_0or1row is_support {
@@ -3093,9 +3098,13 @@ ad_proc -public imsld::process_activity_structure_as_ul {
 } {
      set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id } ]
     # get the items associated with the activity
-    set info_tab_node [$dom_doc createElement li]
+    set info_tab_node [$dom_doc createElement div]
+    $info_tab_node setAttribute class "tabbertab"
+    set info_tab_title [$dom_doc createElement h2]
+    $info_tab_node appendChild $info_tab_title
     set text [$dom_doc createTextNode "[_ imsld.Information]"]
-    $info_tab_node appendChild $text
+    $info_tab_node setAttribute style "display: none; float:left; "
+    $info_tab_title appendChild $text
     set info_node [$dom_doc createElement ul]
     # FIX-ME: if the ul is empty, the browser show the ul incorrectly
     set text [$dom_doc createTextNode ""]    
@@ -3949,10 +3958,12 @@ ad_proc -public imsld::structure_completion_resctriction_p {
     foreach referenced_activity [db_list_of_lists struct_referenced_activities {
         select ar.object_id_two,
         ar.rel_type
-        from acs_rels ar, imsld_activity_structuresi ias
+        from acs_rels ar, imsld_activity_structuresi ias, cr_revisions r
         where ar.object_id_one = ias.item_id
         and ias.item_id = :structure_item_id
 	and content_revision__is_live(ias.structure_id) = 't'
+	and ar.object_id_two = r.item_id
+	and content_revision__is_live(r.revision_id) = 't'
         order by ar.object_id_two
     }] {
         # get all the directly referenced activities (from the activity structure)
@@ -4504,8 +4515,8 @@ ad_proc -public imsld::get_activity_from_resource {
 }
 
 ad_proc -public imsld::get_imsld_from_activity { 
-   -activity_id
-    -activity_type
+    -activity_id:required
+    -activity_type:required
 } { 
     @return The imsld_id from which the activity is being used.
 } {

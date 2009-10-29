@@ -19,8 +19,8 @@ ad_page_contract {
 set package_id [ad_conn package_id]
 permission::require_permission -object_id $package_id -privilege create
 
-set page_title "[_ imsld.Confirm_New_IMS-LD]"
-set context [list "[_ imsld.Confirm_New_IMS-LD]"]
+set page_title "[_ imsld.Creating_new_Packaged_Course]"
+set context [list "[_ imsld.Creating_new_Packaged_Course]"]
 
 set user_id [ad_conn user_id]
 
@@ -140,8 +140,9 @@ if {[apm_package_installed_p "xowiki"]} {
     if {[lsearch $applets "dotlrn_xowiki"] > -1} {
 	ad_form -extend -name imsld_upload -form {
 	    { resource_handler:integer(select)
-		{label "Resource manager:"}
+		{label "[_ imsld.Resource_manager]:"}
 		{options {{XoWiki xowiki} {{File Storage} file-storage}}}
+		{help_text "[_ imsld.Select_the_application]"}
 	    }
 	}
     }

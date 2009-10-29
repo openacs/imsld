@@ -156,15 +156,23 @@ ad_proc -public imsld::xowiki::convert_syntax {
     # attribute) will be a file in XoWiki, while links (URLs
     # referenced by the ALT attribute.
 
-    # small hack to avoid tDOM to escape the LD tags :(
-    regsub {<ld:([^\s]+)} $content {<ld\1} content
-
-    set document [dom parse -html $content]
+    if { [catch {dom parse $content document} errmsg] } {
+	ns_log notice "imsld::xowiki::convert_syntax ERROR: Not a valid XML file, aborting parse process!"
+	# the docuemnt is not an xml file, just return it
+	return $content
+    } 
     set root [$document documentElement]
 
     if { $root eq "" } {
 	# Content is too generic, we cannot proceed
 	return $content
+    }
+
+    # Since XoWiki will crop the IMS LD namespace, we need to include
+    # it within each LD tag.
+    set ld_tags [$root selectNodes -namespaces {imsld "http://www.imsglobal.org/xsd/imsld_v1p0"} //imsld:*]
+    foreach ld_tag $ld_tags {
+	$ld_tag setAttribute xmlns:[$ld_tag prefix] [$ld_tag namespaceURI]
     }
 
     # Changing links
@@ -221,9 +229,6 @@ ad_proc -public imsld::xowiki::convert_syntax {
     }
 
     set wiki_content [$root asXML]
-
-    # small hack to avoid tDOM to escape the LD tags :(
-    regsub {<ld([^\s]+)} $wiki_content {<ld:\1} content
 
     return $wiki_content    
 }

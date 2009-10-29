@@ -504,7 +504,7 @@ ad_proc -public imsld::runtime::environment::show_hide {
     db_foreach learning_object {
         select lo.learning_object_id,
         lo.identifier as lo_identifier
-        from imsld_learning_objects lo, imsld_environmentsi env
+        from imsld_learning_objects lo
         where lo.environment_id = :environment_item_id
     } {
         imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $lo_identifier -action $action -user_id $user_id

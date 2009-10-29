@@ -5,9 +5,9 @@
 
   <div><formtemplate id="upload_file_form"></formtemplate></div>
 
-  <h2 class="center">#imsld.IMS-LDs_1#</h2>
+  <h2 class="center">#imsld.Packaged_Courses#</h2>
   <div class="centered-table"><listtemplate name="imslds"></listtemplate></div>
 
-  <h2 class="center">#imsld.Runs#</h2>
+  <h2 class="center">#imsld.Courses#</h2>
   <div class="centered-table"><listtemplate name="imsld_runs"></listtemplate></div>
 

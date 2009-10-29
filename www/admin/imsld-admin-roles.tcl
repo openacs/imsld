@@ -39,7 +39,7 @@ set roles_list_names [imsld::roles::get_roles_names -roles_list $roles_list]
 
 
 set lista [list]
-lappend lista [list "Select a role..." 0]
+lappend lista [list "[_ imsld.Select_a_role]..." 0]
 
 for {set order 0} {$order < [llength $roles_list] } {incr order} {
     set lista_item [list [lindex $roles_list_names $order] [lindex [lindex $roles_list $order] 0]]
@@ -48,7 +48,7 @@ for {set order 0} {$order < [llength $roles_list] } {incr order} {
 
 ad_form -name choose_role -action imsld-admin-roles -export {imsld_id run_id} -show_required_p {0} -form {
                 {role:integer(select)
-                   {label "Select a role"} 
+		    {label "[_ imsld.Select_a_role]"} 
                    {options "$lista"}
                 {html {onChange confirmValue(this.form)}}
                }
@@ -60,7 +60,7 @@ ad_form -name choose_role -action imsld-admin-roles -export {imsld_id run_id} -s
 
 ad_form -name upload_role -action imsld-import-roles -export {imsld_id run_id} -show_required_p {0} -form {
     {role_url:text
-	{label "Import members from a URL"} 
+	{label "[_ imsld.Import_members_from_a_URL]"} 
     }
 }
 

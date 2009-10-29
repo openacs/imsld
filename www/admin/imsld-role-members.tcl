@@ -73,8 +73,8 @@ if {![db_0or1row get_group_name {}]} {
     set bulk_actions_not "{Create new instance} $create_instance_url {[_ imsld.lt_Create_a_new_instance]}"
     set bulk_action_export_vars "{imsld_id} {role} {run_id}"
 } else {
-    set bulk_actions "{<------} {imsld-role-remove-members} {[_ imsld.lt_Remove_selected_membe]}"
-    set bulk_actions_not "{------->} {imsld-role-add-members} {[_ imsld.lt_Add_selected_members_]}"
+    set bulk_actions "{[_ imsld.Remove_Members]} {imsld-role-remove-members} {[_ imsld.lt_Remove_selected_membe]}"
+    set bulk_actions_not "{[_ imsld.Add_Members]} {imsld-role-add-members} {[_ imsld.lt_Add_selected_members_]}"
                      
     set bulk_action_export_vars "{group_instance} {role} {imsld_id} {run_id} {members_list}"
 }

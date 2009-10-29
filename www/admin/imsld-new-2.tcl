@@ -18,8 +18,8 @@ ad_page_contract {
 set package_id [ad_conn package_id]
 permission::require_permission -object_id $package_id -privilege create
 
-set page_title "[_ imsld.Creating_new_IMS-LD]"
-set context [list [list "[_ imsld.New_IMS-LD]" "new-imsld"] [list "[_ imsld.lt_Creating_new_IMS-L]"]]
+set page_title "[_ imsld.Processing_new_Packaged_Course]"
+set context [list [list "[_ imsld.Creating_new_Packaged_Course]" "new-imsld"] [list "[_ imsld.Processing_new_Packaged_Course]"]]
 
 set user_id [ad_conn user_id]
 
@@ -36,11 +36,11 @@ if {[lsearch $applets "dotlrn_xowiki"] == -1} {
 
 # Display progress bar
 ad_progress_bar_begin \
-    -title "[_ imsld.Uploading_IMS_LD]" \
+    -title "[_ imsld.Uploading_Packaged_Course]" \
     -message_1 "[_ imsld.lt_Uploading_and_process]" \
     -message_2 "[_ imsld.lt_We_will_continue_auto]"
 
-ns_write "[_ imsld.lt_h2Uploading_new_IMS_L]"
+ns_write "<h2>[_ imsld.Uploading_new_Packaged_Course]</h2>"
 
 set community_id [dotlrn_community::get_community_id]
 # Atempting to create the new IMS LD.

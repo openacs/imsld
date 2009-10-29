@@ -34,7 +34,7 @@
   <div class="one-element">
     <formtemplate id="choose_role"></formtemplate>
     <if @role@ eq 0>
-      - or -
+      - #imsld.or# -
       <formtemplate id="upload_role"></formtemplate>
     </if>
   </div>

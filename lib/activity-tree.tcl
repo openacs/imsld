@@ -34,6 +34,14 @@ foreach role_part_list [db_list_of_lists referenced_role_parts { *SQL* }] {
     set act_item_id [lindex $role_part_list 4]
     set play_id [lindex $role_part_list 5]
 
+    set completed_p [db_0or1row already_completed {
+	select 1 from imsld_status_user 
+	where related_id = :activity_id 
+	and user_id = :user_id 
+	and run_id = :run_id
+	and status = 'finished'
+    }]
+
     if {$type ne {structure}} {
 	set visible_p [db_string get_visible {
 	    select attr.is_visible_p
@@ -44,7 +52,7 @@ foreach role_part_list [db_list_of_lists referenced_role_parts { *SQL* }] {
 	    and attr.type = 'isvisible'
 	}]
 
-	if { $visible_p } {
+	if { $visible_p && ($completed_p || [lsearch -exact $next_activity_id_list $activity_id] != -1)} {
 	    multirow append activities $activity_id $type $play_id $act_id $role_part_id
 	}
 

@@ -190,7 +190,7 @@ ad_proc -public imsld::export::ld::components::write_properties {
     set imsld_datatype [$doc createElement "imsld:datatype"]
     $property appendChild $imsld_datatype
     #Add attribute datatype
-    $property setAttribute datatype $datatype
+    $imsld_datatype setAttribute datatype $datatype
 
     #If initial-value exists
     if {$initial_value != ""} {
@@ -548,6 +548,17 @@ ad_proc -public imsld::export::ld::components::write_on_completion {
   #Get on-completion data
   db_1row get_data {select feedback_title, change_property_value_xml from imsld_on_completion where on_completion_id = cr_items.latest_revision and cr_items.item_id = :on_completion_id}
 
+    #Write change-property-values
+    if {$change_property_value_xml != ""} {
+      #First, create the new document
+      set change_prop_val [dom parse $change_property_value_xml]
+      #Get root element of the document
+      set root [$change_prop_val documentElement]
+      #$on_completion appendChild [$root firstChild]
+      $on_completion appendChild $root
+    }
+
+
   if {$change_property_value_xml == ""} {
 
     if {$feedback_title != ""} {
@@ -594,13 +605,13 @@ ad_proc -public imsld::export::ld::components::write_on_completion {
     }
 
     #Write change-property-values
-    if {$change_property_value_xml != ""} {
-      #First, create the new document
-      set change_prop_val [dom parse $change_property_value_xml]
-      #Get root element of the document
-      set root [$change_prop_val documentElement]
-      $on_completion appendChild [$root firstChild]
-    }
+#    if {$change_property_value_xml != ""} {
+#      #First, create the new document
+#      set change_prop_val [dom parse $change_property_value_xml]
+#      #Get root element of the document
+#      set root [$change_prop_val documentElement]
+#      $on_completion appendChild [$root firstChild]
+#    }
   }
 
   #If there is a notification associated
