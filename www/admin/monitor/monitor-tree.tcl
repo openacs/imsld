@@ -52,6 +52,8 @@ if { [db_string count_properties {
     $props_title_node appendChild $properties_node
     
     set properties_tree [$props_dom_root asXML]
+
+    $props_doc delete
 } else {
     set properties_tree ""
 }
@@ -102,6 +104,8 @@ $li_node appendChild $a_node
 
 set user_activity [$dom_root asXML]
 
+$doc delete
+
 # runtime generated activities (notifications, level C)
 if { [db_string generated_acitivties_p {
     select count(*)
@@ -125,6 +129,8 @@ if { [db_string generated_acitivties_p {
     $aux_title_node appendChild $aux_activities_node
     
     set aux_html_tree [$aux_dom_root asXML]
+
+    $aux_doc delete
 } else {
     set aux_html_tree ""
 }

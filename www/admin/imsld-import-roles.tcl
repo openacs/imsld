@@ -60,4 +60,6 @@ foreach node [$root selectNodes {role-population/user}] {
     }
 }
 
+$doc delete
+
 ad_returnredirect [export_vars -base imsld-finish {run_id imsld_id}]

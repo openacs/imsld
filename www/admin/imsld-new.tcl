@@ -128,6 +128,8 @@ if { [lindex $is_imsld_list 0] } {
     ad_script_abort
 }
 
+$doc delete
+
 ad_form -name imsld_upload -cancel_url $return_url -action imsld-new-2 -html { enctype multipart/form-data } -form {
     {tmp_dir:text {widget hidden} {value $tmp_dir}}
     {return_url:text {widget hidden} {value $return_url}}

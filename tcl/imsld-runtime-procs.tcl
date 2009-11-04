@@ -307,6 +307,7 @@ ad_proc -public imsld::runtime::property::property_value_set {
                 dom parse $condition_xml document
                 $document documentElement condition_node
                 imsld::condition::execute -run_id $run_id -user_id $member_id -condition $condition_node
+		$document delete
             }
         }
 

@@ -223,9 +223,10 @@ ad_proc -public imsld::sweep_expired_activities {
                                                                       and ilai.play_id=:play_id
                                                                       and ici.item_id=ar.object_id_two
             }] { 
-               dom parse $condition_xml document
-               $document documentElement condition_node
-               imsld::condition::execute -run_id $run_id -condition $condition_node
+		dom parse $condition_xml document
+		$document documentElement condition_node
+		imsld::condition::execute -run_id $run_id -condition $condition_node
+		$document delete
             }
             #role conditions, time conditions...
             imsld::condition::execute_time_role_conditions -run_id $run_id
@@ -262,9 +263,10 @@ ad_proc -public imsld::sweep_expired_activities {
                                                                       and ilai.act_id=:act_id
                                                                       and ici.item_id=ar.object_id_two
             }] { 
-               dom parse $condition_xml document
-               $document documentElement condition_node
-               imsld::condition::execute -run_id $run_id -condition $condition_node
+		dom parse $condition_xml document
+		$document documentElement condition_node
+		imsld::condition::execute -run_id $run_id -condition $condition_node
+		$document delete
             }
             #role conditions, time conditions...
             imsld::condition::execute_time_role_conditions -run_id $run_id 
@@ -314,9 +316,10 @@ ad_proc -public imsld::sweep_expired_activities {
                                                                               and ilai.activity_id=:activity_id
                                                                               and ici.item_id=ar.object_id_two
                     }] { 
-                       dom parse $condition_xml document
-                       $document documentElement condition_node
-                       imsld::condition::execute -run_id $run_id -condition $condition_node
+			dom parse $condition_xml document
+			$document documentElement condition_node
+			imsld::condition::execute -run_id $run_id -condition $condition_node
+			$document delete
                     }
                     #role conditions, time conditions...
                     imsld::condition::execute_time_role_conditions -run_id $run_id
@@ -368,9 +371,10 @@ ad_proc -public imsld::sweep_expired_activities {
                                                                               and ilai.activity_id=:activity_id
                                                                               and ici.item_id=ar.object_id_two
                     }] { 
-                       dom parse $condition_xml document
-                       $document documentElement condition_node
-                       imsld::condition::execute -run_id $run_id -condition $condition_node
+			dom parse $condition_xml document
+			$document documentElement condition_node
+			imsld::condition::execute -run_id $run_id -condition $condition_node
+			$document delete
                     }
                     #role conditions, time conditions...
                     imsld::condition::execute_time_role_conditions -run_id $run_id
@@ -439,6 +443,7 @@ ad_proc -public imsld::finish_expired_activity {
 			dom parse $condition_xml document
 			$document documentElement condition_node
 			imsld::condition::execute -run_id $run_id -condition $condition_node
+			$document delete
 		    }
 		    #role conditions, time conditions...
 		    imsld::condition::execute_time_role_conditions -run_id $run_id
@@ -475,6 +480,7 @@ ad_proc -public imsld::finish_expired_activity {
 			dom parse $condition_xml document
 			$document documentElement condition_node
 			imsld::condition::execute -run_id $run_id -condition $condition_node
+			$document delete
 		    }
 		    #role conditions, time conditions...
 		    imsld::condition::execute_time_role_conditions -run_id $run_id 
@@ -527,6 +533,7 @@ ad_proc -public imsld::finish_expired_activity {
 				dom parse $condition_xml document
 				$document documentElement condition_node
 				imsld::condition::execute -run_id $run_id -condition $condition_node
+				$document delete
 			    }
 			    #role conditions, time conditions...
 			    imsld::condition::execute_time_role_conditions -run_id $run_id
@@ -582,6 +589,7 @@ ad_proc -public imsld::finish_expired_activity {
 				dom parse $condition_xml document
 				$document documentElement condition_node
 				imsld::condition::execute -run_id $run_id -condition $condition_node
+				$document delete
 			    }
 			    #role conditions, time conditions...
 			    imsld::condition::execute_time_role_conditions -run_id $run_id
@@ -704,6 +712,16 @@ ad_proc -public imsld::mark_role_part_finished {
     }
     db_dml insert_role_part { *SQL* }
 
+    imsld::finish_component_element -imsld_id $imsld_id \
+	-run_id $run_id \
+	-play_id $play_id \
+	-act_id $act_id \
+	-role_part_id $role_part_id \
+	-element_id $role_part_id \
+	-type role_part \
+	-user_id $user_id \
+	-code_call
+    
     # mark as finished all the referenced activities
     db_1row role_part_activity {
         select case
@@ -741,6 +759,7 @@ ad_proc -public imsld::mark_role_part_finished {
         } else {
             set resources_activities_list [imsld::process_activity_structure_as_ul -run_id $run_id -structure_item_id $activity_item_id -resource_mode "t" -dom_node $foo_node -dom_doc $foo_doc]
         }
+	$foo_doc delete
         #grant permissions for newly showed resources
         imsld::grant_permissions -resources_activities_list $resources_activities_list -user_id $user_id -run_id $run_id
     }
@@ -768,6 +787,15 @@ ad_proc -public imsld::mark_act_finished {
     }
 
     db_dml insert_act { *SQL* }
+
+    imsld::finish_component_element -imsld_id $imsld_id \
+	-run_id $run_id \
+	-play_id $play_id \
+	-act_id $act_id \
+	-element_id $act_id \
+	-type act \
+	-user_id $user_id \
+	-code_call  
 
     foreach referenced_role_part [db_list_of_lists referenced_role_part {
         select rp.role_part_id
@@ -800,6 +828,15 @@ ad_proc -public imsld::mark_play_finished {
         return
     }
     db_dml insert_play { *SQL* }
+
+    imsld::finish_component_element -imsld_id $imsld_id \
+	-run_id $run_id \
+	-play_id $play_id \
+	-element_id $play_id \
+	-type play \
+	-user_id $user_id \
+	-code_call  
+
     foreach referenced_act [db_list_of_lists referenced_act {
         select ia.act_id
         from imsld_acts ia, imsld_playsi ip
@@ -857,6 +894,13 @@ ad_proc -public imsld::mark_method_finished {
         return
     }
     db_dml insert_method { *SQL* }
+
+    imsld::finish_component_element -imsld_id $imsld_id \
+	-run_id $run_id \
+	-element_id $method_id \
+	-type method \
+	-user_id $user_id \
+	-code_call  
 
     foreach referenced_play [db_list_of_lists referenced_plays {
         select ip.play_id
@@ -1217,9 +1261,10 @@ ad_proc -public imsld::finish_component_element {
    
     if { [info exists table_name] } {
         foreach condition_xml [db_list search_related_conditions ""] { 
-           dom parse $condition_xml document
-           $document documentElement condition_node
-           imsld::condition::execute -run_id $run_id -condition $condition_node
+	    dom parse $condition_xml document
+	    $document documentElement condition_node
+	    imsld::condition::execute -run_id $run_id -condition $condition_node
+	    $document delete
         }
         #role conditions, time conditions...
         imsld::condition::execute_time_role_conditions -run_id $run_id
@@ -1691,6 +1736,7 @@ ad_proc -public imsld::structure_next_activity {
                 } else {
                     set environment_list [imsld::process_environment_as_ul -environment_item_id $object_id_two -run_id $run_id -dom_doc $foo_doc -dom_node $foo_node]
                 }
+		$foo_doc delete
             }
         }
     } 
@@ -4604,6 +4650,7 @@ ad_proc -public imsld::finish_resource {
 		set completion_restriction t
             }
         }
+	$foo_doc delete
 
         #only the learning_activities must be finished
         set resources_item_list [lindex $first_resources_item_list 3]

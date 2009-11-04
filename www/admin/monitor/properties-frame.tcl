@@ -328,5 +328,7 @@ if { ![string eq "" $user_id] || ![string eq "" $role_instance_id]
     set table_node ""
 }
 
+$dom_doc delete
+
 set page_title $frame_header
 

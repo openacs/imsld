@@ -32,6 +32,7 @@ ad_proc -public imsld::condition::execute_all {
         dom parse $condition_xml document
         $document documentElement condition
         imsld::condition::execute -run_id $run_id -condition $condition -user_id $user_id
+	$document delete
     }
 }
 
@@ -93,6 +94,7 @@ ad_proc -public imsld::condition::execute_time_role_conditions {
         dom parse $condition_xml document
         $document documentElement condition_node
         imsld::condition::execute -run_id $run_id -condition $condition_node
+	$document delete
     }
 }
 
@@ -129,6 +131,7 @@ ad_proc -public imsld::condition::eval_when_condition_true {
             break
         }
     }
+    $document delete
 
     # 3. if the expression is true for all of the users, mark the rererencer act as completed
     db_1row get_context_info {
@@ -194,6 +197,7 @@ ad_proc -public imsld::condition::eval_change_property_value {
         ns_log Notice "eval_change_property_value with user_id: $user_id"
         imsld::statement::execute -run_id $run_id -statement [$change_property_value_root childNodes] -user_id $user_id
     }
+    $document delete
 }
 
 ad_proc -public imsld::condition::eval_when_prop_value_is_set {
@@ -249,6 +253,7 @@ ad_proc -public imsld::condition::eval_when_prop_value_is_set {
         # there is no associated value, the activity is completed
         set equal_value_p 1
     }
+    $document delete
     
     if { $equal_value_p } {
         # the values are the same, mark the referenced activity as completed

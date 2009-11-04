@@ -516,13 +516,13 @@ ad_proc -public imsld::parse::get_files_structure {
             set dir_content [list]
                 
             foreach subdirx [imsld::parse::get_folder_contents -dir $dir -type directory] {
-                lappend dir_content [list [string tolower "$subdirx"] dir]
+                lappend dir_content [list "$subdirx" dir]
                 lappend dirx $subdirx
             }
             foreach filex [imsld::parse::get_folder_contents -dir $dir -type file] {
-                lappend dir_content [list [string tolower "$filex"] file 0]
+                lappend dir_content [list "$filex" file 0]
             }
-            lappend files_structure [list [list [string tolower $dir] 0] $dir_content]
+            lappend files_structure [list [list $dir 0] $dir_content]
             set dirx [lrange $dirx 1 [expr [llength $dirx] -1]]
         }
         return $files_structure
@@ -2356,6 +2356,8 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
             $temporal_node appendChild $expression
 
             set expression_xml [$temporal_node asXML]
+
+	    $temporal_doc delete
         }
     }
 
@@ -2498,6 +2500,8 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             
             $temporal_node appendChild $when_prop_value_is_set
             set when_prop_value_is_set_xml [$temporal_node asXML]
+
+	    $temporal_doc delete
         }
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
 								       [list time_string $time_string] \
@@ -2534,6 +2538,8 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                 $temporal_node appendChild $cpv
             }
             set change_property_value_xml [$temporal_node asXML]
+
+	    $temporal_doc delete
         }
 
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
@@ -2591,7 +2597,8 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                                            -manifest $manifest \
                                            -manifest_id $manifest_id \
                                            -parent_id $parent_id \
-                                           -tmp_dir $tmp_dir]
+                                           -tmp_dir $tmp_dir \
+					   -resource_handler $resource_handler]
                 set notification_id [lindex $notification_list 0]
                 if { !$notification_id } {
                     # an error occurred, return it
@@ -2719,6 +2726,8 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             
             $temporal_node appendChild $when_prop_value_is_set
             set when_prop_value_is_set_xml [$temporal_node asXML]
+
+	    $temporal_doc delete
         }
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
 								       [list time_string $time_string] \
@@ -2757,6 +2766,8 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                 $temporal_node appendChild $cpv
             }
             set change_property_value_xml [$temporal_node asXML]
+
+	    $temporal_doc delete
         }
 
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
@@ -2813,7 +2824,8 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                                            -manifest $manifest \
                                            -manifest_id $manifest_id \
                                            -parent_id $parent_id \
-                                           -tmp_dir $tmp_dir]
+                                           -tmp_dir $tmp_dir \
+					   -resource_handler $resource_handler]
                 set notification_id [lindex $notification_list 0]
                 if { !$notification_id } {
                     # an error occurred, return it
@@ -3559,6 +3571,8 @@ ad_proc -public imsld::parse::parse_and_create_act {
             
             $temporal_node appendChild $when_prop_value_is_set
             set when_prop_value_is_set_xml [$temporal_node asXML]
+
+	    $temporal_doc delete
         }
         # Act: Complete Act: When Condition True
         set when_condition_true [$complete_act selectNodes "*\[local-name()='when-condition-true'\]"] 
@@ -3598,6 +3612,8 @@ ad_proc -public imsld::parse::parse_and_create_act {
                 # map the property with the condition (when condition true)
                 relation_add imsld_prop_whct_rel $property_id $when_condition_true_id 
             }
+
+	    $temporal_doc delete
         }
         
 	if { ![string eq "" $time_in_seconds] || ![string eq "" $when_prop_value_is_set_xml] ||![string eq "" $when_condition_true_id]  } {
@@ -3638,6 +3654,8 @@ ad_proc -public imsld::parse::parse_and_create_act {
                 $temporal_node appendChild $cpv
             }
             set change_property_value_xml [$temporal_node asXML]
+
+	    $temporal_doc delete
         }
 
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
@@ -3691,7 +3709,8 @@ ad_proc -public imsld::parse::parse_and_create_act {
                                            -manifest $manifest \
                                            -manifest_id $manifest_id \
                                            -parent_id $parent_id \
-                                           -tmp_dir $tmp_dir]
+                                           -tmp_dir $tmp_dir \
+					   -resource_handler $resource_handler]
                 set notification_id [lindex $notification_list 0]
                 if { !$notification_id } {
                     # an error occurred, return it
@@ -3808,6 +3827,8 @@ ad_proc -public imsld::parse::parse_and_create_play {
             
             $temporal_node appendChild $when_prop_value_is_set
             set when_prop_value_is_set_xml [$temporal_node asXML]
+
+	    $temporal_doc delete
         }
         # Play: Complete Play: When Last Act Completed
         set when_last_act_completed [$complete_play selectNodes "*\[local-name()='when-last-act-completed'\]"]
@@ -3850,6 +3871,8 @@ ad_proc -public imsld::parse::parse_and_create_play {
                 $temporal_node appendChild $cpv
             }
             set change_property_value_xml [$temporal_node asXML]
+
+	    $temporal_doc delete
         }
 
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
@@ -3906,7 +3929,8 @@ ad_proc -public imsld::parse::parse_and_create_play {
                                            -manifest $manifest \
                                            -manifest_id $manifest_id \
                                            -parent_id $parent_id \
-                                           -tmp_dir $tmp_dir]
+                                           -tmp_dir $tmp_dir \
+					   -resource_handler $resource_handler]
                 set notification_id [lindex $notification_list 0]
                 if { !$notification_id } {
                     # an error occurred, return it
@@ -3952,6 +3976,7 @@ ad_proc -public imsld::parse::parse_and_create_notification {
     -manifest_id:required
     -parent_id:required
     -tmp_dir:required
+    {-resource_handler "file-storage"}
 } {
     Parse a notification and stores all the information in the database.
 
@@ -4175,6 +4200,8 @@ ad_proc -public imsld::parse::parse_and_create_if_then_else {
     }
     set xml_piece [$temporal_node asXML]
     
+    $temporal_doc delete
+
     set if_then_else_id [imsld::item_revision_new -attributes [list [list method_id $method_id] \
                                                                    [list condition_xml $xml_piece]] \
                              -content_type imsld_condition \
@@ -4559,6 +4586,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
             
             $temporal_node appendChild $when_prop_value_is_set
             set when_prop_value_is_set_xml [$temporal_node asXML]
+
+	    $temporal_doc delete
         }
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
 								       [list time_string $time_string] \
@@ -4595,6 +4624,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                 $temporal_node appendChild $cpv
             }
             set change_property_value_xml [$temporal_node asXML]
+
+	    $temporal_doc delete
         }
 
 
@@ -4645,7 +4676,8 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                                            -manifest $manifest \
                                            -manifest_id $manifest_id \
                                            -parent_id $cr_folder_id \
-                                           -tmp_dir $tmp_dir]
+                                           -tmp_dir $tmp_dir \
+					   -resource_handler $resource_handler]
                 set notification_id [lindex $notification_list 0]
                 if { !$notification_id } {
                     # an error occurred, return it

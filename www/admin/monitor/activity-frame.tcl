@@ -523,6 +523,8 @@ if { $type eq "learning" || $type eq "support" } {
 		    $node appendChild $wpvis
 		    set xml [$node asXML]
 
+		    $doc delete
+
 		    set complete_act_id [imsld::item_revision_new -attributes [list [list when_prop_val_is_set_xml $xml]] \
 					     -content_type imsld_complete_act \
 					     -item_id $complete_act_id \

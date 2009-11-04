@@ -68,7 +68,7 @@ ad_proc -public imsld::fs::file_new {
         set count_x 0
         # search in the dir contents
         foreach contentsx [lindex $dirx 1] {
-            if { [lsearch -exact [string tolower $contentsx] [string tolower $complete_path]] >= 0 && [string eq [lindex $contentsx 1] $type] } {
+            if { [lsearch -exact $contentsx $complete_path] >= 0 && [string eq [lindex $contentsx 1] $type] } {
                 # file found, see if the parent dir is created
                 set found_p 1
                 # have we already created this file?

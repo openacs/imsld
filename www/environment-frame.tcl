@@ -36,3 +36,5 @@ if { [$dom_root hasChildNodes]} {
     set environments [$dom_root asXML]
 }
 
+$doc delete
+

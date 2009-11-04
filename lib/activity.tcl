@@ -123,6 +123,7 @@ switch $type {
 	db_1row get_activity_structure_info { *SQL* }
 	set started_p [db_0or1row as_started_p { *SQL* }]
 	set completed_p [db_0or1row as_completed_p { *SQL* }]
+	set completion_restriction [imsld::structure_completion_resctriction_p -run_id $run_id -structure_item_id $structure_item_id]
 
 	if { $started_p } {
 	    if { $completed_p } {
@@ -151,7 +152,7 @@ switch $type {
 		    and status = 'finished'
 		}]
 
-		if { $activity_type ne "imsld_as_as_rel" } {
+		if { $activity_type ne "structure" } {
 		    set visible_p [db_string get_visible {
 			select attr.is_visible_p
 			from imsld_attribute_instances attr
@@ -164,9 +165,26 @@ switch $type {
 		    set visible_p t
 		}
 
+		set complete_act_id ""
+		if { $activity_type eq "learning" } {
+		    set complete_act_id [db_string completion_restriction {
+			select complete_act_id 
+			from imsld_learning_activities
+			where activity_id = :activity_id
+		    } -default ""]		    
+		} elseif { $activity_type eq "support" } {
+		    set complete_act_id [db_string completion_restriction {
+			select complete_act_id 
+			from imsld_support_activities
+			where activity_id = :activity_id
+		    } -default ""]		    
+		}
+
 		if { $visible_p && (($structure_type eq "selection")
 				    || ([lsearch -exact $next_activity_id_list $activity_id] != -1)
-				    || $completed_activity_p)
+				    || !$completion_restriction
+				    || $completed_activity_p
+				    || $complete_act_id eq "" )
 		     || !$completion_restriction} {
 		    multirow append referenced_activities $object_id_two $rel_type $rel_id $sort_order $activity_type $activity_id
 		}

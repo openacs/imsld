@@ -987,4 +987,7 @@ if {![llength [$head_node selectNodes {/*[local-name()='base']}]]} {
 
 set xmloutput {<?xml version="1.0" encoding="UTF-8"?>}
 append xmloutput [$dom_root asXML]
+
+$dom_doc delete
+
 ns_return 200 text/html $xmloutput

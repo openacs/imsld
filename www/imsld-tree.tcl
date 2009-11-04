@@ -112,7 +112,7 @@ if { $user_role_id == -1 } {
         $aux_dom_root setAttribute class "mktree"
         set aux_title_node [$aux_doc createElement li]
         $aux_title_node setAttribute class "liOpen"
-        set text [$doc createTextNode "[_ imsld.Extra_Activities]"] 
+        set text [$aux_doc createTextNode "[_ imsld.Extra_Activities]"] 
         $aux_title_node appendChild $text
         $aux_dom_root appendChild $aux_title_node
         
@@ -125,6 +125,8 @@ if { $user_role_id == -1 } {
         $aux_title_node appendChild $aux_activities_node
         
         set aux_html_tree [$aux_dom_root asXML]
+
+	$aux_doc delete
     } else {
         set aux_html_tree ""
     }

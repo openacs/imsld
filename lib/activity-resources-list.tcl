@@ -36,3 +36,5 @@ if { $monitor_p } {
 			  $li_node appendChild $choose_node
 			  $li_node appendChild [$dom_doc createTextNode {]}]
 }
+
+$dom_doc delete

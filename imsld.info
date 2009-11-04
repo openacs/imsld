@@ -18,9 +18,9 @@
         <maturity>0</maturity>
 
         <provides url="imsld" version="2.0"/>
-        <requires url="acs-content-repository" version="5.5.0"/>
-        <requires url="acs-kernel" version="5.5.0"/>
-        <requires url="acs-templating" version="5.5.0"/>
+        <requires url="acs-content-repository" version="5.4.0"/>
+        <requires url="acs-kernel" version="5.4.0"/>
+        <requires url="acs-templating" version="5.4.0"/>
 
         <callbacks>
             <callback type="after-install"  proc="imsld::apm_callback::after_install"/>

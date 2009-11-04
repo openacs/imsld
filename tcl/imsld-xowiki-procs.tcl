@@ -229,6 +229,7 @@ ad_proc -public imsld::xowiki::convert_syntax {
     }
 
     set wiki_content [$root asXML]
+    $document delete
 
     return $wiki_content    
 }

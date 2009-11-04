@@ -118,7 +118,7 @@ if {[llength $supported_roles]} {
     set roles_template_p 1 
 }
 
-if { !$roles_template_p } {
+if { 1 || !$roles_template_p } {
 
     dom createDocument div doc
     set dom_root [$doc documentElement]
@@ -166,6 +166,8 @@ if { !$roles_template_p } {
     }
     
     set activities [$dom_root asXML] 
+
+    $doc delete
 
 } else {
     # a user has been selected to be supported
