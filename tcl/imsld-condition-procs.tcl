@@ -18,7 +18,7 @@ ad_proc -public imsld::condition::execute_all {
 } {
 } {
     if {![info exist user_id]} {
-    	set user_id [ad_conn user_id] 
+        set user_id [ad_conn user_id] 
     }
 
     set imsld_rev_id [db_string get_imsld_rev_id {SELECT imsld_id FROM imsld_runs WHERE run_id = :run_id}]
@@ -32,7 +32,7 @@ ad_proc -public imsld::condition::execute_all {
         dom parse $condition_xml document
         $document documentElement condition
         imsld::condition::execute -run_id $run_id -condition $condition -user_id $user_id
-	$document delete
+        $document delete
     }
 }
 
@@ -45,7 +45,7 @@ ad_proc -public imsld::condition::execute {
     upvar recursivity_count recursivity_count
 
     if {![info exist user_id]} {
-	    set user_id [ad_conn user_id] 
+        set user_id [ad_conn user_id] 
     }
     set ifNodes [$condition selectNodes {*[local-name()='if']}]
     set thenNodes [$condition selectNodes {*[local-name()='then']}]
@@ -58,7 +58,7 @@ ad_proc -public imsld::condition::execute {
         } else {
             foreach elseNode $elseNodes {
                 #an else node may contain an expression or another if_then_else
-#prevent for empty else nodes
+                #prevent for empty else nodes
                 if {[$elseNode hasChildNodes]} {
                     if { [string eq [ [$elseNode selectNodes {*[position()=1] } ] localName] "if" ] } {
                         imsld::condition::execute -run_id $run_id -condition $elseNode -user_id $user_id
@@ -94,7 +94,7 @@ ad_proc -public imsld::condition::execute_time_role_conditions {
         dom parse $condition_xml document
         $document documentElement condition_node
         imsld::condition::execute -run_id $run_id -condition $condition_node
-	$document delete
+        $document delete
     }
 }
 
@@ -438,12 +438,12 @@ ad_proc -public imsld::expression::eval {
                             and ila.identifier=:la_ref
                         }
                         set return_value [db_0or1row la_finished_p {
-                                                                   select 1 
-                                                                   from imsld_status_user
-                                                                   where status='finished' 
-                                                                         and related_id=:la_id 
-                                                                         and user_id=:user_id
-                                                                         and run_id=:run_id
+                            select 1 
+                            from imsld_status_user
+                            where status='finished' 
+                            and related_id=:la_id 
+                            and user_id=:user_id
+                            and run_id=:run_id
                         }]
                     }
                     {support-activity-ref} {
@@ -463,12 +463,12 @@ ad_proc -public imsld::expression::eval {
                             isa.identifier=:sa_ref 
                         }
                         set return_value [db_0or1row la_finished_p {
-                                                                   select 1 
-                                                                   from imsld_status_user
-                                                                   where status='finished' 
-                                                                         and related_id=:sa_id 
-                                                                         and user_id=:user_id
-                                                                         and run_id=:run_id
+                            select 1 
+                            from imsld_status_user
+                            where status='finished' 
+                            and related_id=:sa_id 
+                            and user_id=:user_id
+                            and run_id=:run_id
                         }]
                     }
                     {unit-of-learning-href} {
@@ -648,14 +648,14 @@ ad_proc -public imsld::statement::execute {
     upvar recursivity_count recursivity_count
 
     if {![info exist user_id]} {
-	set user_id [ad_conn user_id] 
+        set user_id [ad_conn user_id] 
     }
     ns_log Notice "statement::execute with user_id: $user_id"
     foreach executeNode $statement {
         switch -- [$executeNode localName] {
             {show} {
                 foreach refNodes [$executeNode childNodes] {
-                   switch -- [$refNodes localName] {
+                    switch -- [$refNodes localName] {
                         {class} {
                             set class [$refNodes getAttribute class ""]
                             set title [$refNodes getAttribute title ""]
@@ -667,36 +667,36 @@ ad_proc -public imsld::statement::execute {
                                 continue
                             }
                             imsld::runtime::class::show_hide -class $class -run_id $run_id -title $title \
-				-with_control_p $with_control_p -action "show" -user_id $user_id
+                                -with_control_p $with_control_p -action "show" -user_id $user_id
                         }
                         {environment-ref} {
                             # the environments doesn't have any isvisible attribute, 
                             # so we have to 'show' all the referenced elements
-                           imsld::runtime::environment::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "show" -user_id $user_id
+                            imsld::runtime::environment::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
+                                -action "show" -user_id $user_id
                         }
                         {activity-structure-ref} {
                             imsld::runtime::activity_structure::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "show"
+                                -action "show"
                         }
                         {unit-of-learning-href} {
                             # NOT IMPLEMENTED: noop
                         }
                         {item-ref} {
                             imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "show" -user_id $user_id
+                                -action "show" -user_id $user_id
                         }
                         {learning-activity-ref} {
                             imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "show" -user_id $user_id
+                                -action "show" -user_id $user_id
                         }
                         {support-activity-ref} {
                             imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "show" -user_id $user_id
+                                -action "show" -user_id $user_id
                         }
                         {play-ref} {
                             imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "show" -user_id $user_id
+                                -action "show" -user_id $user_id
                         }
                     }
                 }
@@ -715,37 +715,37 @@ ad_proc -public imsld::statement::execute {
                                 continue
                             }
                             imsld::runtime::class::show_hide -class $class -run_id $run_id -title $title \
-                                                             -with_control_p $with_control_p \
-				-action "hide" -user_id $user_id
+                                -with_control_p $with_control_p \
+                                -action "hide" -user_id $user_id
                         }
                         {environment-ref} {
                             # the environments doesn't have any isvisible attribute, 
                             # so we have to 'hide' all the referenced elements
                             imsld::runtime::environment::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "hide" -user_id $user_id
+                                -action "hide" -user_id $user_id
                         }
                         {activity-structure-ref} {
                             imsld::runtime::activity_structure::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "hide"
+                                -action "hide"
                         }
                         {unit-of-learning-href} {
                             # NOT IMPLEMENTED: noop
                         }
                         {item-ref} {
                             imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "hide" -user_id $user_id
+                                -action "hide" -user_id $user_id
                         }
                         {learning-activity-ref} {
                             imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "hide" -user_id $user_id
+                                -action "hide" -user_id $user_id
                         }
                         {support-activity-ref} {
                             imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "hide" -user_id $user_id
+                                -action "hide" -user_id $user_id
                         }
                         {play-ref} {
                             imsld::runtime::isvisible::show_hide -run_id $run_id -identifier [$refNodes getAttribute "ref"] \
-				-action "hide" -user_id $user_id
+                                -action "hide" -user_id $user_id
                         }
                     }
                 }
@@ -768,8 +768,8 @@ ad_proc -public imsld::statement::execute {
                                 #gsi-hook for external-value type. 
                                 #The value will be extracted from the proper service
                                 set propertyValue [imsld::gsi::get_external_value -run_id $run_id \
-                                                                                  -user_id $user_id \
-                                                                                  -node $propertyvalueChildNode]
+                                                       -user_id $user_id \
+                                                       -node $propertyvalueChildNode]
                             }
                         }
                     }
@@ -778,7 +778,7 @@ ad_proc -public imsld::statement::execute {
                     }
                 }
                 imsld::runtime::property::property_value_set -run_id $run_id -user_id $user_id \
-		    -identifier [$propertyref getAttribute {ref}] -value $propertyValue
+                    -identifier [$propertyref getAttribute {ref}] -value $propertyValue
             }
             {notification} {
                 set activity_id ""
