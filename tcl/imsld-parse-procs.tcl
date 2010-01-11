@@ -2357,7 +2357,7 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
 
             set expression_xml [$temporal_node asXML]
 
-	    $temporal_doc delete
+            $temporal_doc delete
         }
     }
 
@@ -2501,12 +2501,12 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             $temporal_node appendChild $when_prop_value_is_set
             set when_prop_value_is_set_xml [$temporal_node asXML]
 
-	    $temporal_doc delete
         }
-        set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
-								       [list time_string $time_string] \
-                                                                       [list user_choice_p $user_choice_p] \
-                                                                       [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
+        set complete_act_id [imsld::item_revision_new \
+                                 -attributes [list [list time_in_seconds $time_in_seconds] \
+                                                  [list time_string $time_string] \
+                                                  [list user_choice_p $user_choice_p] \
+                                                  [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
                                  -content_type imsld_complete_act \
                                  -parent_id $parent_id]
 
@@ -2518,6 +2518,10 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                 # map the property with the complete_act_id
                 relation_add imsld_prop_wpv_is_rel $property_id $complete_act_id
             }
+        }
+
+        if { $temporal_doc ne "" } {
+            $temporal_doc delete
         }
 
     }
@@ -2539,7 +2543,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             }
             set change_property_value_xml [$temporal_node asXML]
 
-	    $temporal_doc delete
+            $temporal_doc delete
         }
 
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
@@ -2671,13 +2675,14 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     set activity_description [$activity_node selectNodes "*\[local-name()='activity-description'\]"] 
     imsld::parse::validate_multiplicity -tree $activity_description -multiplicity 1 -element_name activity-description(support-activity) -equal
     set title [expr { [string eq "" $title] ? "[imsld::parse::get_title -node $activity_description -prefix imsld]" : "$title" }]
-    set activity_description_list [imsld::parse::parse_and_create_activity_description -activity_description_node $activity_description \
+    set activity_description_list [imsld::parse::parse_and_create_activity_description \
+                                       -activity_description_node $activity_description \
                                        -manifest_id $manifest_id \
                                        -manifest $manifest \
                                        -activity_name $title \
                                        -parent_id $parent_id \
                                        -tmp_dir $tmp_dir \
-				       -resource_handler $resource_handler ]
+                                       -resource_handler $resource_handler ]
 
     set activity_description_id [lindex $activity_description_list 0]
     if { !$activity_description_id } {
@@ -2727,12 +2732,12 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             $temporal_node appendChild $when_prop_value_is_set
             set when_prop_value_is_set_xml [$temporal_node asXML]
 
-	    $temporal_doc delete
         }
-        set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
-								       [list time_string $time_string] \
-                                                                       [list user_choice_p $user_choice_p] \
-                                                                       [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
+        set complete_act_id [imsld::item_revision_new \
+                                 -attributes [list [list time_in_seconds $time_in_seconds] \
+                                                  [list time_string $time_string] \
+                                                  [list user_choice_p $user_choice_p] \
+                                                  [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
                                  -content_type imsld_complete_act \
                                  -parent_id $parent_id]
 
@@ -2744,6 +2749,10 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                 # map the property with the complete_act_id
                 relation_add imsld_prop_wpv_is_rel $property_id $complete_act_id
             }
+        }
+
+        if { $temporal_doc ne "" } {
+            $temporal_doc delete
         }
 
     }
@@ -2767,7 +2776,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             }
             set change_property_value_xml [$temporal_node asXML]
 
-	    $temporal_doc delete
+            $temporal_doc delete
         }
 
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
@@ -2802,13 +2811,14 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     }
 
     # crete support activity
-    set support_activity_id [imsld::item_revision_new -attributes [list [list identifier $identifier] \
-                                                                       [list component_id $component_id] \
-                                                                       [list activity_description_id $activity_description_id] \
-                                                                       [list parameters $parameters] \
-                                                                       [list is_visible_p $is_visible_p] \
-                                                                       [list complete_act_id $complete_act_id] \
-                                                                       [list on_completion_id $on_completion_id]] \
+    set support_activity_id [imsld::item_revision_new \
+                                 -attributes [list [list identifier $identifier] \
+                                                  [list component_id $component_id] \
+                                                  [list activity_description_id $activity_description_id] \
+                                                  [list parameters $parameters] \
+                                                  [list is_visible_p $is_visible_p] \
+                                                  [list complete_act_id $complete_act_id] \
+                                                  [list on_completion_id $on_completion_id]] \
                                  -content_type imsld_support_activity \
                                  -title $title \
                                  -parent_id $parent_id]
@@ -2819,13 +2829,14 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
         set notifications_list [$on_completion selectNodes "*\[local-name()='notification'\]"] 
         if { [llength $notifications_list] } {
             foreach notification $notifications_list {
-                set notification_list [imsld::parse::parse_and_create_notification -component_id $component_id \
+                set notification_list [imsld::parse::parse_and_create_notification \
+                                           -component_id $component_id \
                                            -notification_node $notification \
                                            -manifest $manifest \
                                            -manifest_id $manifest_id \
                                            -parent_id $parent_id \
                                            -tmp_dir $tmp_dir \
-					   -resource_handler $resource_handler]
+                                           -resource_handler $resource_handler]
                 set notification_id [lindex $notification_list 0]
                 if { !$notification_id } {
                     # an error occurred, return it
@@ -2925,11 +2936,12 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
     }
     
     # crete activity structure
-    set activity_structure_id [imsld::item_revision_new -attributes [list [list identifier $identifier] \
-                                                                         [list number_to_select $number_to_select] \
-                                                                         [list sort $sort] \
-                                                                         [list structure_type $structure_type] \
-                                                                         [list component_id $component_id]] \
+    set activity_structure_id [imsld::item_revision_new \
+                                   -attributes [list [list identifier $identifier] \
+                                                    [list number_to_select $number_to_select] \
+                                                    [list sort $sort] \
+                                                    [list structure_type $structure_type] \
+                                                    [list component_id $component_id]] \
                                    -content_type imsld_activity_structure \
                                    -title $title \
                                    -parent_id $parent_id]
@@ -2943,22 +2955,22 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
             return [list 0 "[_ imsld.lt_Information_given_but_1]"]
         }
 
-	foreach information_item $information_item_list {
-	    set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
-			       -manifest_id $manifest_id \
-			       -item_node $information_item \
-			       -parent_id $parent_id \
-			       -tmp_dir $tmp_dir \
-			       -resource_handler $resource_handler ]
+        foreach information_item $information_item_list {
+            set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
+                               -manifest_id $manifest_id \
+                               -item_node $information_item \
+                               -parent_id $parent_id \
+                               -tmp_dir $tmp_dir \
+                               -resource_handler $resource_handler ]
 	    
-	    set information_id [lindex $item_list 0]
-	    if { !$information_id } {
-		# an error happened, abort and return the list whit the error
-		return $item_list
-	    }
-	    # map information item with the activity structure
-	    relation_add imsld_as_info_i_rel $activity_structure_id $information_id
-	}
+            set information_id [lindex $item_list 0]
+            if { !$information_id } {
+                # an error happened, abort and return the list whit the error
+                return $item_list
+            }
+            # map information item with the activity structure
+            relation_add imsld_as_info_i_rel $activity_structure_id $information_id
+        }
     }
 
     # store the order of the activities to display them later in the correct order
@@ -3572,7 +3584,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
             $temporal_node appendChild $when_prop_value_is_set
             set when_prop_value_is_set_xml [$temporal_node asXML]
 
-	    $temporal_doc delete
+            $temporal_doc delete
         }
         # Act: Complete Act: When Condition True
         set when_condition_true [$complete_act selectNodes "*\[local-name()='when-condition-true'\]"] 
@@ -3613,17 +3625,18 @@ ad_proc -public imsld::parse::parse_and_create_act {
                 relation_add imsld_prop_whct_rel $property_id $when_condition_true_id 
             }
 
-	    $temporal_doc delete
+            $temporal_doc delete
         }
         
-	if { ![string eq "" $time_in_seconds] || ![string eq "" $when_prop_value_is_set_xml] ||![string eq "" $when_condition_true_id]  } {
-	    set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
-									   [list time_string $time_string] \
-									   [list when_condition_true_id $when_condition_true_id] \
-									   [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
-				     -content_type imsld_complete_act \
-				     -parent_id $parent_id]
-	}
+        if { ![string eq "" $time_in_seconds] || ![string eq "" $when_prop_value_is_set_xml] ||![string eq "" $when_condition_true_id]  } {
+	    set complete_act_id [imsld::item_revision_new \
+                                 -attributes [list [list time_in_seconds $time_in_seconds] \
+                                                  [list time_string $time_string] \
+                                                  [list when_condition_true_id $when_condition_true_id] \
+                                                  [list when_prop_val_is_set_xml $when_prop_value_is_set_xml]] \
+                                 -content_type imsld_complete_act \
+                                 -parent_id $parent_id]
+        }
 
         if { [llength $when_prop_value_is_set] } {
             #search properties in expression 
@@ -3655,7 +3668,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
             }
             set change_property_value_xml [$temporal_node asXML]
 
-	    $temporal_doc delete
+            $temporal_doc delete
         }
 
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
@@ -3673,7 +3686,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
                                    -item_node $feedback_item \
                                    -parent_id $parent_id \
                                    -tmp_dir $tmp_dir \
-				   -resource_handler $resource_handler ]
+                                   -resource_handler $resource_handler ]
                 set item_id [lindex $item_list 0]
                 if { !$item_id } {
                     # an error happened, abort and return the list whit the error
