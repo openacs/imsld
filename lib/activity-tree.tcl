@@ -35,32 +35,32 @@ foreach role_part_list [db_list_of_lists referenced_role_parts { *SQL* }] {
     set play_id [lindex $role_part_list 5]
 
     set completed_p [db_0or1row already_completed {
-	select 1 from imsld_status_user 
-	where related_id = :activity_id 
-	and user_id = :user_id 
-	and run_id = :run_id
-	and status = 'finished'
+        select 1 from imsld_status_user 
+        where related_id = :activity_id 
+        and user_id = :user_id 
+        and run_id = :run_id
+        and status = 'finished'
     }]
 
     if {$type ne {structure}} {
-	set visible_p [db_string get_visible {
-	    select attr.is_visible_p
-	    from imsld_attribute_instances attr
-	    where attr.owner_id = :activity_id
-	    and attr.run_id = :run_id
-	    and attr.user_id = :user_id
-	    and attr.type = 'isvisible'
-	}]
+        set visible_p [db_string get_visible {
+            select attr.is_visible_p
+            from imsld_attribute_instances attr
+            where attr.owner_id = :activity_id
+            and attr.run_id = :run_id
+            and attr.user_id = :user_id
+            and attr.type = 'isvisible'
+        }]
 
-	if { $visible_p && ($completed_p || [lsearch -exact $next_activity_id_list $activity_id] != -1)} {
-	    multirow append activities $activity_id $type $play_id $act_id $role_part_id
-	}
+        if { $visible_p && ($completed_p || [lsearch -exact $next_activity_id_list $activity_id] != -1)} {
+            multirow append activities $activity_id $type $play_id $act_id $role_part_id
+        }
 
     } else {
 
-	set started_p [db_0or1row as_started_p { *SQL* }]
-	if { $started_p } {
-	    multirow append activities $activity_id $type $play_id $act_id $role_part_id
-	}
+        set started_p [db_0or1row as_started_p { *SQL* }]
+        if { $started_p } {
+            multirow append activities $activity_id $type $play_id $act_id $role_part_id
+        }
     }
 }
