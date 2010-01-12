@@ -913,7 +913,8 @@
             where ilai.item_id=ar.object_id_one 
                   and ar.rel_type='imsld_ilm_cond_rel' 
                   and ilai.${element_name}=:element_id
-                  and ici.item_id=ar.object_id_two;
+                  and ici.item_id=ar.object_id_two
+            order by ici.condition_id
 		</querytext>
 	</fullquery>
     
@@ -2057,7 +2058,7 @@
 		  and attr.run_id = :run_id
 		  and attr.user_id = :user_id
 		  and attr.type = 'isvisible'
-
+          and attr.is_visible_p = 't'
 		</querytext>
 	</fullquery>
 
@@ -2088,6 +2089,7 @@
                     and attr.run_id = :run_id
                     and attr.user_id = :user_id
                     and attr.type = 'isvisible'
+                    and attr.is_visible_p = 't'
                 
 		</querytext>
 	</fullquery>
@@ -2124,7 +2126,7 @@
                     select 1 from imsld_status_user
                     where related_id = :structure_id 
                     and user_id = :user_id 
-                    and status = 'finish'
+                    and status = 'finished'
                     and run_id = :run_id
                 
 		</querytext>
@@ -2201,6 +2203,7 @@
                     and attr.run_id = :run_id
                     and attr.user_id = :user_id
                     and attr.type = 'isvisible'
+                    and attr.is_visible_p = 't'
                     
 		</querytext>
 	</fullquery>
@@ -2219,6 +2222,7 @@
                     and attr.run_id = :run_id
                     and attr.user_id = :user_id
                     and attr.type = 'isvisible'
+                    and attr.is_visible_p = 't'
                     
 		</querytext>
 	</fullquery>
