@@ -285,6 +285,7 @@ ad_proc -public imsld::runtime::property::property_value_set {
 	    and ipi.item_id = ar.object_id_one 
 	    and ar.rel_type = 'imsld_prop_cond_rel' 
 	    and ar.object_id_two = ici.item_id
+            order by ici.condition_id
         }]
         #property conditions
         foreach member_id [db_list user_in_run { 
@@ -529,7 +530,7 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
     -action
     -user_id
 } {
-    mark an activity structure as showh or hidden. NOTE: not recursively
+    mark an activity structure as show or hidden. NOTE: not recursively
 } {
     if {![info exist user_id]} {
         set user_id [ad_conn user_id]
@@ -592,6 +593,7 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
         and ar.object_id_two = ias.item_id
     } {
         imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $structure_identifier -action $action -user_id $user_id
+        imsld::runtime::activity_structure::show_hide -run_id $run_id -identifier $structure_identifier -action $action -user_id $user_id
     }
 
     # 5. show the environments
