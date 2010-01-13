@@ -530,12 +530,13 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
     -action
     -user_id
 } {
-    mark an activity structure as show or hidden. NOTE: not recursively
+    mark an activity structure as show or hidden.
 } {
     if {![info exist user_id]} {
         set user_id [ad_conn user_id]
     }
-    # according to the spec, the activity structures doesn't have any isvisible attribute
+ 
+   # according to the spec, the activity structures doesn't have any isvisible attribute
     # so we show the referenced activities, learning infos and environments
 
     db_1row context_info {
@@ -592,7 +593,6 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
         where ar.object_id_one = :structure_item_id
         and ar.object_id_two = ias.item_id
     } {
-        imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $structure_identifier -action $action -user_id $user_id
         imsld::runtime::activity_structure::show_hide -run_id $run_id -identifier $structure_identifier -action $action -user_id $user_id
     }
 
@@ -607,6 +607,61 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
         imsld::runtime::isvisible::show_hide -run_id $run_id -identifier $env_identifier -action $action -user_id $user_id
     }
     
+}
+
+ad_proc -public imsld::runtime::activity_structure::has_visible_child_p {
+    -run_id:required
+    -user_id:required
+    -structure_id:required
+} {
+    Returns true if any descendant of the structure is visible. (Recursive)
+} {
+
+
+    set has_visible_child_p 0
+
+    set child_count [db_string get_childs {
+        select count(ica.child_item_id)
+        from
+        (select ar.object_id_two as child_item_id
+         from imsld_activity_structuresi ias, acs_rels ar    
+         where ar.object_id_one = ias.item_id 
+         and ias.structure_id = :structure_id
+         and ar.rel_type in ('imsld_as_la_rel','imsld_as_sa_rel')
+         ) ica
+        left join imsld_attribute_instances iai on (iai.owner_id = content_item__get_live_revision(ica.child_item_id))
+        where iai.is_visible_p = 't'
+        and iai.run_id = :run_id
+        and iai.user_id = :user_id
+    }]
+
+    if { $child_count > 0 } {
+
+        set has_visible_child_p 1
+
+    } else {
+
+        db_foreach get_child_structures {
+            select cr.live_revision as child_structure_id 
+            from imsld_activity_structuresi ias, acs_rels ar, cr_items cr  
+            where ar.object_id_one = ias.item_id 
+              and ias.structure_id = :structure_id
+              and ar.rel_type = 'imsld_as_as_rel'
+              and cr.item_id = ar.object_id_two
+        } {
+            set has_visible_child_p [imsld::runtime::activity_structure::has_visible_child_p \
+                                         -run_id $run_id \
+                                         -user_id $user_id \
+                                         -structure_id $child_structure_id]
+
+            if { $has_visible_child_p } {
+                break
+            }
+        }
+
+    }
+
+    return $has_visible_child_p
 }
 
 ad_proc -public imsld::runtime::users_in_run { 

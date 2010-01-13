@@ -59,7 +59,11 @@ foreach role_part_list [db_list_of_lists referenced_role_parts { *SQL* }] {
     } else {
 
         set started_p [db_0or1row as_started_p { *SQL* }]
-        if { $started_p } {
+        set has_visible_child_p [imsld::runtime::activity_structure::has_visible_child_p \
+                                     -run_id $run_id \
+                                     -user_id $user_id \
+                                     -structure_id $activity_id]
+        if { $started_p && $has_visible_child_p } {
             multirow append activities $activity_id $type $play_id $act_id $role_part_id
         }
     }
