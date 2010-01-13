@@ -222,6 +222,7 @@ ad_proc -public imsld::sweep_expired_activities {
                 and ar.rel_type='imsld_ilm_cond_rel' 
                 and ilai.play_id=:play_id
                 and ici.item_id=ar.object_id_two
+                order by ici.condition_id
             }] { 
                 dom parse $condition_xml document
                 $document documentElement condition_node
@@ -262,6 +263,7 @@ ad_proc -public imsld::sweep_expired_activities {
                 and ar.rel_type='imsld_ilm_cond_rel' 
                 and ilai.act_id=:act_id
                 and ici.item_id=ar.object_id_two
+                order by ici.condition_id
             }] { 
                 dom parse $condition_xml document
                 $document documentElement condition_node
@@ -315,6 +317,7 @@ ad_proc -public imsld::sweep_expired_activities {
                         and ar.rel_type='imsld_ilm_cond_rel' 
                         and ilai.activity_id=:activity_id
                         and ici.item_id=ar.object_id_two
+                        order by ici.condition_id
                     }] { 
                         dom parse $condition_xml document
                         $document documentElement condition_node
@@ -370,6 +373,7 @@ ad_proc -public imsld::sweep_expired_activities {
                         and ar.rel_type='imsld_ilm_cond_rel' 
                         and ilai.activity_id=:activity_id
                         and ici.item_id=ar.object_id_two
+                        order by ici.condition_id
                     }] { 
                         dom parse $condition_xml document
                         $document documentElement condition_node
@@ -439,6 +443,7 @@ ad_proc -public imsld::finish_expired_activity {
                         and ar.rel_type='imsld_ilm_cond_rel' 
                         and ilai.play_id=:play_id
                         and ici.item_id=ar.object_id_two
+                        order by ici.condition_id
                     }] { 
                         dom parse $condition_xml document
                         $document documentElement condition_node
@@ -476,6 +481,7 @@ ad_proc -public imsld::finish_expired_activity {
                         and ar.rel_type='imsld_ilm_cond_rel' 
                         and ilai.act_id=:act_id
                         and ici.item_id=ar.object_id_two
+                        order by ici.condition_id
                     }] { 
                         dom parse $condition_xml document
                         $document documentElement condition_node
@@ -529,6 +535,7 @@ ad_proc -public imsld::finish_expired_activity {
                                 and ar.rel_type='imsld_ilm_cond_rel' 
                                 and ilai.activity_id=:activity_id
                                 and ici.item_id=ar.object_id_two
+                                order by ici.condition_id
                             }] { 
                                 dom parse $condition_xml document
                                 $document documentElement condition_node
@@ -585,6 +592,7 @@ ad_proc -public imsld::finish_expired_activity {
                                 and ar.rel_type='imsld_ilm_cond_rel' 
                                 and ilai.activity_id=:activity_id
                                 and ici.item_id=ar.object_id_two
+                                order by ici.condition_id
                             }] { 
                                 dom parse $condition_xml document
                                 $document documentElement condition_node
@@ -4210,11 +4218,13 @@ ad_proc -public imsld::get_next_activity_list {
     # search trough each play
     foreach play_list [db_list_of_lists imsld_plays {
         select ip.play_id,
-        ip.item_id
-        from imsld_playsi ip, imsld_methodsi im
+        ip.item_id, ip.identifier
+        from imsld_playsi ip, imsld_methodsi im, imsld_attribute_instances iai
         where ip.method_id = im.item_id
         and im.imsld_id = :imsld_item_id
         and content_revision__is_live(ip.play_id) = 't'
+        and iai.owner_id = ip.play_id
+        and iai.is_visible_p = 't'
     }] {
         set play_id [lindex $play_list 0]
         set play_item_id [lindex $play_list 1]
@@ -4246,7 +4256,7 @@ ad_proc -public imsld::get_next_activity_list {
                 and iii.imsld_id=ir.imsld_id 
                 and imi.imsld_id=iii.item_id 
                 and imi.item_id=ipi.method_id 
-                and iai.play_id=ipi.item_id
+                and iai.play_id = :play_item_id
                 order by iai.sort_order
             }]
             
@@ -4385,11 +4395,11 @@ ad_proc -public imsld::get_next_activity_list {
                 where role_part_id = :role_part_id
             }
             # activity structure
-            if { [string eq $activity_type structure] } {
+            if { $activity_type eq "structure" } {
                 # activity structure. we have to look for the next learning or support activity
                 set activity_list [imsld::structure_next_activity -activity_structure_id $next_activity_id -imsld_id $imsld_id -run_id $run_id -role_part_id $role_part_id]
                 set next_activity_id [lindex $activity_list 0]
-            }
+            } 
             lappend next_activity_id_list $next_activity_id
         }
     }
