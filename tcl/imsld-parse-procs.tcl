@@ -2520,7 +2520,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             }
         }
 
-        if { $temporal_doc ne "" } {
+        if { [exists_and_not_null temporal_doc] } {
             $temporal_doc delete
         }
 
@@ -2751,7 +2751,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             }
         }
 
-        if { $temporal_doc ne "" } {
+        if { [exists_and_not_null temporal_doc] } {
             $temporal_doc delete
         }
 
