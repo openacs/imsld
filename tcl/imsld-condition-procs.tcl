@@ -651,11 +651,11 @@ ad_proc -public imsld::statement::execute {
     if {![info exist user_id]} {
         set user_id [ad_conn user_id] 
     }
-    ns_log Notice "statement::execute with user_id: $user_id"
+    ns_log Debug "statement::execute with user_id: $user_id"
     foreach executeNode $statement {
         set action [$executeNode localName]
         switch -- $action {
-            {show - hide} {
+            show - hide {
                 foreach refNodes [$executeNode childNodes] {
                     switch -- [$refNodes localName] {
                         {class} {
