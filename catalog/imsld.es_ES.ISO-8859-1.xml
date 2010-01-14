@@ -23,6 +23,7 @@
   <msg key="Community">Comunidad</msg>
   <msg key="Complete_Act">Acto completado</msg>
   <msg key="Complete_Acts">Actos completados</msg>
+  <msg key="completed">completado</msg>
   <msg key="Component_Identifier">Identificador de componente</msg>
   <msg key="Condition">Condición</msg>
   <msg key="conference">conferencia</msg>
@@ -127,6 +128,7 @@
   <msg key="IMS-LD_Title">Título IMS LD</msg>
   <msg key="IMS-LDs">IMS-LDs</msg>
   <msg key="IMS-LDs_1">Diseños de aprendizaje IMS</msg>
+  <msg key="IMS_LD_Level">Nivel IMS LD</msg>
   <msg key="IMS_LD_Name">Nombre de la unidad de aprendizaje</msg>
   <msg key="Individual_Report">Informe Individual</msg>
   <msg key="Information">Información</msg>
