@@ -2716,7 +2716,7 @@ ad_proc -public imsld::process_resource_as_ul {
             }
         }
         # get associated urls
-            
+        
         db_foreach associated_urls { *SQL* } {
             set a_node [$dom_doc createElement a]
             
