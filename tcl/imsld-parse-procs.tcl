@@ -2306,6 +2306,10 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
     @param activity_node The activity node to parse 
     @param parent_id Parent folder ID
 } {
+
+    # helper for temporal dom trees
+    set temporal_doc_list [list]
+
     # Property Ref
     set property_ref [$property_value_node selectNodes "*\[local-name()='property-ref'\]"]
     imsld::parse::validate_multiplicity -tree $property_ref -multiplicity 1 -element_name property-ref(property-value) -equal
@@ -2348,6 +2352,7 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
             imsld::parse::validate_multiplicity -tree $calculate -multiplicity 1 -element_name calculate(property-value) -equal
 
             set temporal_doc [dom createDocument calculate]
+            lappend temporal_doc_list $temporal_doc
             set temporal_node [$temporal_doc documentElement]
 
             # Expression
@@ -2357,7 +2362,6 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
 
             set expression_xml [$temporal_node asXML]
 
-            $temporal_doc delete
         }
     }
 
@@ -2367,6 +2371,8 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
                                                                      [list property_value_ref $property_id]] \
                                -content_type imsld_property_value \
                                -parent_id $parent_id]
+
+    imsld::parse::delete_trees -tree_list $temporal_doc_list
     return $property_value_id
 }
 
@@ -2393,6 +2399,9 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
 } {
     upvar files_struct_list files_struct_list
     upvar warnings warnings
+
+    # helper for temporal dom trees
+    set temporal_doc_list [list]
 
     # get the info of the learning activity and create it
     set identifier [imsld::parse::get_attribute -node $activity_node -attr_name identifier]
@@ -2496,6 +2505,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(learning-activity) -equal
             # create a node where the when-property-value-is-set will be stored
             set temporal_doc [dom createDocument when-property-value-is-set]
+            lappend temporal_doc_list $temporal_doc
             set temporal_node [$temporal_doc documentElement]
             
             $temporal_node appendChild $when_prop_value_is_set
@@ -2520,10 +2530,6 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             }
         }
 
-        if { [exists_and_not_null temporal_doc] } {
-            $temporal_doc delete
-        }
-
     }
 
     # Learning Activity: On Completion
@@ -2536,6 +2542,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
         if { [llength $change_property_value_list] } {
             # create a node where all the change-property-values will be stored
             set temporal_doc [dom createDocument change-property-values]
+            lappend temporal_doc_list $temporal_doc
             set temporal_node [$temporal_doc documentElement]
 
             foreach cpv $change_property_value_list {
@@ -2543,7 +2550,6 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             }
             set change_property_value_xml [$temporal_node asXML]
 
-            $temporal_doc delete
         }
 
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
@@ -2565,6 +2571,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                 set item_id [lindex $item_list 0]
                 if { !$item_id } {
                     # an error happened, abort and return the list whit the error
+                    imsld::parse::delete_trees -tree_list $temporal_doc_list
                     return $item_list
                 }
                 # map item with the learning objective
@@ -2577,15 +2584,16 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
         }
     }
     # crete learning activity
-    set learning_activity_id [imsld::item_revision_new -attributes [list [list identifier $identifier] \
-                                                                        [list component_id $component_id] \
-                                                                        [list activity_description_id $activity_description_id] \
-                                                                        [list parameters $parameters] \
-                                                                        [list is_visible_p $is_visible_p] \
-                                                                        [list complete_act_id $complete_act_id] \
-                                                                        [list on_completion_id $on_completion_id] \
-                                                                        [list learning_objective_id $learning_objective_id] \
-                                                                        [list prerequisite_id $prerequisite_id]] \
+    set learning_activity_id [imsld::item_revision_new \
+                                  -attributes [list [list identifier $identifier] \
+                                                   [list component_id $component_id] \
+                                                   [list activity_description_id $activity_description_id] \
+                                                   [list parameters $parameters] \
+                                                   [list is_visible_p $is_visible_p] \
+                                                   [list complete_act_id $complete_act_id] \
+                                                   [list on_completion_id $on_completion_id] \
+                                                   [list learning_objective_id $learning_objective_id] \
+                                                   [list prerequisite_id $prerequisite_id]] \
                                   -content_type imsld_learning_activity \
                                   -title $title \
                                   -parent_id $parent_id]
@@ -2606,6 +2614,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                 set notification_id [lindex $notification_list 0]
                 if { !$notification_id } {
                     # an error occurred, return it
+                    imsld::parse::delete_trees -tree_list $temporal_doc_list
                     return $notification_list
                 }
                 # map on_completion with the notif
@@ -2630,6 +2639,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
                 component_id = :component_id
             }] } {
                 # error, referenced environment does not exist
+                imsld::parse::delete_trees -tree_list $temporal_doc_list
                 return [list 0 "[_ imsld.lt_Referenced_environmen_1]"]
             }
 
@@ -2637,6 +2647,8 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
             relation_add imsld_la_env_rel $learning_activity_id $environment_id
         }
     }
+
+    imsld::parse::delete_trees -tree_list $temporal_doc_list
     return $learning_activity_id
 }
 
@@ -2664,6 +2676,9 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
 } {
     upvar files_struct_list files_struct_list
     upvar warnings warnings
+
+    # helper for temporal dom trees
+    set temporal_doc_list [list]
 
     # get the info of the support activity and create it
     set identifier [imsld::parse::get_attribute -node $activity_node -attr_name identifier]
@@ -2727,6 +2742,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(support-activity) -equal
             # create a node where the when-property-value-is-set will be stored
             set temporal_doc [dom createDocument when-property-value-is-set]
+            lappend temporal_doc_list $temporal_doc
             set temporal_node [$temporal_doc documentElement]
             
             $temporal_node appendChild $when_prop_value_is_set
@@ -2751,10 +2767,6 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             }
         }
 
-        if { [exists_and_not_null temporal_doc] } {
-            $temporal_doc delete
-        }
-
     }
 
     # Support Activity: On completion
@@ -2769,6 +2781,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
         if { [llength $change_property_value_list] } {
             # create a node where all the change-property-values will be stored
             set temporal_doc [dom createDocument change-property-values]
+            lappend temporal_doc_list $temporal_doc
             set temporal_node [$temporal_doc documentElement]
 
             foreach cpv $change_property_value_list {
@@ -2776,7 +2789,6 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             }
             set change_property_value_xml [$temporal_node asXML]
 
-            $temporal_doc delete
         }
 
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
@@ -2798,6 +2810,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                 set item_id [lindex $item_list 0]
                 if { !$item_id } {
                     # an error happened, abort and return the list whit the error
+                    imsld::parse::delete_trees -tree_list $temporal_doc_list
                     return $item_list
                 }
                 # map item with the support objective
@@ -2840,6 +2853,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                 set notification_id [lindex $notification_list 0]
                 if { !$notification_id } {
                     # an error occurred, return it
+                    imsld::parse::delete_trees -tree_list $temporal_doc_list
                     return $notification_list
                 }
 
@@ -2861,6 +2875,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             and component_id = :component_id
         }] } {
             # there is no role with that identifier, return the error
+            imsld::parse::delete_trees -tree_list $temporal_doc_list
             return [list 0 "[_ imsld.lt_There_is_no_role_with_5]"]
         }
         # map support activity with the role
@@ -2883,6 +2898,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
                 and component_id = :component_id
             }] } {
                 # error, referenced environment does not exist
+                imsld::parse::delete_trees -tree_list $temporal_doc_list
                 return [list 0 "[_ imsld.lt_Referenced_environmen_2]"]
             }
 
@@ -2890,6 +2906,8 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
             relation_add imsld_sa_env_rel $support_activity_id $environment_id
         }
     }
+
+    imsld::parse::delete_trees -tree_list $temporal_doc_list
     return $support_activity_id
 }
 
@@ -3556,6 +3574,9 @@ ad_proc -public imsld::parse::parse_and_create_act {
         and cr1.item_id = :play_id
     }
     
+    # helper list for killing temporal dom doc after used
+    set temporal_doc_list [list]
+
     # Act: Complete Act: Time Limit
     set complete_act [$act_node selectNodes "*\[local-name()='complete-act'\]"]
     set complete_act_id ""
@@ -3579,12 +3600,12 @@ ad_proc -public imsld::parse::parse_and_create_act {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(complete-act) -equal
             # create a node where the when-property-value-is-set will be stored
             set temporal_doc [dom createDocument when-property-value-is-set]
+            lappend temporal_doc_list $temporal_doc
             set temporal_node [$temporal_doc documentElement]
             
             $temporal_node appendChild $when_prop_value_is_set
             set when_prop_value_is_set_xml [$temporal_node asXML]
 
-            $temporal_doc delete
         }
         # Act: Complete Act: When Condition True
         set when_condition_true [$complete_act selectNodes "*\[local-name()='when-condition-true'\]"] 
@@ -3602,10 +3623,13 @@ ad_proc -public imsld::parse::parse_and_create_act {
                 and content_revision__is_live(ir.role_id) = 't' 
                 and ir.component_id = :component_id}] } {
                 # error, referenced role does not exist
+                # kill temporal dom trees then return
+                imsld::parse::delete_trees -tree_list $temporal_doc_list
                 return [list 0 "[_ imsld.lt_Referenced_role_role_]"]
             }
             #select all but role-ref that is: select the expression node
             set temporal_doc [dom createDocument expression]
+            lappend temporal_doc_list $temporal_doc
             set temporal_node [$temporal_doc documentElement]
             set expression [$when_condition_true selectNodes "*\[not(local-name()='role-ref')\]"]
             $temporal_node appendChild $expression
@@ -3624,8 +3648,6 @@ ad_proc -public imsld::parse::parse_and_create_act {
                 # map the property with the condition (when condition true)
                 relation_add imsld_prop_whct_rel $property_id $when_condition_true_id 
             }
-
-            $temporal_doc delete
         }
         
         if { ![string eq "" $time_in_seconds] || ![string eq "" $when_prop_value_is_set_xml] ||![string eq "" $when_condition_true_id]  } {
@@ -3662,13 +3684,12 @@ ad_proc -public imsld::parse::parse_and_create_act {
         if { [llength $change_property_value_list] } {
             # create a node where all the change-property-values will be stored
             set temporal_doc [dom createDocument change-property-values]
+            lappend temporal_doc_list $temporal_doc
             set temporal_node [$temporal_doc documentElement]
             foreach cpv $change_property_value_list {
                 $temporal_node appendChild $cpv
             }
             set change_property_value_xml [$temporal_node asXML]
-
-            $temporal_doc delete
         }
 
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
@@ -3690,6 +3711,8 @@ ad_proc -public imsld::parse::parse_and_create_act {
                 set item_id [lindex $item_list 0]
                 if { !$item_id } {
                     # an error happened, abort and return the list whit the error
+                    # kill temporal dom trees then return
+                    imsld::parse::delete_trees -tree_list $temporal_doc_list
                     return $item_list
                 }
                 # map item with the support objective
@@ -3727,6 +3750,8 @@ ad_proc -public imsld::parse::parse_and_create_act {
                 set notification_id [lindex $notification_list 0]
                 if { !$notification_id } {
                     # an error occurred, return it
+                    # kill temporal dom trees then return
+                    imsld::parse::delete_trees -tree_list $temporal_doc_list
                     return $notification_list
                 }
                 # map on_completion with the notif
@@ -3751,6 +3776,8 @@ ad_proc -public imsld::parse::parse_and_create_act {
         set role_part_id [lindex $role_part_list 0]
         if { !$role_part_id } {
             # an error happened, abort and return the list whit the error
+            # kill temporal dom trees then return
+            imsld::parse::delete_trees -tree_list $temporal_doc_list
             return $role_part_list
         }
         incr count
@@ -3773,6 +3800,8 @@ ad_proc -public imsld::parse::parse_and_create_act {
                 and content_revision__is_live(role_part_id) = 't' 
                 and act_id = :act_id
             }] } {
+                # kill temporal dom trees then return
+                imsld::parse::delete_trees -tree_list $temporal_doc_list
                 return [list 0 "[_ imsld.lt_The_referenced_role_p]"]
             }
             # found, map the role part (with the imsld_act_rp_completed_rel) with the act
@@ -3780,6 +3809,8 @@ ad_proc -public imsld::parse::parse_and_create_act {
         }
     }
     
+    # kill temporal dom trees then return
+    imsld::parse::delete_trees -tree_list $temporal_doc_list
     return $act_id
 }
 
@@ -3807,6 +3838,9 @@ ad_proc -public imsld::parse::parse_and_create_play {
 } {
     upvar files_struct_list files_struct_list
     upvar warnings warnings
+
+    # helper for temporal dom docs
+    set temporal_doc_list [list]
 
     # get the info of the play and create it
     set identifier [imsld::parse::get_attribute -node $play_node -attr_name identifier]
@@ -3836,12 +3870,12 @@ ad_proc -public imsld::parse::parse_and_create_play {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(complete-play) -equal
             # create a node where the when-property-value-is-set will be stored
             set temporal_doc [dom createDocument when-property-value-is-set]
+            lappend temporal_doc_list $temporal_doc
             set temporal_node [$temporal_doc documentElement]
             
             $temporal_node appendChild $when_prop_value_is_set
             set when_prop_value_is_set_xml [$temporal_node asXML]
 
-	    $temporal_doc delete
         }
         # Play: Complete Play: When Last Act Completed
         set when_last_act_completed [$complete_play selectNodes "*\[local-name()='when-last-act-completed'\]"]
@@ -3878,6 +3912,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
         if { [llength $change_property_value_list] } {
             # create a node where all the change-property-values will be stored
             set temporal_doc [dom createDocument change-property-values]
+            lappend temporal_doc_list $temporal_doc
             set temporal_node [$temporal_doc documentElement]
 
             foreach cpv $change_property_value_list {
@@ -3885,7 +3920,6 @@ ad_proc -public imsld::parse::parse_and_create_play {
             }
             set change_property_value_xml [$temporal_node asXML]
 
-	    $temporal_doc delete
         }
 
         set feedback_desc [$on_completion selectNodes "*\[local-name()='feedback-description'\]"]
@@ -3908,6 +3942,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
                 set item_id [lindex $item_list 0]
                 if { !$item_id } {
                     # an error happened, abort and return the list whit the error
+                    imsld::parse::delete_trees -tree_list $temporal_doc_list
                     return $item_list
                 }
                 # map item with the support objective
@@ -3947,6 +3982,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
                 set notification_id [lindex $notification_list 0]
                 if { !$notification_id } {
                     # an error occurred, return it
+                    imsld::parse::delete_trees -tree_list $temporal_doc_list
                     return $notification_list
                 }
                 # map on_completion with the notif
@@ -3973,11 +4009,13 @@ ad_proc -public imsld::parse::parse_and_create_play {
         set act_id [lindex $act_list 0]
         if { !$act_id } {
             # an error happened, abort and return the list whit the error
+            imsld::parse::delete_trees -tree_list $temporal_doc_list
             return $act_list
         }
         incr count
     }
     
+    imsld::parse::delete_trees -tree_list $temporal_doc_list
     return $play_id
 }
 
@@ -4191,7 +4229,12 @@ ad_proc -public imsld::parse::parse_and_create_if_then_else {
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
 } {
+
+    # helper for temporal dom trees
+    set temporal_doc_list [list]
+
     set temporal_doc [dom createDocument condition]
+    lappend temporal_doc_list $temporal_doc
     set temporal_node [$temporal_doc documentElement]
 
     set temporal_if [$condition_node cloneNode -deep]
@@ -4213,12 +4256,12 @@ ad_proc -public imsld::parse::parse_and_create_if_then_else {
     }
     set xml_piece [$temporal_node asXML]
     
-    $temporal_doc delete
-
     set if_then_else_id [imsld::item_revision_new -attributes [list [list method_id $method_id] \
                                                                    [list condition_xml $xml_piece]] \
                              -content_type imsld_condition \
                              -parent_id $parent_id]
+
+    imsld::parse::delete_trees -tree_list $temporal_doc_list
     return $if_then_else_id
 }
 
@@ -4290,6 +4333,9 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
 } {
     set community_id [expr { [empty_string_p $community_id] ? [dotlrn_community::get_community_id] : $community_id }]
     set warnings ""
+
+    # helper for temporal dom trees
+    set temporal_doc_list [list]
 
     # list in which every element will have locpersproperty_id
     # [ [prop1] [prop2] ... ]
@@ -4595,12 +4641,12 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
             imsld::parse::validate_multiplicity -tree $when_prop_value_is_set -multiplicity 1 -element_name when-property-valye-is-set(complete-unit-of-learning) -equal
             # create a node where the when-property-value-is-set will be stored
             set temporal_doc [dom createDocument when-property-value-is-set]
+            lappend temporal_doc_list $temporal_doc
             set temporal_node [$temporal_doc documentElement]
             
             $temporal_node appendChild $when_prop_value_is_set
             set when_prop_value_is_set_xml [$temporal_node asXML]
 
-	    $temporal_doc delete
         }
         set complete_act_id [imsld::item_revision_new -attributes [list [list time_in_seconds $time_in_seconds] \
 								       [list time_string $time_string] \
@@ -4631,6 +4677,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         if { [llength $change_property_value_list] } {
             # create a node where all the change-property-values will be stored
             set temporal_doc [dom createDocument change-property-values]
+            lappend temporal_doc_list $temporal_doc
             set temporal_node [$temporal_doc documentElement]
 
             foreach cpv $change_property_value_list {
@@ -4638,7 +4685,6 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
             }
             set change_property_value_xml [$temporal_node asXML]
 
-	    $temporal_doc delete
         }
 
 
@@ -4660,6 +4706,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                 set item_id [lindex $item_list 0]
                 if { !$item_id } {
                     # an error happened, abort and return the list whit the error
+                    imsld::parse::delete_trees -tree_list $temporal_doc_list
                     return $item_list
                 }
                 # map item with the support objective
@@ -4694,6 +4741,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                 set notification_id [lindex $notification_list 0]
                 if { !$notification_id } {
                     # an error occurred, return it
+                    imsld::parse::delete_trees -tree_list $temporal_doc_list
                     return $notification_list
                 }
                 # map on_completion with the notif
@@ -4719,6 +4767,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
 
         if { ![lindex $play_list 0] } {
             # an error happened, abort and return the list whit the error
+            imsld::parse::delete_trees -tree_list $temporal_doc_list
             return $play_list
         }
         incr count
@@ -4740,6 +4789,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
                 and content_revision__is_live(play_id) = 't' 
                 and method_id = :method_id
             } ] } {
+                imsld::parse::delete_trees -tree_list $temporal_doc_list
                 return [list 0 "[_ imsld.lt_The_referenced_play_i]"]
             }
             # found, map the play (with the imsld_mp_completed_rel) with the method
@@ -4895,6 +4945,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
             set resource_id [lindex $resource_list 0]
             if { !$resource_id } {
                 # return the error
+                imsld::parse::delete_trees -tree_list $temporal_doc_list
                 return $resource_list
             }
         }
@@ -4912,6 +4963,15 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     if { ![empty_string_p $warnings] } {
         set warnings "[_ imsld.lt_br__Warnings_ul_warni]"
     }
+
+    imsld::parse::delete_trees -tree_list $temporal_doc_list
     return [list $manifest_id "$warnings"]
 }
 
+ad_proc -private imsld::parse::delete_trees {
+    -tree_list:required
+} {
+    foreach tree $tree_list {
+        $tree delete
+    }
+}
