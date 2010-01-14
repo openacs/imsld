@@ -569,379 +569,436 @@ ad_proc -public imsld::install::init_rels {
         content_item 0 {}
 }
 
-ad_proc -public imsld::install::after_upgrade {
-    -from_version_name:required
-    -to_version_name:required
+ad_proc -public imsld::install::level_c {
 } {
-    apm_upgrade_logic \
-        -from_version_name $from_version_name \
-        -to_version_name $to_version_name \
-        -spec {
-            0.1d 1.0d {
-                ### IMS-LD LEVEL C
-                
-                # notifications
-                content::type::new -content_type imsld_notification -supertype content_revision -pretty_name "#imsld.Notification#" -pretty_plural "#imsld.Notifications#"  -table_name imsld_notifications -id_column notification_id
-                
-                content::type::attribute::new -content_type imsld_notification -attribute_name imsld_id -datatype number -pretty_name "#imsld.IMS-LD_Identifier#" -column_spec "integer"
-                content::type::attribute::new -content_type imsld_notification -attribute_name activity_id -datatype number -pretty_name "#imsld.Activity_Identifier#" -column_spec "integer"
-                content::type::attribute::new -content_type imsld_notification -attribute_name subject -datatype string -pretty_name "#imsld.Notification_Subject#" -column_spec "varchar(4000)"
-                
-                # Imsld on completion  - notifications
-                rel_types::new imsld_on_comp_notif_rel "On Completion - Notification" "On Completion - Notifications" \
-                    content_item 0 {} \
-                    content_item 0 {}
-                
-                # Imsld notification  - email datas
-                rel_types::new imsld_notif_email_rel "Notification - Email Data" "Notification - Email Datas" \
-                    content_item 0 {} \
-                    content_item 0 {}
-                
-                # special case: add the new attributes, new rel and migrate the existing data
-                content::type::attribute::new -content_type imsld_send_mail_data -attribute_name email_property_id -datatype number -pretty_name "#imsld.lt_Email_Propery_Identif#" -column_spec "integer"
-                content::type::attribute::new -content_type imsld_send_mail_data -attribute_name username_property_id -datatype number -pretty_name "#imsld.lt_Username_Property_Ide#" -column_spec "integer"
+    Install IMS-LD level C
+} {
+    # notifications
+    content::type::new -content_type imsld_notification -supertype content_revision -pretty_name "#imsld.Notification#" -pretty_plural "#imsld.Notifications#"  -table_name imsld_notifications -id_column notification_id
+    
+    content::type::attribute::new -content_type imsld_notification -attribute_name imsld_id -datatype number -pretty_name "#imsld.IMS-LD_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_notification -attribute_name activity_id -datatype number -pretty_name "#imsld.Activity_Identifier#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_notification -attribute_name subject -datatype string -pretty_name "#imsld.Notification_Subject#" -column_spec "varchar(4000)"
+    
+    # Imsld on completion  - notifications
+    rel_types::new imsld_on_comp_notif_rel "On Completion - Notification" "On Completion - Notifications" \
+        content_item 0 {} \
+        content_item 0 {}
+    
+    # Imsld notification  - email datas
+    rel_types::new imsld_notif_email_rel "Notification - Email Data" "Notification - Email Datas" \
+        content_item 0 {} \
+        content_item 0 {}
+    
+    # special case: add the new attributes, new rel and migrate the existing data
+    content::type::attribute::new -content_type imsld_send_mail_data -attribute_name email_property_id -datatype number -pretty_name "#imsld.lt_Email_Propery_Identif#" -column_spec "integer"
+    content::type::attribute::new -content_type imsld_send_mail_data -attribute_name username_property_id -datatype number -pretty_name "#imsld.lt_Username_Property_Ide#" -column_spec "integer"
 
-                # Imsld send mail service  - email datas
-                rel_types::new imsld_send_mail_serv_data_rel "Send Mail Service - Email Data" "Send Mail Service - Email Datas" \
-                    content_item 0 {} \
-                    content_item 0 {}
-                
-                db_foreach send_mail_data {
-                    select serv.username_property_id, 
-                    serv.email_property_id, 
-                    data.data_id,
-                    data.item_id as data_item_id,
-                    serv.item_id as serv_item_id
-                    from imsld_send_mail_datai data, imsld_send_mail_servicesi serv 
-                    where data.send_mail_id = serv.item_id
-                    and content_revision__is_live(serv.mail_id) = 't'
-                } {
+    # Imsld send mail service  - email datas
+    rel_types::new imsld_send_mail_serv_data_rel "Send Mail Service - Email Data" "Send Mail Service - Email Datas" \
+        content_item 0 {} \
+        content_item 0 {}
+    
+    db_foreach send_mail_data {
+        select serv.username_property_id, 
+        serv.email_property_id, 
+        data.data_id,
+        data.item_id as data_item_id,
+        serv.item_id as serv_item_id
+        from imsld_send_mail_datai data, imsld_send_mail_servicesi serv 
+        where data.send_mail_id = serv.item_id
+        and content_revision__is_live(serv.mail_id) = 't'
+    } {
 
-                    db_dml update_table {
-                        update imsld_send_mail_data
-                        set email_property_id = :email_property_id,
-                        username_property_id = :username_property_id
-                        where data_id = :data_id
+        db_dml update_table {
+            update imsld_send_mail_data
+            set email_property_id = :email_property_id,
+            username_property_id = :username_property_id
+            where data_id = :data_id
+        }
+
+        relation_add imsld_notif_email_rel $serv_item_id $data_item_id
+    }
+    
+    
+    # finally, delete the attributes
+    content::type::attribute::delete -content_type imsld_send_mail_data \
+        -attribute_name send_mail_id \
+        -drop_column t
+    content::type::attribute::delete -content_type imsld_send_mail_service \
+        -attribute_name email_property_id \
+        -drop_column t
+    content::type::attribute::delete -content_type imsld_send_mail_service \
+        -attribute_name username_property_id \
+        -drop_column t
+    
+}
+
+ad_proc -public imsld::install::update_property_instances {
+} {
+    Create property instances type
+} {
+
+    # property instances
+    content::type::new \
+        -content_type imsld_property_instance \
+        -supertype content_revision \
+        -pretty_name "#imsld.lt_IMS-LD_Property_Insta#" \
+        -pretty_plural "#imsld.lt_IMS-LD_Property_Insta_1#" \
+        -table_name imsld_property_instances \
+        -id_column instance_id
+    
+    content::type::attribute::new \
+        -content_type imsld_property_instance \
+        -attribute_name property_id \
+        -datatype number \
+        -pretty_name "#imsld.Property_Identifier#" \
+        -column_spec "integer"
+
+    content::type::attribute::new \
+        -content_type imsld_property_instance \
+        -attribute_name identifier \
+        -datatype string \
+        -pretty_name "#imsld.lt_Property_String_Ident#" \
+        -column_spec "varchar(100)"
+
+    content::type::attribute::new \
+        -content_type imsld_property_instance \
+        -attribute_name party_id \
+        -datatype number \
+        -pretty_name "#imsld.Party_Identifier#" \
+        -column_spec "integer"
+
+    content::type::attribute::new \
+        -content_type imsld_property_instance \
+        -attribute_name run_id \
+        -datatype number \
+        -pretty_name "#imsld.Run_Identifier#" \
+        -column_spec "integer"
+
+    content::type::attribute::new \
+        -content_type imsld_property_instance \
+        -attribute_name value \
+        -datatype string \
+        -pretty_name "#imsld.Property_Value#" \
+        -column_spec "varchar(4000)"
+
+    set i 0
+    foreach run [db_list_of_lists runs {
+        select ir.run_id,
+        ir.imsld_id,
+        ic.item_id as component_item_id,
+        icm.manifest_id,
+        rug.group_id as run_group_id
+        from imsld_runs ir,
+        imsld_imsldsi ii,
+        imsld_componentsi ic,
+        imsld_cp_organizationsi ico,
+        imsld_cp_manifestsi icm,
+        imsld_run_users_group_ext rug
+        where ir.imsld_id = ii.imsld_id
+        and ii.item_id = ic.imsld_id
+        and ii.organization_id = ico.item_id
+        and ico.manifest_id = icm.item_id
+        and rug.run_id = ir.run_id
+    }] {
+        set run_id [lindex $run 0]
+        set imsld_id [lindex $run 1]
+        set component_item_id [lindex $run 2]
+        set manifest_id [lindex $run 3]
+        set run_group_id [lindex $run 4]
+        incr i
+        
+        set community_id [imsld::community_id_from_manifest_id -manifest_id $manifest_id]
+        set run_folder_id [imsld::instance::create_run_folder -run_id $run_id -community_id $community_id]
+        set cr_folder_id [content::item::get_parent_folder -item_id $component_item_id]
+        #in case the content type is not registered
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_property_instance
+        content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_property_instance
+        set global_folder_id [imsld::global_folder_id -community_id $community_id]
+
+        db_foreach property_in_component {
+            select property_id,
+            identifier,
+            type,
+            datatype,
+            initial_value,
+            role_id,
+            existing_href,
+            uri,
+            component_id as component_item_id
+            from imsld_properties
+            where component_id = :component_item_id
+        } {
+            incr i
+            switch $type {
+                loc {
+                    # get instance info
+                    if { ![db_0or1row get_instance_info {
+                        select instance_id as old_instance_id,
+                        party_id,
+                        value
+                        from imsld_property_instances
+                        where property_id = :property_id
+                        and identifier = :identifier
+                        and run_id = :run_id
+                    }] } {
+                        continue
                     }
 
-                    relation_add imsld_notif_email_rel $serv_item_id $data_item_id
+                    if { ![db_0or1row loc_already_instantiated_p {
+                        select 1
+                        from imsld_property_instancesi
+                        where property_id = :property_id
+                        and identifier = :identifier
+                        and run_id = :run_id
+                    }] } {
+                        set instance_id [imsld::item_revision_new \
+                                             -attributes [list [list run_id $run_id] \
+                                                              [list value $value] \
+                                                              [list identifier $identifier] \
+                                                              [list property_id $property_id]] \
+                                             -content_type imsld_property_instance \
+                                             -title $identifier \
+                                             -parent_id [expr [string eq $datatype "file"] ? $run_folder_id : $cr_folder_id]]
+                        
+                        if { [string eq $datatype "file"] } {
+                            # initialize the file to an empty one so the fs doesn't 
+                            # generate an error when requesting the file
+                            imsld::fs::empty_file \
+                                -revision_id [content::item::get_live_revision -item_id $instance_id] \
+                                -string $value
+                        }
+                        # delete old instance
+                        db_dml delte_old_instance {
+                            delete from imsld_property_instances 
+                            where instance_id = :old_instance_id
+                        }
+                    }
                 }
-                
-                
-                # finally, delete the attributes
-                content::type::attribute::delete -content_type imsld_send_mail_data \
-                    -attribute_name send_mail_id \
-                    -drop_column t
-                content::type::attribute::delete -content_type imsld_send_mail_service \
-                    -attribute_name email_property_id \
-                    -drop_column t
-                content::type::attribute::delete -content_type imsld_send_mail_service \
-                    -attribute_name username_property_id \
-                    -drop_column t
-                
-                
-            }
-            1.0d 1.1d {
-                # property instances
-                content::type::new -content_type imsld_property_instance -supertype content_revision -pretty_name "#imsld.lt_IMS-LD_Property_Insta#" -pretty_plural "#imsld.lt_IMS-LD_Property_Insta_1#" -table_name imsld_property_instances -id_column instance_id
-                
-                content::type::attribute::new -content_type imsld_property_instance -attribute_name property_id -datatype number -pretty_name "#imsld.Property_Identifier#" -column_spec "integer"
-                content::type::attribute::new -content_type imsld_property_instance -attribute_name identifier -datatype string -pretty_name "#imsld.lt_Property_String_Ident#" -column_spec "varchar(100)"
-                content::type::attribute::new -content_type imsld_property_instance -attribute_name party_id -datatype number -pretty_name "#imsld.Party_Identifier#" -column_spec "integer"
-                content::type::attribute::new -content_type imsld_property_instance -attribute_name run_id -datatype number -pretty_name "#imsld.Run_Identifier#" -column_spec "integer"
-                content::type::attribute::new -content_type imsld_property_instance -attribute_name value -datatype string -pretty_name "#imsld.Property_Value#" -column_spec "varchar(4000)"
+                locpers {
+                    foreach party_id [db_list users_in_run {
+                        select ar.object_id_two as party_id
+                        from acs_rels ar
+                        where ar.object_id_one = :run_group_id
+                        and ar.rel_type = 'imsld_run_users_group_rel'
+                    }] { 
+                        
+                        # get instance info
+                        if { ![db_0or1row get_instance_info {
+                            select instance_id as old_instance_id,
+                            party_id,
+                            value
+                            from imsld_property_instances
+                            where property_id = :property_id
+                            and identifier = :identifier
+                            and party_id = :party_id
+                            and run_id = :run_id
+                        }] } {
+                            continue
+                        }
+                        
+                        if { ![db_0or1row locrole_already_instantiated_p {
+                            select 1
+                            from imsld_property_instancesi
+                            where property_id = :property_id
+                            and identifier = :identifier
+                            and party_id = :party_id
+                            and run_id = :run_id
+                        }] } {
+                            set instance_id [imsld::item_revision_new \
+                                                 -attributes [list [list run_id $run_id] \
+                                                                  [list value $value] \
+                                                                  [list identifier $identifier] \
+                                                                  [list party_id $party_id] \
+                                                                  [list property_id $property_id]] \
+                                                 -content_type imsld_property_instance \
+                                                 -title $identifier \
+                                                 -parent_id [expr [string eq $datatype "file"] ? $run_folder_id : $cr_folder_id]]
+                            if { [string eq $datatype "file"] } {
+                                # initialize the file to an empty one so the fs doesn't 
+                                # generate an error when requesting the file
+                                imsld::fs::empty_file \
+                                    -revision_id [content::item::get_live_revision -item_id $instance_id] \
+                                    -string $value
+                            }
+                            # delete old instance
+                            db_dml delte_old_instance {
+                                delete from imsld_property_instances 
+                                where instance_id = :old_instance_id
+                            }
+                        }
+                    }
+                }
+                locrole {
+                    foreach party_id [db_list roles_instances_in_run {
+                        select ar1.object_id_two as party_id
+                        from acs_rels ar1, acs_rels ar2, acs_rels ar3,
+                        public.imsld_run_users_group_ext run_group
+                        where ar1.rel_type = 'imsld_role_group_rel'
+                        and ar1.object_id_two = ar2.object_id_one
+                        and ar2.rel_type = 'imsld_roleinstance_run_rel'
+                        and ar2.object_id_two = ar3.object_id_one
+                        and ar3.object_id_one = run_group.group_id
+                        and run_group.run_id = :run_id
+                    }] { 
+                        # get instance info
+                        if { ![db_0or1row get_instance_info {
+                            select instance_id as old_instance_id,
+                            party_id,
+                            value
+                            from imsld_property_instances
+                            where property_id = :property_id
+                            and identifier = :identifier
+                            and party_id = :party_id
+                            and run_id = :run_id
+                        }] } {
+                            continue
+                        }
+                        
+                        if { ![db_0or1row locrole_already_instantiated_p {
+                            select 1
+                            from imsld_property_instancesi
+                            where property_id = :property_id
+                            and identifier = :identifier
+                            and party_id = :party_id
+                            and run_id = :run_id
+                        }] } {
+                            
+                            set instance_id [imsld::item_revision_new \
+                                                 -attributes [list [list run_id $run_id] \
+                                                                  [list value $value] \
+                                                                  [list identifier $identifier] \
+                                                                  [list party_id $party_id] \
+                                                                  [list property_id $property_id]] \
+                                                 -content_type imsld_property_instance \
+                                                 -title $identifier \
+                                                 -parent_id [expr [string eq $datatype "file"] ? $run_folder_id : $cr_folder_id]]
+                            if { [string eq $datatype "file"] } {
+                                # initialize the file to an empty one so the fs doesn't 
+                                # generate an error when requesting the file
+                                imsld::fs::empty_file \
+                                    -revision_id [content::item::get_live_revision -item_id $instance_id] \
+                                    -string $value
+                            }
+                            
+                            # delete old instance
+                            db_dml delte_old_instance {
+                                delete from imsld_property_instances 
+                                where instance_id = :old_instance_id
+                            }
+                        }
+                    }
+                }
+                globpers {
+                    foreach party_id [db_list user_in_run {
+                        select ar.object_id_two as party_id
+                        from acs_rels ar
+                        where ar.object_id_one = :run_group_id
+                        and ar.rel_type = 'imsld_run_users_group_rel'
+                    }] {
+                        # get instance info
+                        if { ![db_0or1row get_instance_info {
+                            select instance_id as old_instance_id,
+                            party_id,
+                            value
+                            from imsld_property_instances
+                            where identifier = :identifier
+                            and party_id = :party_id
+                        }] } {
+                            continue
+                        }
+                        
+                        if { ![db_0or1row globpers_already_instantiated_p {
+                            select 1 
+                            from imsld_property_instancesi
+                            where identifier = :identifier
+                            and party_id = :party_id
+                        }] } {
+                            # not instantiated... is it already defined (existing href)? 
+                            # or must we use the one of the global definition?
+                            if { ![string eq $existing_href ""] } {
+                                # it is already defined
+                                # NOTE: there must be a better way to deal with this, 
+                                # but by the moment we treat the href as the property value
+                                set initial_value $existing_href
+                            } 
+                            # TODO: the property must be somehow instantiated in the given URI also
+                            set instance_id [imsld::item_revision_new \
+                                                 -attributes [list [list value $value] \
+                                                                  [list identifier $identifier] \
+                                                                  [list party_id $party_id] \
+                                                                  [list property_id $property_id]] \
+                                                 -content_type imsld_property_instance \
+                                                 -title $identifier \
+                                                 -parent_id [expr [string eq $datatype "file"] ? $global_folder_id : $cr_folder_id]]
+                            if { [string eq $datatype "file"] } {
+                                # initialize the file to an empty one so the fs doesn't 
+                                # generate an error when requesting the file
+                                imsld::fs::empty_file \
+                                    -revision_id [content::item::get_live_revision -item_id $instance_id] \
+                                    -string $value
+                            }
+                            
+                            # delete old instance
+                            db_dml delte_old_instance {
+                                delete from imsld_property_instances 
+                                where instance_id = :old_instance_id
+                            }
+                        }
+                    }
+                }
+                global {
+                    # get instance info
+                    if { ![db_0or1row get_instance_info {
+                        select instance_id as old_instance_id,
+                        party_id,
+                        value
+                        from imsld_property_instances
+                        where identifier = :identifier
+                    }] } {
+                        continue
+                    }
 
-                set i 0
-                foreach run [db_list_of_lists runs {
-                    select ir.run_id,
-                    ir.imsld_id,
-                    ic.item_id as component_item_id,
-                    icm.manifest_id,
-                    rug.group_id as run_group_id
-                    from imsld_runs ir,
-                    imsld_imsldsi ii,
-                    imsld_componentsi ic,
-                    imsld_cp_organizationsi ico,
-                    imsld_cp_manifestsi icm,
-                    imsld_run_users_group_ext rug
-                    where ir.imsld_id = ii.imsld_id
-                    and ii.item_id = ic.imsld_id
-                    and ii.organization_id = ico.item_id
-                    and ico.manifest_id = icm.item_id
-                    and rug.run_id = ir.run_id
-                }] {
-                    set run_id [lindex $run 0]
-                    set imsld_id [lindex $run 1]
-                    set component_item_id [lindex $run 2]
-                    set manifest_id [lindex $run 3]
-                    set run_group_id [lindex $run 4]
-                    incr i
-                    
-                    set community_id [imsld::community_id_from_manifest_id -manifest_id $manifest_id]
-                    set run_folder_id [imsld::instance::create_run_folder -run_id $run_id -community_id $community_id]
-                    set cr_folder_id [content::item::get_parent_folder -item_id $component_item_id]
-                    #in case the content type is not registered
-                    content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_property_instance
-                    content::folder::register_content_type -folder_id $cr_folder_id -content_type imsld_property_instance
-                    set global_folder_id [imsld::global_folder_id -community_id $community_id]
-
-                    db_foreach property_in_component {
-                        select property_id,
-                        identifier,
-                        type,
-                        datatype,
-                        initial_value,
-                        role_id,
-                        existing_href,
-                        uri,
-                        component_id as component_item_id
-                        from imsld_properties
-                        where component_id = :component_item_id
-                    } {
-                        incr i
-                        switch $type {
-                            loc {
-                                # get instance info
-                                if { ![db_0or1row get_instance_info {
-                                    select instance_id as old_instance_id,
-                                    party_id,
-                                    value
-                                    from imsld_property_instances
-                                    where property_id = :property_id
-                                    and identifier = :identifier
-                                    and run_id = :run_id
-                                }] } {
-                                    continue
-                                }
-
-                                if { ![db_0or1row loc_already_instantiated_p {
-                                    select 1
-                                    from imsld_property_instancesi
-                                    where property_id = :property_id
-                                    and identifier = :identifier
-                                    and run_id = :run_id
-                                }] } {
-                                    set instance_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
-                                                                                               [list value $value] \
-                                                                                               [list identifier $identifier] \
-                                                                                               [list property_id $property_id]] \
-                                                         -content_type imsld_property_instance \
-                                                         -title $identifier \
-                                                         -parent_id [expr [string eq $datatype "file"] ? $run_folder_id : $cr_folder_id]]
-                                    
-                                    if { [string eq $datatype "file"] } {
-                                        # initialize the file to an empty one so the fs doesn't generate an error when requesting the file
-                                        imsld::fs::empty_file -revision_id [content::item::get_live_revision -item_id $instance_id] -string $value
-                                    }
-                                    # delete old instance
-                                    db_dml delte_old_instance {
-                                        delete from imsld_property_instances where instance_id = :old_instance_id
-                                    }
-                                }
-                            }
-                            locpers {
-                                foreach party_id [db_list users_in_run {
-                                    select ar.object_id_two as party_id
-                                    from acs_rels ar
-                                    where ar.object_id_one = :run_group_id
-                                    and ar.rel_type = 'imsld_run_users_group_rel'
-                                }] { 
-                                    
-                                    # get instance info
-                                    if { ![db_0or1row get_instance_info {
-                                        select instance_id as old_instance_id,
-                                        party_id,
-                                        value
-                                        from imsld_property_instances
-                                        where property_id = :property_id
-                                        and identifier = :identifier
-                                        and party_id = :party_id
-                                        and run_id = :run_id
-                                    }] } {
-                                        continue
-                                    }
-                                    
-                                    if { ![db_0or1row locrole_already_instantiated_p {
-                                        select 1
-                                        from imsld_property_instancesi
-                                        where property_id = :property_id
-                                        and identifier = :identifier
-                                        and party_id = :party_id
-                                        and run_id = :run_id
-                                    }] } {
-                                        set instance_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
-                                                                                                   [list value $value] \
-                                                                                                   [list identifier $identifier] \
-                                                                                                   [list party_id $party_id] \
-                                                                                                   [list property_id $property_id]] \
-                                                             -content_type imsld_property_instance \
-                                                             -title $identifier \
-                                                             -parent_id [expr [string eq $datatype "file"] ? $run_folder_id : $cr_folder_id]]
-                                        if { [string eq $datatype "file"] } {
-                                            # initialize the file to an empty one so the fs doesn't generate an error when requesting the file
-                                            imsld::fs::empty_file -revision_id [content::item::get_live_revision -item_id $instance_id] -string $value
-                                        }
-                                        # delete old instance
-                                        db_dml delte_old_instance {
-                                            delete from imsld_property_instances where instance_id = :old_instance_id
-                                        }
-                                    }
-                                }
-                            }
-                            locrole {
-                                foreach party_id [db_list roles_instances_in_run {
-                                    select ar1.object_id_two as party_id
-                                    from acs_rels ar1, acs_rels ar2, acs_rels ar3,
-                                    public.imsld_run_users_group_ext run_group
-                                    where ar1.rel_type = 'imsld_role_group_rel'
-                                    and ar1.object_id_two = ar2.object_id_one
-                                    and ar2.rel_type = 'imsld_roleinstance_run_rel'
-                                    and ar2.object_id_two = ar3.object_id_one
-                                    and ar3.object_id_one = run_group.group_id
-                                    and run_group.run_id = :run_id
-                                }] { 
-                                    # get instance info
-                                    if { ![db_0or1row get_instance_info {
-                                        select instance_id as old_instance_id,
-                                        party_id,
-                                        value
-                                        from imsld_property_instances
-                                        where property_id = :property_id
-                                        and identifier = :identifier
-                                        and party_id = :party_id
-                                        and run_id = :run_id
-                                    }] } {
-                                        continue
-                                    }
-                                    
-                                    if { ![db_0or1row locrole_already_instantiated_p {
-                                        select 1
-                                        from imsld_property_instancesi
-                                        where property_id = :property_id
-                                        and identifier = :identifier
-                                        and party_id = :party_id
-                                        and run_id = :run_id
-                                    }] } {
-                                        
-                                        set instance_id [imsld::item_revision_new -attributes [list [list run_id $run_id] \
-                                                                                                   [list value $value] \
-                                                                                                   [list identifier $identifier] \
-                                                                                                   [list party_id $party_id] \
-                                                                                                   [list property_id $property_id]] \
-                                                             -content_type imsld_property_instance \
-                                                             -title $identifier \
-                                                             -parent_id [expr [string eq $datatype "file"] ? $run_folder_id : $cr_folder_id]]
-                                        if { [string eq $datatype "file"] } {
-                                            # initialize the file to an empty one so the fs doesn't generate an error when requesting the file
-                                            imsld::fs::empty_file -revision_id [content::item::get_live_revision -item_id $instance_id] -string $value
-                                        }
-                                        
-                                        # delete old instance
-                                        db_dml delte_old_instance {
-                                            delete from imsld_property_instances where instance_id = :old_instance_id
-                                        }
-                                    }
-                                }
-                            }
-                            globpers {
-                                foreach party_id [db_list user_in_run {
-                                    select ar.object_id_two as party_id
-                                    from acs_rels ar
-                                    where ar.object_id_one = :run_group_id
-                                    and ar.rel_type = 'imsld_run_users_group_rel'
-                                }] {
-                                    # get instance info
-                                    if { ![db_0or1row get_instance_info {
-                                        select instance_id as old_instance_id,
-                                        party_id,
-                                        value
-                                        from imsld_property_instances
-                                        where identifier = :identifier
-                                        and party_id = :party_id
-                                    }] } {
-                                        continue
-                                    }
-                                    
-                                    if { ![db_0or1row globpers_already_instantiated_p {
-                                        select 1 
-                                        from imsld_property_instancesi
-                                        where identifier = :identifier
-                                        and party_id = :party_id
-                                    }] } {
-                                        # not instantiated... is it already defined (existing href)? or must we use the one of the global definition?
-                                        if { ![string eq $existing_href ""] } {
-                                            # it is already defined
-                                            # NOTE: there must be a better way to deal with this, 
-                                            # but by the moment we treat the href as the property value
-                                            set initial_value $existing_href
-                                        } 
-                                        # TODO: the property must be somehow instantiated in the given URI also
-                                        set instance_id [imsld::item_revision_new -attributes [list [list value $value] \
-                                                                                                   [list identifier $identifier] \
-                                                                                                   [list party_id $party_id] \
-                                                                                                   [list property_id $property_id]] \
-                                                             -content_type imsld_property_instance \
-                                                             -title $identifier \
-                                                             -parent_id [expr [string eq $datatype "file"] ? $global_folder_id : $cr_folder_id]]
-                                        if { [string eq $datatype "file"] } {
-                                            # initialize the file to an empty one so the fs doesn't generate an error when requesting the file
-                                            imsld::fs::empty_file -revision_id [content::item::get_live_revision -item_id $instance_id] -string $value
-                                        }
-                                        
-                                        # delete old instance
-                                        db_dml delte_old_instance {
-                                            delete from imsld_property_instances where instance_id = :old_instance_id
-                                        }
-                                    }
-                                }
-                            }
-                            global {
-                                # get instance info
-                                if { ![db_0or1row get_instance_info {
-                                    select instance_id as old_instance_id,
-                                    party_id,
-                                    value
-                                    from imsld_property_instances
-                                    where identifier = :identifier
-                                }] } {
-                                    continue
-                                }
-
-                                if { ![db_0or1row global_already_instantiated_p {
-                                    select 1 
-                                    from imsld_property_instancesi
-                                    where identifier = :identifier
-                                }] } {
-                                    # not instantiated... is it already defined (existing href)? or must we use the one of the global definition?
-                                    if { ![string eq $existing_href ""] } {
-                                        # it is already defined
-                                        # NOTE: there must be a better way to deal with this, but by the moment we treat the href as the property value
-                                        set initial_value $existing_href
-                                    } 
-                                    # TODO: the property must be somehow instantiated in the given URI also
-                                    set instance_id [imsld::item_revision_new -attributes [list [list value $value] \
-                                                                                               [list identifier $identifier] \
-                                                                                               [list property_id $property_id]] \
-                                                         -content_type imsld_property_instance \
-                                                         -parent_id [expr [string eq $datatype "file"] ? $global_folder_id : $cr_folder_id]]
-                                    if { [string eq $datatype "file"] } {
-                                        # initialize the file to an empty one so the fs doesn't generate an error when requesting the file
-                                        imsld::fs::empty_file -revision_id [content::item::get_live_revision -item_id $instance_id] -string $value
-                                    }
-                                    
-                                    # delete old instance
-                                    db_dml delte_old_instance {
-                                        delete from imsld_property_instances where instance_id = :old_instance_id
-                                    }
-                                }
-                            }
+                    if { ![db_0or1row global_already_instantiated_p {
+                        select 1 
+                        from imsld_property_instancesi
+                        where identifier = :identifier
+                    }] } {
+                        # not instantiated... is it already defined (existing href)? 
+                        # or must we use the one of the global definition?
+                        if { ![string eq $existing_href ""] } {
+                            # it is already defined
+                            # NOTE: there must be a better way to deal with this, 
+                            # but by the moment we treat the href as the property value
+                            set initial_value $existing_href
+                        } 
+                        # TODO: the property must be somehow instantiated in the given URI also
+                        set instance_id [imsld::item_revision_new \
+                                             -attributes [list [list value $value] \
+                                                              [list identifier $identifier] \
+                                                              [list property_id $property_id]] \
+                                             -content_type imsld_property_instance \
+                                             -parent_id [expr [string eq $datatype "file"] ? $global_folder_id : $cr_folder_id]]
+                        if { [string eq $datatype "file"] } {
+                            # initialize the file to an empty one so the fs doesn't 
+                            # generate an error when requesting the file
+                            imsld::fs::empty_file \
+                                -revision_id [content::item::get_live_revision -item_id $instance_id] \
+                                -string $value
+                        }
+                        
+                        # delete old instance
+                        db_dml delte_old_instance {
+                            delete from imsld_property_instances 
+                            where instance_id = :old_instance_id
                         }
                     }
                 }
             }
         }
-}   
-
+    }
+}
 
 ad_proc -public imsld::uninstall::delete_rels {  
 } { 

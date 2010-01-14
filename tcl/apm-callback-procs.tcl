@@ -90,6 +90,12 @@ ad_proc -public imsld::apm_callback::after_upgrade {
         -from_version_name $from_version_name \
         -to_version_name $to_version_name \
         -spec {
+            0.1d 1.0d {
+                imsld::install::level_c
+            }
+            1.0d 1.1d {
+                imsld::install::update_property_instances
+            }
             1.3d 1.4d {
                 content::type::attribute::new -content_type imsld_complete_act \
                     -attribute_name time_string -datatype string \
