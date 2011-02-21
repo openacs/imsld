@@ -2509,7 +2509,7 @@ ad_proc -public imsld::activity_url {
     @param run_id
     @option user_id
 
-    @returns the url for the given activity
+    @return the url for the given activity
 } {
 
     set user_id [expr { [string eq $user_id ""] ? [ad_conn user_id] : $user_id }]
