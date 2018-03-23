@@ -166,7 +166,7 @@ ad_proc -public imsld::export::ld::write_method {
     db_1row get_play_identifier {select identifier from imsld_plays where play_id = cr_items.latest_revision and cr_items.item_id = :object_id_two}
     set when_play_completed [$doc createElement "imsld:when-play-completed"]
     $complete_unit appendChild $when_play_completed
-    #Add ref attibute
+    #Add ref attribute
     $when_play_completed setAttribute ref $identifier
   }
 }

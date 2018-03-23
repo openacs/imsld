@@ -160,7 +160,7 @@ ad_proc -public imsld::export::ld::method::write_act {
         #Write imsld:learning-activity-ref label and content
         set imsld_ld_ref [$doc createElement "imsld:learning-activity-ref"]
         $imsld_role_part appendChild $imsld_ld_ref
-        #Add identifier attibute
+        #Add identifier attribute
         $imsld_ld_ref setAttribute ref $identifier
       }
       #In case there is an activity structure associated, write it
@@ -168,7 +168,7 @@ ad_proc -public imsld::export::ld::method::write_act {
         #Write imsld:activity-structure-ref label and content
         set imsld_as_ref [$doc createElement "imsld:activity-structure-ref"]
         $imsld_role_part appendChild $imsld_as_ref
-        #Add ref attibute
+        #Add ref attribute
         $imsld_as_ref setAttribute ref $identifier
       }
       #In case there is a support activity associated, write it
@@ -176,7 +176,7 @@ ad_proc -public imsld::export::ld::method::write_act {
         #Write imsld:activity-structure-ref label and content
         set imsld_sa_ref [$doc createElement "imsld:support-activity-ref"]
         $imsld_role_part appendChild $imsld_sa_ref
-        #Add ref attibute
+        #Add ref attribute
         $imsld_sa_ref setAttribute ref $identifier
       }
       ###################################
@@ -188,7 +188,7 @@ ad_proc -public imsld::export::ld::method::write_act {
         #Write imsld:activity-structure-ref label and content
         set imsld_environment_ref [$doc createElement "imsld:environment-ref"]
         $imsld_role_part appendChild $imsld_environment_ref
-        #Add identifier attibute
+        #Add identifier attribute
         $imsld_environment_ref setAttribute ref $identifier
       }
     }

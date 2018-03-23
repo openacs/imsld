@@ -10,7 +10,7 @@
 
         <p>Welcome to the google spreadsheet service for Learning Design. This service offers a HTML page containing
         a form, where course participants can answer proposed questions. Later, you will be able to view all results in
-        the spreadsheet where anwsers are automatically stored.</p>
+        the spreadsheet where answers are automatically stored.</p>
 
         <p>Before using the service, you have to take some steps to finish its configuration.</p> 
         <!-- Set form file or url -->

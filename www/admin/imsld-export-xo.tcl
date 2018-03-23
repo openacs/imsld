@@ -7,7 +7,7 @@ ad_page_contract {
     imsld_id:integer
 }
 
-#Check if the user who attemps to enter the page has admin priviledges
+#Check if the user who attempts to enter the page has admin priviledges
 set package_id [ad_conn package_id]
 set admin_p [permission::permission_p -object_id $package_id \
   -privilege admin]
