@@ -49,7 +49,7 @@ set in_path [ns_tmpnam]
 set path [acs_package_root_dir imsld]/www$in_path
 exec mkdir $path
 
-#Declare list to store aditional resources
+#Declare list to store additional resources
 set resource_list [list]
 
 set last_file ""
