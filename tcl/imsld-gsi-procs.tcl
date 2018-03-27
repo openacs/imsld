@@ -607,7 +607,7 @@ ad_proc -public imsld::gsi::request_configured_instance {
     -run_id
     -user_id
 } { 
-    Once a service has been choosen and users mapped, request URL of a given user.
+    Once a service has been chosen and users mapped, request URL of a given user.
     @param gservice_id "The service that needs to be configured"
     @param plugin_URI "The plugin that manages the request"
     @param run_id "since a service can request from several runs, the run_id provides identification completeness."

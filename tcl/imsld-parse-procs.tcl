@@ -817,7 +817,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
                                               -tmp_dir $tmp_dir \
 					      -resource_handler $resource_handler ]
             if { ![lindex $dependency_resource_list 0] } {
-                # return this value and let the user know there was an error (becuase if succeded, it does nothing here)
+                # return this value and let the user know there was an error (because if succeded, it does nothing here)
                 return $dependency_resource_list
             }
         }

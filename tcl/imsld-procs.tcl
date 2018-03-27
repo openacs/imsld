@@ -1157,8 +1157,8 @@ ad_proc -public imsld::do_notification {
     # add the activity to the rel imsld_run_time_activities_rel
     if { ![string eq "" $activity_id] && ![db_0or1row already_mapped { *SQL* }] } {
         # map the activity to the role
-        # NOTE: this mappnig couldn't be done using acs_rels becuase we could map more than once the same activity with the same role,
-        # with differnet context info (run_id), but that's not taken into account when creating the acs rel even tough if when creating the rel 
+        # NOTE: this mapping couldn't be done using acs_rels because we could map more than once the same activity with the same role,
+        # with different context info (run_id), but that's not taken into account when creating the acs rel even tough if when creating the rel
         # we indicate that the rel info is stored in other table....
 
         imsld::map::role_to_activity -run_id $run_id -activity_id $activity_id -role_id $role_id
