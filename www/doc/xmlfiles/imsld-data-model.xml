@@ -472,7 +472,7 @@
             </listitem>
 
             <listitem>
-              <para>index_class - this element selects the calss to make the
+              <para>index_class - this element selects the class to make the
               index on</para>
             </listitem>
 

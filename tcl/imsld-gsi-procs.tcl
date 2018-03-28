@@ -129,7 +129,7 @@ ad_proc -public imsld::gsi::get_service_startup_actions {
     set full_data_list [list] 
     foreach usage_id $usages {
         #si es deploy o close, la lista es {deploy {} {}} o {close {} {}}
-        set function_name [db_string get_funtion_name {
+        set function_name [db_string get_function_name {
                         select fu.function_name
                         from imsld_gsi_funct_usage us, 
                              imsld_gsi_functions fu 

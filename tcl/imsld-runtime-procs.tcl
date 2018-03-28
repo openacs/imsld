@@ -444,7 +444,7 @@ ad_proc -public imsld::runtime::class::show_hide {
     {-with_control_p ""}
     -action:required
 } {
-    mark a class as showh or hidden. NOTE: not recursively
+    mark a class as shown or hidden. NOTE: not recursively
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     if { [string eq $action "show"] } {
@@ -480,7 +480,7 @@ ad_proc -public imsld::runtime::environment::show_hide {
     -action
     -user_id
 } {
-    mark an environment as showh or hidden. NOTE: not recursively
+    mark an environment as shown or hidden. NOTE: not recursively
 } {
 
     if {![info exist user_id]} {
