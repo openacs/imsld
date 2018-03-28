@@ -239,7 +239,7 @@ create table imsld_activity_descs (
 );
 
 comment on table imsld_activity_descs is '
-This table holds the descrition of a learning activity.
+This table holds the description of a learning activity.
 Technically it is just a mapping table between items and the learning activity, but this table was created to provide simplicity and clarification in the data model';
 
 create table imsld_learning_activities (

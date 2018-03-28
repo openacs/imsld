@@ -448,7 +448,7 @@ ad_proc -public imsld::parse::remove_dir {
 ad_proc -public imsld::parse::sql_boolean {
     -bool:required
 } {
-    Convets a boolean string to its corresponding boolean value f or t. 
+    Converts a boolean string to its corresponding boolean value f or t.
 
     @param bool The boolean value to convert
 } {
@@ -4533,14 +4533,14 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
         }
     }
     
-    # Componetns: Activities
+    # Components: Activities
     # N.B.: With the level C and notificaitons, it is possible to make a reference to an 'uncreated'
     #       learning or support activity. Therefore we must check before if the activity has not been created
     set activities [$components selectNodes "*\[local-name()='activities'\]"]
     if { [llength $activities] } {
         imsld::parse::validate_multiplicity -tree $activities -multiplicity 1 -element_name components -equal
 
-        # Componets: Activities: Learning Activities
+        # Components: Activities: Learning Activities
         set learning_activities [$activities selectNodes "*\[local-name()='learning-activity'\]"]
         
         foreach learning_activity $learning_activities {
@@ -4567,7 +4567,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
             }
         }
 
-        # Componets: Activities: Support Activities
+        # Components: Activities: Support Activities
         set support_activities [$activities selectNodes "*\[local-name()='support-activity'\]"]
         
         foreach support_activity $support_activities {

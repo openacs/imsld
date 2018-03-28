@@ -140,7 +140,7 @@ ad_proc -public imsld::xowiki::convert_syntax {
     -content:required
     -manifest_identifier:required
 } {
-    Gets a text and returns its convertion to XoWiki Syntax
+    Gets a text and returns its conversion to XoWiki Syntax
 
     @author Derick Leony (derick@inv.it.uc3m.es)
     @creation-date 2009-06-15

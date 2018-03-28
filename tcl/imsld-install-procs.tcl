@@ -1161,7 +1161,7 @@ ad_proc -public imsld::uninstall::empty_content_repository {
     content::type::attribute::delete -content_type imsld_item -attribute_name is_visible_p
     content::type::attribute::delete -content_type imsld_item -attribute_name parameters
 
-    # componets
+    # components
     content::type::attribute::delete -content_type imsld_component -attribute_name imsld_id
 
     # imsld roles
