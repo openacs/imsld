@@ -25,7 +25,7 @@ ad_proc -public imsld::parse::find_manifest {
     @param tmp_dir Temporary directory where the course is located
     @param file Manifest file
 } {
-    if { [file exist $dir/$file_name] } {
+    if { [file exists $dir/$file_name] } {
         return "$dir/$file_name"
     } else {
         return 0
