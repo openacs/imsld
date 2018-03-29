@@ -632,7 +632,7 @@ create index imsld_rp_as_id_idx on imsld_role_parts(activity_structure_id);
 create index imsld_rp_env_id_idx on imsld_role_parts(environment_id);
 
 comment on table imsld_role_parts is '
-This table holds the actual mapping bewteen activities and roles.
+This table holds the actual mapping between activities and roles.
 There are also mappings between roles and environments or units of learning';
 
 create table imsld_complete_acts (
