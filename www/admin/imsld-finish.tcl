@@ -65,7 +65,7 @@ foreach role $roles_list {
             set members_list [db_list get_members_list {select member_id from group_member_map where group_id=:group group by member_id}]
 
             if {[llength $members_list] == 0} {
-                lappend warnings "\<li\>WARNING: Group $group_name in role $role_name has no members. A empty group is not forbiden, but may be you forgot assigning members...\<\/li\>"
+                lappend warnings "\<li\>WARNING: Group $group_name in role $role_name has no members. A empty group is not forbidden, but may be you forgot assigning members...\<\/li\>"
                  set warning_flag 1           
             }
             #numero maximo

@@ -337,7 +337,7 @@ ad_proc -public imsld::install::init_content_repository {
 
 ad_proc -public imsld::install::create_group_types {  
 } { 
-    create groups needed to manage imsld functionallity
+    create groups needed to manage imsld functionality
 } { 
     group_type::new -group_type imsld_role_group -supertype group  "Role defined by IMS-LD" "Roles defined by IMS-LD"
 

@@ -392,7 +392,7 @@ ad_proc -public imsld::export::files::modify_img {
                   if {$position > 0} {
                     set src [string range $src [expr $position+8] end]
                   }
-                  #If none of the previous conditions is fullfill, then a new kind of local url
+                  #If none of the previous conditions is fulfill, then a new kind of local url
                   # not taken into account appears or there is an error in the computed url.
                 }
                 #Copy file
