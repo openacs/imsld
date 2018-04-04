@@ -483,7 +483,7 @@ ad_proc -public imsld::runtime::environment::show_hide {
     mark an environment as shown or hidden. NOTE: not recursively
 } {
 
-    if {![info exist user_id]} {
+    if {![info exists user_id]} {
         set user_id [ad_conn user_id]
     }
     # according to the spec, the environments doesn't have any isvisible attribute
@@ -532,7 +532,7 @@ ad_proc -public imsld::runtime::activity_structure::show_hide {
 } {
     mark an activity structure as show or hidden.
 } {
-    if {![info exist user_id]} {
+    if {![info exists user_id]} {
         set user_id [ad_conn user_id]
     }
     

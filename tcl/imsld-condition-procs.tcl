@@ -17,7 +17,7 @@ ad_proc -public imsld::condition::execute_all {
     -user_id
 } {
 } {
-    if {![info exist user_id]} {
+    if {![info exists user_id]} {
         set user_id [ad_conn user_id] 
     }
 
@@ -44,7 +44,7 @@ ad_proc -public imsld::condition::execute {
 } {
     upvar recursivity_count recursivity_count
 
-    if {![info exist user_id]} {
+    if {![info exists user_id]} {
         set user_id [ad_conn user_id] 
     }
     set ifNodes [$condition selectNodes {*[local-name()='if']}]
@@ -415,7 +415,7 @@ ad_proc -public imsld::expression::eval {
     -user_id
 } {
 } {
-    if {![info exist user_id]} {
+    if {![info exists user_id]} {
         set user_id [ad_conn user_id]
     }
     foreach expressionNode $expression {
@@ -648,7 +648,7 @@ ad_proc -public imsld::statement::execute {
 } {
     upvar recursivity_count recursivity_count
 
-    if {![info exist user_id]} {
+    if {![info exists user_id]} {
         set user_id [ad_conn user_id] 
     }
     ns_log Debug "statement::execute with user_id: $user_id"

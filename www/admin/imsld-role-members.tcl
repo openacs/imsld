@@ -35,7 +35,7 @@ if {[string eq "t" $match_persons_p] && [llength $not_allowed]} {
 set group_title [group::title  -group_id $group_instance]
 
 if {![string eq $group_instance "0"] && [db_0or1row has_role_parent_p {}]} {
-    if {![info exist members_list]} {
+    if {![info exists members_list]} {
         set members_list [db_list get_members_list_2 {}]
     }
     if {![llength $members_list]} {
@@ -49,7 +49,7 @@ if {![string eq $group_instance "0"] && [db_0or1row has_role_parent_p {}]} {
   
     
 } else {
-     if {![info exist members_list]} {
+     if {![info exists members_list]} {
         set members_list [db_list get_members_list {}]
     }
 

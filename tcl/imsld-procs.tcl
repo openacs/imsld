@@ -4724,7 +4724,7 @@ ad_proc -public imsld::get_property_item_id {
     @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
 } {
 
-    if {[info exist play_id] & ![info exist imsld_id]} {
+    if {[info exists play_id] & ![info exists imsld_id]} {
         set imsld_id [db_string get_imsld_id_from_play {
             select iii.item_id 
             from imsld_imsldsi iii, 

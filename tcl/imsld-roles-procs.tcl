@@ -39,7 +39,7 @@ ad_proc -public imsld::roles::create_instance {
 #map role with group
     set rel_id [relation_add imsld_role_group_rel $role_item_id $group_id]
 #map group with his parent (composition_rel)
-    if {[info exist parent_group_id] } {
+    if {[info exists parent_group_id] } {
         relation_add composition_rel $parent_group_id $group_id
     } 
 #map group with the run
@@ -272,7 +272,7 @@ ad_proc -public imsld::roles::get_user_roles {
     Returns a list with all the roles_id from which the user are member. If run_id is given, restrict the list to the roles of the run.
 } {
     set roles_list [list]
-    if {[info exist run_id]} {
+    if {[info exists run_id]} {
         set roles_list [db_list get_user_roles_list {}]
     } else {
         set roles_list [db_list get_raw_user_roles_list {}]
@@ -287,7 +287,7 @@ ad_proc -public imsld::roles::get_users_in_role {
     Returns a list with all the users in a role. If run_id is given, restrict the list to the roles of the run.
 } {
 
-   if {[info exist run_id]} {
+   if {[info exists run_id]} {
        set groups_list [db_list get_groups_in_run {
             select ar1.object_id_two as groups  
             from acs_rels ar1,
@@ -334,7 +334,7 @@ ad_proc -public imsld::roles::get_role_id {
 } {
     Returns the role_id which has a given ref in a run or imsld, 0 if no matches found.
 } {
-    if {[info exist imsld_id]} {
+    if {[info exists imsld_id]} {
         if { [db_0or1row select_role_id_from_imsld {
             select role_id 
             from imsld_roles ir, 
@@ -345,7 +345,7 @@ ad_proc -public imsld::roles::get_role_id {
         }]} {
             return $role_id
         }
-    } elseif { [info exist run_id] } {
+    } elseif { [info exists run_id] } {
         if { [db_0or1row select_role_id_from_run {
                 select iri.role_id
                 from imsld_rolesi iri, 
@@ -418,7 +418,7 @@ ad_proc -public imsld::roles::create_basic_instance {
     set role_item_id [content::revision::item_id -revision_id $role_id]
     set rel_id [relation_add imsld_role_group_rel $role_item_id $group_id]
     #map group with his parent (composition_rel)
-    if {[info exist parent_group_id] } {
+    if {[info exists parent_group_id] } {
         relation_add composition_rel $parent_group_id $group_id
     } 
     #map group with the run

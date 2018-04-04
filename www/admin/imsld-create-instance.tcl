@@ -28,7 +28,7 @@ if { !([string eq $number_of_groups "0"] || [string eq $create_new_p  "t"] ) } {
     ad_script_abort
 }
 
-if {[info exist parent_group_id] } {
+if {[info exists parent_group_id] } {
     set new_instance [imsld::roles::create_instance -role_id $role -parent_group_id $parent_group_id -run_id $run_id]
     ad_returnredirect [export_vars -base imsld-admin-roles {{role $role} {imsld_id $imsld_id} {run_id $run_id} {group_instance $new_instance}}]
 } elseif { ![db_0or1row has_role_parent_p {}] } {

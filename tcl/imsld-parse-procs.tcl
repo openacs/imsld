@@ -718,7 +718,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
         # This callback gets the href of the imported content (if some package imported it)
 
         #revoke permissions until first usage of resources
-        if {[info exist acs_object_id]} {
+        if {[info exists acs_object_id]} {
             permission::set_not_inherit -object_id $acs_object_id
         }
         
@@ -1765,7 +1765,7 @@ ad_proc -public imsld::parse::parse_and_create_forum {
     }
 
     #revoke read permissions until first usage
-    if {[info exist acs_object_id]} {
+    if {[info exists acs_object_id]} {
         permission::set_not_inherit -object_id $acs_object_id
     }
     return $acs_object_id
@@ -2124,7 +2124,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
             # an error happened, abort and return the list whit the error
             return $item_list
         }
-        if { ![info exist role_id] } {
+        if { ![info exists role_id] } {
             set role_id "";
         }
         # create the monitor service

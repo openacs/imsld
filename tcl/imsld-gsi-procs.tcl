@@ -73,7 +73,7 @@ ad_proc -public imsld::gsi::get_triggered_actions {
                 where gt.gsi_trigger_id=gfu.gsi_trigger_id and 
                       gt.trigger_type=:trigger
     }]
-    if {[info exist run_id]} {
+    if {[info exists run_id]} {
         set services_in_run [imsld::gsi::get_services_in_run -run_id $run_id]
         if {[llength $full_actions_list] && [llength $services_in_run]} {
             set actions_list [db_list get_matching_actions "
@@ -839,7 +839,7 @@ ad_proc -public imsld::gsi::action_list_execute {
     @param gservice_id "The service_id to be configured"
 
 } {
-    if {![info exist gservice_id]} {
+    if {![info exists gservice_id]} {
         #FIXME:we can obtain gservice_id because all of them belongs to the same service, obviously there's only one service
         #what happens when more than a service appear?
         #just an idea (I have no time to think more on this): a db_list and a foreach can solve the problem
@@ -851,7 +851,7 @@ ad_proc -public imsld::gsi::action_list_execute {
                                 group by gservice_id"
     }
 
-    if {![info exist multiplicity]} {
+    if {![info exists multiplicity]} {
         db_1row get_service_multiplicity {
             select c.multiplicity as multiplicity 
             from imsld_gsi_services s, 
@@ -861,7 +861,7 @@ ad_proc -public imsld::gsi::action_list_execute {
         }
     }
 
-    if {![info exist plugin_URI]} {
+    if {![info exists plugin_URI]} {
         db_1row get_plugin_URI {
             select plugin_uri as plugin_URI 
             from imsld_gsi_service_status
@@ -897,10 +897,10 @@ ad_proc -public imsld::gsi::get_external_value {
     Receive a node external-value dom node and a run_id and call the proper plugin to obtain the value from the service.
     The meaning of the attributes depends on the handler plugin
 } {
-    if {![info exist user_id]} {
+    if {![info exists user_id]} {
         set user_id [ad_conn user_id]
     }
-    if {![info exist gservice_id]} {
+    if {![info exists gservice_id]} {
         #Given the serviceref, whe can obtain the service_id, since we also have the run_id
         #Note: there can be more than one service with the same identifier (form different UoLs),
         #      so the run_id is used to guarantee uniqueness
@@ -913,7 +913,7 @@ ad_proc -public imsld::gsi::get_external_value {
         }
     }
 
-    if {![info exist multiplicity]} {
+    if {![info exists multiplicity]} {
         db_1row get_service_multiplicity {
             select c.multiplicity as multiplicity 
             from imsld_gsi_services s, 
@@ -923,7 +923,7 @@ ad_proc -public imsld::gsi::get_external_value {
         }
     }
 
-    if {![info exist plugin_URI]} {
+    if {![info exists plugin_URI]} {
         db_1row get_plugin_URI {
             select plugin_uri as plugin_URI 
             from imsld_gsi_service_status
