@@ -375,11 +375,11 @@ ad_proc -public imsld::install::init_ext_rels {
 }
 
 ad_proc -public imsld::install::init_rels {  
-} { 
+} {
     Create default rels between imsld items
-} { 
-    
-    # Learning Objetcives - IMS-LD Items
+} {
+
+    # Learning Objectives - IMS-LD Items
     rel_types::new imsld_lo_item_rel "Learing Objective - Imsld Item rel" "Learing Objective - Imsld Item rels"  \
         content_item 0 {} \
         content_item 0 {}
