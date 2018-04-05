@@ -20,7 +20,7 @@
 <p>#imsld.lt_Are_all_the_students_#</p>
 
 <p>#imsld.lt_If_you_are_not_sure_t# <a href="@back@" title="#imsld.go_back#">#imsld.go_back#</a></p>
-<p>#imsld.lt_Otherwise_if_everthin# <a href="@confirm@" title="#imsld.Confirm#">#imsld.Confirm#</a>.</p>
+<p>#imsld.lt_Otherwise_if_everything# <a href="@confirm@" title="#imsld.Confirm#">#imsld.Confirm#</a>.</p>
 </else>
 
 

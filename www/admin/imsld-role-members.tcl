@@ -1,8 +1,8 @@
 # /packages/imsld/www/admin/imsld-role-members.tcl
 
 ad_page_contract {
-    Asign users assigned to an specified group
-    
+    Assign users assigned to an specified group
+
     @author lfuente@it.uc3m.es
     @creation-date Mar 2006
 } {
@@ -11,7 +11,7 @@ ad_page_contract {
     imsld_id
     run_id
     members_list:optional
-} 
+}
 
 #check conditions and set the database
 set role_info [imsld::roles::get_role_info -role_id $role]
@@ -75,7 +75,7 @@ if {![db_0or1row get_group_name {}]} {
 } else {
     set bulk_actions "{[_ imsld.Remove_Members]} {imsld-role-remove-members} {[_ imsld.lt_Remove_selected_membe]}"
     set bulk_actions_not "{[_ imsld.Add_Members]} {imsld-role-add-members} {[_ imsld.lt_Add_selected_members_]}"
-                     
+
     set bulk_action_export_vars "{group_instance} {role} {imsld_id} {run_id} {members_list}"
 }
 

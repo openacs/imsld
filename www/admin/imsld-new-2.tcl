@@ -43,7 +43,7 @@ ad_progress_bar_begin \
 ns_write "<h2>[_ imsld.Uploading_new_Packaged_Course]</h2>"
 
 set community_id [dotlrn_community::get_community_id]
-# Atempting to create the new IMS LD.
+# Attempting to create the new IMS LD.
 # The proc imsld::parse::parse_and_create_imsld_manifest return a pair of values (manifest_id and a message)
 set manifest_list [imsld::parse::parse_and_create_imsld_manifest -xmlfile $tmp_dir/imsmanifest.xml \
                        -manifest_id $manifest_id \

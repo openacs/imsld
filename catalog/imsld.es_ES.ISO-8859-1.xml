@@ -226,7 +226,7 @@
   <msg key="lt_On_Completion_Identif">Identificador On-Completion</msg>
   <msg key="lt_Organization_Identifi">Identificador Organización</msg>
   <msg key="lt_organizations_tag_not">etiqueta organizations no encontrada en imsmanifest.xml</msg>
-  <msg key="lt_Otherwise_if_everthin">Por lo demás, si todo esta correcto y está seguro, por favor</msg>
+  <msg key="lt_Otherwise_if_everything">Por lo demás, si todo esta correcto y está seguro, por favor</msg>
   <msg key="lt_Parent_Item_Identifie">Identificador del item padre</msg>
   <msg key="lt_Parent_Manifest_Ident">Identificador del item padre</msg>
   <msg key="lt_Parent_Role_Identifie">Parent Role Identifier</msg>

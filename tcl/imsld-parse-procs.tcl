@@ -761,7 +761,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
 	    }
             
             if { !$filex_id } {
-                # an error ocurred when creating the file
+                # an error occurred when creating the file
                 return [list 0 "[_ imsld.lt_The_file_filex_href_w]"]
             }
             if { ![empty_string_p $resource_href] && [string eq $resource_href $filex_href] } {
@@ -842,7 +842,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
     
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
-    @option activity_name In case the item is asociated with an activity, the name is pased to hame the possible associated objects which require pretty names
+    @option activity_name In case the item is associated with an activity, the name is pased to hame the possible associated objects which require pretty names
     @param item_node The item node to parse 
     @param parent_id Parent folder ID
     @param tmp_dir Temporary directory where the files were exctracted

@@ -2,7 +2,7 @@
 
 ad_page_contract {
     
-    Sets the propper resource permissions
+    Sets the proper resource permissions
     
     @author Derick Leony (derick@inv.it.uc3m.es)
     @creation-date 2008-11-22

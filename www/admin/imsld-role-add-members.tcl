@@ -1,8 +1,8 @@
 #/packages/imsld/www/admin/imsld-role-add-members.tcl
 
 ad_page_contract {
-    Asign users assigned to an specified group
-    
+    Assign users assigned to an specified group
+
     @author lfuente@it.uc3m.es
     @creation-date Mar 2006
 } {
@@ -12,7 +12,7 @@ ad_page_contract {
     role
     imsld_id
     run_id
-} 
+}
 
 set page_title "[_ imsld.Add_Members]" 
 set context "" 

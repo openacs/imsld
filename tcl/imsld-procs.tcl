@@ -4596,7 +4596,7 @@ ad_proc -public imsld::get_imsld_from_activity {
 ad_proc -public imsld::get_resource_from_object {
     -object_id
 } {
-    <p>Get the object which is asociated with an acs_object_id</p>
+    <p>Get the object which is associated with an acs_object_id</p>
     @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
 } {
     db_1row get_resource {
@@ -4615,7 +4615,7 @@ ad_proc -public imsld::finish_resource {
 
     @author Luis de la Fuente Valentín (lfuente@it.uc3m.es)
 } {
-    #look for the asociated activities
+    #look for the associated activities
     set activities_list [imsld::get_activity_from_resource -resource_id $resource_id]
     # process each activity
     foreach activity_list $activities_list {

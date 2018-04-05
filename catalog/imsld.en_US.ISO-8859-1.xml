@@ -226,7 +226,7 @@
   <msg key="lt_On_Completion_Identif">On Completion Identifier</msg>
   <msg key="lt_Organization_Identifi">Organization Identifier</msg>
   <msg key="lt_organizations_tag_not">organizations tag not found in imsmanifest.xml</msg>
-  <msg key="lt_Otherwise_if_everthin">Otherwise, if everthing is OK and you are sure, please</msg>
+  <msg key="lt_Otherwise_if_everything">Otherwise, if everything is OK and you are sure, please</msg>
   <msg key="lt_Parent_Item_Identifie">Parent Item Identifier</msg>
   <msg key="lt_Parent_Manifest_Ident">Parent Manifest Identifier</msg>
   <msg key="lt_Parent_Role_Identifie">Parent Role Identifier</msg>
@@ -283,7 +283,7 @@
   <msg key="lt_The_value_must_be_low">The value must be lower than %restriction_value% (inclusive)</msg>
   <msg key="lt_The_value_must_be_low_1">The value must be lower than %restriction_value%</msg>
   <msg key="lt_The_value_value_doesn">The value (%value%) doesn't match with the expression %restriction_value%</msg>
-  <msg key="lt_The_value_value_is_no">The value %value% is not alowed</msg>
+  <msg key="lt_The_value_value_is_no">The value %value% is not allowed</msg>
   <msg key="lt_There_cant_be_less_th">There can't be less than %multiplicity% %element_name% and there are %tree_length%. This is not supported, sorry.</msg>
   <msg key="lt_There_cant_greather_t">There can't greather than %multiplicity% %element_name% and there are %tree_length%. This is not supported, sorry.</msg>
   <msg key="lt_There_is_no_property-">There is no property-group with the identifier %ref% (referenced by property-group %identifier%)</msg>
