@@ -434,7 +434,7 @@ ad_proc -public imsld::parse::remove_dir {
     Deletes the given directory.
     For instance, the tmp_dir used to extract the files and parse them.
 
-    Returns 1 when succeded, 0 otherwise
+    Returns 1 when succeeded, 0 otherwise
 
     @param dir directory to be deleted.
 } {
@@ -661,13 +661,13 @@ ad_proc -public imsld::parse::parse_and_create_resource {
     Parses an IMS-LD resource and stores all the information in the database, such as files, dependencies, etc
 
     Returns a list with the new resource_id created if there were no errors, or 0 and an error explanation.
-    
+
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @option activity_name In case the resource forms part of an activity, the name is passed to name the possible acs_object associated
     @param resource_node Resource tree being parsed
     @param parent_id Parent folder ID
-    @tmp_dir Temporary directory where the files were exctracted
+    @tmp_dir Temporary directory where the files were extracted
 } {
     upvar files_struct_list files_struct_list
 
@@ -684,7 +684,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
         set resource_type [imsld::parse::get_attribute -node $resource_node -attr_name type]
         set resource_href [imsld::parse::get_attribute -node $resource_node -attr_name href]
         set community_id [dotlrn_community::get_community_id]
-        
+
         if { $resource_type eq "imsqti_xmlv1p0" || $resource_type eq "imsqti_xmlv1p1" || $resource_type eq "imsqti_item_xmlv2p0" } {
                 set resource_id [imsld::parse::get_attribute -node $resource_node -attr_name identifier]
                 set noprop 1
@@ -789,11 +789,11 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             set extra_vars [util_list_to_ns_set [list displayable_p "t"]]
             relation_add -extra_vars $extra_vars imsld_res_files_rel $resource_id $link_id
         }
-        
+
 
         set resource_dependencies [$resource_node selectNodes {*[local-name()='dependency']}]
 
-        
+
         foreach dependency $resource_dependencies {
             set dependency_identifierref [imsld::parse::get_attribute -node $dependency -attr_name identifierref]
             set dependency_id [imsld::cp::dependency_new -resource_id $resource_id \
@@ -802,10 +802,10 @@ ad_proc -public imsld::parse::parse_and_create_resource {
             # look for the resource in the manifest and add it to the CR
 
             set resources [$manifest selectNodes {*[local-name()='resources'] }]
-            
+
             # there must be at least one reource for the learning objective
             imsld::parse::validate_multiplicity -tree $resources -multiplicity 0 -element_name "resources (dependency)" -greather_than
-            
+
             set resourcex [$resources find identifier $dependency_identifierref]
             # this resourcex must match with exactly one resource
             imsld::parse::validate_multiplicity -tree $resourcex -multiplicity 1 -element_name "resource ($dependency_identifierref) en $resourcex" -equal
@@ -817,7 +817,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
                                               -tmp_dir $tmp_dir \
 					      -resource_handler $resource_handler ]
             if { ![lindex $dependency_resource_list 0] } {
-                # return this value and let the user know there was an error (because if succeded, it does nothing here)
+                # return this value and let the user know there was an error (because if succeeded, it does nothing here)
                 return $dependency_resource_list
             }
         }
@@ -825,7 +825,7 @@ ad_proc -public imsld::parse::parse_and_create_resource {
     return [list $resource_id {}]
 }
 
-ad_proc -public imsld::parse::parse_and_create_item { 
+ad_proc -public imsld::parse::parse_and_create_item {
     -manifest
     -manifest_id
     {-activity_name ""}
@@ -838,14 +838,14 @@ ad_proc -public imsld::parse::parse_and_create_item {
 } {
     Parse IMS-LD item node and stores all the information in the database, such as the resources, resources items, etc.
 
-    Returns a list with the new imsld_item_id created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new imsld_item_id created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
-    @option activity_name In case the item is associated with an activity, the name is pased to hame the possible associated objects which require pretty names
-    @param item_node The item node to parse 
+    @option activity_name In case the item is associated with an activity, the name is passed to name the possible associated objects which require pretty names
+    @param item_node The item node to parse
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
     @option parent_item_id In case it's a nested item. Default null
 } {
     upvar files_struct_list files_struct_list
@@ -867,7 +867,7 @@ ad_proc -public imsld::parse::parse_and_create_item {
     if { ![empty_string_p $item_identifierref] } {
         # look for the resource in the manifest and add it to the CR
         set resources [$manifest selectNodes {*[local-name()='resources']}]
-        
+
         # there must be at least one reource for the learning objective
         imsld::parse::validate_multiplicity -tree $resources -multiplicity 1 -element_name "resources (referenced from item $item_identifier)" -greather_than
 
@@ -927,15 +927,15 @@ ad_proc -public imsld::parse::parse_and_create_role {
 } {
     Parse IMS-LD role node and stores all the information in the database.
 
-    Returns a list with the new role_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new role_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param role_type staff or learner
     @param component_id Component identifier which this role belongs to
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param roles_node The role node to parse 
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
     @option parent_role_id Parent role identifier. Default to null
 } {
     upvar files_struct_list files_struct_list
@@ -1046,17 +1046,17 @@ ad_proc -public imsld::parse::parse_and_create_restriction {
 } {
     Parse a restriction and stores all the information in the database.
 
-    Returns a list with the new restriction_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new restriction_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param restriction_node restriction node to parse
     @param property_id property_id
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
 } {
     upvar files_struct_list files_struct_list
- 
+
     set restriction_type [string tolower [imsld::parse::get_attribute -node $restriction_node -attr_name restriction-type]]
     set restriction_value [imsld::parse::get_element_text -node $restriction_node]
     set restriction_id [imsld::item_revision_new -attributes [list [list property_id $property_id] \
@@ -1083,8 +1083,8 @@ ad_proc -public imsld::parse::parse_and_create_global_def {
 
     Returns a list with the new global_definition_id (item_id, actually a
     property_id) created if there were no errors, or 0 and an explanation
-    messge if there was an error.
-    
+    message if there was an error.
+
     @option global_def_node global_def node to parse
     @param identifier
     @param existing_href
@@ -1094,7 +1094,7 @@ ad_proc -public imsld::parse::parse_and_create_global_def {
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
 } {
     upvar files_struct_list files_struct_list
 
@@ -1177,17 +1177,17 @@ ad_proc -public imsld::parse::parse_and_create_property_group {
 } {
     Parse a property group and stores all the information in the database.
 
-    Returns a list with the new property_group_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new property_group_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param property_group_node property_group node to parse
     @param component_id Component identifier of the one that owns this property
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
 } {
     upvar files_struct_list files_struct_list
-    
+
     set identifier [imsld::parse::get_attribute -node $property_group_node -attr_name identifier]
     set title [imsld::parse::get_title -node $property_group_node -prefix imsld]
 
@@ -1286,15 +1286,15 @@ ad_proc -public imsld::parse::parse_and_create_property {
 } {
     Parse IMS-LD property and stores all the information in the database.
 
-    Returns a list with the new property_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new property_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param role_type staff or learner
     @param component_id Component identifier which this role belongs to
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
-    @param roles_node The role node to parse 
+    @param roles_node The role node to parse
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
     @option parent_role_id Parent role identifier. Default to null
 } {
     upvar files_struct_list files_struct_list
@@ -1537,14 +1537,14 @@ ad_proc -public imsld::parse::parse_and_create_learning_objective {
 } {
     Parse a learning objective and stores all the information in the database.
 
-    Returns a list with the new learning_objective_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new learning_objective_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param learning_objective_node learning objective node to parse
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @option activity_name In case the learning objective forms part of an activity, the name is provided to be used as the pretty name of the possible associated objects
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
 } {
     upvar files_struct_list files_struct_list
 
@@ -1554,7 +1554,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_objective {
                                    -content_type imsld_learning_objective \
                                    -parent_id $parent_id \
                                    -attributes [list [list pretty_title $learning_objective_title]]]
-                                                
+
     # learning objective: imsld_items
     set learning_objective_items [$learning_objective_node selectNodes "*\[local-name()='item'\]"]
     if { [llength $learning_objective_items] } {
@@ -1588,13 +1588,13 @@ ad_proc -public imsld::parse::parse_and_create_prerequisite {
 } {
     Parse a prerequisite and stores all the information in the database.
 
-    Returns a list with the new prerequisite_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new prerequisite_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param prerequisite_node prerequisite node to parse
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
 } {
     upvar files_struct_list files_struct_list
 
@@ -1604,7 +1604,7 @@ ad_proc -public imsld::parse::parse_and_create_prerequisite {
                              -content_type imsld_prerequisite \
                              -parent_id $parent_id \
                              -attributes [list [list pretty_title $prerequisite_title]]]
-    
+
     # prerequisite: imsld_items
     set prerequisite_items [$prerequisite_node selectNodes "*\[local-name()='item'\]"]
     if { [llength $prerequisite_items] } {
@@ -1641,14 +1641,14 @@ ad_proc -public imsld::parse::parse_and_create_activity_description {
 } {
     Parse a activity description and stores all the information in the database.
 
-    Returns a list with the new activity_description_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new activity_description_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param activity_description_node activity description node to parse
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @option activity_name Provided to name the possible objects associated with the activity
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
 } {
     upvar files_struct_list files_struct_list
 
@@ -1657,12 +1657,12 @@ ad_proc -public imsld::parse::parse_and_create_activity_description {
     set activity_description_id [imsld::item_revision_new -title $activity_description_title \
                                      -content_type imsld_activity_desc \
                                      -parent_id $parent_id]
-    
+
     # activity description: imsld_items
     set activity_description_items [$activity_description_node selectNodes "*\[local-name()='item'\]"]
     if { [llength $activity_description_items] } {
         foreach imsld_item $activity_description_items {
-            
+
             set item_list [imsld::parse::parse_and_create_item -manifest $manifest \
                                -manifest_id $manifest_id \
                                -item_node $imsld_item \
@@ -1695,14 +1695,14 @@ ad_proc -public imsld::parse::parse_and_create_learning_object {
 } {
     Parse a learning object and stores all the information in the database.
 
-    Returns a list with the new learning_object_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new learning_object_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param learning_object_node learning object node to parse
     @param environment_id environment ID of the one tha owns the learning objective
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
 } {
     upvar files_struct_list files_struct_list
 
@@ -1782,14 +1782,14 @@ ad_proc -public imsld::parse::parse_and_create_service {
 } {
     Parse a service and stores all the information in the database.
 
-    Returns a list with the new service_ids (item_ids) created if there were no errors, or 0 and an explanation messge if there was an error. The service element can have conference or send-mail services (index service is currently not supported in .LRN), and they are created directly as a service, i.e. there is no table for storing the services, they are stored directly in the send-mail or conference tables.
-    
+    Returns a list with the new service_ids (item_ids) created if there were no errors, or 0 and an explanation message if there was an error. The service element can have conference or send-mail services (index service is currently not supported in .LRN), and they are created directly as a service, i.e. there is no table for storing the services, they are stored directly in the send-mail or conference tables.
+
     @param service_node service node to parse
     @param environment_id
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
 } {
     upvar files_struct_list files_struct_list
 
@@ -1798,7 +1798,7 @@ ad_proc -public imsld::parse::parse_and_create_service {
     set identifier [imsld::parse::get_attribute -node $service_node -attr_name identifier]
     set is_visible_p [imsld::parse::get_bool_attribute -node $service_node -attr_name isvisible -default t]
     set parameters [imsld::parse::get_attribute -node $service_node -attr_name parameters]
-    
+
     set component_id [db_string get_component_id {
         select env.component_id
         from imsld_environmentsi env
@@ -2151,13 +2151,13 @@ ad_proc -public imsld::parse::parse_and_create_environment {
 } {
     Parse a environment and stores all the information in the database.
 
-    Returns a list with the new environment_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new environment_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param environment_node environment node to parse
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
 } {
     upvar files_struct_list files_struct_list
     upvar warnings warnings
@@ -2165,7 +2165,7 @@ ad_proc -public imsld::parse::parse_and_create_environment {
     # get environment info
     set identifier [imsld::parse::get_attribute -node $environment_node -attr_name identifier]
     set title [imsld::parse::get_title -node $environment_node -prefix imsld]
-    
+
     # check if the environmet hasn't been already created by the reference of another environment previously parsed
     if { [db_0or1row already_created_environment {
         select item_id as environment_item_id
@@ -2298,7 +2298,7 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
 } {
     Parse a property value and stores all the information in the database.
 
-    Returns a list with the new property_value_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
+    Returns a list with the new property_value_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
     
     @param component_id Component identifier which this role belongs to
     @param manifest Manifest tree
@@ -2388,14 +2388,14 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
 } {
     Parse a learning activity and stores all the information in the database.
 
-    Returns a list with the new activity_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new activity_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param component_id Component identifier which this role belongs to
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param activity_node The activity node to parse 
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
 } {
     upvar files_struct_list files_struct_list
     upvar warnings warnings
@@ -2408,7 +2408,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     set is_visible_p [imsld::parse::get_bool_attribute -node $activity_node -attr_name isvisible -default t]
     set parameters [imsld::parse::get_attribute -node $activity_node -attr_name parameters]
     set title [imsld::parse::get_title -node $activity_node -prefix imsld]
-    
+
     # Learning Activity: Learning Objectives (which are really an imsld_item that can have resource associated.)
     set learning_objectives [$activity_node selectNodes "*\[local-name()='learning-objectives'\]"]
     if { [llength $learning_objectives] } {
@@ -2663,15 +2663,15 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
 } {
     Parse a support activity and stores all the information in the database.
 
-    Returns a list with the new activity_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new activity_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param role_type staff or learner
     @param component_id Component identifier which this role belongs to
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
-    @param roles_node The role node to parse 
+    @param roles_node The role node to parse
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
     @option parent_role_id Parent role identifier. Default to null
 } {
     upvar files_struct_list files_struct_list
@@ -2922,14 +2922,14 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
 } {
     Parse a activity structure and stores all the information in the database.
 
-    Returns a list with the new activivty_structure_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new activivty_structure_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param component_id Component identifier which this role belongs to
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
-    @param activity_node The activity structure node to parse 
+    @param activity_node The activity structure node to parse
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
 } {
     upvar files_struct_list files_struct_list
     upvar warnings warnings
@@ -2941,7 +2941,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
     set sort [expr { [string eq "" $sort] ? "as-is" : "[string tolower $sort]" }]
     set structure_type [imsld::parse::get_attribute -node $activity_node -attr_name structure-type]
     set title [imsld::parse::get_title -node $activity_node -prefix imsld]
-    
+
     # because of the complexity of the manifest, the activity structure may be already crated
     if { [db_0or1row already_crated {
         select item_id as activity_structure_id
@@ -2952,7 +2952,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
     }] } {
         return $activity_structure_id
     }
-    
+
     # crete activity structure
     set activity_structure_id [imsld::item_revision_new \
                                    -attributes [list [list identifier $identifier] \
@@ -3309,14 +3309,14 @@ ad_proc -public imsld::parse::parse_and_create_role_part {
 } {
     Parse a role part and stores all the information in the database.
 
-    Returns a list with the new role_part_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new role_part_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param act_id Act identifier which this role part belongs to
-    @param role_part_node The role part node to parse 
+    @param role_part_node The role part node to parse
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
     @param sort_order
 } {
     upvar warnings warnings
@@ -3541,14 +3541,14 @@ ad_proc -public imsld::parse::parse_and_create_act {
 } {
     Parse a act and stores all the information in the database.
 
-    Returns a list with the new act_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new act_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param play_id Play identifier which this act belongs to
-    @param act_node The act node to parse 
+    @param act_node The act node to parse
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
     @param sort_order
 } {
     upvar files_struct_list files_struct_list
@@ -3573,7 +3573,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
         and ip.play_id = cr1.revision_id
         and cr1.item_id = :play_id
     }
-    
+
     # helper list for killing temporal dom doc after used
     set temporal_doc_list [list]
 
@@ -3826,15 +3826,15 @@ ad_proc -public imsld::parse::parse_and_create_play {
 } {
     Parse a play and stores all the information in the database.
 
-    Returns a list with the new play_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new play_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @param method_id method identifier which this play belongs to
-    @param play_node The play node to parse 
+    @param play_node The play node to parse
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
-    @param sort_order 
+    @param tmp_dir Temporary directory where the files were extracted
+    @param sort_order
 } {
     upvar files_struct_list files_struct_list
     upvar warnings warnings
@@ -3846,7 +3846,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
     set identifier [imsld::parse::get_attribute -node $play_node -attr_name identifier]
     set is_visible_p [imsld::parse::get_bool_attribute -node $play_node -attr_name isvisible -default t]
     set title [imsld::parse::get_title -node $play_node -prefix imsld]
-    
+
     # Play: Complete Play
     set complete_play [$play_node selectNodes "*\[local-name()='complete-play'\]"]
     set complete_act_id ""
@@ -4031,15 +4031,15 @@ ad_proc -public imsld::parse::parse_and_create_notification {
 } {
     Parse a notification and stores all the information in the database.
 
-    Returns a list with the new notification_id (item_id) created if there were no errors, or 0 and an explanation messge if there was an error.
-    
+    Returns a list with the new notification_id (item_id) created if there were no errors, or 0 and an explanation message if there was an error.
+
     @option component_id Component identifier which the notification belongs
     @option imsld_id IMS-LD identifier which this notification belongs
     @param manifest Manifest tree
     @param manifest_id Manifest ID or the manifest being parsed
-    @param notification_node The notification node to parse 
+    @param notification_node The notification node to parse
     @param parent_id Parent folder ID
-    @param tmp_dir Temporary directory where the files were exctracted
+    @param tmp_dir Temporary directory where the files were extracted
 } {
     upvar files_struct_list files_struct_list
     upvar warnings warnings
@@ -4221,7 +4221,7 @@ ad_proc -public imsld::parse::parse_and_create_if_then_else {
 } {
     Parse a condition and stores all the information in the database.
 
-    Returns the if_then_else_id (item_id) if there were no errors, or 0 and an explanation messge if there was an error.
+    Returns the if_then_else_id (item_id) if there were no errors, or 0 and an explanation message if there was an error.
     
     @param imsld_id IMS-LD identifier which this play belongs to
     @param condition_node The condition node to be parsed 
@@ -4272,7 +4272,7 @@ ad_proc -public imsld::parse::parse_and_create_class {
 } {
     Parse a class and stores all the information in the database.
 
-    Returns the class_id (item_id) if there were no errors, or 0 and an explanation messge if there was an error.
+    Returns the class_id (item_id) if there were no errors, or 0 and an explanation message if there was an error.
     
     @param method_id 
     @param class_node
@@ -4293,7 +4293,7 @@ ad_proc -public imsld::parse::parse_and_create_calculate {
 } {
     Parse a condition and stores all the information in the database.
 
-    Returns a list with the condition_id (item_id) if there were no errors, or 0 and an explanation messge if there was an error.
+    Returns a list with the condition_id (item_id) if there were no errors, or 0 and an explanation message if there was an error.
     
     @param calculate_node The condition node to be parsed 
     @param manifest Manifest tree

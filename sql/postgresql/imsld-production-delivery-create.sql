@@ -1,6 +1,6 @@
 --
 -- IMS-LD Status Data Model.
--- Theese tables are used to determine the status of the learner, staff or any other "IMS-LD object"
+-- These tables are used to determine the status of the learner, staff or any other "IMS-LD object"
 -- inside the unit of learning.
 --
 -- @author jopez@inv.it.uc3m.es

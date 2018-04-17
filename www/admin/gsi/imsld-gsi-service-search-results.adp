@@ -3,7 +3,7 @@
   <property name="context">@context;noquote@</property>
 
 <if @connected_p@ eq "t">
-    <h2 class="center">Theese are the available alternatives to configure the service</h2>
+    <h2 class="center">These are the available alternatives to configure the service</h2>
     <div class="centered-table"><listtemplate name="lookup_results"></listtemplate></div>
 </if>
 <else>

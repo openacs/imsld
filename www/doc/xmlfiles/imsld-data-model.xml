@@ -736,7 +736,7 @@
             </listitem>
 
             <listitem>
-              <para>imsld_object_one_type - wich can be: learning_object,
+              <para>imsld_object_one_type - which can be: learning_object,
               imsld_item, imsld_role, support_activity, etc</para>
             </listitem>
 

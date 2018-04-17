@@ -2765,11 +2765,11 @@ ad_proc -public imsld::process_activity_as_ul {
     @option user_id default ad_conn user_id
 
     @return The html list (activity_name, list of associated urls, using tdom) of the activity in the IMS-LD. 
-    It only works whith the learning and support activities, since it will only return the objectives, prerequistes,
+    It only works with the learning and support activities, since it will only return the objectives, prerequistes,
     associated resources but not the environments.
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
-    
+
     if { [db_0or1row is_imsld {
         select 1 from imsld_imsldsi where item_id = :activity_item_id
     }] } {
@@ -4408,10 +4408,10 @@ ad_proc -public imsld::get_next_activity_list {
     
 }
 
-ad_proc -public imsld::get_activity_from_environment { 
+ad_proc -public imsld::get_activity_from_environment {
     -environment_item_id
-    
-} { 
+
+} {
     @return The a list of lists of the activity_id, activity_item_id and activity_type from which the environment is being referenced
 } {
     set activities_list [list]
@@ -4423,7 +4423,7 @@ ad_proc -public imsld::get_activity_from_environment {
     }] {
         set object_id_one [lindex $environment_list 0]
         set rel_type [lindex $environment_list 1]
-        # the enviroment may be referenced froma learning activity, support activity or from an enviroment!
+        # the environment may be referenced froma learning activity, support activity or from an environment!
         if { [string eq $rel_type imsld_la_env_rel] } {
             set activities_list [concat $activities_list [db_list_of_lists learning_env_ref {
                 select la.activity_id,

@@ -841,7 +841,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
             }
         }
 
-        # 5. service (enviroment)
+        # 5. service (environment)
         db_foreach service {
             select serv.service_id,
             coalesce(serv.is_visible_p, 't') as is_visible_p,

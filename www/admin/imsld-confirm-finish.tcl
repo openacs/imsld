@@ -34,7 +34,7 @@ if {$has_services_p == 0} {
     }
 }
 
-# excecute all conditions for all users
+# execute all conditions for all users
 
 set users_list [list]
 foreach role_id [imsld::roles::get_list_of_roles -imsld_id $imsld_id] {

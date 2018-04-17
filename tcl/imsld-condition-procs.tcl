@@ -584,7 +584,7 @@ ad_proc -public imsld::expression::eval {
                 set returnvalue [expr { [string eq 0 $count] ? 0 : $returnvalue }]
                 return $returnvalue
             }
-            {substract} {
+            {subtract} {
                 set childs [$expressionNode childNodes]
                 return [expr {[imsld::expression::eval -run_id $run_id -expression [lindex $childs 0]] - [imsld::expression::eval -run_id $run_id  -user_id $user_id -expression [lindex $childs 1]]}]
             }

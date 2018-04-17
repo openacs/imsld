@@ -527,7 +527,7 @@ create index imsld_methods_oncomp_id_idx on imsld_methods(on_completion_id);
 comment on table imsld_methods is '
 This table holds the methods of the unit of learning.
 The methods are the ones that specifies the sequence of activities. 
-Theese activities are grouped with their corresponding roles and form a play, which is mapped to the method.
+These activities are grouped with their corresponding roles and form a play, which is mapped to the method.
 The method is completed when all the ''plays to complete method'' mapped to this table are completed or
 when the time indicated by time_limit has been completed, and may be completed by some contidions explained
 in the level B of the spec';
@@ -563,7 +563,7 @@ comment on table imsld_plays is '
 This table stores the plays of the method in the unit of learning.
 The play is completed when the act (in imsld_acts) referenced by ''when_last_act_completed_id'' is completed or
 when the time indicated by ''time_limit_id'' has fihished (it may also be completed according to
-some conditions explained in the level B of the spec). If theese two fields are empty, the play is ''ulimited.''';
+some conditions explained in the level B of the spec). If these two fields are empty, the play is ''ulimited.''';
 
 create table imsld_acts (
     act_id              integer 

@@ -304,7 +304,7 @@ ad_proc -public imsld::export::ld::components::write_activities {
     if {$identifier != ""} {
       $la setAttribute identifier $identifier
     }
-    #Add parameters if ther are parameters
+    #Add parameters if there are parameters
     if {$parameters != ""} {
       $la setAttribute parameters $parameters
     }

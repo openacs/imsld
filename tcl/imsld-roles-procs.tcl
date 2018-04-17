@@ -102,7 +102,7 @@ ad_proc -public imsld::roles::get_depth {
 ad_proc -public imsld::roles::get_list_of_roles {
     -imsld_id:required
 } {
-    @param imsld_id identifier of the imsld from wich roles will be searched
+    @param imsld_id identifier of the imsld from which roles will be searched
 } {
     set main_roles [db_list roles_list {}]
     set roles_list [list]
