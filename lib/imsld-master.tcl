@@ -6,7 +6,7 @@ if { [template::util::is_nil title] } {
 }
 
 if {![array exists doc]} {
-    array set doc [list]
+    array set doc {}
 }
 
 if { ![info exists header_stuff] } {

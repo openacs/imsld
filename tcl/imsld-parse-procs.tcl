@@ -137,7 +137,7 @@ ad_proc -public imsld::parse::convert_time_to_array {
 } {
     # seconds in year, month, day, hour, minute and second
     set units [list year 31536000 month 2592000 day 86400 hour 3600 minute 60 second 1]
-    set result [list]
+    set result {}
 
     foreach {unit seconds} $units {
 	set value [expr $time / $seconds]
@@ -487,7 +487,7 @@ ad_proc -public imsld::parse::get_folder_contents {
     @param dir File System directory
     @param type file or directory. If type is file it returns the list of files in the dir. If type is directory it returns the list of directories in the dir.
 } {
-    set return_list [list]
+    set return_list {}
      foreach f [glob -no complain [file join $dir * ]] {
          if { [string eq $type [file type $f]] } {
              lappend return_list $f
@@ -504,7 +504,7 @@ ad_proc -public imsld::parse::get_files_structure {
     @param tmp_dir The dir where the files where uncompressed to.
 } {
     if { [file exists $tmp_dir] } {
-        set files_structure [list]
+        set files_structure {}
         
         # get all the directories and files under those dirs
         # dirx = directory loop
@@ -513,7 +513,7 @@ ad_proc -public imsld::parse::get_files_structure {
         # for each directory found..
         while { [llength $dirx] != 0 } {
             set dir [lindex $dirx 0]
-            set dir_content [list]
+            set dir_content {}
                 
             foreach subdirx [imsld::parse::get_folder_contents -dir $dir -type directory] {
                 lappend dir_content [list "$subdirx" dir]
@@ -2308,7 +2308,7 @@ ad_proc -public imsld::parse::parse_and_create_property_value {
 } {
 
     # helper for temporal dom trees
-    set temporal_doc_list [list]
+    set temporal_doc_list {}
 
     # Property Ref
     set property_ref [$property_value_node selectNodes "*\[local-name()='property-ref'\]"]
@@ -2401,7 +2401,7 @@ ad_proc -public imsld::parse::parse_and_create_learning_activity {
     upvar warnings warnings
 
     # helper for temporal dom trees
-    set temporal_doc_list [list]
+    set temporal_doc_list {}
 
     # get the info of the learning activity and create it
     set identifier [imsld::parse::get_attribute -node $activity_node -attr_name identifier]
@@ -2678,7 +2678,7 @@ ad_proc -public imsld::parse::parse_and_create_support_activity {
     upvar warnings warnings
 
     # helper for temporal dom trees
-    set temporal_doc_list [list]
+    set temporal_doc_list {}
 
     # get the info of the support activity and create it
     set identifier [imsld::parse::get_attribute -node $activity_node -attr_name identifier]
@@ -3575,7 +3575,7 @@ ad_proc -public imsld::parse::parse_and_create_act {
     }
 
     # helper list for killing temporal dom doc after used
-    set temporal_doc_list [list]
+    set temporal_doc_list {}
 
     # Act: Complete Act: Time Limit
     set complete_act [$act_node selectNodes "*\[local-name()='complete-act'\]"]
@@ -3840,7 +3840,7 @@ ad_proc -public imsld::parse::parse_and_create_play {
     upvar warnings warnings
 
     # helper for temporal dom docs
-    set temporal_doc_list [list]
+    set temporal_doc_list {}
 
     # get the info of the play and create it
     set identifier [imsld::parse::get_attribute -node $play_node -attr_name identifier]
@@ -4231,7 +4231,7 @@ ad_proc -public imsld::parse::parse_and_create_if_then_else {
 } {
 
     # helper for temporal dom trees
-    set temporal_doc_list [list]
+    set temporal_doc_list {}
 
     set temporal_doc [dom createDocument condition]
     lappend temporal_doc_list $temporal_doc
@@ -4335,11 +4335,11 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     set warnings ""
 
     # helper for temporal dom trees
-    set temporal_doc_list [list]
+    set temporal_doc_list {}
 
     # list in which every element will have locpersproperty_id
     # [ [prop1] [prop2] ... ]
-    set lpplist [list]
+    set lpplist {}
 
     # get the files structure
     set files_struct_list [imsld::parse::get_files_structure -tmp_dir $tmp_dir]
