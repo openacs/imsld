@@ -34,7 +34,7 @@ ad_page_contract {
 }
 
 set page_title "[_ imsld.lt_Monitoring_One_Activi]"
-set context [list]
+set context {}
 
 if { $activity_item_id ne "" && $activity_id eq "" } {
     set activity_id [content::item::get_live_revision -item_id $activity_item_id]
@@ -82,7 +82,7 @@ if { [string eq $type "learning"] || [string eq $type "support"] || [string eq $
     lappend elements finish_date \
         [list label "[_ imsld.Finish_Date]"]
 
-    set users_list [list]
+    set users_list {}
     db_foreach related_user {
         select stat.user_id,
         stat.role_id,
@@ -622,7 +622,7 @@ set imsld_id [content::revision::item_id \
 		  -revision_id [imsld::get_imsld_from_activity -activity_id $activity_id -activity_type $type]]
 
 content::item::get -item_id $imsld_id -array_name imsld_array
-set res_options [list]
+set res_options {}
 if { $imsld_array(resource_handler) eq "xowiki" } {
     set res_options [imsld::xowiki::page_list]
 } else {
@@ -632,7 +632,7 @@ if { $imsld_array(resource_handler) eq "xowiki" } {
 			   -package_key "file-storage"]
     
     content::item::get -item_id $imsld_id -array_name imsld_array
-    set res_options [list]
+    set res_options {}
     if { $imsld_array(resource_handler) eq "xowiki" } {
 	set res_options [imsld::xowiki::page_list]
     } else {
@@ -781,7 +781,7 @@ if { $type eq "structure" } {
 		     -imsld_id [db_string get_imsld_from_run \
 				    {select imsld_id from imsld_runs where run_id=:run_id}] ]
 	    
-	    set involved_users [list]
+	    set involved_users {}
 	    foreach role $involved_roles {
 		
 		set involved_users [concat $involved_users \
@@ -912,14 +912,14 @@ ad_form \
 	# 		     -imsld_id [db_string get_imsld_from_run \
 	# 				    {select imsld_id from imsld_runs where run_id=:run_id}] ]
 	
-	# 	    set involved_users [list]
+	# 	    set involved_users {}
 	# 	    foreach role $involved_roles {
 	# 		set involved_users [concat $involved_users \
 	# 					[imsld::roles::get_users_in_role \
 	# 					     -role_id [lindex $role 0] -run_id $run_id]]
 	# 	    }
 	
-	# 	    set involved_users [list]
+	# 	    set involved_users {}
 
 	# 	    foreach user_id [lsort -unique $involved_users] { 
 	

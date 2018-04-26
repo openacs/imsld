@@ -30,7 +30,7 @@ set monitoring_user_name "[_ imsld.None]"
 if { [string eq $self_p "f"] } {
     # display the list of users in order to chose one of them
     set role_instances [imsld::roles::get_role_instances -role_id $role_id -run_id $run_id]
-    set users_in_instances [list]
+    set users_in_instances {}
     foreach instance $role_instances {
         set users_in_instances [concat $users_in_instances [group::get_members -group_id $instance]]
     }
@@ -57,4 +57,4 @@ if { ![string eq $monitoring_user_id ""] } {
 }
 
 set page_title {}
-set context [list]
+set context {}

@@ -12,7 +12,7 @@ ad_page_contract {
 
 set frame_header "[_ imsld.Context_info]"
 set page_title $frame_header
-set context [list]
+set context {}
 
 dom createDocument ul doc
 set dom_root [$doc documentElement]

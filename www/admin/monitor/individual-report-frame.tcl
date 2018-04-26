@@ -12,7 +12,7 @@ ad_page_contract {
 }
 
 set page_title "[_ imsld.Individual_Report]"
-set context [list]
+set context {}
 set frame_header "[_ imsld.This]: "
 
 # Fetch the users that are active in the run
@@ -67,7 +67,7 @@ set elements [list user_name \
                   [list label "[_ imsld.Finished_Date]"]]
 
 template::multirow create related_activities related_id activity_name type started_time finished_time
-set activities_list [list]
+set activities_list {}
         
 db_foreach related_resources {
     select stat.related_id,
