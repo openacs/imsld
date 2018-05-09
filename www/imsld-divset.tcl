@@ -26,4 +26,4 @@ if { $activity_id ne ""} {
 }
 
 set page_title {}
-set context {}
+set context [list]

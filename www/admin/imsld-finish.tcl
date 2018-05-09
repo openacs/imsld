@@ -16,13 +16,13 @@ set context [list $page_title]
 set roles_list_depth [imsld::roles::get_list_of_roles -imsld_id $imsld_id]
 
 
-set roles_list {}
+set roles_list [list]
 foreach role $roles_list_depth {
     lappend roles_list [lindex $role 0]
 }
 
-set warnings {}
-set errors {}
+set warnings [list]
+set errors [list]
 #para cada role, compruebo todas las condiciones
 foreach role $roles_list {
     set role_info [imsld::roles::get_role_info -role_id $role]

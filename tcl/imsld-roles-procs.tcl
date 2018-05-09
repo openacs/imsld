@@ -105,7 +105,7 @@ ad_proc -public imsld::roles::get_list_of_roles {
     @param imsld_id identifier of the imsld from which roles will be searched
 } {
     set main_roles [db_list roles_list {}]
-    set roles_list {}
+    set roles_list [list]
     foreach role $main_roles {
 	set depth [imsld::roles::get_depth -role_id $role]
 	lappend roles_list [list $role $depth]
@@ -120,7 +120,7 @@ ad_proc -public imsld::roles::get_roles_names {
     @param roles_list the list of roles to get the name
 } {
     set counter 1
-    set roles_names {}
+    set roles_names [list]
     foreach role_item_par $roles_list {
 
         set role_item [lindex $role_item_par 0]
@@ -259,7 +259,7 @@ ad_proc -private imsld::roles::get_mail_recipients {
 #        set group_id 
 #
 #       }
-    set users_list {}
+    set users_list [list]
     foreach group $list_of_groups {
         lappend users_list [group::get_members -group_id $group]
     }
@@ -271,7 +271,7 @@ ad_proc -public imsld::roles::get_user_roles {
 } {
     Returns a list with all the roles_id from which the user are member. If run_id is given, restrict the list to the roles of the run.
 } {
-    set roles_list {}
+    set roles_list [list]
     if {[info exists run_id]} {
         set roles_list [db_list get_user_roles_list {}]
     } else {
@@ -313,7 +313,7 @@ ad_proc -public imsld::roles::get_users_in_role {
        }]
    }
 
-   set users_list {}
+   set users_list [list]
    foreach group $groups_list {
         set users_in_group [db_list get_users_in_group {
            select member_id 
@@ -448,7 +448,7 @@ ad_proc -public imsld::roles::create_groups_from_dom {
     
     @error 
 } {
-    set groups {}
+    set groups [list]
     foreach role_node [$node selectNodes {role}] {
 	set id [$role_node getAttribute {id}]
 	set occurrence [$role_node getAttribute {occurrence}]

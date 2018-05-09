@@ -13,7 +13,7 @@ set user_id [ad_conn user_id]
 
 set frame_header "[_ imsld.Context_info]"
 set page_title $frame_header
-set context {}
+set context [list]
 
 dom createDocument ul doc
 set dom_root [$doc documentElement]
