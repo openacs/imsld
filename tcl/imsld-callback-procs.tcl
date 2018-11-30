@@ -43,7 +43,7 @@ ad_proc -public -callback fs::file_revision_new -impl imsld {
 
     This is a hack so let the course administrator can change the files of the UoL from the fs UI. This should be done in a cleaner way.
 } {
-    if { [string eq [content::item::content_type -item_id $file_id] "imsld_cp_file"] } {
+    if { [string eq [content::item::get_content_type -item_id $file_id] "imsld_cp_file"] } {
 	db_transaction {
 	    db_1row imsld_cp_file_info {
 		select path_to_file,
