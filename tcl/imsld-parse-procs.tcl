@@ -4346,7 +4346,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
 
     # Parser
     # XML => DOM document
-    dom parse [::tDOM::xmlReadFile $xmlfile] document
+    dom parse [::tdom::xmlReadFile $xmlfile] document
     
     # DOM document => DOM root
     $document documentElement manifest

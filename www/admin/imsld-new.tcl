@@ -38,7 +38,7 @@ if {$manifest == 0} {
 }
 
 # open the imsmanifest.xml file
-dom parse [::tDOM::xmlReadFile $manifest] doc
+dom parse [::tdom::xmlReadFile $manifest] doc
 set manifest [$doc documentElement]
 
 # Pair of values, success_p + explanation
