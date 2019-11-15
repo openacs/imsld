@@ -16,7 +16,7 @@
       </a>
     </span>
 
-  <if @roles_template_p@ eq 1>
+  <if @roles_template_p;literal@ true>
     <include src="support-activity-roles" 
 	supported_roles="@supported_roles@" 
 	run_id=@run_id@ 
@@ -36,7 +36,7 @@
   <iframe id="object" name="object" src="@iframe_activity_url@" style="left:0; top:0;" width="98%" height="60%"></iframe>
 
   <script type="text/javascript">
-    <if @roles_template_p@ eq 1>
+    <if @roles_template_p;literal@ true>
       dynamicSelect("supported-roles", "user-roles");
     </if>
   </script>

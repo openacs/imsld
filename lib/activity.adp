@@ -5,14 +5,14 @@
         onclick="return(loadContent('@div@'))">
         @activity_title@
       </a>
-      <if @completed_activity_p@>
+      <if @completed_activity_p;literal@ true>
         <if @complete_act_id@ ne "">
           <img src="/resources/imsld/completed.png" alt="#imsld.completed#"
             title="#imsld.completed#" >
         </if>
       </if>
       <else>
-        <if @is_visible_p@ and @user_choice_p@ and @finish_href@ not nil>
+        <if @is_visible_p;literal@ true and @user_choice_p@ and @finish_href@ not nil>
           <a href="@finish_href@" onclick="return(loadTree(this.href))"
             class="finish" title="#imsld.finish_activity#">#imsld.finish#</a>
         </if>
@@ -28,14 +28,14 @@
         onclick="return(loadContent('@div@'))">
         @activity_title@
       </a>
-      <if @completed_activity_p@>
+      <if @completed_activity_p;literal@ true>
         <if @complete_act_id@ ne "">
           <img src="/resources/imsld/completed.png" alt="#imsld.completed#"
             title="#imsld.completed#" >
         </if>
       </if>
       <else>
-        <if @is_visible_p@ and @user_choice_p@>
+        <if @is_visible_p;literal@ true and @user_choice_p;literal@ true>
           <a href="@finish_href@" onclick="return(loadTree(this.href))"
             class="finish" title="#imsld.finish_activity#">#imsld.finish#</a>
         </if>
@@ -46,7 +46,7 @@
   </case>
 
   <case value="structure">
-    <if @started_p@ and @referenced_activities:rowcount@>
+    <if @started_p;literal@ true and @referenced_activities:rowcount@>
       <li id="mktree_activity_li_@structure_item_id@">
         <a href="@href@"
           onclick="return(loadContent('@div@'))">

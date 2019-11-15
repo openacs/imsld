@@ -321,7 +321,7 @@ ad_proc -public imsld::roles::get_users_in_role {
            where group_id=:group
            group by member_id
         }]
-        set users_list [concat $users_list $users_in_group]
+        lappend users_list {*}$users_in_group
    }
   return $users_list
 }
@@ -466,7 +466,7 @@ ad_proc -public imsld::roles::create_groups_from_dom {
 	lappend groups $occurrence $new_instance_id
 	set sub_groups [imsld::roles::create_groups_from_dom -node $role_node -run_id $run_id -imsld_id $imsld_id \
 			    -parent_group_id $new_instance_id]
-	set groups [concat $groups $sub_groups]
+	lappend groups {*}$sub_groups
     }
     return $groups
 }

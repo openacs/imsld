@@ -1,5 +1,5 @@
 <div class="service-configurated">
-<if @still_waiting_p@ eq "f">
+<if @still_waiting_p;literal@ false>
 <p>congratulations....</p>
 </if>
 <else>

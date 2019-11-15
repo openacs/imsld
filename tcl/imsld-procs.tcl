@@ -103,7 +103,7 @@ ad_proc -public imsld::get_role_part_from_activity {
             set role_part_list [list]
             set referncer_list [db_list la_directly_mapped { *SQL* }]
             if { [llength $referncer_list] } {
-                set role_part_list [concat $role_part_list $referncer_list]
+                lappend role_part_list {*}$referncer_list
             }
             # check if the learning activity is referenced by some activity structures... digg more
             foreach la_structure_list [db_list_of_lists get_la_activity_structures { *SQL* }] {
@@ -111,7 +111,7 @@ ad_proc -public imsld::get_role_part_from_activity {
                 set leaf_id [lindex $la_structure_list 1]
                 set referencer_list [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
                 if { [llength $referencer_list] } {
-                    set role_part_list [concat $role_part_list $referencer_list]
+                    lappend role_part_list {*}$referencer_list
                 }
             }
             return $role_part_list
@@ -120,7 +120,7 @@ ad_proc -public imsld::get_role_part_from_activity {
             set role_part_list [list]
             set referncer_list [db_list sa_directly_mapped { *SQL* }]
             if { [llength $referncer_list] } {
-                set role_part_list [concat $role_part_list $referncer_list]
+                lappend role_part_list {*}$referncer_list
             }
             # check if the support activity is referenced by some activity structures... digg more
             foreach sa_structure_list [db_list_of_lists get_sa_activity_structures { *SQL* }] {
@@ -128,7 +128,7 @@ ad_proc -public imsld::get_role_part_from_activity {
                 set leaf_id [lindex $sa_structure_list 1]
                 set referencer_list [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
                 if { [llength $referencer_list] } {
-                    set role_part_list [concat $role_part_list $referencer_list]
+                    lappend role_part_list {*}$referencer_list
                 }
             }
             return $role_part_list
@@ -137,7 +137,7 @@ ad_proc -public imsld::get_role_part_from_activity {
             set role_part_list [list]
             set referncer_list [db_list as_directly_mapped { *SQL* }]
             if { [llength $referncer_list] } {
-                set role_part_list [concat $role_part_list $referncer_list]
+                lappend role_part_list {*}$referncer_list
             }
             # check if the activity structure is referenced by an activity structure... digg more
             foreach sa_structure_list [db_list_of_lists get_as_activity_structures { *SQL* }] {
@@ -145,7 +145,7 @@ ad_proc -public imsld::get_role_part_from_activity {
                 set leaf_id [lindex $sa_structure_list 1] 
                 set referencer_list [imsld::get_role_part_from_activity -activity_type structure -leaf_id $leaf_id]
                 if { [llength $referencer_list] } {
-                    set role_part_list [concat $role_part_list $referencer_list]
+                    lappend role_part_list {*}$referencer_list
                 } 
             }
             return $role_part_list
@@ -4329,7 +4329,7 @@ ad_proc -public imsld::get_next_activity_list {
                 set users_list [list]
                 foreach role $roles_list {
                     set users_in_role [imsld::roles::get_users_in_role -role_id [lindex $role 0] -run_id $run_id]
-                    set users_list [concat $users_list $users_in_role]
+                    lappend users_list {*}$users_in_role
                 }
 
                 #check if all has finished the act
@@ -4455,7 +4455,7 @@ ad_proc -public imsld::get_activity_from_environment {
                 set referencer_env_item_id [lindex $referenced_environment 0]
                 set activities_list_nested [concat $activities_list_nested [imsld::get_activity_from_environment -environment_item_id $referencer_env_item_id]]
             }
-            set activities_list [concat $activities_list $$activities_list]
+            lappend activities_list {*}$$activities_list
         }
     }
     return $activities_list
@@ -4523,7 +4523,7 @@ ad_proc -public imsld::get_activity_from_resource {
                         and la.activity_description_id = ades.item_id
                         and content_revision__is_live(la.activity_id)
                     }] } {
-                        set activities_list [concat $activities_list [list [list $activity_id $activity_item_id learning]]]
+                        lappend activities_list [list $activity_id $activity_item_id learning]
                     } else {
                         set activities_list [concat $activities_list [db_list_of_lists support_activity_ref {
                             select sa.activity_id,

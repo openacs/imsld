@@ -49,7 +49,7 @@
 
 	<fullquery name="imsld::parse::parse_and_create_environment.get_env_id">
 		<querytext>
-                select item_id as refrenced_env_id 
+                select item_id as referenced_env_id 
                 from imsld_environmentsi 
                 where identifier = :ref 
                 and content_revision__is_live(environment_id) = 't' 
@@ -135,7 +135,7 @@
 
 	<fullquery name="imsld::parse::parse_and_create_activity_structure.get_struct_id_from_as_ref">
 		<querytext>
-                        select item_id as refrenced_struct_id,
+                        select item_id as referenced_struct_id,
                         structure_id
                         from imsld_activity_structuresi 
                         where identifier = :ref 
@@ -147,7 +147,7 @@
 
 	<fullquery name="imsld::parse::parse_and_create_activity_structure.get_struct_id_from_la_ref">
 		<querytext>
-                        select item_id as refrenced_struct_id,
+                        select item_id as referenced_struct_id,
                         structure_id
                         from imsld_activity_structuresi 
                         where identifier = :learning_activity_ref 
@@ -159,7 +159,7 @@
 
 	<fullquery name="imsld::parse::parse_and_create_activity_structure.get_struct_id_from_sa_ref">
 		<querytext>
-                        select item_id as refrenced_struct_id,
+                        select item_id as referenced_struct_id,
                         structure_id
                         from imsld_activity_structuresi 
                         where identifier = :support_activity_ref
