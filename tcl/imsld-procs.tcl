@@ -1167,8 +1167,8 @@ ad_proc -public imsld::do_notification {
     foreach recipient_user_id [imsld::roles::get_users_in_role -role_id $role_id -run_id $run_id] {
         set recipient_email [party::email -party_id $recipient_user_id]
         if { [lsearch -exact $notified_users_list $email_address] == -1 } {
-            set recepient_name [party::name -party_id $recipient_user_id] 
-            set body_html "[_ imsld.lt_Dear_recepient_name_b]"
+            set recipient_name [party::name -party_id $recipient_user_id] 
+            set body_html "[_ imsld.lt_Dear_recipient_name_b]"
             # if activity_id is not null: 
             # 1. make it visible
             # 2. get the activity url in order to send it in the email
@@ -1228,7 +1228,7 @@ ad_proc -public imsld::finish_component_element {
 
     Mark as finished the given component_id. This is done by adding a row in the table imsld_user_status.
 
-    This function is called from a url, but it can also be called recursively
+    This function is called from a URL, but it can also be called recursively
 } {
     set user_id [expr { [string eq "" $user_id] ? [ad_conn user_id] : $user_id }]
     if { !$code_call_p } {
@@ -1349,7 +1349,7 @@ ad_proc -public imsld::finish_component_element {
             }
         }
         #FIXME: on-complete-actions are only defined form acts, because all users finish the component at the
-        #same time. I have to define the behaviour for other components.
+        #same time. I have to define the behavior for other components.
         #look for matching gsi_triggers
         set action_list [imsld::gsi::get_triggered_actions -trigger "on-complete-action" -run_id $run_id]
         #FIXME: hay que restringir la lista a las acciones que apuntan al component actual
@@ -4620,7 +4620,7 @@ ad_proc -public imsld::finish_resource {
     # process each activity
     foreach activity_list $activities_list {
         if { !([llength $activity_list] == 3) } {
-            # it's not refrenced from an activity, skip it
+            # it's not referenced from an activity, skip it
             break
         }
         # set the activity_id, activity_item_id and activity_type
@@ -4637,7 +4637,7 @@ ad_proc -public imsld::finish_resource {
         if { ![db_string check_completed_resource { *SQL* }] } {
             db_dml insert_completed_resource { *SQL* }
         }
-        #find all the resouces in the same activity 
+        #find all the resources in the same activity 
 
         dom createDocument foo foo_doc
         set foo_node [$foo_doc documentElement]

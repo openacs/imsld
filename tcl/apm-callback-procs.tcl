@@ -15,7 +15,7 @@ ad_proc -public imsld::apm_callback::after_install {
 } { 
     Proc calls and tasks needed to be donde after the installation of the imsld package.
 } { 
-    # initalize the cr
+    # initialize the cr
     imsld::install::init_content_repository
     
     # create default relationships

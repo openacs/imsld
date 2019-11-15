@@ -18,7 +18,7 @@ ad_proc -public imsld::roles::create_instance {
     -parent_group_id
 } {
     Create a instance of a role (a party) for the role and for all the subroles with the "create-new" attribute set to true.    
-    @param role_id identifier of the role to be instanciated
+    @param role_id identifier of the role to be instantiated
 } {
     db_1row get_role_name {} 
 
@@ -244,7 +244,7 @@ ad_proc -private imsld::roles::get_mail_recipients {
     -role_source_id
     -run_id
 } {
-    Get the list of recipients of a send-mail service. Its called from a user belonging to a role into an specific imsld run and must get a list of users from the destination role.
+    Get the list of recipients of a send-mail service. Its called from a user belonging to a role into a specific imsld run and must get a list of users from the destination role.
 } {
 
 #FIX ME: when runs are supported, here may be included

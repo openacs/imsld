@@ -40,12 +40,12 @@ ad_proc -public imsld::gsi::get_services_in_run {
     Return a list with all service_id that are in a given UoL (the one instantiated by the run_id)
 } {
     set environments_in_run [db_list get_environments {
-                                                    select ie.item_id 
+                                                    select ienv.item_id 
                                                     from imsld_componentsi ici, 
                                                          imsld_imsldsi iii, 
                                                          imsld_runs ir, 
-                                                         imsld_environmentsi ie 
-                                                    where ie.component_id=ici.item_id and 
+                                                         imsld_environmentsi ienv 
+                                                    where ienv.component_id=ici.item_id and 
                                                           ici.imsld_id=iii.item_id and 
                                                           iii.imsld_id=ir.imsld_id and 
                                                           ir.run_id=:run_id

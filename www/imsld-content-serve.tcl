@@ -104,7 +104,7 @@ set fs_package_id [site_node_apm_integration::get_child_package_id \
 # XML => DOM document
 if { [catch {dom parse $xml_string dom_doc} errmsg] } {
     ns_log notice "IMSLD-CONTENT-SERVE:: ERROR: Not a valid XML file, serving without parsing!"
-    # the docuemnt is not an xml file, just return it
+    # the docuemnt is not an XML file, just return it
     ns_return 200 $mime_type $xml_string
     ad_script_abort
 } 

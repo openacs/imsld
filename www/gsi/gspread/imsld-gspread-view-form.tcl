@@ -13,7 +13,7 @@ if { ![info exists user_id] } {
 #three options: 
 #1- there is no form
 #2- the form is in a local file
-#3- the form is in a url supported by TclCurl
+#3- the form is in a URL supported by TclCurl
 #4- malformed
 
 db_1row get_url {

@@ -1,7 +1,7 @@
 # /packages/imsld/tcl/imsld-gsi-parse.procs.tcl
 
 ad_library {
-    Procedures in the imsld namespace for parsing gsi based xml files.
+    Procedures in the imsld namespace for parsing gsi based XML files.
     
     @creation-date Oct 2008
     @author lfuente@it.uc3m.es

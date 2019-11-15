@@ -76,7 +76,7 @@ if {[string is integer -strict $tmp_form_url] &&  \
     set form_type "Local File"
     set access_to_form "$tmp_form_url"
 } elseif {![string eq $tmp_form_url ""]} {
-    #is form linket to a url? (it is not a local file and the value is set)
+    #is form linket to a URL? (it is not a local file and the value is set)
     set form_already_set_p "t"
     set form_type "URL"
     set access_to_form "$tmp_form_url"

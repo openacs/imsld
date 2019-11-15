@@ -1,7 +1,7 @@
 # /packages/imsld/tcl/imsld-parse-procs.tcl
 
 ad_library {
-    Procedures in the imsld namespace for parsing xml files.
+    Procedures in the imsld namespace for parsing XML files.
     
     @creation-date Jul 2005
     @author jopez@inv.it.uc3m.es
@@ -295,7 +295,7 @@ ad_proc -public imsld::parse::expand_file {
             #   ported  compression  method or encryption with an unknown
             #   password.
             
-            # Therefore it if it is 1, then it concluded successfully
+            # Therefore, it if it is 1, then it concluded successfully
             # but with warnings, so we switch it back to 0
             
             if { $error_p == 1 } {
@@ -354,7 +354,7 @@ ad_proc -public imsld::parse::get_attribute {
     -attr_name
 } {
     Taken from the one with the same name in the LORS package.
-    Gets attributes for an specific element. Returns the attribute value if found, emtpy string otherwise
+    Gets attributes for a specific element. Returns the attribute value if found, empty string otherwise
     
     @param node Node
     @param attr_name Attribute we want to fetch
@@ -371,7 +371,7 @@ ad_proc -public imsld::parse::get_bool_attribute {
     -attr_name
     -default
 } {
-    Gets a boolean attribute for an specific element. Returns the tcl true or false value attribute value if found, -default otherwise.
+    Gets a boolean attribute for a specific element. Returns the tcl true or false value attribute value if found, -default otherwise.
 
     @param node Document
     @param attr_name Attribute we want to fetch
@@ -2243,14 +2243,14 @@ ad_proc -public imsld::parse::parse_and_create_environment {
             # 2. the referenced environment hasn't been created: invoke the parse_and_create_environment proc,
             #    but first verify that the environment exists in the manifest
             if { [db_0or1row get_env_id {
-                select item_id as refrenced_env_id 
+                select item_id as referenced_env_id 
                 from imsld_environmentsi 
                 where identifier = :ref 
                 and content_revision__is_live(environment_id) = 't' 
                 and component_id = :component_id
             }] } {
                 # case one, just do the mappings
-                relation_add imsld_env_env_rel $environment_id $refrenced_env_id
+                relation_add imsld_env_env_rel $environment_id $referenced_env_id
             } else {
                 # case two, first verify that the referenced environment exists
                 set organizations [$manifest selectNodes "*\[local-name()='organizations'\]"]
@@ -3041,7 +3041,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 }] } {
                     # ok, last try: searching in the rest of activity structures...
                     if { [db_0or1row get_struct_id_from_la_ref {
-                        select item_id as refrenced_struct_id,
+                        select item_id as referenced_struct_id,
                         structure_id
                         from imsld_activity_structuresi 
                         where identifier = :learning_activity_ref 
@@ -3056,7 +3056,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                             -var_list { sort_order }
                         
                         # do the mappings
-                        relation_add -extra_vars $extra_vars imsld_as_as_rel $activity_structure_id $refrenced_struct_id 
+                        relation_add -extra_vars $extra_vars imsld_as_as_rel $activity_structure_id $referenced_struct_id 
                         incr sort_order
                     } else {
                         # search in the manifest ...
@@ -3148,7 +3148,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                 }] } {
                     # ok, last try: searching in the rest of activity structures...
                     if { [db_0or1row get_struct_id_from_sa_ref {
-                        select item_id as refrenced_struct_id,
+                        select item_id as referenced_struct_id,
                         structure_id
                         from imsld_activity_structuresi 
                         where identifier = :support_activity_ref 
@@ -3162,7 +3162,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                             -ns_set $extra_vars \
                             -var_list { sort_order }
                         # do the mappings
-                        relation_add -extra_vars $extra_vars imsld_as_as_rel $activity_structure_id $refrenced_struct_id
+                        relation_add -extra_vars $extra_vars imsld_as_as_rel $activity_structure_id $referenced_struct_id
                         incr sort_order
                     } else {
                         # search in the manifest ...
@@ -3238,7 +3238,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
             # 2. the referenced activity structure hasn't been created: invoke the parse_and_create_activity_structure proc,
             #    but first verify that the activity structure exists in the manifest
             if { [db_0or1row get_struct_id_from_as_ref {
-                select item_id as refrenced_struct_id,
+                select item_id as referenced_struct_id,
                 structure_id
                 from imsld_activity_structuresi 
                 where identifier = :ref 
@@ -3250,7 +3250,7 @@ ad_proc -public imsld::parse::parse_and_create_activity_structure {
                     -ns_set $extra_vars \
                     -var_list { sort_order }
                 # case one, just do the mappings
-                relation_add -extra_vars $extra_vars imsld_as_as_rel $activity_structure_id $refrenced_struct_id
+                relation_add -extra_vars $extra_vars imsld_as_as_rel $activity_structure_id $referenced_struct_id
                 incr sort_order
             } else {
                  # case two, first verify that the referenced activity structure exists
@@ -4303,7 +4303,7 @@ ad_proc -public imsld::parse::parse_and_create_calculate {
     set calculate [$calculate_node asXML]
     set imsld_id [db_1row get_imsld_id {
         select ii.item_id 
-        from imsld_imsldsi ii, imsld_organisationsi io
+        from imsld_imsldsi ii, imsld_organizationsi io
         where ii.organization_id = io.item_id
         and io.manifest_id = :manifest_id
         and content_revision__is_live(ii.imsld_id) = 't'
@@ -4535,7 +4535,7 @@ ad_proc -public imsld::parse::parse_and_create_imsld_manifest {
     
     # Components: Activities
     # N.B.: With the level C and notificaitons, it is possible to make a reference to an 'uncreated'
-    #       learning or support activity. Therefore we must check before if the activity has not been created
+    #       learning or support activity. Therefore, we must check before if the activity has not been created
     set activities [$components selectNodes "*\[local-name()='activities'\]"]
     if { [llength $activities] } {
         imsld::parse::validate_multiplicity -tree $activities -multiplicity 1 -element_name components -equal

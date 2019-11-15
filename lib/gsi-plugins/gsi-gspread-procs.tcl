@@ -113,7 +113,7 @@ ad_proc -public imsld::gsi::p_gspread::request_configured_instance {
     Returns a list of lists with URL and title to access each facility in the service instance of a given user
 } {
     set all_urls [list]
-    #rigth now, urls are static. This fact must be changed, but, by now, let's define them statically
+    #right now, urls are static. This fact must be changed, but, by now, let's define them statically
     set package_id [ad_conn package_id]
     set mount_point "[ad_conn location][apm_package_url_from_id $package_id]/gsi/gspread"
 #in this plugin, user_id and external_credentials can be obtained in the following urls, it does not make
@@ -474,7 +474,7 @@ ad_proc -private imsld::gsi::p_gspread::init-remote-sheet {
     } else {
         ns_log Notice "there was a problem with the request, please try again."
 
-        #we have to undo whatever in in the database
+        #we have to undo whatever is in the database
 
         #redirect to previous page 
         set package_id [ad_conn package_id]

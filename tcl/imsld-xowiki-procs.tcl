@@ -158,7 +158,7 @@ ad_proc -public imsld::xowiki::convert_syntax {
 
     if { [catch {dom parse $content document} errmsg] } {
 	ns_log notice "imsld::xowiki::convert_syntax ERROR: Not a valid XML file, aborting parse process!"
-	# the docuemnt is not an xml file, just return it
+	# the docuemnt is not an XML file, just return it
 	return $content
     } 
     set root [$document documentElement]

@@ -122,7 +122,7 @@ if {![template::multirow exists link]} {
 
 # DRB: this shouldn't really be in blank master, there should be some way for
 # the templating package to associate a particular css file with pages that use
-# particular form or list templates.  Therefore I'll put the hard-wired values
+# particular form or list templates.  Therefore, I'll put the hard-wired values
 # in blank-compat for the moment.
 multirow append link stylesheet text/css /resources/acs-templating/lists.css \
     "" [ad_conn language] all

@@ -202,7 +202,7 @@ ad_proc -public imsld::fs::empty_file {
 } {  
     set string [expr { [string eq "" $string] ? \
 			   "[_ imsld.Empty_property_value]" : "$string" }]
-    set tmpfile [ns_mktemp "/tmp/imsld_emtpyXXXXXX"]
+    set tmpfile [ns_mktemp "/tmp/imsld_emptyXXXXXX"]
     set file [open $tmpfile a]
     puts $file "$string"
     close $file

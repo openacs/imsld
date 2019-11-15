@@ -897,7 +897,7 @@ ad_proc -public imsld::instance::instantiate_activity_attributes {
         }
 
         #5.5 Generic Service (GSI)
-        #in another file, to ensure an non-intrussive add-on (as much as possible)
+        #in another file, to ensure a non-intrussive add-on (as much as possible)
         imsld::gsi::instance::instantiate_service -component_item_id $component_item_id -run_id $run_id -user_id $user_id
 
 

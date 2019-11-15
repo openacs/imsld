@@ -1,5 +1,5 @@
 ad_page_contract {
-    Confirm changes and set a run as activeAsign users assigned to an specified group
+    Confirm changes and set a run as activeAsign users assigned to a specified group
     
     @author lfuente@it.uc3m.es
     @creation-date May 2006

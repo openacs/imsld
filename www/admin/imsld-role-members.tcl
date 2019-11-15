@@ -1,7 +1,7 @@
 # /packages/imsld/www/admin/imsld-role-members.tcl
 
 ad_page_contract {
-    Assign users assigned to an specified group
+    Assign users assigned to a specified group
 
     @author lfuente@it.uc3m.es
     @creation-date Mar 2006

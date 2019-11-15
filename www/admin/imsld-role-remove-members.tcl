@@ -1,7 +1,7 @@
 #/packages/imsld/www/admin/imsld-role-remove-members.tcl
 
 ad_page_contract {
-    Remove members from an specified group
+    Remove members from a specified group
     
     @author lfuente@it.uc3m.es
     @creation-date Mar 2006

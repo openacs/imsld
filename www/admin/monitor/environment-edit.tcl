@@ -2,7 +2,7 @@
 
 ad_page_contract {
     
-    Adds/removes an URL from an environment
+    Adds/removes a URL from an environment
     
     @author Derick Leony (derick@inv.it.uc3m.es)
     @creation-date 2008-06-25
