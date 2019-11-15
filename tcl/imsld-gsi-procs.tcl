@@ -528,7 +528,7 @@ ad_proc -public imsld::gsi::send_check_request {
     -plugin_URI
     -run_id
 } {
-    Sends a check-request to the service, in order to ask for funcionality support
+    Sends a check-request to the service, in order to ask for functionality support
     @param gservice_id "The service that needs to be configured"
     @param plugin_URI "The plugin that manages the request"
     @param run_id "since a service can request from several runs, the run_id provides identification completeness."

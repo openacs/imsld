@@ -22,7 +22,7 @@ ad_proc -public imsld::gsi::parse::parse_and_create_genericService {
 } {
     Parse a genericService and stores all the information in the database.
 
-    Returns a list with the new gservice_ids (item_ids) created if there were no errors, or 0 and an explanation message if there was an error. 
+    Returns a list with the new gservice_ids (item_ids) created if there were no errors, or 0 and an explanation messge if there was an error. 
     Generic services are just stored in the database, but no deployment is done in any sense.
 
     @param service_node service node to parse
@@ -497,9 +497,9 @@ ad_proc -public imsld::gsi::parse::parse_and_create_triggers {
 # this line made sense when the type was an attribute
 #           set type [imsld::parse::get_attribute -node $node -attr_name type]
             #the type is the subelement whose name matches in functions table. 
-            #All other childs are trigger params, so they are ignored
-           set all_trigger_childs [$node childNodes]
-           foreach child_element $all_trigger_childs {
+            #All other children are trigger params, so they are ignored
+           set all_trigger_children [$node childNodes]
+           foreach child_element $all_trigger_children {
                 set tmp_function_id [imsld::gsi::parse::get_function_id -function_name [$child_element nodeName]]
                 if { ![string eq $tmp_function_id 0] } {
                    set function_id $tmp_function_id
@@ -570,8 +570,8 @@ ad_proc -public imsld::gsi::parse::parse_and_create_trigger_params {
     }
 
     #2- check child elements. Only those whose name is in imsld_gsi_trigger_params table are interesting here
-    set trigger_childs [$node childNodes]
-    foreach childElement $trigger_childs {
+    set trigger_children [$node childNodes]
+    foreach childElement $trigger_children {
         set param_name [$childElement localName]
         if {[db_0or1row is_trigger_param_p {
                                         select t.trigger_type, 
