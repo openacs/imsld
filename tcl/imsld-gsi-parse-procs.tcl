@@ -22,7 +22,7 @@ ad_proc -public imsld::gsi::parse::parse_and_create_genericService {
 } {
     Parse a genericService and stores all the information in the database.
 
-    Returns a list with the new gservice_ids (item_ids) created if there were no errors, or 0 and an explanation messge if there was an error. 
+    Returns a list with the new gservice_ids (item_ids) created if there were no errors, or 0 and an explanation message if there was an error. 
     Generic services are just stored in the database, but no deployment is done in any sense.
 
     @param service_node service node to parse
