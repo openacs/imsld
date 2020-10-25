@@ -7,7 +7,7 @@
 
 -- tree query support for imsld_items
 
-create function imsld_items_insert_tr() returns opaque as '
+create function imsld_items_insert_tr() returns trigger as '
 declare
         v_parent_sk    		varbit default null;
         v_max_child_sortkey	varbit;
