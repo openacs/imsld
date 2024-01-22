@@ -144,6 +144,20 @@ if {[info exists acs_blank_master__htmlareas]
     # Add RTE scripts if we are using RTE
     #
     if {[info exists acs_blank_master(rte)]} {
+        lappend body(onload) {
+           /* RTE functions */
+           function acs_rteSubmitForm() {
+                   updateRTEs();
+                   return true;
+           }
+
+           function acs_rteInit(form_name) {
+               // sets onsubmit to function for the given form name
+               if (document.forms == null) return;
+               if (document.forms[form_name] == null) return;
+               document.forms[form_name].onsubmit = acs_rteSubmitForm;
+           }
+        }
         foreach htmlarea_id [lsort -unique $acs_blank_master__htmlareas] {
 	    lappend body(onload) "acs_rteInit('${htmlarea_id}')"
         }
